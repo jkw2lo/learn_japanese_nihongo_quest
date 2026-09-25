@@ -9,13 +9,13 @@
      cached js/app.js keeps serving it until the URL changes, so a push can be
      live and invisible at once. It lives here and nowhere else.
      Bump with: node tools/version.mjs patch -->
-<script>const APP_VERSION = "0.8.1", APP_DATE = "2026-09-25";</script>
+<script>const APP_VERSION = "0.9.0", APP_DATE = "2026-09-25";</script>
 <!-- First, before anything it could report on. -->
-<script src="js/diag.js?v=0.8.1"></script>
+<script src="js/diag.js?v=0.9.0"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@500;700&display=swap">
-<link rel="stylesheet" href="css/app.css?v=0.8.1">
+<link rel="stylesheet" href="css/app.css?v=0.9.0">
 
 <body>
 <div class="app">
@@ -30,6 +30,8 @@
       <button data-act="nav" data-nav="today" class="on"><span class="nz" lang="ja">今日</span> Today</button>
       <button data-act="nav" data-nav="kana"><span class="nz" lang="ja">かな</span> Kana</button>
       <button data-act="nav" data-nav="words"><span class="nz" lang="ja">言葉</span> Words</button>
+      <button data-act="nav" data-nav="grammar"><span class="nz" lang="ja">文法</span> Grammar</button>
+      <button data-act="nav" data-nav="cards"><span class="nz" lang="ja">札</span> Cards</button>
       <button data-act="nav" data-nav="sprint"><span class="nz" lang="ja">速</span> Sprint</button>
       <button data-act="nav" data-nav="record"><span class="nz" lang="ja">記録</span> Record</button>
     </nav>
@@ -44,6 +46,8 @@
     <section class="view" id="v-kana"></section>
     <section class="view" id="v-words"></section>
     <section class="view" id="v-menu"></section>
+    <section class="view" id="v-grammar"></section>
+    <section class="view" id="v-cards"></section>
     <section class="view" id="v-sprint"></section>
     <section class="view" id="v-record"></section>
   </main>
@@ -67,6 +71,8 @@
       <button data-act="nav" data-nav="today"><span lang="ja">今日</span>Today</button>
       <button data-act="nav" data-nav="kana"><span lang="ja">かな</span>Kana</button>
       <button data-act="nav" data-nav="words"><span lang="ja">言葉</span>Words</button>
+      <button data-act="nav" data-nav="grammar"><span lang="ja">文法</span>Grammar</button>
+      <button data-act="nav" data-nav="cards"><span lang="ja">札</span>Cards</button>
       <button data-act="nav" data-nav="menu"><span lang="ja">メニュー</span>Menu</button>
       <button data-act="nav" data-nav="sprint"><span lang="ja">速</span>Sprint</button>
       <button data-act="nav" data-nav="record"><span lang="ja">記録</span>Record</button>
@@ -135,25 +141,28 @@
 <button class="sound-bar" id="soundBar" data-act="sound-unblock"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 8h3l4.5-3.5v11L6.5 12h-3z"/><path d="M14.5 8l4 4M18.5 8l-4 4"/></svg> Sound was blocked — tap to allow</button>
 <div class="toast" id="toast" role="status"></div>
 
-<script src="js/data/kana.js?v=0.8.1"></script>
-<script src="js/furi.js?v=0.8.1"></script>
-<script src="js/conj.js?v=0.8.1"></script>
-<script src="js/data/words.js?v=0.8.1"></script>
-<script src="js/data/patterns.js?v=0.8.1"></script>
-<script src="js/data/kanji.js?v=0.8.1"></script>
-<script src="js/data/kanji-lessons.js?v=0.8.1"></script>
-<script src="js/data/menu.js?v=0.8.1"></script>
-<script src="js/srs.js?v=0.8.1"></script>
-<script src="js/sound.js?v=0.8.1"></script>
-<script src="js/art.js?v=0.8.1"></script>
-<script src="js/write.js?v=0.8.1"></script>
-<script src="js/app.js?v=0.8.1"></script>
-<script src="js/guide.js?v=0.8.1"></script>
-<script src="js/words-ui.js?v=0.8.1"></script>
-<script src="js/menu-ui.js?v=0.8.1"></script>
-<script src="js/patterns-ui.js?v=0.8.1"></script>
-<script src="js/kanji-ui.js?v=0.8.1"></script>
-<script src="js/sprint.js?v=0.8.1"></script>
-<script src="js/phone.js?v=0.8.1"></script>
+<script src="js/data/kana.js?v=0.9.0"></script>
+<script src="js/furi.js?v=0.9.0"></script>
+<script src="js/conj.js?v=0.9.0"></script>
+<script src="js/data/words.js?v=0.9.0"></script>
+<script src="js/data/patterns.js?v=0.9.0"></script>
+<script src="js/data/kanji.js?v=0.9.0"></script>
+<script src="js/data/kanji-lessons.js?v=0.9.0"></script>
+<script src="js/data/menu.js?v=0.9.0"></script>
+<script src="js/data/grammar.js?v=0.9.0"></script>
+<script src="js/srs.js?v=0.9.0"></script>
+<script src="js/sound.js?v=0.9.0"></script>
+<script src="js/art.js?v=0.9.0"></script>
+<script src="js/write.js?v=0.9.0"></script>
+<script src="js/app.js?v=0.9.0"></script>
+<script src="js/guide.js?v=0.9.0"></script>
+<script src="js/words-ui.js?v=0.9.0"></script>
+<script src="js/menu-ui.js?v=0.9.0"></script>
+<script src="js/patterns-ui.js?v=0.9.0"></script>
+<script src="js/kanji-ui.js?v=0.9.0"></script>
+<script src="js/grammar-ui.js?v=0.9.0"></script>
+<script src="js/cards-ui.js?v=0.9.0"></script>
+<script src="js/sprint.js?v=0.9.0"></script>
+<script src="js/phone.js?v=0.9.0"></script>
 </body>
 </html>

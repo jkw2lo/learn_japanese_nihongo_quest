@@ -49,7 +49,10 @@ const CONTRACT = {
   'js/data/words.js': ['WORDS', 'WORD_BY', 'WORD_STAGES', 'WORD_LESSONS'],
   'js/conj.js': ['conj', 'isVerb', 'stems', 'CONJ_FORMS', 'CONJ_TAUGHT'],
   'js/data/patterns.js': ['PATTERNS', 'PATTERN_BY', 'PARTICLES', 'PARTICLE_CONFUSIONS'],
-  'js/patterns-ui.js': ['patternLessonCards', 'qPatFill', 'qPatMean', 'patPrompt', 'patVerdict', 'patIntroHtml', 'gapHtml', 'hasGaps', 'learnedPatterns', 'patternsSectionHtml'],
+  'js/patterns-ui.js': ['patternLessonCards', 'qPatFill', 'qPatMean', 'patPrompt', 'patVerdict', 'patIntroHtml', 'gapHtml', 'hasGaps', 'learnedPatterns'],
+  'js/data/grammar.js': ['SENTENCE_SHAPE', 'PARTICLE_GUIDE', 'ENDINGS', 'GRAMMAR_SAY', 'SHAPE_SENTENCE'],
+  'js/grammar-ui.js': ['renderGrammar'],
+  'js/cards-ui.js': ['DECKS', 'deckKeys', 'orderKeys', 'cardFaces', 'startDeck', 'renderCards', 'flipCard', 'rateCard', 'cardsKey'],
   'js/data/kanji.js': ['KANJI'],
   'js/data/kanji-lessons.js': ['KANJI_BY'],
   'js/kanji-ui.js': ['kanjiLessonCards', 'kanjiIntroHtml', 'qKanjiMean', 'qKanjiRead', 'kanjiPrompt', 'kanjiVerdict', 'kanjiChartHtml', 'openKanji', 'wordsWith', 'kanjiSay', 'learnedKanji', 'bareRun'],
@@ -311,7 +314,7 @@ section('patterns');
 {
   const k = sandbox();
   const run = code => vm.runInContext(code, k);
-  const P = run('PATTERNS.map(p => ({ key: p.key, st: p.st, alts: p.alts || null, ex: p.ex.map(e => ({ gapped: e.gapped, gap: e.gap, jp: e.jp })) }))');
+  const P = run('PATTERNS.map(p => ({ key: p.key, st: p.st, alts: p.alts || null, ex: p.ex.map(e => ({ gapped: e.gapped, gap: e.gap, jp: e.jp, alts: e.alts })) }))');
   ok(new Set(P.map(p => p.key)).size === P.length, 'two patterns share an id');
   const particles = run('PARTICLES');
   P.forEach(p => {
@@ -319,7 +322,7 @@ section('patterns');
     p.ex.forEach(e => {
       const gaps = (e.gapped.match(/«/g) || []).length;
       ok(gaps <= 1, `${p.key}: more than one gap in ${e.gapped}`);
-      if (e.gap) ok((p.alts || particles).includes(e.gap), `${p.key}: the gap ${e.gap} isn't among its choices`);
+      if (e.gap) ok((e.alts || p.alts || particles).includes(e.gap), `${p.key}: the gap ${e.gap} isn't among its choices`);
     });
   });
   /* examples only use kanji the learner has met by that stage */
@@ -522,10 +525,11 @@ section('furigana');
 /* ---------- 6. audio coverage ---------- */
 
 section('audio');
-if (existsSync(join(root, 'js/audio-kana.js')) && existsSync(join(root, 'js/audio-n5.js'))) {
+const audioFiles = readdirSync(join(root, 'js')).filter(f => /^audio-.*\.js$/.test(f));
+if (audioFiles.includes('audio-kana.js')) {
   const a = { window: {} };
   vm.createContext(a);
-  vm.runInContext(read('js/audio-kana.js') + read('js/audio-n5.js'), a);
+  audioFiles.forEach(f => vm.runInContext(read('js/' + f), a));
   const clips = a.window.NQ_AUDIO || {};
   const missing = speakable().filter(t => !clips[t]);
   ok(!missing.length, `no clip for: ${missing.slice(0, 20).join(' ')}${missing.length > 20 ? ' …' : ''} — run node tools/make-audio.mjs`);

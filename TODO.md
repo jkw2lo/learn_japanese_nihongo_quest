@@ -42,12 +42,20 @@ Build order. Each step should run end to end before the next one starts.
    in a word, furigana dropping away as they're learned; the 漢字 chart;
    KANJIDIC2 readings, AnimCJK strokes.
 
+8c. ~~The rest of N5~~ (0.9.0): stages 7 買う, 8 毎日, 9 て形, 10 まとめ (92
+   more words, 21 more patterns, 52 more kanji); adjectives conjugate; the
+   て-form and casual forms join the drill as their patterns are learned.
+   Also: the Grammar tab, flashcards, squarish word tiles on Today, audio
+   split per stage at 24 kbps, dead CSS and code removed.
+
 ## Next
 
-8. **The rest of N5**:
-   stages 7 買う shopping (adjectives), 8 毎日 daily life, 9 て-form, and
-   10 the wrap-up. The て-form and plain forms are already generated.
-9. Sync, N4.
+9. **Sync** — progress lives in one browser. A static GitHub Pages site has
+   no server to sync through; the choices are in the 0.9.0 notes to the
+   user (publish as a Claude artifact with its shared store, a small
+   backend, or keep to file backups).
+10. **N4** — about 600 more words, 170 kanji and 80 patterns: stages 11+,
+   built the same way (words → patterns → kanji per stage).
 
 ## Smaller, from 0.4.0
 

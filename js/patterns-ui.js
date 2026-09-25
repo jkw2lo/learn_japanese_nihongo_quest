@@ -54,7 +54,7 @@ function qPatFill(key, mode) {
   if (!withGap.length) return null;
   const e = sample(withGap, 1)[0];
   let pool;
-  if (p.alts) pool = p.alts.filter(a => a !== e.gap);
+  if (e.alts || p.alts) pool = (e.alts || p.alts).filter(a => a !== e.gap);
   else {
     const near = (PARTICLE_CONFUSIONS[e.gap] || []).filter(x => x !== e.gap);
     pool = [...near, ...shuffle(PARTICLES.filter(x => x !== e.gap && !near.includes(x)))];
@@ -84,21 +84,4 @@ function patPrompt(c) {
 
 function patVerdict(c) {
   return `<span lang="ja">${c.ex.gap ? gapHtml(c.ex, c.ex.gap) : wordHtml(c.ex.jp)}</span> · ${esc(c.ex.en)}`;
-}
-
-/* ---------- the Words tab: patterns you know ---------- */
-
-function patternsSectionHtml() {
-  const ps = learnedPatterns();
-  if (!ps.length) return "";
-  /* folded by default: it's a reference, and the words are what the tab is for */
-  return `<details class="card pat-section">
-    <summary class="card-head"><h2><span lang="ja">文型</span> Patterns you know</h2>
-    <span class="count">${ps.length} · open to see them</span></summary>
-    <div class="pat-list">${ps.map(p => `<details class="pat-item">
-      <summary><span class="pat-name" lang="ja">${wordHtml(p.pat)}</span><span class="pat-m">${esc(p.m)}</span></summary>
-      <p class="small">${wordHtml(p.note)}</p>
-      ${p.ex.map(e => `<button class="ex-sent" data-act="say" data-say="${esc(e.kana)}"><span lang="ja">${e.gap ? gapHtml(e, e.gap) : wordHtml(e.jp)}</span><small>${esc(e.en)}</small></button>`).join("")}
-    </details>`).join("")}</div>
-  </details>`;
 }

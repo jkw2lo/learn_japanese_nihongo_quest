@@ -6,18 +6,12 @@ holding a simple conversation. It starts from nothing and runs to JLPT N5,
 then on towards N4. Writing is there if you want it and never in the way if
 you don't.
 
-> **Status: the kana stage and word stages 2–6 are built (0.5.0).** An
-> introduction to the three scripts, hiragana five a day, the hiragana check,
-> katakana, look-alikes, the pauses and long vowels, and writing practice.
-> Then 127 words in five stages (phrases, numbers and money, me and you,
-> food, getting around), with furigana, typed answers and polite verb forms.
-> There's a Words library, the Read a Menu side quest (a café and a diner),
-> Sprint, Record and Settings, and the celebrations: the cat, the hanamaru,
-> the teacher's stamps and falling petals. Words, kanji and grammar (stage 2
-> onward) are still spec only — this README describes them so they can be
-> built against it. Much of the reasoning is lifted from Hanzi Quest, where
-> most of it was learned the hard way; where a decision came from there, it
-> says so, so the original write-up can be looked up.
+> **Status: all of N5 is built (0.9.0).** The kana stage, then 219 words
+> in nine stages (phrases, numbers and money, me and you, food, getting
+> around, shopping, daily life, the て-form, and an N5 wrap-up), 40 grammar
+> patterns, 131 kanji (74 N5, 57 N4) taught through the words, verbs and
+> adjectives conjugated, a Grammar reference tab, flashcards, the Read a Menu
+> side quest, Sprint, Record and Settings.
 
 **Live at:** https://jkw2lo.github.io/learn_japanese_nihongo_quest/
 **Repo:** https://github.com/jkw2lo/learn_japanese_nihongo_quest (`main`, over
@@ -242,13 +236,17 @@ a note, and example sentences for many.
   but the kana stage is gated the whole way through (hiragana cemented
   before katakana), so words wait for the last kana too.
 - **Five a day**, under the same **New kana a day** allowance, which counts
-  words once kana are done. There are 127 words in five stages, in lessons of five:
+  words once kana are done. There are 219 words in nine stages, in lessons of five:
   - **2 · あいさつ** survival phrases (24)
   - **3 · 数** numbers, time and money (29)
   - **4 · 私** me and you (25)
   - **5 · 食べる** food and ordering (25)
   - **6 · 行く** getting around (24): trains, stations, directions, eight
     verbs, and the particles に, で and へ
+  - **7 · 買う** shopping (26): い- and な-adjectives, colours, ある and いる
+  - **8 · 毎日** daily life (26): everyday verbs, how often, と, から, まで
+  - **9 · て形** the て-form (20): the verbs you ask people to do
+  - **10 · まとめ** wrapping up N5 (20): weather, feelings, the calendar
 
   Each stage opens with a card saying what it's for. The very first word
   lesson opens with one explaining furigana.
@@ -274,12 +272,15 @@ a note, and example sentences for many.
   `w:` + the written form, so nothing that walks the kana ever meets a word.
   They go through the same `grade()` and `dueKeys()`.
 - **Spoken from kana.** Every word and example is recorded from its kana
-  (`js/audio-n5.js`, loaded once words are open), so the voice never guesses
+  (`js/audio-s2.js` … `audio-s10.js`, one per stage), so the voice never guesses
   a kanji's reading. A word can set `say` where its spelling misleads: the
   particle は is said わ.
 
-Verbs get a fourth skill, `j` **conjugate it**: see the verb and a form,
-and type the form. A verb's card shows its four polite forms, each tappable.
+Verbs and adjectives get a fourth skill, `j` **conjugate it**: see the
+word and a form, and type the form. The forms drilled grow as you go: the
+four polite ones from the start (〜ます… or 〜いです, 〜くないです…), the
+て-form once 〜てください is learned, and the casual た and ない forms after
+stage 10's casual-forms pattern. A verb's card shows its four polite forms, each tappable.
 Every form is generated (`js/conj.js`), never typed into the data. See
 **Conjugation**.
 
@@ -353,7 +354,7 @@ This depends on how readings are stored. See **Furigana markup** under Data.
 Kanji are a layer over words, never the way in. Built (`js/data/kanji.js`,
 generated; `js/data/kanji-lessons.js`; `js/kanji-ui.js`).
 
-- **Which kanji:** the 79 in the stage words that are N5 (53) or N4 (26).
+- **Which kanji:** the 131 in the stage words that are N5 (74) or N4 (57).
   KANJIDIC's `jlpt` field is the old four-level test, where 4 ≈ N5 and 3 ≈ N4.
   Rarer ones (丈夫, 全部, 卵, 昨…) keep their furigana for good.
 - **Each is taught through a word you know.** A stage's kanji, the ones its
@@ -395,10 +396,21 @@ generated; `js/data/kanji-lessons.js`; `js/kanji-ui.js`).
 ## Patterns (grammar)
 
 Chinese barely needed a grammar track; Japanese does. Built
-(`js/data/patterns.js`, `js/patterns-ui.js`), with 19 patterns for stages
-3 to 6: 〜はいくらですか, 〜は〜です, じゃないです, か, の, この/その/あの, も,
-〜が好きです, 〜をください, 〜を〜ます, ません, ました, に (going), で (by and at),
-〜はどこですか, 〜に乗ります, and に for a time.
+(`js/data/patterns.js`, `js/patterns-ui.js`), with 40 patterns across
+stages 3 to 10, the everyday structures N5 covers:
+
+- **Stages 3–6:** は〜です, じゃないです, か, の, この/その/あの, も, が好きです,
+  をください, を〜ます, ません/ました, に (going and time), で (by and at),
+  はどこですか and に乗ります.
+- **Stage 7:** はありますか, があります/います, な + noun, くないです,
+  かったです and にします.
+- **Stage 8:** と, から〜まで, あまり〜ません, ましょう and ませんか.
+- **Stage 9:** てください, ています, てもいいですか, てから and ないでください.
+- **Stage 10:** たいです, から (because), が (but), ね/よ, and the casual
+  forms (for recognising).
+
+A gap can carry its own choices per sentence, since a て-form question
+offers 待って / 待った / 待ちます.
 
 - **One pattern, one card**: the pattern, what it means, how it's built,
   and two or three example sentences, each tappable to hear.
@@ -421,7 +433,35 @@ Chinese barely needed a grammar track; Japanese does. Built
 - Patterns live in `state.patterns` (key `g:` + id) and go through the same
   scheduling as everything else. Today's list on a pattern day is 学ぶ,
   文型 fill the gaps and 文 understand them. Go deeper has a 文型 tile, and
-  the Words tab lists **Patterns you know**, each opening to its examples.
+  the **Grammar tab** lists every pattern.
+
+### The Grammar tab
+
+A reference to come back to (`js/data/grammar.js`, `js/grammar-ui.js`):
+
+- **How a sentence is built:** 私は 毎日 電車で 駅に 行きます, cut into its
+  chunks (topic, when, how, where to, verb), with the points that matter.
+  The verb comes last, particles come after what they mark, the middle
+  order is loose, and obvious things get dropped.
+- **Particles:** は が を に で へ の も と か ね よ, each with its job in one
+  line and an example to hear.
+- **Endings at a glance:** now / not / past / past-not for verbs, both
+  kinds of adjective, and nouns.
+- **Every pattern**, by stage. Learned ones open to their examples;
+  upcoming ones are there to look ahead at, marked with the stage that
+  teaches them. There's a button to practise the ones you know.
+
+### Flashcards
+
+The **Cards** tab (`js/cards-ui.js`): decks for today's items, hiragana,
+katakana, words, kanji and patterns, built from what you've learned.
+- Japanese → English or the other way round, shakiest first or shuffled.
+- Look, think, flip (it turns over, and says the word), then **Again**,
+  which sends the card to the back of the deck, or **Got it**.
+- Keys: Space flips, 1 is Again, 2 is Got it, and the arrows move.
+- On a phone the card fills the screen and the buttons sit at the bottom.
+- It's self-paced, so like Go deeper it never moves a review, and a
+  self-marked card isn't evidence for "solid".
 - **Conjugations are generated in code**, never typed into the data. See
   **Conjugation** under Words.
 
@@ -631,7 +671,7 @@ when that tier opens.
 
 Built so far: `js/audio-kana.js`, 305 clips (every kana sound, every kana
 word and pair, and the introduction's example sentence), 2.4 MB, fetched
-after the first screen draws. `js/audio-n5.js` has 95 more (every stage word
+after the first screen draws. The word stages' audio, originally one `js/audio-n5.js` with 95 more (every stage word
 and example not already in the kana bundle), about 1 MB, fetched once words
 are open. Both add to one table (`window.NQ_AUDIO`), so they load in any
 order. `make-audio.mjs` only records what's missing,
@@ -641,6 +681,15 @@ same. A lone kana is sometimes read as something else: は and へ on their
 own could come out as the particles "wa" and "e". Checked by ear with Kyoko:
 は says ha, へ says he, を says o. If a new voice gets one wrong,
 `SPEAK_AS` in the script forces a spelling for that clip.
+
+**Bundles now.** Word audio is split **per stage** (`js/audio-s2.js` …
+`audio-s10.js`), and a stage's bundle is fetched only once the learner is
+within one stage of it, so nobody downloads all of N5 on day one. The
+Grammar tab's sentences are their own bundle, fetched when it opens. All
+clips are AAC at 24 kbps (32 kbps was a quarter bigger, for speech that
+sounds the same). `make-audio.mjs` reuses any clip already recorded in any
+bundle, so moving clips between bundles costs nothing, and it deletes
+bundles it no longer makes.
 
 A smoke check walks every string the app can speak and fails if one has no
 clip, the same check that caught 225 silent characters in Hanzi Quest.
@@ -882,14 +931,18 @@ you like.
     js/audio-kana.js        generated clips — do not hand-edit
     js/strokes.js           generated stroke data — do not hand-edit
     js/furi.js              furigana markup: parse, check, render, derive kana
-    js/data/words.js        stages 2–6: 127 words, their stages, lessons of five
-    js/data/patterns.js     19 grammar patterns, placed after their stage's words
+    js/data/words.js        stages 2–10: 219 words, their stages, lessons of five
+    js/data/patterns.js     40 grammar patterns, placed after their stage's words
+    js/data/grammar.js      the Grammar tab's reference: sentence shape, particles, endings
+    js/grammar-ui.js        the Grammar tab
+    js/cards-ui.js          flashcards
     js/patterns-ui.js       pattern cards, fill-the-gap and understand drills
-    js/data/kanji.js        79 kanji with KANJIDIC readings — generated, do not hand-edit
+    js/data/kanji.js        131 kanji with KANJIDIC readings — generated, do not hand-edit
     js/data/kanji-lessons.js where the kanji lessons go
     js/kanji-ui.js          kanji cards, meaning and read-in-a-word drills, the 漢字 chart
     js/words-ui.js          word lessons and questions, typing, the Words library
-    js/audio-n5.js          generated clips for the word stages — do not hand-edit
+    js/audio-s<N>.js        generated clips, one bundle per word stage — do not hand-edit
+    js/audio-grammar.js     generated clips for the Grammar tab
 
     not built yet (stubs, not loaded):
     js/sync.js              optional sync

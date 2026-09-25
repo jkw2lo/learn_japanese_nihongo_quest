@@ -72,6 +72,8 @@ function render() {
   else if (view === "kana") renderKana();
   else if (view === "words") renderWords();
   else if (view === "menu") renderMenu();
+  else if (view === "grammar") renderGrammar();
+  else if (view === "cards") renderCards();
   else if (view === "sprint") renderSprint();
   else if (view === "record") renderRecord();
   renderSaveDot();
@@ -363,10 +365,10 @@ function wordsDeckHtml() {
   ];
   return `<section class="card deck">
     <div class="card-head"><h2>Words you can read</h2><button class="link" data-act="nav" data-nav="words">All ${libraryEntries().length} ›</button></div>
-    ${items.length ? `<ul class="words">${items.slice(0, 60).map(x => `
-      <li><button class="word" data-act="say" data-say="${esc(x.say)}" title="Hear it">
-        <span class="word-jp" lang="ja">${wordHtml(x.w)}</span>${romaji(x.r)}<span class="word-en">${esc(x.m)}</span>
-      </button><button class="more" data-act="lib-open" data-src="${x.src}" data-w="${esc(x.id)}" aria-label="Details">${icon("chevron")}</button></li>`).join("")}</ul>`
+    ${items.length ? `<div class="wgrid">${items.slice(0, 60).map(x => `
+      <div class="wtile"><button class="wt-say" data-act="say" data-say="${esc(x.say)}" title="Hear it">
+        <span class="wt-jp" lang="ja">${wordHtml(x.w)}</span>${romaji(x.r)}<span class="wt-en">${esc(x.m)}</span>
+      </button><button class="wt-more" data-act="lib-open" data-src="${x.src}" data-w="${esc(x.id)}" aria-label="Details">${icon("chevron")}</button></div>`).join("")}</div>`
     : `<div class="empty">${neko("think", "mini")}<p class="muted small">Real words appear here as soon as you know every kana in one — <span lang="ja">いえ</span> (house) needs just two.</p></div>`}
   </section>`;
 }
@@ -1556,6 +1558,7 @@ document.addEventListener("keydown", guard(e => {
   const inField = /INPUT|TEXTAREA|SELECT/.test(e.target.tagName);
   if (askDone) { if (e.key === "Escape") closeAsk(false); return; }
   if (typeof sprintKey === "function" && sprintKey(e)) return;
+  if (typeof cardsKey === "function" && cardsKey(e)) return;
   if (S && (S.card?.kind === "c" || S.card?.kind === "j") && !S.finished) {
     if (e.key === "Enter") { e.preventDefault(); S.answered ? ACTS.next() : checkType(); return; }
     if (e.key === " " && S.answered) { e.preventDefault(); ACTS.next(); return; }

@@ -55,7 +55,7 @@ function wordIntroHtml(c) {
 
 /* A verb's polite forms, each one tappable. */
 function formsTable(x) {
-  return `<div class="forms">${formsFor(x.pos).map(f => {
+  return `<div class="forms">${drillForms(x.pos).map(f => {
     const m = conj(x.w, x.pos, f);
     return `<button class="form" data-act="say" data-say="${esc(furiKana(m))}"><span lang="ja">${wordHtml(m)}</span><small>${esc(CONJ_FORMS[f].en)}</small></button>`;
   }).join("")}</div>`;
@@ -100,11 +100,22 @@ function qWordType(key, mode) {
   return { t: "q", kind: "c", wk: true, k: key, mode, answer: key, sound: x.say };
 }
 
+/* The forms a word is drilled on, growing with the patterns learned: the
+   て-form once 〜てください is known, the casual forms after stage 10's. */
+function drillForms(pos) {
+  const fs = [...formsFor(pos)];
+  if (isVerb(pos)) {
+    if (isLearned("g:te-kudasai")) fs.push("te");
+    if (isLearned("g:plain")) fs.push("ta", "nai");
+  }
+  return fs;
+}
+
 /* Conjugate: see the verb and a form, type the form. */
 function qWordConj(key, mode, form) {
   const x = WORD_BY[key];
   if (!isConjugable(x.pos)) return null;
-  const f = form || sample(formsFor(x.pos), 1)[0];
+  const f = form || sample(drillForms(x.pos), 1)[0];
   const m = conj(x.w, x.pos, f);
   return { t: "q", kind: "j", wk: true, k: key, mode, answer: key, form: f, target: m, sound: furiKana(m) };
 }
@@ -260,7 +271,6 @@ function renderWords() {
     </div>
     ${!all.length ? `<section class="card empty">${neko("think", "mini")}<p>Words appear here as soon as you know every kana in one — <span lang="ja">いえ</span> (house)
       needs just the first row. Every word stays here once it arrives; this is the whole list, not just today's.</p></section>` : ""}
-    ${patternsSectionHtml()}
     ${groups.join("") || (all.length ? `<section class="card"><p class="muted">Nothing matches that.</p></section>` : "")}
     ${notYet.length ? `<section class="card not-yet"><div class="card-head"><h2>Coming up</h2><span class="count">${notYet.length} more kana words</span></div>
       ${topNeed.length ? `<p class="small">One kana away:</p><div class="chips">${topNeed.map(([k, n]) =>
@@ -307,16 +317,12 @@ function openLibWord(src, w) {
   </div>`);
 }
 
-/* The second audio bundle — every stage word and example sentence — is
-   fetched only once words are open. */
+/* Word audio comes a stage at a time: every stage the learner has reached,
+   and the next one, so a lesson never starts before its sound has. */
 function loadAudioN5() {
-  if (loadAudioN5.done || !wordsOpen()) return;
-  loadAudioN5.done = true;
-  const el = document.createElement("script");
-  el.src = `js/audio-n5.js?v=${APP_VERSION}`;
-  el.async = true;
-  el.onload = () => { if (!S) render(); };
-  document.head.appendChild(el);
+  if (!wordsOpen()) return;
+  const reached = Math.max(2, ...learnedWords().map(x => x.st));
+  WORD_STAGES.forEach(S => { if (S.st <= reached + 1) loadBundle("s" + S.st); });
 }
 
 Object.assign(ACTS, {

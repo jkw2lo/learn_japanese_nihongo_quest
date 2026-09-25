@@ -46,6 +46,13 @@ const KANJI_MEANING = {
   子: "child", 父: "father", 母: "mother", 白: "white", 長: "long", 新: "new", 古: "old",
   少: "a little", 多: "many", 週: "week", 間: "between; interval", 道: "road", 校: "school",
   言: "say", 立: "stand", 足: "foot; enough", 手: "hand", 目: "eye", 耳: "ear",
+  悪: "bad", 赤: "red", 黒: "black", 青: "blue", 有: "have; exist", 服: "clothes", 産: "produce; birth",
+  起: "get up", 働: "work", 勉: "effort", 強: "strong", 夜: "night", 仕: "serve; do", 事: "thing; matter",
+  開: "open", 使: "use", 作: "make", 教: "teach", 住: "live", 知: "know", 持: "hold", 写: "copy; photo",
+  真: "true", 画: "picture", 映: "reflect; project", 音: "sound", 楽: "fun; music", 暑: "hot", 寒: "cold",
+  元: "origin", 旅: "trip", 閉: "close", 座: "sit", 晩: "evening", 末: "end", 週: "week", 窓: "window",
+  忙: "busy", 難: "difficult", 変: "change; strange", 緒: "beginning; cord", 年: "year", 去: "go; past",
+  入: "enter", 休: "rest",
 };
 
 function parseKanjidic(xml) {

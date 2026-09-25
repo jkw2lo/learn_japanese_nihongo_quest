@@ -18,7 +18,6 @@ const QUICK_KANJI_MS = { m: 4000, y: 6000 };
    days, each after the last hiragana was learned, on which a full hiragana
    sweep was finished at this first-try accuracy. */
 const HIRA_CHECK = { days: 2, pass: 0.9 };
-const TIER_ORDER = ["h", "k"];
 
 const DEFAULT_SETTINGS = {
   showRomaji: false,     /* outside kana lessons — see README → Open questions */
@@ -312,7 +311,6 @@ function nextLessons() {
   return out;
 }
 
-const upcomingLesson = () => [...LESSONS, ...WORD_LESSONS].find(L => !lessonLearned(L)) || null;
 
 /* The hiragana check passed today? */
 const checkPassedToday = () => !!state.days[today()]?.check?.passed;

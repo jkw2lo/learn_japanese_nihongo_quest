@@ -1,7 +1,8 @@
 /* Record every kana sound, every kana-stage word, every stage word and
    every example sentence, and bundle them as base64 AAC:
-     js/audio-kana.js   the kana stage — loaded after the first screen
-     js/audio-n5.js     stages 2 onward — loaded once words are open
+     js/audio-kana.js     the kana stage — loaded after the first screen
+     js/audio-s<N>.js     one per word stage — loaded as the learner reaches it
+     js/audio-grammar.js  the Grammar tab's sentences — loaded when it opens
    Both add to window.NQ_AUDIO rather than replace it, so they load in any order.
 
    Why bundle at all: see js/sound.js. Why record words whole, from kana:
@@ -14,7 +15,7 @@
      node tools/make-audio.mjs Kyoko      or name another ja_JP voice (implies --all) */
 
 import { execFileSync } from 'child_process';
-import { readFileSync, writeFileSync, mkdtempSync, rmSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, mkdtempSync, rmSync, existsSync, readdirSync, unlinkSync } from 'fs';
 import vm from 'vm';
 import { fileURLToPath } from 'url';
 import { join } from 'path';
@@ -23,15 +24,15 @@ import { tmpdir } from 'os';
 const ARGS = process.argv.slice(2);
 const VOICE = ARGS.find(a => !a.startsWith('--')) || 'Kyoko';
 const ALL = ARGS.includes('--all') || ARGS.some(a => !a.startsWith('--'));
-const BITRATE = '32000';
+const BITRATE = '24000';     /* speech is clear at 24k; 32k was a quarter bigger */
 /* A single kana is short — を is about 0.11s — so the floor for "the voice
    is mute" is lower than Hanzi Quest's. */
 const MIN_SECONDS = 0.06;
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const { KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS } = new Function(
-  ['js/data/kana.js', 'js/furi.js', 'js/conj.js', 'js/data/words.js', 'js/data/patterns.js', 'js/data/menu.js'].map(f => readFileSync(join(root, f), 'utf8')).join('\n') +
-  '\nreturn {KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS};')();
+const { KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS, GRAMMAR_SAY } = new Function(
+  ['js/data/kana.js', 'js/furi.js', 'js/conj.js', 'js/data/words.js', 'js/data/patterns.js', 'js/data/menu.js', 'js/data/grammar.js'].map(f => readFileSync(join(root, f), 'utf8')).join('\n') +
+  '\nreturn {KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS, GRAMMAR_SAY};')();
 
 /* The text actually handed to `say` for a clip key, for any key the voice
    misreads on its own. A lone は or へ could be taken as the particles "wa"
@@ -55,21 +56,42 @@ function speakableKana() {
   return [...out];
 }
 
-/* Always from kana: the voice never has to guess a kanji's reading. */
-function speakableN5() {
-  const kana = new Set(speakableKana());
+/* Always from kana: the voice never has to guess a kanji's reading.
+
+   One bundle per word stage, so a learner downloads what they've reached
+   rather than everything at once: a stage's words, their examples and
+   forms, and its patterns' sentences (the diner menu rides with stage 5).
+   A clip already in the kana bundle or an earlier stage isn't repeated. */
+function stageClips(st) {
   const out = new Set();
-  WORDS.forEach(w => { out.add(w.say); w.ex.forEach(([jp]) => out.add(furiKana(jp))); });
-  menuItems(MENUS[1]).forEach(it => out.add(it.kana));
-  PATTERNS.forEach(p => p.ex.forEach(e => out.add(e.kana)));
-  /* every taught form of every verb */
-  WORDS.filter(w => isConjugable(w.pos)).forEach(w => formsFor(w.pos).forEach(f => out.add(furiKana(conj(w.w, w.pos, f)))));
-  MENU_PHRASES.forEach(([jp]) => out.add(furiKana(jp).replace('〜', '')));
-  return [...out].filter(t => !kana.has(t));
+  WORDS.filter(w => w.st === st).forEach(w => {
+    out.add(w.say);
+    w.ex.forEach(([jp]) => out.add(furiKana(jp)));
+    if (isConjugable(w.pos)) [...formsFor(w.pos), ...(isVerb(w.pos) ? ['te', 'ta', 'nai'] : [])].forEach(f => out.add(furiKana(conj(w.w, w.pos, f))));
+  });
+  PATTERNS.filter(p => p.st === st).forEach(p => p.ex.forEach(e => out.add(e.kana)));
+  if (st === 5) {
+    menuItems(MENUS[1]).forEach(it => out.add(it.kana));
+    MENU_PHRASES.forEach(([jp]) => out.add(furiKana(jp).replace('〜', '')));
+  }
+  return [...out];
 }
 
-export const BUNDLES = { 'js/audio-kana.js': speakableKana, 'js/audio-n5.js': speakableN5 };
-export const speakable = () => [...speakableKana(), ...speakableN5()];
+const STAGES = [...new Set(WORDS.map(w => w.st))].sort((a, b) => a - b);
+function stageBundles() {
+  const seen = new Set(speakableKana());
+  const out = {};
+  STAGES.forEach(st => {
+    out[`js/audio-s${st}.js`] = stageClips(st).filter(t => !seen.has(t));
+    out[`js/audio-s${st}.js`].forEach(t => seen.add(t));
+  });
+  out['js/audio-grammar.js'] = GRAMMAR_SAY.map(s => furiKana(s)).filter(t => !seen.has(t));
+  return out;
+}
+
+export const BUNDLES = { 'js/audio-kana.js': speakableKana, ...Object.fromEntries(Object.entries(stageBundles()).map(([f, list]) => [f, () => list])) };
+
+export const speakable = () => Object.values(BUNDLES).flatMap(f => f());
 
 function readBundle(file) {
   if (!existsSync(file)) return {};
@@ -81,12 +103,15 @@ function readBundle(file) {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const work = mkdtempSync(join(tmpdir(), 'nq-audio-'));
+  /* every clip already recorded, whichever bundle it's in */
+  const OLD = {};
+  readdirSync(join(root, 'js')).filter(f => /^audio-.*\.js$/.test(f)).forEach(f => Object.assign(OLD, readBundle(join(root, 'js', f))));
   for (const [rel, list] of Object.entries(BUNDLES)) {
     const file = join(root, rel);
     const WANTED = list();
     /* Keep what's already recorded (and still wanted) unless asked for --all:
        adding one word shouldn't mean minutes of re-recording. */
-    const old = ALL ? {} : readBundle(file);
+    const old = ALL ? {} : OLD;
     const clips = {}, silent = [];
     WANTED.forEach(t => { if (old[t]) clips[t] = old[t]; });
     const todo = WANTED.filter(t => !clips[t]);
@@ -110,4 +135,6 @@ window.NQ_AUDIO = Object.assign(window.NQ_AUDIO || {}, ${JSON.stringify(clips)})
     if (silent.length) console.log(`  no audio for: ${silent.join(' ')}`);
   }
   rmSync(work, { recursive: true, force: true });
+  /* bundles no longer made (audio-n5.js, from before the split) go */
+  readdirSync(join(root, 'js')).filter(f => /^audio-.*\.js$/.test(f) && !BUNDLES['js/' + f]).forEach(f => { unlinkSync(join(root, 'js', f)); console.log(`removed js/${f}`); });
 }
