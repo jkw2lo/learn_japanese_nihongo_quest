@@ -350,19 +350,45 @@ This depends on how readings are stored. See **Furigana markup** under Data.
 
 ## Kanji
 
-Kanji are a layer over words, never the way in.
+Kanji are a layer over words, never the way in. Built (`js/data/kanji.js`,
+generated; `js/data/kanji-lessons.js`; `js/kanji-ui.js`).
 
-- **A kanji unlocks when a word that uses it is known.** It's taught through
-  that word: "you know たべる; this is how it's written: 食べる." The card
-  then shows the kanji's other words that are already known or coming soon.
+- **Which kanji:** the 79 in the stage words that are N5 (53) or N4 (26).
+  KANJIDIC's `jlpt` field is the old four-level test, where 4 ≈ N5 and 3 ≈ N4.
+  Rarer ones (丈夫, 全部, 卵, 昨…) keep their furigana for good.
+- **Each is taught through a word you know.** A stage's kanji, the ones its
+  words are first to use, get lessons of five placed after that stage's
+  words and patterns, in the order those words are taught (so the numbers
+  come out 一 二 三). The smoke test checks that every kanji has a word by
+  its stage to be taught through. The first kanji lesson opens with a card
+  on on and kun readings.
+- **The card:** the kanji, its meaning, its readings (on in katakana, kun in
+  hiragana with the okurigana in brackets: た(べる)), its strokes (tap to
+  animate), and **the words you know that use it**, each tappable.
+- **Once learned, its furigana goes, everywhere.** `knowsKanji()` is what
+  `furiHtml()` asks, so words, sentences, patterns, the Words tab and the
+  diner menu all drop the reading for a kanji you know. A run keeps its
+  furigana until every kanji in it is known (今日 needs both).
 - **Readings are shown, never drilled as a list.** Reciting "ショク, た.べる"
-  helps nobody get by. What gets drilled is reading the kanji *in a word*:
-  食堂 → しょくどう. The on and kun lists sit on the card as reference.
-- **Parts and stories carry over from Hanzi Quest** (`comp`, `story`, and the
-  character pictures), but lightly. There are ~300 kanji, not 1,000, and
-  this app doesn't need a Radicals tab. The Kanji tab shows the parts inline.
-- **Writing is opt-in** (Settings → Writing → Kanji). Kana writing is on by
-  default, but only in the kana stages.
+  helps nobody get by. There are two skills:
+  - `m` **what it means**: pick from other kanji's meanings.
+  - `y` **read it in a word**: a word you know, with this kanji's part of
+    it bare and highlighted ("How is 高 read here?" → たか). The wrong
+    answers are the kanji's own other readings first (こう), then other
+    words' kanji readings of the same length that share the most kana.
+    Asking about the kanji's part, not the whole word, means a set phrase
+    can't give itself away by length.
+- **Writing is opt-in**: Settings → Write kanji too, off by default. With it
+  on, each new kanji gets a trace and Today gets a 書く task. The writing
+  marker is the same as for kana; the stroke data is AnimCJK's
+  `graphicsJa.txt`, and every kanji's stroke count matches KANJIDIC's
+  (checked by the smoke test).
+- **Where they show up:** Today's list on a kanji day (学ぶ, 意味, 読み, and
+  書く if on), a 漢字 tile in Go deeper, rows in Record, and a **漢字 chart**
+  as the third tab on the Kana page, grouped by stage, each opening its card.
+- **Meanings are written for the app** (`KANJI_MEANING` in
+  `tools/fetch-kanji.mjs`); KANJIDIC's first meanings read 行 as "going,
+  journey, carry out". **Readings and stroke counts are KANJIDIC2's.**
 
 ---
 
@@ -822,8 +848,8 @@ this mean" question must not contain the English gloss).
 | what | source | licence | notes |
 |---|---|---|---|
 | word meanings, readings, parts of speech | JMdict (EDRDG) | CC BY-SA 4.0 | for checking and filling gaps; hand-edited glosses are shorter |
-| kanji readings and meanings | KANJIDIC2 (EDRDG) | CC BY-SA 4.0 | |
-| stroke order | AnimCJK `graphicsJaKana.txt` | Arphic Public License | licence text in `licenses/animCJK/`; see **Writing → Stroke data** |
+| kanji readings and stroke counts | KANJIDIC2 (EDRDG) | CC BY-SA 4.0 | used, by `tools/fetch-kanji.mjs` → `js/data/kanji.js`; meanings written for the app |
+| stroke order | AnimCJK `graphicsJaKana.txt` and `graphicsJa.txt` | Arphic Public License | licence text in `licenses/animCJK/`; see **Writing → Stroke data** |
 | example sentences | Tatoeba | CC BY 2.0 FR | a starting point; most will be written for the app so they only use known words |
 | JLPT levels | community lists (e.g. Jonathan Waller's) | CC BY | there has been **no official JLPT list since 2010**; levels are a guide, not a spec |
 | romaji → kana | wanakana | MIT | |
@@ -857,18 +883,22 @@ you like.
     js/strokes.js           generated stroke data — do not hand-edit
     js/furi.js              furigana markup: parse, check, render, derive kana
     js/data/words.js        stages 2–6: 127 words, their stages, lessons of five
+    js/data/patterns.js     19 grammar patterns, placed after their stage's words
+    js/patterns-ui.js       pattern cards, fill-the-gap and understand drills
+    js/data/kanji.js        79 kanji with KANJIDIC readings — generated, do not hand-edit
+    js/data/kanji-lessons.js where the kanji lessons go
+    js/kanji-ui.js          kanji cards, meaning and read-in-a-word drills, the 漢字 chart
     js/words-ui.js          word lessons and questions, typing, the Words library
     js/audio-n5.js          generated clips for the word stages — do not hand-edit
 
     not built yet (stubs, not loaded):
-    js/data/kanji.js        kanji, taught through words
-    js/data/patterns.js     grammar patterns with example sentences
     js/sync.js              optional sync
     tools/server.mjs        dev server, http://localhost:8732
     tools/version.mjs       bump the version and re-stamp every asset
     tools/smoke.mjs         contract, data, scheduling, allowance, the check, writing, audio, versions
     tools/make-audio.mjs    records the clips that are missing (macOS)
-    tools/fetch-strokes.mjs builds js/strokes.js, merging AnimCJK's stroke pieces
+    tools/fetch-strokes.mjs builds js/strokes.js (kana and kanji), merging AnimCJK's stroke pieces
+    tools/fetch-kanji.mjs   builds js/data/kanji.js from KANJIDIC2
 
 Port 8732, so it can run next to Hanzi Quest on 8731.
 

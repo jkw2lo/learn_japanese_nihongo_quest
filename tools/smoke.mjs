@@ -32,7 +32,7 @@ function sandbox() {
     },
   };
   vm.createContext(ctx);
-  vm.runInContext(['js/data/kana.js', 'js/furi.js', 'js/conj.js', 'js/data/words.js', 'js/data/patterns.js', 'js/srs.js'].map(read).join('\n') + `
+  vm.runInContext(['js/data/kana.js', 'js/furi.js', 'js/conj.js', 'js/data/words.js', 'js/data/patterns.js', 'js/data/kanji.js', 'js/data/kanji-lessons.js', 'js/srs.js'].map(read).join('\n') + `
     ;globalThis.__ = { get state() { return state; }, set state(v) { state = v; },
        setShift: n => { clockShift = n; } };`, ctx);
   return ctx;
@@ -50,6 +50,9 @@ const CONTRACT = {
   'js/conj.js': ['conj', 'isVerb', 'stems', 'CONJ_FORMS', 'CONJ_TAUGHT'],
   'js/data/patterns.js': ['PATTERNS', 'PATTERN_BY', 'PARTICLES', 'PARTICLE_CONFUSIONS'],
   'js/patterns-ui.js': ['patternLessonCards', 'qPatFill', 'qPatMean', 'patPrompt', 'patVerdict', 'patIntroHtml', 'gapHtml', 'hasGaps', 'learnedPatterns', 'patternsSectionHtml'],
+  'js/data/kanji.js': ['KANJI'],
+  'js/data/kanji-lessons.js': ['KANJI_BY'],
+  'js/kanji-ui.js': ['kanjiLessonCards', 'kanjiIntroHtml', 'qKanjiMean', 'qKanjiRead', 'kanjiPrompt', 'kanjiVerdict', 'kanjiChartHtml', 'openKanji', 'wordsWith', 'kanjiSay', 'learnedKanji', 'bareRun'],
   'js/data/menu.js': ['MENUS', 'MENU_PHRASES', 'menuItems', 'numberKana'],
   'js/menu-ui.js': ['menuOpen', 'canReadItem', 'menuCardHtml', 'renderMenu', 'tapItem', 'startMenuGame', 'noren', 'inked'],
   'js/art.js': ['icon', 'neko', 'hanamaru', 'hanamaruPath', 'stamp', 'petals'],
@@ -332,6 +335,37 @@ section('patterns');
   ok(run('skillsFor("g:wa-desu").join()') === 'f,r', 'patterns have the fill and understand skills');
   run('load(); learn("g:wa-desu")');
   ok(run('!!state.patterns["g:wa-desu"] && !state.words["g:wa-desu"]'), 'patterns are stored apart');
+}
+
+section('kanji');
+{
+  const k = sandbox();
+  const run = code => vm.runInContext(code, k);
+  const K = run('KANJI');
+  ok(K.length >= 70, `expected most N5 kanji, got ${K.length}`);
+  ok(new Set(K.map(e => e.k)).size === K.length, 'a kanji appears twice');
+  K.forEach(e => {
+    ok(!!e.m && e.on.length + e.kun.length > 0, `${e.k} has no meaning or readings`);
+    ok(run(`WORDS.some(w => w.st <= ${e.st} && w.plain.includes(${JSON.stringify(e.k)}))`), `${e.k} has no word by stage ${e.st} to be taught through`);
+  });
+  /* every kanji lesson comes after its stage's words, and each kanji after a word that uses it */
+  const order = run('WORD_LESSONS.map(L => [L.id, L.kind, L.st, L.items])');
+  order.forEach(([id, kind, st, items], i) => {
+    if (kind !== 'kanji') return;
+    ok(!order.slice(i + 1).some(([, k2, st2]) => k2 === 'words' && st2 === st), `${id} comes before some of stage ${st}'s words`);
+    ok(items.length <= 5, `${id} has more than five kanji`);
+  });
+  ok(run('KANJI.every(e => WORD_LESSONS.some(L => L.items.includes(e.key)))'), 'a kanji has no lesson');
+  /* stroke data: every kanji drawn, with KANJIDIC's stroke count */
+  const w = { window: {} };
+  vm.createContext(w);
+  vm.runInContext(read('js/strokes.js'), w);
+  K.forEach(e => ok(w.window.NQ_STROKES[e.k]?.m.length === e.sc, `${e.k}: ${w.window.NQ_STROKES[e.k]?.m.length} strokes drawn, KANJIDIC says ${e.sc}`));
+  /* learning a kanji takes its furigana away */
+  run('load(); learn("k:食")');
+  ok(run('furiHtml("{食|た}べる", c => isLearned("k:" + c))') === '食べる', 'a learned kanji should lose its furigana');
+  ok(run('furiHtml("{今日|きょう}", c => isLearned("k:" + c))').includes('<ruby>'), 'an unlearned kanji keeps its furigana');
+  ok(run('skillsFor("k:食").join()') === 'm,y,w', 'kanji have meaning, reading and writing skills');
 }
 
 section('conjugation');

@@ -1,5 +1,6 @@
 /* Build js/strokes.js: stroke outlines and median lines for every single-
-   glyph kana the app teaches, from AnimCJK's graphicsJaKana.txt.
+   glyph kana and every kanji the app teaches, from AnimCJK's
+   graphicsJaKana.txt and graphicsJa.txt.
 
    Source:  https://github.com/parsimonhi/animCJK (graphicsJaKana.txt)
    Licence: Arphic Public License — see licenses/animCJK/. The format is
@@ -12,28 +13,33 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { join } from 'path';
 
-const URL_SRC = 'https://raw.githubusercontent.com/parsimonhi/animCJK/master/graphicsJaKana.txt';
+const SOURCES = {
+  'graphicsJaKana.txt': 'https://raw.githubusercontent.com/parsimonhi/animCJK/master/graphicsJaKana.txt',
+  'graphicsJa.txt': 'https://raw.githubusercontent.com/parsimonhi/animCJK/master/graphicsJa.txt',   /* 21 MB: every kanji */
+};
 const root = fileURLToPath(new URL('../', import.meta.url));
 const cacheDir = join(root, 'tools/.cache');
-const cache = join(cacheDir, 'graphicsJaKana.txt');
-
 export async function source(refresh = false) {
-  if (refresh || !existsSync(cache)) {
-    const r = await fetch(URL_SRC);
-    if (!r.ok) throw new Error(`download failed: ${r.status}`);
-    mkdirSync(cacheDir, { recursive: true });
-    writeFileSync(cache, await r.text());
-  }
   const out = {};
-  readFileSync(cache, 'utf8').trim().split('\n').forEach(l => { const j = JSON.parse(l); out[j.character] = j; });
+  for (const [name, url] of Object.entries(SOURCES)) {
+    const cache = join(cacheDir, name);
+    if (refresh || !existsSync(cache)) {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(`download failed: ${r.status}`);
+      mkdirSync(cacheDir, { recursive: true });
+      writeFileSync(cache, await r.text());
+    }
+    readFileSync(cache, 'utf8').trim().split('\n').forEach(l => { const j = JSON.parse(l); out[j.character] = j; });
+  }
   return out;
 }
 
-/* Only single characters get writing drills: きゃ is two glyphs you already
-   write, and ー is a line. */
+/* Single kana (きゃ is two glyphs you already write, and ー is a line),
+   and every kanji the app teaches. */
 export function wanted() {
   const { KANA } = new Function(readFileSync(join(root, 'js/data/kana.js'), 'utf8') + '\nreturn {KANA};')();
-  return KANA.filter(e => [...e.k].length === 1 && e.k !== 'ー').map(e => e.k);
+  const { KANJI } = new Function(readFileSync(join(root, 'js/data/kanji.js'), 'utf8') + '\nreturn {KANJI};')();
+  return [...KANA.filter(e => [...e.k].length === 1 && e.k !== 'ー').map(e => e.k), ...KANJI.map(e => e.k)];
 }
 
 /* AnimCJK cuts a stroke that loops back over itself (あ's last stroke, the
@@ -75,6 +81,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 window.NQ_STROKES = ${JSON.stringify(data)};
 `;
   writeFileSync(join(root, 'js/strokes.js'), out);
-  console.log(`${Object.keys(data).length} kana → js/strokes.js (${(out.length / 1024).toFixed(0)} KB)`);
+  console.log(`${Object.keys(data).length} kana and kanji → js/strokes.js (${(out.length / 1024).toFixed(0)} KB)`);
   if (missing.length) console.log(`no strokes for: ${missing.join(' ')}`);
 }

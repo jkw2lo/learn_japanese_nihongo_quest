@@ -4,9 +4,9 @@
    through the same grade() / dueKeys() as kana. Skills: r (read it, pick
    the meaning), p (hear it, pick the word), c (see the meaning, type it). */
 
-/* Which kanji the learner knows. None yet — kanji are taught in step 8 —
-   so every kanji shows its furigana. */
-const knowsKanji = () => false;
+/* Which kanji the learner knows: a learned kanji loses its furigana
+   everywhere — words, sentences, patterns, the menu. */
+const knowsKanji = ch => isLearned("k:" + ch);
 
 const wordHtml = (markup, mode = state.settings.furigana) => furiHtml(markup, knowsKanji, mode);
 const learnedWords = () => WORDS.filter(x => isLearned(x.key));

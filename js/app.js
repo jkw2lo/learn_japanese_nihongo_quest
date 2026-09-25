@@ -101,15 +101,17 @@ const lessonNames = ls => ls.slice(0, 2).map(L => L.title).join(" · ") + (ls.le
 
 const todaysWords = () => (state.days[today()]?.learned || []).filter(isWordKey);
 const todaysPatterns = () => (state.days[today()]?.learned || []).filter(isPatternKey);
+const todaysKanji = () => (state.days[today()]?.learned || []).filter(isKanjiKey);
 /* A day of words rather than kana: words were learned today, or it's the
    words stage and no kana were. */
-const wordDay = () => todaysWords().length > 0 || todaysPatterns().length > 0 || (phase() === "words" || phase() === "done") && !todaysGlyphs().length;
+const wordDay = () => todaysWords().length > 0 || todaysPatterns().length > 0 || todaysKanji().length > 0 || (phase() === "words" || phase() === "done") && !todaysGlyphs().length;
 
 function wordTasks() {
   const ks = todaysWords();
   const gs = todaysPatterns();
+  const js = todaysKanji();
   const planned = nextLessons();
-  const learnedAny = ks.length > 0 || gs.length > 0;
+  const learnedAny = ks.length > 0 || gs.length > 0 || js.length > 0;
   const tasks = [{
     kind: "learn", jp: "学ぶ", en: "Learn today's words",
     sub: lessonNames(planned.length ? planned : lessonsLearnedToday()),
@@ -117,13 +119,15 @@ function wordTasks() {
     locked: !learnedAny && !planned.length ? "Nothing new to learn today" : null,
   }];
   const drill = (kind, jp, en, keys) => {
-    const n = keys.filter(k => dayOkList(kind === "gr" ? "r" : kind).includes(k)).length;
+    const sk = kind === "gr" ? "r" : /^k[myw]$/.test(kind) ? kind[1] : kind;
+    const n = keys.filter(k => dayOkList(sk).includes(k)).length;
     tasks.push({ kind, jp, en, keys, sub: keys.length ? `${n} of ${keys.length}` : "",
       done: keys.length > 0 && n === keys.length, locked: !learnedAny ? "Learn today's words first" : null });
   };
   /* a day whose lesson is patterns gets the pattern tasks, before and after it's learned */
   const patDay = gs.length > 0 || planned.some(L => L.kind === "patterns");
-  if (ks.length || !patDay) {
+  const kanjiDay = js.length > 0 || planned.some(L => L.kind === "kanji");
+  if (ks.length || (!patDay && !kanjiDay)) {
     drill("r", "読む", "Read them", ks);
     if (hasAudio()) drill("p", "聞く", "Hear them", ks.filter(k => clipFor(WORD_BY[k].say)));
     drill("c", "打つ", "Type them in kana", ks);
@@ -134,6 +138,11 @@ function wordTasks() {
     const gapped = gs.filter(k => hasGaps(PATTERN_BY[k]));
     if (gapped.length || !gs.length) drill("f", "文型", "Fill the gaps", gapped);
     drill("gr", "文", "Understand them", gs);
+  }
+  if (kanjiDay) {
+    drill("km", "意味", "What they mean", js);
+    drill("ky", "読み", "Read them in words", js);
+    if (state.settings.writing && state.settings.writeKanji) drill("kw", "書く", "Write them", js.filter(k => canWrite(k.slice(2))));
   }
   return tasks;
 }
@@ -327,6 +336,7 @@ function deeperHtml() {
       ${tile("wc", "打つ", "Type words", standing(wk, "c"))}
       ${wk.some(k => isVerb(WORD_BY[k].pos)) ? tile("wj", "活用", "Conjugate", standing(wk.filter(k => isVerb(WORD_BY[k].pos)), "j")) : ""}
       ${Object.keys(state.patterns).length ? tile("g", "文型", "Patterns", standing(Object.keys(state.patterns), "f")) : ""}
+      ${Object.keys(state.kanji).length ? tile("kj", "漢字", "Kanji", standing(Object.keys(state.kanji), "y")) : ""}
     </div></section>`;
   return `<section class="card">
     <div class="card-head"><h2>Go deeper</h2>${toggle}</div>
@@ -456,11 +466,15 @@ function qWord(w) {
    first meeting with a kana — and is practice, not a test. Only single
    glyphs with stroke data: きゃ is two kana you already write. */
 function qWrite(k, mode, trace = false) {
-  if (!state.settings.writing || !canWrite(k)) return null;
-  return { t: "q", kind: "w", k, mode, trace, sound: KANA_BY[k].say };
+  /* k is the item key: a kana glyph, or "k:食" for a kanji; ch is what's drawn */
+  const kanji = isKanjiKey(k);
+  const ch = kanji ? k.slice(2) : k;
+  if (!state.settings.writing || (kanji && !state.settings.writeKanji) || !canWrite(ch)) return null;
+  return { t: "q", kind: "w", k, ch, mode, trace, sound: kanji ? kanjiSay(ch) : KANA_BY[k].say };
 }
 
 function qFor(k, kind, mode) {
+  if (isKanjiKey(k)) return kind === "m" ? qKanjiMean(k, mode) : kind === "y" ? qKanjiRead(k, mode) : kind === "w" ? qWrite(k, mode) : null;
   if (isPatternKey(k)) return kind === "f" ? qPatFill(k, mode) : kind === "r" ? qPatMean(k, mode) : null;
   if (isWordKey(k)) {
     if (kind === "r") return qWordRead(k, mode);
@@ -479,6 +493,7 @@ function qFor(k, kind, mode) {
 
 /* The weaker of reading and hearing, for a review. */
 function reviewKind(k) {
+  if (isKanjiKey(k)) return solidness(k, "y") <= solidness(k, "m") ? "y" : "m";
   if (isPatternKey(k)) return hasGaps(PATTERN_BY[k]) && solidness(k, "f") <= solidness(k, "r") ? "f" : "r";
   if (isWordKey(k)) {
     const ks = hasAudio() ? ["r", "p", "c"] : ["r", "c"];
@@ -494,6 +509,7 @@ function reviewKind(k) {
    ============================================================ */
 
 function lessonCards(L) {
+  if (L.kind === "kanji") return kanjiLessonCards(L);
   if (L.kind === "patterns") return patternLessonCards(L);
   if (L.set === "w") return wordLessonCards(L);
   /* the first lesson of a new kind opens with a card saying what's new */
@@ -539,6 +555,11 @@ function startAhead() {
 }
 
 function startTask(kind) {
+  if (/^k[myw]$/.test(kind)) {
+    const keys = todaysKanji().filter(k => kind !== "kw" || canWrite(k.slice(2)));
+    openSession({ kind: "practice", title: { km: "意味 · Meanings", ky: "読み · Readings", kw: "書く · Write" }[kind], queue: shuffle(keys).map(k => () => qFor(k, kind[1], "practice")) });
+    return;
+  }
   if (wordDay() && (kind === "f" || kind === "gr")) {
     const keys = todaysPatterns().filter(k => kind !== "f" || hasGaps(PATTERN_BY[k]));
     openSession({ kind: "practice", title: kind === "f" ? "文型 · Fill the gaps" : "文 · Understand", queue: shuffle(keys).map(k => () => qFor(k, kind === "gr" ? "r" : "f", "practice")) });
@@ -562,6 +583,12 @@ const TASK_TITLES = { r: "読む · Read", p: "聞く · Hear", a: "似てる ·
 function startDeeper(kind) {
   const keys = Object.keys(state.items);
   let queue;
+  if (kind === "kj") {
+    const ks = shakiest(Object.keys(state.kanji), "y").slice(0, 12);
+    queue = shuffle(ks.flatMap(k => [() => qFor(k, "y", "practice"), () => qFor(k, "m", "practice")]));
+    openSession({ kind: "practice", title: "漢字 · Kanji", queue });
+    return;
+  }
   if (kind === "g") {
     const ps = Object.keys(state.patterns);
     queue = shuffle(ps).slice(0, 12).flatMap(k => [() => qFor(k, hasGaps(PATTERN_BY[k]) ? "f" : "r", "practice"), () => qFor(k, "r", "practice")]);
@@ -692,6 +719,16 @@ function showCard() {
     return;
   }
 
+  if (c.t === "kintro") {
+    learn(c.k); save();
+    if (!S.learned.includes(c.k)) S.learned.push(c.k);
+    body.innerHTML = kanjiIntroHtml(c);
+    foot.innerHTML = `<button class="btn btn-ghost" data-act="replay">${icon("speaker")} Hear it <kbd>R</kbd></button>
+      <button class="btn" data-act="next" id="nextBtn">Next <kbd>␣</kbd></button>`;
+    if (state.settings.autoplay) say(kanjiSay(c.k.slice(2)));
+    return;
+  }
+
   if (c.t === "gintro") {
     learn(c.k); save();
     if (!S.learned.includes(c.k)) S.learned.push(c.k);
@@ -726,16 +763,16 @@ function showCard() {
   };
   const n = c.opts.length;
   body.innerHTML = `<div class="q q-${c.kind}">
-    ${c.gk ? patPrompt(c) : c.wk ? wordPrompt(c) : prompts[c.kind]()}
+    ${c.kk ? kanjiPrompt(c) : c.gk ? patPrompt(c) : c.wk ? wordPrompt(c) : prompts[c.kind]()}
     <div class="opts n${n} ${c.wk ? "words" : ""}">${c.opts.map((o, i) => `
       <button class="opt ${o.jp ? "jp" : ""} ${o.furi ? "furi" : ""}" data-act="opt" data-i="${i}" ${o.jp ? 'lang="ja"' : ""}><kbd>${i + 1}</kbd><span>${o.furi ? wordHtml(o.label) : esc(o.label)}</span></button>`).join("")}
     </div>
     <div class="verdict" id="verdict" aria-live="polite"></div>
   </div>`;
   /* a fill-the-gap sentence can't be played before it's answered — the sound gives the gap away */
-  foot.innerHTML = `${c.sound && c.kind !== "f" ? `<button class="btn btn-ghost" data-act="replay">${icon("speaker")} Again <kbd>R</kbd></button>` : "<span></span>"}
+  foot.innerHTML = `${c.sound && c.kind !== "f" && !c.kk ? `<button class="btn btn-ghost" data-act="replay">${icon("speaker")} Again <kbd>R</kbd></button>` : "<span></span>"}
     <button class="btn" data-act="next" id="nextBtn" disabled>Next <kbd>␣</kbd></button>`;
-  if (c.kind !== "r" && c.kind !== "word" && c.kind !== "f" && c.sound) say(c.sound);
+  if (c.kind !== "r" && c.kind !== "word" && c.kind !== "f" && !c.kk && c.sound) say(c.sound);
   S.t0 = performance.now();
   startTimer(quickMs(c));
 }
@@ -743,14 +780,20 @@ function showCard() {
 /* ---------- writing ---------- */
 
 function showWrite(c) {
-  const e = KANA_BY[c.k];
-  const n = strokesFor(c.k).s.length;
+  const n = strokesFor(c.ch).s.length;
   const ordered = state.settings.strokeOrder;
+  let what;
+  if (isKanjiKey(c.k)) {
+    const K = KANJI_BY[c.ch];
+    what = `${c.trace ? `<b lang="ja">${esc(c.ch)}</b> ` : "the kanji for "}<b>${esc(K.m)}</b>`;
+  } else {
+    const e = KANA_BY[c.k];
+    what = `${c.trace ? `<b lang="ja">${esc(e.k)}</b> ` : ""}<b>${esc(e.r)}</b> in ${SET_NAME[e.set]}`;
+  }
   $("#sBody").innerHTML = `<div class="q q-w">
-    <div class="q-ask">${c.trace ? "Trace it" : "Write it from memory"}:
-      ${c.trace ? `<b lang="ja">${esc(e.k)}</b> ` : ""}<b>${esc(e.r)}</b> in ${SET_NAME[e.set]}
+    <div class="q-ask">${c.trace ? "Trace it" : "Write it from memory"}: ${what}
       <span class="muted small">· ${n} stroke${n > 1 ? "s" : ""}${ordered ? ", in order" : ""}</span></div>
-    ${padHtml(c.k, { trace: c.trace })}
+    ${padHtml(c.ch, { trace: c.trace })}
     <div class="pad-tools">
       <button class="btn btn-ghost btn-sm" data-act="w-undo">Undo <kbd>Z</kbd></button>
       <button class="btn btn-ghost btn-sm" data-act="w-clear">Clear</button>
@@ -763,7 +806,7 @@ function showWrite(c) {
   $("#sTimer").classList.remove("run");
   S.peeked = false;
   bindPad();
-  if (state.settings.autoplay) sayKana(c.k);
+  if (state.settings.autoplay) say(c.sound);
 }
 
 /* The stroke animation, played into the box. Afterwards the model stays
@@ -773,9 +816,9 @@ function showStrokes() {
   if (!c || c.kind !== "w") return;
   if (!c.trace && !S.answered) S.peeked = true;
   const box = $("#padModel");
-  box.innerHTML = modelSvg(c.k, { animate: true });
+  box.innerHTML = modelSvg(c.ch, { animate: true });
   clearTimeout(showStrokes.t);
-  showStrokes.t = setTimeout(() => { if (S?.card === c && box.isConnected) box.innerHTML = modelSvg(c.k, { faint: true }); }, modelAnimMs(c.k) + 500);
+  showStrokes.t = setTimeout(() => { if (S?.card === c && box.isConnected) box.innerHTML = modelSvg(c.ch, { faint: true }); }, modelAnimMs(c.ch) + 500);
 }
 
 function checkWrite() {
@@ -783,7 +826,7 @@ function checkWrite() {
   if (!c || c.kind !== "w" || S.answered) return;
   if (!pad || !pad.strokes.length) { toast("Write it in the box first."); return; }
   pad.locked = true;
-  const res = markWriting(c.k, pad.strokes, state.settings.strokeOrder);
+  const res = markWriting(c.ch, pad.strokes, state.settings.strokeOrder);
   const ok = res.ok;
   /* A trace is practice, and a peek withholds the credit (Hanzi Quest's
      writing drill works the same way): the answer counts for the day, but
@@ -799,15 +842,16 @@ function checkWrite() {
   } else settle(c, ok, null, !S.peeked);
 
   drawInk(res.strokes);
-  const e = KANA_BY[c.k];
+  const label = isKanjiKey(c.k) ? `<span lang="ja">${esc(c.ch)}</span> <span class="rom-always">${esc(KANJI_BY[c.ch].m)}</span>`
+    : `<span lang="ja">${esc(KANA_BY[c.k].k)}</span> <span class="rom-always">${esc(KANA_BY[c.k].r)}</span>`;
   const v = $("#verdict");
   if (ok) {
     v.className = "verdict ok";
-    v.innerHTML = `${icon("check", "v-ico")} <span lang="ja">${esc(e.k)}</span> <span class="rom-always">${esc(e.r)}</span>${S.peeked && !c.trace ? ` <span class="muted small">— after a peek, so it's practice this time</span>` : ""}`;
+    v.innerHTML = `${icon("check", "v-ico")} ${label}${S.peeked && !c.trace ? ` <span class="muted small">— after a peek, so it's practice this time</span>` : ""}`;
   } else {
     v.className = "verdict miss";
     v.innerHTML = `${esc(res.reason)} <span class="muted small">Here's how it goes.</span>`;
-    $("#padModel").innerHTML = modelSvg(c.k, { animate: true });
+    $("#padModel").innerHTML = modelSvg(c.ch, { animate: true });
   }
   afterAnswer(ok);
 }
@@ -851,7 +895,7 @@ function updateProgress() {
   $("#sCount").textContent = total ? `${Math.min(i + 1, total)} / ${total}` : "";
 }
 
-const quickMs = c => (c.gk ? QUICK_PATTERN_MS : c.wk ? QUICK_WORD_MS : QUICK_MS)[c.kind];
+const quickMs = c => (c.kk ? QUICK_KANJI_MS : c.gk ? QUICK_PATTERN_MS : c.wk ? QUICK_WORD_MS : QUICK_MS)[c.kind];
 
 /* A fresh copy of a question, for when a miss comes back at the end. */
 function rebuild(c) {
@@ -919,12 +963,13 @@ function answer(idx) {
     v.className = "verdict miss";
     v.innerHTML = `It was ${verdictDetail(c)}`;
   }
-  if (state.settings.autoplay && c.sound && (c.kind === "r" || c.kind === "word" || c.kind === "f")) say(c.sound);
+  if (state.settings.autoplay && c.sound && (c.kind === "r" || c.kind === "word" || c.kind === "f" || c.kk)) say(c.sound);
   else if (c.kind === "r" && state.settings.autoplay && !c.wk) sayKana(c.k);
   afterAnswer(ok);
 }
 
 function verdictDetail(c) {
+  if (c.kk) return kanjiVerdict(c);
   if (c.gk) return patVerdict(c);
   if (c.wk) return wordVerdict(WORD_BY[c.k]);
   if (c.kind === "word") {
@@ -951,7 +996,8 @@ function replay() {
   if (c.t === "intro") return sayKana(c.k);
   if (c.t === "wintro") return sayWord(WORD_BY[c.k]);
   if (c.t === "gintro") return say(PATTERN_BY[c.k].ex[0].kana);
-  if (c.kind === "f" && !S.answered) return;
+  if ((c.kind === "f" || c.kk) && !S.answered) return;
+  if (c.t === "kintro") return say(kanjiSay(c.k.slice(2)));
   if (c.sound) say(c.sound);
 }
 
@@ -999,9 +1045,9 @@ function finishSession() {
     crumb(`check ${Math.round(r.acc * 100)}% ${r.passed ? "pass" : "fail"}`);
   } else if (S.learned.length) {
     mood = "cheer"; stampText = "よくできました"; petalN = 16;
-    head = S.learned.some(isPatternKey) ? `${S.learned.length} new pattern${S.learned.length > 1 ? "s" : ""}.`
+    head = S.learned.some(isKanjiKey) ? `${S.learned.length} new kanji.` : S.learned.some(isPatternKey) ? `${S.learned.length} new pattern${S.learned.length > 1 ? "s" : ""}.`
       : S.learned.some(isWordKey) ? `${S.learned.length} new word${S.learned.length > 1 ? "s" : ""}.` : `${S.learned.length} new kana.`;
-    const label = k => isPatternKey(k) ? wordHtml(PATTERN_BY[k].pat) : isWordKey(k) ? wordHtml(WORD_BY[k].w) : esc(k);
+    const label = k => isKanjiKey(k) ? esc(k.slice(2)) : isPatternKey(k) ? wordHtml(PATTERN_BY[k].pat) : isWordKey(k) ? wordHtml(WORD_BY[k].w) : esc(k);
     const long = S.learned.some(k => isWordKey(k) || isPatternKey(k));
     extra = `<p class="learned-list ${long ? "words" : ""}" lang="ja">${S.learned.map(label).join(long ? "<br>" : " ")}</p>`;
     if (phase() === "check" && S.kind === "today") {
@@ -1030,7 +1076,9 @@ function finishSession() {
     <div class="muted">${S.firstRight} of ${S.first} right first time${S.quick ? ` · ${S.quick} quick` : ""}</div>
     <h2>${esc(head)}</h2>
     ${extra}
-    ${missed.length ? `<div class="missed"><div class="eyebrow">To look at again</div>${missed.map(k => isPatternKey(k)
+    ${missed.length ? `<div class="missed"><div class="eyebrow">To look at again</div>${missed.map(k => isKanjiKey(k)
+      ? `<button class="chip" lang="ja" data-act="kanji-cell" data-k="${esc(k.slice(2))}">${esc(k.slice(2))} <small>${esc(KANJI_BY[k.slice(2)].m)}</small></button>`
+      : isPatternKey(k)
       ? `<button class="chip" lang="ja" data-act="say" data-say="${esc(PATTERN_BY[k].ex[0].kana)}">${wordHtml(PATTERN_BY[k].pat)} <small>${esc(PATTERN_BY[k].m)}</small></button>`
       : isWordKey(k)
       ? `<button class="chip" lang="ja" data-act="say" data-say="${esc(WORD_BY[k].say)}">${wordHtml(WORD_BY[k].w)} <small>${esc(WORD_BY[k].m)}</small></button>`
@@ -1125,14 +1173,17 @@ function renderKana() {
       </div>
     </section>`;
   };
+  const segs = `<div class="seg">
+        <button class="${set === "h" ? "on" : ""}" data-act="chart-set" data-set="h"><span lang="ja">ひらがな</span></button>
+        <button class="${set === "k" ? "on" : ""}" data-act="chart-set" data-set="k"><span lang="ja">カタカナ</span></button>
+        <button class="${set === "j" ? "on" : ""}" data-act="chart-set" data-set="j"><span lang="ja">漢字</span></button>
+      </div>`;
+  if (set === "j") { el.innerHTML = `<div class="chart-head">${segs}</div>${kanjiChartHtml()}`; return; }
   const learnedN = KANA.filter(e => e.set === set && isLearned(e.k)).length;
   const totalN = KANA.filter(e => e.set === set).length;
   el.innerHTML = `
     <div class="chart-head">
-      <div class="seg">
-        <button class="${set === "h" ? "on" : ""}" data-act="chart-set" data-set="h"><span lang="ja">ひらがな</span></button>
-        <button class="${set === "k" ? "on" : ""}" data-act="chart-set" data-set="k"><span lang="ja">カタカナ</span></button>
-      </div>
+      ${segs}
       <span class="muted">${learnedN} of ${totalN} learned · tap one to hear it${state.settings.showRomaji ? "" : " and see its romaji"}</span>
     </div>
     <details class="card how-chart" ${Object.keys(state.items).length < 10 ? "open" : ""}>
@@ -1222,6 +1273,8 @@ function renderRecord() {
         ${Object.keys(state.words).length ? skillRow('<span lang="ja">言葉</span> read', Object.keys(state.words), "r")
           + (hasAudio() ? skillRow('<span lang="ja">言葉</span> hear', Object.keys(state.words), "p") : "")
           + skillRow('<span lang="ja">言葉</span> type', Object.keys(state.words), "c") : ""}
+        ${Object.keys(state.kanji).length ? skillRow('<span lang="ja">漢字</span> meaning', Object.keys(state.kanji), "m")
+          + skillRow('<span lang="ja">漢字</span> in words', Object.keys(state.kanji), "y") : ""}
         ${Object.keys(state.patterns).length ? skillRow('<span lang="ja">文型</span> fill', Object.keys(state.patterns), "f")
           + skillRow('<span lang="ja">文型</span> understand', Object.keys(state.patterns), "r") : ""}
         ${state.settings.writing ? skillRow('<span lang="ja">ひらがな</span> write', hk.filter(canWrite), "w") + skillRow('<span lang="ja">カタカナ</span> write', kk.filter(canWrite), "w") : ""}
@@ -1278,6 +1331,7 @@ function openSettings() {
     <label class="set-row"><span>New kana a day<small>Five is about one row. Rows are never split, so a day can run one over.</small></span>
       <select data-set="newPerDay">${[5, 8, 10, 15, 20].map(n => `<option ${s.newPerDay === n ? "selected" : ""}>${n}</option>`).join("")}</select></label>
     ${tog("writing", "Writing practice", "Trace each new kana, and write today's from memory. Draw with a mouse, finger or pen.")}
+    ${tog("writeKanji", "Write kanji too", "Trace each new kanji, and write today's from memory. Off by default — reading them is the part that gets you by.")}
     ${tog("strokeOrder", "Check stroke order", "Off: any order is fine — the shape is what's marked (strokes still go the usual way round, which is what tells ソ from ン). On: each stroke has to come in its proper turn too.")}
     <label class="set-row"><span>Furigana<small>The small kana over a kanji that say how to read it. “auto” shows them over kanji you haven't learned — which, until kanji arrive, is all of them.</small></span>
       <select data-set="furigana">${["auto", "always", "never"].map(t => `<option ${s.furigana === t ? "selected" : ""}>${t}</option>`).join("")}</select></label>
@@ -1456,7 +1510,7 @@ const ACTS = {
   "kana-cell": el => openKana(el.dataset.k),
   "chart-set": el => { chartSet = el.dataset.set; renderKana(); },
   opt: el => answer(+el.dataset.i),
-  next: () => { if (S && (S.card?.t === "intro" || S.card?.t === "concept" || S.card?.t === "info" || S.card?.t === "wintro" || S.card?.t === "gintro" || S.answered || S.finished)) next(); },
+  next: () => { if (S && (S.card?.t === "intro" || S.card?.t === "concept" || S.card?.t === "info" || S.card?.t === "wintro" || S.card?.t === "gintro" || S.card?.t === "kintro" || S.answered || S.finished)) next(); },
   "deeper-set": el => { deeperSet = el.dataset.set; renderToday(); },
   "w-check": () => checkWrite(),
   "w-undo": () => padUndo(),

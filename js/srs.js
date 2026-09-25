@@ -13,6 +13,7 @@ const QUICK_MS = { r: 3000, p: 4000, a: 4000, w: 5000 };
 const QUICK_WORD_MS = { r: 5000, p: 5000, c: 12000, j: 15000 };
 /* A pattern question is a whole sentence to read. */
 const QUICK_PATTERN_MS = { f: 8000, r: 9000 };
+const QUICK_KANJI_MS = { m: 4000, y: 6000 };
 /* The consolidation gate between hiragana and katakana: this many separate
    days, each after the last hiragana was learned, on which a full hiragana
    sweep was finished at this first-try accuracy. */
@@ -27,6 +28,7 @@ const DEFAULT_SETTINGS = {
   newPerDay: 5,          /* new kana a day — about one row */
   writing: true,         /* writing drills as reinforcement */
   strokeOrder: false,    /* also check stroke order and direction */
+  writeKanji: false,     /* writing drills for kanji too — opt-in */
   furigana: "auto",      /* over kanji you don't know | always | never */
   theme: "auto",
 };
@@ -59,6 +61,7 @@ const freshState = () => ({
   words: {},          /* "w:食べる" -> the same shape. Kept apart so everything
                          that walks the kana never trips over a word. */
   patterns: {},       /* "g:wa-desu" -> the same shape, for grammar patterns */
+  kanji: {},          /* "k:食" -> the same shape, for kanji */
   days: {},           /* date  -> { n, ok: {r:[],p:[],a:[],x:[]}, learned:[], rev:[], check } */
   settings: { ...DEFAULT_SETTINGS },
   sprint: { best: {}, recent: [] },
@@ -77,6 +80,7 @@ function normalise(s) {
   out.items = s.items && typeof s.items === "object" ? s.items : {};
   out.words = s.words && typeof s.words === "object" ? s.words : {};
   out.patterns = s.patterns && typeof s.patterns === "object" ? s.patterns : {};
+  out.kanji = s.kanji && typeof s.kanji === "object" ? s.kanji : {};
   out.days = s.days && typeof s.days === "object" ? s.days : {};
   Object.values(out.days).forEach(d => {
     d.learned = asList(d.learned);
@@ -122,7 +126,8 @@ const dayOkList = (kind, k = today()) => (state.days[k]?.ok?.[kind]) || [];
 
 const isWordKey = k => typeof k === "string" && k.startsWith("w:");
 const isPatternKey = k => typeof k === "string" && k.startsWith("g:");
-const storeOf = k => isWordKey(k) ? state.words : isPatternKey(k) ? state.patterns : state.items;
+const isKanjiKey = k => typeof k === "string" && k.startsWith("k:");
+const storeOf = k => isWordKey(k) ? state.words : isPatternKey(k) ? state.patterns : isKanjiKey(k) ? state.kanji : state.items;
 const item = k => storeOf(k)[k] || null;
 const isLearned = k => !!storeOf(k)[k];
 const learnedKana = set => KANA.filter(e => (!set || e.set === set) && isLearned(e.k));
@@ -138,7 +143,8 @@ function skill(k, sk) {
    telling look-alikes apart, only applies to kana that have one — callers
    narrow the keys for that. */
 /* Verbs have one more: j, conjugate it. */
-const skillsFor = k => isPatternKey(k) ? ["f", "r"] : isWordKey(k) ? (isVerb(WORD_BY[k]?.pos) ? ["r", "p", "c", "j"] : ["r", "p", "c"])
+/* Kanji: m, what it means; y, reading it in a word; w, writing it (opt-in). */
+const skillsFor = k => isKanjiKey(k) ? ["m", "y", "w"] : isPatternKey(k) ? ["f", "r"] : isWordKey(k) ? (isVerb(WORD_BY[k]?.pos) ? ["r", "p", "c", "j"] : ["r", "p", "c"])
   : KANA_BY[k]?.concept ? ["x"] : ["r", "p", "a", "w"];
 
 function learn(k) {
@@ -168,7 +174,7 @@ function grade(k, sk, ok, ms, mode = "practice") {
   s.n++;
   if (ok) {
     s.ok++;
-    if (ms != null && ms <= ((isPatternKey(k) ? QUICK_PATTERN_MS : isWordKey(k) ? QUICK_WORD_MS : QUICK_MS)[sk] || 4000)) s.fast++;
+    if (ms != null && ms <= ((isKanjiKey(k) ? QUICK_KANJI_MS : isPatternKey(k) ? QUICK_PATTERN_MS : isWordKey(k) ? QUICK_WORD_MS : QUICK_MS)[sk] || 4000)) s.fast++;
   } else {
     s.miss++;
     state.mistakes[k] = (state.mistakes[k] || 0) + 1;
@@ -228,7 +234,8 @@ function dueKeys() {
   const kana = Object.keys(state.items).filter(k => state.items[k].due <= t && !retired(k));
   const words = Object.keys(state.words).filter(k => state.words[k].due <= t);
   const patterns = Object.keys(state.patterns).filter(k => state.patterns[k].due <= t);
-  return [...kana, ...words, ...patterns].sort((a, b) => item(a).due.localeCompare(item(b).due));
+  const kanji = Object.keys(state.kanji).filter(k => state.kanji[k].due <= t);
+  return [...kana, ...words, ...patterns, ...kanji].sort((a, b) => item(a).due.localeCompare(item(b).due));
 }
 
 /* ---------- lessons and the gates ---------- */

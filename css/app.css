@@ -659,6 +659,10 @@ ul.lib .lib-row { border-top: 0; flex: 1; min-width: 0; }
 }
 .gap.filled { border-bottom-style: solid; color: var(--c-hira); font-weight: 600; }
 .pat-list { display: flex; flex-direction: column; gap: 6px; }
+.pat-section > summary { cursor: pointer; list-style: none; margin-bottom: 0; }
+.pat-section > summary::-webkit-details-marker { display: none; }
+.pat-section > summary h2::after { content: " ▾"; color: var(--ink-3); font-size: .8em; }
+.pat-section[open] > summary { margin-bottom: .6rem; }
 .pat-item { border: 1px solid var(--rule-2); border-radius: 12px; padding: 8px 12px; background: var(--paper); }
 .pat-item summary { cursor: pointer; display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; list-style: none; }
 .pat-item summary::-webkit-details-marker { display: none; }
@@ -666,6 +670,22 @@ ul.lib .lib-row { border-top: 0; flex: 1; min-width: 0; }
 .pat-m { color: var(--ink-3); font-size: .88rem; text-align: right; }
 .pat-item[open] { background: var(--sheet); }
 .pat-item .ex-sent { width: 100%; align-items: flex-start; }
+
+/* ---------- kanji ---------- */
+
+.kanji { font-family: var(--f-ja-serif); }
+.kgrid.c6 { grid-template-columns: repeat(auto-fill, minmax(4.4rem, 1fr)); }
+.kgrid.c6 .kg { font-size: 1.9rem; }
+.kgrid.c6 .kr { font-size: .64rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 3px; }
+.kanji-top { display: flex; align-items: center; justify-content: center; gap: 1.4rem; }
+.kanji-top .glyph-xl { margin: 0; }
+.k-strokes { display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--ink-3); }
+.k-strokes #kdStrokes { width: 5.5rem; height: 5.5rem; position: relative; background: var(--sheet); border: 1px solid var(--rule-2); border-radius: 12px; }
+.k-strokes #kdStrokes svg { width: 100%; height: 100%; }
+.k-strokes small { font-size: .74rem; }
+.k-read { display: inline-flex; flex-direction: column; gap: 2px; margin: 0 auto .9rem; font-size: 1.05rem; text-align: left; }
+.k-rl { display: inline-block; width: 2.4rem; font: 500 .72rem var(--f-body); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
+.k-target { color: var(--c-hira); border-bottom: 3px solid var(--c-hira); }
 
 /* ---------- Read a Menu ---------- */
 
@@ -1117,4 +1137,10 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
   .pat-sent { font-size: 1.6rem; }
   .pat-item { padding: 12px 14px; }
   .pat-item summary { min-height: 40px; align-items: center; }
+
+  /* ---------- kanji ---------- */
+  .kgrid.c6 { grid-template-columns: repeat(4, 1fr); }
+  .kgrid.c6 .kg { font-size: 2rem; }
+  .kgrid.c6 .kr { font-size: .72rem; }
+  .k-read { font-size: 1.1rem; }
 }

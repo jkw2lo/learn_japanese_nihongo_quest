@@ -91,12 +91,14 @@ function patVerdict(c) {
 function patternsSectionHtml() {
   const ps = learnedPatterns();
   if (!ps.length) return "";
-  return `<section class="card"><div class="card-head"><h2><span lang="ja">文型</span> Patterns you know</h2>
-    <span class="count">${ps.length} · tap a sentence to hear it</span></div>
+  /* folded by default: it's a reference, and the words are what the tab is for */
+  return `<details class="card pat-section">
+    <summary class="card-head"><h2><span lang="ja">文型</span> Patterns you know</h2>
+    <span class="count">${ps.length} · open to see them</span></summary>
     <div class="pat-list">${ps.map(p => `<details class="pat-item">
       <summary><span class="pat-name" lang="ja">${wordHtml(p.pat)}</span><span class="pat-m">${esc(p.m)}</span></summary>
       <p class="small">${wordHtml(p.note)}</p>
       ${p.ex.map(e => `<button class="ex-sent" data-act="say" data-say="${esc(e.kana)}"><span lang="ja">${e.gap ? gapHtml(e, e.gap) : wordHtml(e.jp)}</span><small>${esc(e.en)}</small></button>`).join("")}
     </details>`).join("")}</div>
-  </section>`;
+  </details>`;
 }

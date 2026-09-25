@@ -37,10 +37,14 @@ Build order. Each step should run end to end before the next one starts.
    rolodex, the main button pinned bottom-left, answers at the foot, larger
    type and targets. Desktop checked identical before and after.
 
+8b. ~~Patterns~~ (0.7.0) and ~~kanji~~ (0.8.0): 19 patterns with fill-the-gap
+   and understand drills; 79 N5/N4 kanji taught through known words, read
+   in a word, furigana dropping away as they're learned; the 漢字 chart;
+   KANJIDIC2 readings, AnimCJK strokes.
+
 ## Next
 
-8. **Patterns, then kanji** (kanji stroke data from AnimCJK's graphicsJa;
-   `knowsKanji` in words-ui.js starts returning true), then the rest of N5:
+8. **The rest of N5**:
    stages 7 買う shopping (adjectives), 8 毎日 daily life, 9 て-form, and
    10 the wrap-up. The て-form and plain forms are already generated.
 9. Sync, N4.
