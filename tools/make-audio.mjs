@@ -6,16 +6,20 @@
    stitched together sounds robotic.
 
    Needs macOS `say` and `afconvert`.
-     node tools/make-audio.mjs            voice Kyoko
-     node tools/make-audio.mjs Kyoko      or name another ja_JP voice */
+     node tools/make-audio.mjs            record what's missing, voice Kyoko
+     node tools/make-audio.mjs --all      record everything again
+     node tools/make-audio.mjs Kyoko      or name another ja_JP voice (implies --all) */
 
 import { execFileSync } from 'child_process';
-import { readFileSync, writeFileSync, mkdtempSync, rmSync, statSync } from 'fs';
+import { readFileSync, writeFileSync, mkdtempSync, rmSync, statSync, existsSync } from 'fs';
+import vm from 'vm';
 import { fileURLToPath } from 'url';
 import { join } from 'path';
 import { tmpdir } from 'os';
 
-const VOICE = process.argv[2] || 'Kyoko';
+const ARGS = process.argv.slice(2);
+const VOICE = ARGS.find(a => !a.startsWith('--')) || 'Kyoko';
+const ALL = ARGS.includes('--all') || ARGS.some(a => !a.startsWith('--'));
 const BITRATE = '32000';
 /* A single kana is short — を is about 0.11s — so the floor for "the voice
    is mute" is lower than Hanzi Quest's. */
@@ -28,9 +32,13 @@ const { KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT } = new Function(
 
 /* The text actually handed to `say` for a clip key, for any key the voice
    misreads on its own. A lone は or へ could be taken as the particles "wa"
-   and "e" — listen to those two (and を) after a regenerate, and if one is
-   wrong, add a spelling here that forces the sound, e.g. "は": "ハ". */
+   and "e". Checked by ear with Kyoko (2026-09-25): は says ha, へ says he,
+   を says o — all fine, so nothing is needed yet. If a voice change breaks
+   one, add a spelling that forces the sound, e.g. "は": "ハ". */
 const SPEAK_AS = {};
+
+/* Spoken by the introduction in js/guide.js (which needs the page to load). */
+const GUIDE_SAY = ["わたしはコーヒーをのみます"];
 
 export function speakable() {
   const out = new Set();
@@ -38,6 +46,7 @@ export function speakable() {
   KANA_WORDS.forEach(w => out.add(w.w));
   KANA_PAIRS_WORDS.forEach(p => out.add(p.w));
   Object.values(KANA_CONCEPT).forEach(c => c.ex.forEach(x => out.add(x)));
+  GUIDE_SAY.forEach(x => out.add(x));
   return [...out];
 }
 
@@ -46,8 +55,20 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const clips = {}, silent = [];
   let bytes = 0;
   const WANTED = speakable();
-  console.log(`speaking ${WANTED.length} clips as ${VOICE}`);
-  WANTED.forEach((t, i) => {
+  /* Keep what's already recorded (and still wanted) unless asked for --all:
+     adding one word shouldn't mean three minutes of re-recording. */
+  const file = join(root, 'js/audio-kana.js');
+  let kept = 0;
+  if (!ALL && existsSync(file)) {
+    const ctx = { window: {} };
+    vm.createContext(ctx);
+    vm.runInContext(readFileSync(file, 'utf8'), ctx);
+    const old = ctx.window.NQ_AUDIO || {};
+    WANTED.forEach(t => { if (old[t]) { clips[t] = old[t]; kept++; } });
+  }
+  const todo = WANTED.filter(t => !clips[t]);
+  console.log(`${kept} clips kept, speaking ${todo.length} as ${VOICE}`);
+  todo.forEach((t, i) => {
     const aiff = join(work, 'c.aiff'), m4a = join(work, 'c.m4a');
     execFileSync('say', ['-v', VOICE, '-o', aiff, SPEAK_AS[t] || t]);
     const info = execFileSync('afinfo', [aiff]).toString();
@@ -56,7 +77,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     execFileSync('afconvert', ['-f', 'm4af', '-d', 'aac', '-b', BITRATE, aiff, m4a]);
     clips[t] = readFileSync(m4a).toString('base64');
     bytes += statSync(m4a).size;
-    if ((i + 1) % 50 === 0) console.log(`  ${i + 1}/${WANTED.length}`);
+    if ((i + 1) % 50 === 0) console.log(`  ${i + 1}/${todo.length}`);
   });
   rmSync(work, { recursive: true, force: true });
 
@@ -67,5 +88,5 @@ window.NQ_AUDIO = ${JSON.stringify(clips)};
   writeFileSync(join(root, 'js/audio-kana.js'), out);
   console.log(`bundled ${Object.keys(clips).length} clips`);
   if (silent.length) console.log(`no audio for: ${silent.join(' ')}`);
-  console.log(`audio ${(bytes / 1024).toFixed(0)} KB → js/audio-kana.js ${(out.length / 1024).toFixed(0)} KB`);
+  console.log(`js/audio-kana.js ${(out.length / 1024).toFixed(0)} KB`);
 }

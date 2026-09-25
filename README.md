@@ -6,13 +6,20 @@ holding a simple conversation. It starts from nothing and runs to JLPT N5,
 then on towards N4. Writing is there if you want it and never in the way if
 you don't.
 
-> **Status: the kana stage is built (0.2.0).** Hiragana, the hiragana check,
-> katakana, look-alikes, the pauses and long vowels, real words to read,
-> Sprint, Record and Settings all work. Words, kanji and grammar (stage 2
+> **Status: the kana stage is built (0.3.0).** An introduction to the three
+> scripts, hiragana five a day, the hiragana check, katakana, look-alikes, the
+> pauses and long vowels, real words to read, writing practice, Sprint,
+> Record and Settings all work. Words, kanji and grammar (stage 2
 > onward) are still spec only — this README describes them so they can be
 > built against it. Much of the reasoning is lifted from Hanzi Quest, where
 > most of it was learned the hard way; where a decision came from there, it
 > says so, so the original write-up can be looked up.
+
+**Live at:** https://jkw2lo.github.io/learn_japanese_nihongo_quest/
+**Repo:** https://github.com/jkw2lo/learn_japanese_nihongo_quest (`main`, over
+SSH). GitHub Pages serves `main` directly: there's no build step and no CI,
+so pushing is deploying. Bump the version on every push (see **Shipping a
+change**), then check **Settings → Version** on the live site.
 
 ---
 
@@ -117,8 +124,18 @@ to one card saying what opens them, rather than hundreds of grey squares.
 Kana is a set list you get through. It isn't a library you live in, so it
 gets its own flow and doesn't go into the review queue:
 
-- **Rows, not single glyphs.** A lesson is a row of five (か き く け こ),
-  learned together, because the row is what makes the pattern visible.
+- **Five a day, a row at a time.** A lesson is one row (か き く け こ),
+  learned together, because the row is what makes the pattern visible. No
+  lesson is bigger than five: the voiced sounds are a row each, and the
+  combined sounds are three-kana rows (きゃ きゅ きょ). A day's allowance is
+  counted in kana (Settings → New kana a day, 5 by default, up to 20).
+  Rows are never split, with one kana of slack so two three-kana rows can
+  share a day. At five a day, hiragana takes 21 days and katakana about the
+  same again.
+- **Meet it, hear it, trace it.** Each new kana gets a card (the glyph, its
+  sound, a picture story), then a tracing step with the shape faint in the
+  box, and then reading and listening questions. Writing it from memory is
+  one of the day's practice tasks. See **Writing**.
 - **Mnemonics are optional.** Each glyph has a short picture story (`story`,
   as in Hanzi Quest), shown on the first meeting and on a miss, and hidden
   otherwise.
@@ -143,6 +160,33 @@ gets its own flow and doesn't go into the review queue:
   kana. A word shows up in *Words you can read* the moment every kana in it
   is learned — いえ (house) after the first row. Katakana words are mostly
   loanwords, so reading one is guessing the English, which is the fun part.
+
+### The introduction
+
+A brand-new learner doesn't know Japanese has three scripts, never mind why
+a chart of kana looks the way it does. So before the very first lesson,
+seven short cards (`js/guide.js`) explain:
+
+1. **Three scripts, one sentence.** 私はコーヒーを飲みます, coloured by script:
+   hiragana indigo, katakana plum, kanji ink.
+2. **Hiragana**: the core sounds, used for grammar and words without kanji.
+3. **Katakana**: the same sounds, for borrowed words, names and emphasis.
+4. **Kanji**: characters with meanings, met later through words, with
+   furigana until then.
+5. **How the chart is laid out**: a consonant plus a vowel; vowels across,
+   consonants down; a row shares a consonant, a column shares a vowel.
+6. **Why that order**: it's Japanese alphabetical order (五十音, "the fifty
+   sounds"), usually traced to Sanskrit phonetics. Vowels first, then
+   consonants from the back of the mouth to the lips (h was once p); the
+   gaps are sounds modern Japanese lacks.
+7. **How this goes**: five a day, the check, then katakana, and romaji only
+   while learning.
+
+It can be read again from **Settings → Japanese writing**, and the Kana tab
+opens with a short **How this chart works** card, open by default until ten
+kana are learned. The first lesson of each new kind opens with its own card
+(`KIND_INTRO`): the voiced marks ゛ and ゜, small ゃ ゅ ょ, katakana itself,
+and the loanword sounds.
 
 ### The hiragana check
 
@@ -368,13 +412,15 @@ seconds each. That's several times the Hanzi Quest bundle, so it's **split
 per tier** (`audio-kana.js`, `audio-n5.js`, `audio-n4.js`), each fetched only
 when that tier opens.
 
-Built so far: `js/audio-kana.js`, 304 clips (every kana sound, every kana
-word and pair), 2.4 MB, fetched after the first screen draws. Katakana plays
+Built so far: `js/audio-kana.js`, 305 clips (every kana sound, every kana
+word and pair, and the introduction's example sentence), 2.4 MB, fetched
+after the first screen draws. `make-audio.mjs` only records what's missing,
+so adding a word takes seconds; `--all` re-records everything. Katakana plays
 its hiragana twin's clip, and じ/ぢ and ず/づ share one, since they sound the
 same. A lone kana is sometimes read as something else: は and へ on their
-own could come out as the particles "wa" and "e". **Listen to は, へ and を
-after a regenerate.** If one is wrong, `SPEAK_AS` in the script forces a
-spelling for that clip.
+own could come out as the particles "wa" and "e". Checked by ear with Kyoko:
+は says ha, へ says he, を says o. If a new voice gets one wrong,
+`SPEAK_AS` in the script forces a spelling for that clip.
 
 A smoke check walks every string the app can speak and fails if one has no
 clip, the same check that caught 225 silent characters in Hanzi Quest.
@@ -383,28 +429,80 @@ clip, the same check that caught 225 silent characters in Hanzi Quest.
 
 ## Writing
 
-Hanzi Quest's handwriting design carries over: sticky writing drills (three
-landed in a short window beats one a month), the trackpad mode, "show me the
-strokes", and the notebook page. So does the rule that no sprint gives
-handwriting credit.
+Writing is here as **reinforcement**. Drawing a shape with your own hand
+makes it stick, whether or not the strokes come in textbook order. It's on
+by default (Settings → Writing practice) and appears in three places:
 
-**Stroke data** needs a new source. Make Me a Hanzi is Chinese forms only.
+- **Tracing**, straight after each new kana is introduced, with the model
+  faint in the box. It's practice: it counts for the day, but not towards
+  "solid".
+- **書く Write them from memory**, one of Today's practice tasks. You get the
+  sound and the romaji, and write the kana. It ticks when every one of
+  today's kana has been written right.
+- **Go deeper → 書く Write**, the ten shakiest, from everything learned.
 
-- **AnimCJK** has Japanese kanji and kana in a format like Make Me a Hanzi's,
-  which hanzi-writer can load as custom data. *To verify: coverage of the N5
-  and N4 kanji, the kana, and the licence terms.*
-- **KanjiVG** (CC BY-SA 3.0) is the standard source for Japanese stroke
-  order, but it's SVG paths without the median lines hanzi-writer needs to
-  grade a stroke. It's the fallback, or a source to check the other against.
+Only single glyphs are written. きゃ is two kana you already write, and the
+loanword pairs likewise. No sprint gives writing credit (from Hanzi Quest),
+because nothing in a sprint asks you to draw.
 
-`tools/check-strokes.mjs` is carried over in spirit: every bundled glyph is
-checked against its source.
+**Show me** (`S`) animates the strokes in order in the box, then leaves the
+model there faintly. Writing it after a peek counts as practice, not credit,
+as in Hanzi Quest. A miss shows why and animates the model.
+
+### How it's marked
+
+`js/write.js` compares your strokes with the model's **median lines**, the
+centre line of each stroke. Before comparing, it lines your drawing up with
+the model by its box, because everyone writes off-centre and a little big
+or small. Each stroke is resampled to 24 points, and two strokes match when:
+
+- the mean distance between their points is small,
+- neither **end** is far off (わ curls back where れ kicks out), and
+- no **stretch** of four points is far off (the small loop that makes る
+  not ろ).
+
+Two modes, chosen in **Settings → Check stroke order** (off by default):
+
+- **Off:** strokes may come in **any order**. Each model stroke is paired
+  with its closest stroke of yours. Strokes still have to go the usual way
+  round, top to bottom and left to right, because direction is the whole
+  difference between ソ and ン, and between シ and ツ.
+- **On:** stroke *i* has to be the model's stroke *i*, the right way round.
+
+In both modes the **stroke count must be exact**. Allowing one more or
+fewer let は pass for ほ and ば for ぼ.
+
+The smoke test runs this against the real data. Every kana's own strokes
+pass in both modes. Deliberately sloppy but right versions (shifted, scaled,
+wobbly) pass about 97% of the time with order off and 99.7% with it on. And
+18 look-alike pairs (ソ/ン, シ/ツ, れ/わ, は/ほ, る/ろ, ぬ/め, ば/ぱ …) must
+fail against each other. What still passes for each other is either
+identical in shape (へ/ヘ, べ/ベ), different only in size (っ/つ), or a
+hiragana–katakana near miss (ナ/ヤ, コ/ユ).
+
+### Stroke data
+
+From **AnimCJK** (`graphicsJaKana.txt`), under the **Arphic Public License**
+(the same licence as Hanzi Quest's Make Me a Hanzi data). The licence text
+is in `licenses/animCJK/`, as it requires. `tools/fetch-strokes.mjs` builds
+`js/strokes.js` (145 kana, 156 KB, loaded after the first screen).
+
+AnimCJK cuts a stroke that loops over itself into overlapping pieces, for
+its animations: あ came out as 4 strokes, ぬ as 4, の as 2. A piece ends
+exactly where the stroke before it ends, so the fetch script merges pieces
+back into one stroke. All 92 base kana now match the standard stroke counts,
+which the smoke test pins.
+
+Kanji stroke data is also in AnimCJK (`graphicsJa.txt`, 21 MB for all of
+it). When kanji arrive, the fetch script should take only the ones taught.
 
 ---
 
 ## Placement
 
-As in Hanzi Quest (*Placement*): go through the list **in order** and stop
+**Deferred.** For now the app assumes a brand-new learner who knows no
+Japanese at all. That's why it opens with the introduction. When placement
+comes, it works as in Hanzi Quest (*Placement*): go through the list **in order** and stop
 after `PLACE_MISS_LIMIT` misses. Nothing is sampled or inferred, and an item
 is credited only if it was answered correctly. The quiz goes kana first, then
 the N5 words stage by stage, so someone who already reads kana skips two
@@ -527,7 +625,7 @@ this mean" question must not contain the English gloss).
 |---|---|---|---|
 | word meanings, readings, parts of speech | JMdict (EDRDG) | CC BY-SA 4.0 | for checking and filling gaps; hand-edited glosses are shorter |
 | kanji readings and meanings | KANJIDIC2 (EDRDG) | CC BY-SA 4.0 | |
-| stroke order | AnimCJK, or KanjiVG | to verify / CC BY-SA 3.0 | see **Writing** |
+| stroke order | AnimCJK `graphicsJaKana.txt` | Arphic Public License | licence text in `licenses/animCJK/`; see **Writing → Stroke data** |
 | example sentences | Tatoeba | CC BY 2.0 FR | a starting point; most will be written for the app so they only use known words |
 | JLPT levels | community lists (e.g. Jonathan Waller's) | CC BY | there has been **no official JLPT list since 2010**; levels are a guide, not a spec |
 | romaji → kana | wanakana | MIT | |
@@ -539,17 +637,21 @@ you like.
 
 ---
 
-## Files (planned)
+## Files
 
     index.html              page shell; the only place the version lives
+    licenses/animCJK/       the stroke data's licence
     css/app.css             the design system (lifted from Hanzi Quest, retuned)
     js/diag.js              the recorder; loads first
     js/data/kana.js         lessons, kana, stories, look-alikes, kana words, pairs, romaji
     js/srs.js               scheduling, skills, days, the hiragana check, storage — no DOM
     js/sound.js             clips, the audio unlock, the fallback voice
+    js/write.js             the writing pad, the stroke animation, the marking — no DOM in the marking
     js/app.js               Today, the kana chart, Record, sessions, settings, backup
+    js/guide.js             the introduction and the new-kind cards
     js/sprint.js            the Sprint tab
     js/audio-kana.js        generated clips — do not hand-edit
+    js/strokes.js           generated stroke data — do not hand-edit
 
     not built yet (stubs, not loaded):
     js/data/words.js        vocabulary, by stage
@@ -559,13 +661,11 @@ you like.
     js/furi.js              furigana markup: parse, render, derive kana
     js/conj.js              verb and adjective conjugation (generated, never stored)
     js/sync.js              optional sync
-    js/strokes.js           generated stroke data
     tools/server.mjs        dev server, http://localhost:8732
     tools/version.mjs       bump the version and re-stamp every asset
-    tools/smoke.mjs         contract, data audits, scheduling, the check, audio, versions
-    tools/make-audio.mjs    records the clips (macOS)
-    tools/fetch-strokes.mjs builds js/strokes.js
-    tools/check-strokes.mjs checks the bundle against its source
+    tools/smoke.mjs         contract, data, scheduling, allowance, the check, writing, audio, versions
+    tools/make-audio.mjs    records the clips that are missing (macOS)
+    tools/fetch-strokes.mjs builds js/strokes.js, merging AnimCJK's stroke pieces
 
 Port 8732, so it can run next to Hanzi Quest on 8731.
 
@@ -593,13 +693,17 @@ Run the checks first, not last, and bump the version every time.
 - **Romaji:** hidden by default, with a switch in Settings. See **Romaji** under Kana.
 - **Katakana order:** after hiragana, and only once hiragana has passed the
   check on two separate days. See **The hiragana check**.
+- **Pace:** five new kana a day, more in Settings. Lessons were split so
+  none is bigger than five.
+- **Writing:** a reinforcement, marked on shape; stroke order is an opt-in
+  setting. See **Writing**.
+- **Placement:** skipped for now. The learner is assumed brand new, so the
+  app opens with an introduction to the three scripts and the chart.
+- **Hosting:** GitHub Pages, like Hanzi Quest.
 
 ## Open questions
 
 - **Speaking.** Is `s` (say it, reveal, mark yourself) enough, or is it worth
   trying the browser's speech recognition where it's available?
-- **Sync and hosting.** GitHub Pages like Hanzi Quest (the repo name is to be
-  decided), with the Artifact `db` sync as an option?
-- **Lesson size.** The combined-sound lessons are 9–12 kana each, and a day
-  with two of them plus reviews runs past 100 cards. Split them, or leave it
-  to the lessons-per-day setting?
+- **Sync.** The Artifact `db` sync, as Hanzi Quest has, so progress follows
+  you between devices?

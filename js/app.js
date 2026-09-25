@@ -115,6 +115,7 @@ function todayTasks() {
   };
   drill("r", "読む", "Read them", plain, "No new sounds today");
   if (hasAudio()) drill("p", "聞く", "Hear them", plain, "No new sounds today");
+  if (state.settings.writing) drill("w", "書く", "Write them from memory", plain.filter(canWrite), "Nothing today has a shape to write");
   drill("a", "似てる", "Tell the look-alikes apart", plain.filter(k => alikeOf(k).length), "None of today's kana has a look-alike you know yet");
   if (concepts.length) drill("x", "っ", "Hear the pause", concepts, "");
   return tasks;
@@ -134,8 +135,8 @@ function renderToday() {
       <h1>Start with five sounds.</h1>
       <p class="lede">Japanese is written with two alphabets of sounds — hiragana and katakana — plus kanji. Everything
       starts with hiragana, one row at a time. The first row is <b lang="ja">あ い う え お</b>: a, i, u, e, o${planned.length > 1 ? `, and today's second is the <span lang="ja">${esc(planned[1].title)}</span>` : ""}.</p>
-      <p class="muted">About ten minutes a day. Hiragana takes a week or two; then a few days of practice to make it stick;
-      then katakana.</p>
+      <p class="muted">About ten minutes a day, five new kana at a time. Hiragana takes about three weeks; then a check on
+      two separate days to make sure it stuck; then katakana. First, a two-minute tour of how Japanese is written.</p>
       <button class="btn btn-lg" data-act="start-today">Start learning <kbd>↵</kbd></button>
     </section>`;
   } else if (p === "check") {
@@ -261,6 +262,7 @@ function deeperHtml() {
     <div class="tiles">
       ${tile("r", "読む", "Read", standing(keys, "r"))}
       ${hasAudio() ? tile("p", "聞く", "Hear", standing(keys, "p")) : ""}
+      ${state.settings.writing ? tile("w", "書く", "Write", standing(keys.filter(canWrite), "w"), "Loading…") : ""}
       ${tile("a", "似てる", "Look-alikes", standing(alikeKeys, "a"), "None yet")}
       <button class="tile" data-act="deeper" data-kind="word" ${words.length >= 4 ? "" : "disabled"}>
         <div class="tile-top"><span class="tile-big" lang="ja">言葉</span><div><span class="tile-en">Real words</span></div></div>
@@ -374,7 +376,16 @@ function qWord(w) {
   return { t: "q", kind: "word", k: null, mode: "none", opts: opts.map(x => ({ label: x.m, val: x.w })), answer: w.w, word: w, sound: w.w };
 }
 
+/* A writing question. `trace` puts the model faintly in the box — the
+   first meeting with a kana — and is practice, not a test. Only single
+   glyphs with stroke data: きゃ is two kana you already write. */
+function qWrite(k, mode, trace = false) {
+  if (!state.settings.writing || !canWrite(k)) return null;
+  return { t: "q", kind: "w", k, mode, trace, sound: KANA_BY[k].say };
+}
+
 function qFor(k, kind, mode) {
+  if (kind === "w") return qWrite(k, mode);
   if (kind === "r") return qRead(k, mode);
   if (kind === "p") return hasAudio() ? qHear(k, mode) : null;
   if (kind === "a") return qAlike(k, mode);
@@ -394,7 +405,13 @@ function reviewKind(k) {
    ============================================================ */
 
 function lessonCards(L) {
-  const cards = L.items.map((k, i) => ({ t: KANA_BY[k].concept ? "concept" : "intro", k, L, n: i + 1 }));
+  /* the first lesson of a new kind opens with a card saying what's new */
+  const cards = KIND_INTRO[L.id] ? [infoCard(KIND_INTRO[L.id])] : [];
+  /* meet it, hear it, trace it — then the drill */
+  L.items.forEach((k, i) => {
+    cards.push({ t: KANA_BY[k].concept ? "concept" : "intro", k, L, n: i + 1 });
+    if (!KANA_BY[k].concept) cards.push(() => qWrite(k, "learn", true));
+  });
   const drill = [];
   L.items.forEach(k => {
     if (KANA_BY[k].concept) {
@@ -415,6 +432,8 @@ function startToday() {
   const queue = [];
   shuffle(due).forEach(k => queue.push(() => qFor(k, reviewKind(k), "review")));
   lessons.forEach(L => queue.push(...lessonCards(L)));
+  /* someone brand new sees what they're about to learn, and why it looks the way it does */
+  if (!state.seenGuide && !Object.keys(state.items).length) queue.unshift(...guideCards());
   if (!queue.length) { toast("Nothing due — try Go deeper, or a sprint."); return; }
   openSession({
     kind: "today", title: lessons.length ? lessons.map(L => L.title).join(" · ") : "Review",
@@ -430,13 +449,13 @@ function startAhead() {
 
 function startTask(kind) {
   const ks = todaysGlyphs().filter(k => kind === "x" ? KANA_BY[k].concept : !KANA_BY[k].concept);
-  const keys = kind === "a" ? ks.filter(k => alikeOf(k).length) : ks;
+  const keys = kind === "a" ? ks.filter(k => alikeOf(k).length) : kind === "w" ? ks.filter(canWrite) : ks;
   const queue = shuffle(keys).map(k => () => qFor(k, kind, "practice"));
   if (kind === "x") keys.forEach(k => { queue.push(() => qPair(k, "practice"), () => qPair(k, "practice")); });
   openSession({ kind: "practice", title: TASK_TITLES[kind], queue });
 }
 
-const TASK_TITLES = { r: "読む · Read", p: "聞く · Hear", a: "似てる · Look-alikes", x: "っ · The pause", word: "言葉 · Real words" };
+const TASK_TITLES = { r: "読む · Read", p: "聞く · Hear", a: "似てる · Look-alikes", x: "っ · The pause", w: "書く · Write", word: "言葉 · Real words" };
 
 function startDeeper(kind) {
   const keys = Object.keys(state.items);
@@ -446,8 +465,8 @@ function startDeeper(kind) {
   } else if (kind === "a") {
     queue = shakiest(keys.filter(k => alikeOf(k).length), "a").slice(0, 20).map(k => () => qAlike(k, "practice"));
   } else {
-    const plain = keys.filter(k => !KANA_BY[k].concept);
-    queue = shuffle(shakiest(plain, kind).slice(0, 20)).map(k => () => qFor(k, kind, "practice"));
+    const plain = keys.filter(k => !KANA_BY[k].concept && (kind !== "w" || canWrite(k)));
+    queue = shuffle(shakiest(plain, kind).slice(0, kind === "w" ? 10 : 20)).map(k => () => qFor(k, kind, "practice"));
   }
   openSession({ kind: "practice", title: TASK_TITLES[kind], queue });
 }
@@ -553,6 +572,15 @@ function showCard() {
     return;
   }
 
+  if (c.t === "info") {
+    body.innerHTML = infoHtml(c);
+    foot.innerHTML = `<span></span><button class="btn" data-act="next" id="nextBtn">${c.last && S.kind === "today" ? "Start the first lesson" : "Next"} <kbd>␣</kbd></button>`;
+    if (c.last) { state.seenGuide = true; save(); }
+    return;
+  }
+
+  if (c.kind === "w") return showWrite(c);
+
   /* a question */
   const prompts = {
     r: () => `<div class="q-ask">How is this read?</div><div class="glyph-l" lang="ja">${esc(c.k)}</div>`,
@@ -575,6 +603,90 @@ function showCard() {
   if (c.kind !== "r" && c.kind !== "word" && c.sound) say(c.sound);
   S.t0 = performance.now();
   startTimer(c.kind);
+}
+
+/* ---------- writing ---------- */
+
+function showWrite(c) {
+  const e = KANA_BY[c.k];
+  const n = strokesFor(c.k).s.length;
+  const ordered = state.settings.strokeOrder;
+  $("#sBody").innerHTML = `<div class="q q-w">
+    <div class="q-ask">${c.trace ? "Trace it" : "Write it from memory"}:
+      ${c.trace ? `<b lang="ja">${esc(e.k)}</b> ` : ""}<b>${esc(e.r)}</b> in ${SET_NAME[e.set]}
+      <span class="muted small">· ${n} stroke${n > 1 ? "s" : ""}${ordered ? ", in order" : ""}</span></div>
+    ${padHtml(c.k, { trace: c.trace })}
+    <div class="pad-tools">
+      <button class="btn btn-ghost btn-sm" data-act="w-undo">Undo <kbd>Z</kbd></button>
+      <button class="btn btn-ghost btn-sm" data-act="w-clear">Clear</button>
+      <button class="btn btn-ghost btn-sm" data-act="w-show">Show me <kbd>S</kbd></button>
+      <button class="btn btn-ghost btn-sm" data-act="replay">🔊 <kbd>R</kbd></button>
+    </div>
+    <div class="verdict" id="verdict" aria-live="polite"></div>
+  </div>`;
+  $("#sFoot").innerHTML = `<span></span><button class="btn" data-act="w-check" id="nextBtn">Check <kbd>↵</kbd></button>`;
+  $("#sTimer").classList.remove("run");
+  S.peeked = false;
+  bindPad();
+  if (state.settings.autoplay) sayKana(c.k);
+}
+
+/* The stroke animation, played into the box. Afterwards the model stays
+   there faintly, so you can write over it. */
+function showStrokes() {
+  const c = S?.card;
+  if (!c || c.kind !== "w") return;
+  if (!c.trace && !S.answered) S.peeked = true;
+  const box = $("#padModel");
+  box.innerHTML = modelSvg(c.k, { animate: true });
+  clearTimeout(showStrokes.t);
+  showStrokes.t = setTimeout(() => { if (S?.card === c && box.isConnected) box.innerHTML = modelSvg(c.k, { faint: true }); }, modelAnimMs(c.k) + 500);
+}
+
+function checkWrite() {
+  const c = S?.card;
+  if (!c || c.kind !== "w" || S.answered) return;
+  if (!pad || !pad.strokes.length) { toast("Write it in the box first."); return; }
+  S.answered = true;
+  pad.locked = true;
+  const res = markWriting(c.k, pad.strokes, state.settings.strokeOrder);
+  const ok = res.ok;
+  const key = "w:" + c.k + (c.trace ? ":t" : "");
+  const tries = (S.tries.get(key) || 0) + 1;
+  S.tries.set(key, tries);
+  /* A trace is practice, and a peek withholds the credit (Hanzi Quest's
+     writing drill works the same way): the answer counts for the day, but
+     not towards "solid" in writing. */
+  const credit = !c.trace && !S.peeked;
+  if (credit) {
+    if (tries === 1) { S.first++; if (ok) S.firstRight++; }
+    grade(c.k, "w", ok, null, c.mode);
+    if (!ok) S.missed.add(c.k);
+  } else day().n++;
+  save();
+  crumb(`write ${ok ? "ok" : "miss"}${c.trace ? " trace" : ""}${S.peeked ? " peeked" : ""}`);
+
+  drawInk(res.strokes);
+  const e = KANA_BY[c.k];
+  const v = $("#verdict");
+  if (ok) {
+    v.className = "verdict ok";
+    v.innerHTML = `✓ <span lang="ja">${esc(e.k)}</span> <span class="rom-always">${esc(e.r)}</span>${S.peeked && !c.trace ? ` <span class="muted small">— after a peek, so it's practice this time</span>` : ""}`;
+  } else {
+    v.className = "verdict miss";
+    v.innerHTML = `${esc(res.reason)} <span class="muted small">Here's how it goes.</span>`;
+    $("#padModel").innerHTML = modelSvg(c.k, { animate: true });
+    if (tries < 3) S.queue.push(() => qWrite(c.k, c.mode === "learn" ? "learn" : "practice", c.trace));
+  }
+  const nb = $("#nextBtn");
+  nb.dataset.act = "next";
+  nb.innerHTML = `Next <kbd>␣</kbd>`;
+  if (ok) {
+    nb.classList.add("counting");
+    nb.style.setProperty("--adv", AUTO_ADVANCE_MS + "ms");
+    advanceTimer = setTimeout(next, AUTO_ADVANCE_MS);
+  }
+  updateProgress();
 }
 
 function introNote(e) {
@@ -822,6 +934,15 @@ function renderKana() {
       </div>
       <span class="muted">${learnedN} of ${totalN} learned · tap one to hear it${state.settings.showRomaji ? "" : " and see its romaji"}</span>
     </div>
+    <details class="card how-chart" ${Object.keys(state.items).length < 10 ? "open" : ""}>
+      <summary><h2>How this chart works</h2></summary>
+      <p>Almost every kana is a consonant plus a vowel. Vowels run across — a i u e o — and consonants down — k s t n h m y r w.
+        A row shares a consonant, a column shares a vowel. The order is Japanese alphabetical order, the “fifty sounds”
+        (<span lang="ja">五十音</span>), usually traced back to Sanskrit: vowels first, then consonants from the back of the mouth to the lips.</p>
+      <p>Blank squares are sounds modern Japanese doesn't have. The small bar under each kana fills with three quick
+        passes reading${hasAudio() ? " and hearing" : ""} it.</p>
+      <button class="btn btn-ghost btn-sm" data-act="guide">Read the full introduction</button>
+    </details>
     ${locked ? `<div class="card banner">🔒 Katakana opens after the hiragana check — ${HIRA_CHECK.days} days of it, once every hiragana is learned. You can look, but not start.</div>` : ""}
     <div class="chart-cols">
       <div>${section("Basic", "清音", ["base"], 5)}</div>
@@ -848,7 +969,9 @@ function openKana(k) {
     <div class="intro-rom">${esc(e.concept ? "" : e.r)}</div>
     ${e.concept ? `<p>${esc(KANA_CONCEPT[k].body)}</p>` : introNote(e)}
     <p class="muted small">Taught in <span lang="ja">${esc(L.title)}</span>${got ? ` · learned ${esc(item(k).at)} · next review ${esc(item(k).due)}` : " · not learned yet"}</p>
-    ${got && !e.concept ? `<div class="sk-rows"><div><span lang="ja">読む</span> ${sk("r")}</div>${hasAudio() ? `<div><span lang="ja">聞く</span> ${sk("p")}</div>` : ""}</div>` : ""}
+    ${canWrite(k) ? `<div class="kd-strokes"><div id="kdStrokes">${modelSvg(k)}</div>
+      <button class="btn btn-ghost btn-sm" data-act="kd-strokes" data-k="${esc(k)}">Show the strokes · ${strokesFor(k).s.length}</button></div>` : ""}
+    ${got && !e.concept ? `<div class="sk-rows"><div><span lang="ja">読む</span> ${sk("r")}</div>${hasAudio() ? `<div><span lang="ja">聞く</span> ${sk("p")}</div>` : ""}${canWrite(k) ? `<div><span lang="ja">書く</span> ${Math.min(3, skill(k, "w").ok)}/3 · ${skill(k, "w").ok} of ${skill(k, "w").n} right</div>` : ""}</div>` : ""}
     ${words.length ? `<div class="eyebrow">Words with it</div><div class="ex-row">${words.map(w => `
       <button class="ex ${canRead(w) ? "" : "dim"}" data-act="say" data-say="${esc(w.w)}"><span lang="ja">${esc(w.w)}</span><small>${esc(canRead(w) ? w.m : "not yet")}</small></button>`).join("")}</div>` : ""}
   </div>`);
@@ -894,6 +1017,7 @@ function renderRecord() {
         ${hasAudio() ? skillRow('<span lang="ja">ひらがな</span> hear', hk, "p") : ""}
         ${skillRow('<span lang="ja">カタカナ</span> read', kk, "r")}
         ${hasAudio() ? skillRow('<span lang="ja">カタカナ</span> hear', kk, "p") : ""}
+        ${state.settings.writing ? skillRow('<span lang="ja">ひらがな</span> write', hk.filter(canWrite), "w") + skillRow('<span lang="ja">カタカナ</span> write', kk.filter(canWrite), "w") : ""}
       </section>
       <section class="card">
         <div class="card-head"><h2>The last twelve weeks</h2></div>
@@ -942,8 +1066,10 @@ function openSettings() {
     ${tog("sound", "Sound", "Play kana and words.")}
     ${tog("autoplay", "Play on reveal", "Say the answer after each question, and each new kana as it's introduced.")}
     ${tog("timer", "Question timer", "A bar that drains over a few seconds. Answering before it empties counts as quick. Running out costs nothing.")}
-    <label class="set-row"><span>Lessons a day<small>A lesson is one row, or a small group of combined sounds.</small></span>
-      <select data-set="lessonsPerDay">${[1, 2, 3, 4].map(n => `<option ${s.lessonsPerDay === n ? "selected" : ""}>${n}</option>`).join("")}</select></label>
+    <label class="set-row"><span>New kana a day<small>Five is about one row. Rows are never split, so a day can run one over.</small></span>
+      <select data-set="newPerDay">${[5, 8, 10, 15, 20].map(n => `<option ${s.newPerDay === n ? "selected" : ""}>${n}</option>`).join("")}</select></label>
+    ${tog("writing", "Writing practice", "Trace each new kana, and write today's from memory. Draw with a mouse, finger or pen.")}
+    ${tog("strokeOrder", "Check stroke order", "Off: any order is fine — the shape is what's marked (strokes still go the usual way round, which is what tells ソ from ン). On: each stroke has to come in its proper turn too.")}
     <label class="set-row"><span>Theme</span>
       <select data-set="theme">${["auto", "light", "dark"].map(t => `<option ${s.theme === t ? "selected" : ""}>${t}</option>`).join("")}</select></label>
     <div class="set-block">
@@ -951,6 +1077,11 @@ function openSettings() {
       <p class="small">${hasAudio() ? `${clipCount()} recorded clips loaded.` : `<b>No recorded clips loaded.</b> Run <code>node tools/make-audio.mjs</code> (macOS) to make <code>js/audio-kana.js</code>. Listening drills are hidden until then.`}
         ${voices ? ` A Japanese system voice is also available as a fallback.` : ""}</p>
       <button class="btn btn-ghost btn-sm" data-act="say" data-say="あ">Test: あ</button>
+    </div>
+    <div class="set-block">
+      <h3>Japanese writing</h3>
+      <p class="small">Hiragana, katakana and kanji, how the kana chart is laid out, and why it's in that order.</p>
+      <button class="btn btn-ghost btn-sm" data-act="guide">Read the introduction again</button>
     </div>
     <div class="set-block">
       <h3>Your data</h3>
@@ -965,7 +1096,7 @@ function openSettings() {
 function onSetting(el) {
   const key = el.dataset.set;
   let v = el.type === "checkbox" ? el.checked : el.value;
-  if (key === "lessonsPerDay") v = +v;
+  if (key === "newPerDay") v = +v;
   state.settings[key] = v;
   save();
   crumb(`setting ${key}=${v}`);
@@ -1111,7 +1242,13 @@ const ACTS = {
   "kana-cell": el => openKana(el.dataset.k),
   "chart-set": el => { chartSet = el.dataset.set; renderKana(); },
   opt: el => answer(+el.dataset.i),
-  next: () => { if (S && (S.card?.t === "intro" || S.card?.t === "concept" || S.answered)) next(); },
+  next: () => { if (S && (S.card?.t === "intro" || S.card?.t === "concept" || S.card?.t === "info" || S.answered || S.finished)) next(); },
+  "w-check": () => checkWrite(),
+  "w-undo": () => padUndo(),
+  "w-clear": () => padClear(),
+  "w-show": () => showStrokes(),
+  guide: () => { closeSheet(); startGuide(); },
+  "kd-strokes": el => { const box = $("#kdStrokes"); if (box) box.innerHTML = modelSvg(el.dataset.k, { animate: true }); },
   replay: () => replay(),
   "close-session": () => closeSession(),
   settings: () => openSettings(),
@@ -1153,6 +1290,14 @@ document.addEventListener("keydown", guard(e => {
   if (inField) return;
   if ($("#sheet").classList.contains("on")) { if (e.key === "Escape") closeSheet(); return; }
   if (S) {
+    if (S.card?.kind === "w" && !S.finished) {
+      if (e.key === "Enter" || (e.key === " " && S.answered)) { e.preventDefault(); S.answered ? ACTS.next() : checkWrite(); return; }
+      if (e.key === "z" || e.key === "Z" || e.key === "Backspace") { e.preventDefault(); padUndo(); return; }
+      if (e.key === "s" || e.key === "S") { showStrokes(); return; }
+      if (e.key === "r" || e.key === "R") { replay(); return; }
+      if (e.key === "Escape") { closeSession(); return; }
+      return;
+    }
     if (/^[1-9]$/.test(e.key)) { answer(+e.key - 1); e.preventDefault(); return; }
     if (e.key === " " || e.key === "Enter") { e.preventDefault(); ACTS.next(); return; }
     if (e.key === "r" || e.key === "R") { replay(); return; }
@@ -1164,6 +1309,16 @@ document.addEventListener("keydown", guard(e => {
     if (b) { e.preventDefault(); b.click(); }
   }
 }));
+
+/* Stroke data, like the sound, is fetched after the first screen draws. */
+function loadStrokes() {
+  if (window.NQ_STROKES) return;
+  const el = document.createElement("script");
+  el.src = `js/strokes.js?v=${APP_VERSION}`;
+  el.async = true;
+  el.onload = () => { crumb("strokes loaded"); if (!S) render(); };
+  document.head.appendChild(el);
+}
 
 function onAudioLoaded() {
   crumb(`audio ${clipCount()} clips`);
@@ -1182,4 +1337,5 @@ addEventListener("DOMContentLoaded", guard(() => {
   /* A timeout, not requestAnimationFrame: a tab opened in the background
      runs no frames, and the sound would never start loading. */
   setTimeout(loadAudioBundle, 60);
+  setTimeout(loadStrokes, 90);
 }));

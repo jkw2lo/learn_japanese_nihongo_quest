@@ -20,7 +20,9 @@ const DEFAULT_SETTINGS = {
   sound: true,
   autoplay: true,
   timer: true,
-  lessonsPerDay: 2,
+  newPerDay: 5,          /* new kana a day — about one row */
+  writing: true,         /* writing drills as reinforcement */
+  strokeOrder: false,    /* also check stroke order and direction */
   theme: "auto",
 };
 
@@ -62,6 +64,7 @@ let state = freshState();
 function normalise(s) {
   const out = { ...freshState(), ...s };
   out.settings = { ...DEFAULT_SETTINGS, ...(s.settings || {}) };
+  delete out.settings.lessonsPerDay;      /* replaced by newPerDay in 0.3 */
   out.items = s.items && typeof s.items === "object" ? s.items : {};
   out.days = s.days && typeof s.days === "object" ? s.days : {};
   Object.values(out.days).forEach(d => {
@@ -119,7 +122,7 @@ function skill(k, sk) {
    shape to name on its own, so it only ever comes up as a word pair. "a",
    telling look-alikes apart, only applies to kana that have one — callers
    narrow the keys for that. */
-const skillsFor = k => KANA_BY[k]?.concept ? ["x"] : ["r", "p", "a"];
+const skillsFor = k => KANA_BY[k]?.concept ? ["x"] : ["r", "p", "a", "w"];
 
 function learn(k) {
   if (state.items[k]) return;
@@ -171,8 +174,9 @@ function grade(k, sk, ok, ms, mode = "practice") {
   }
 }
 
-/* How far an item is towards solid in one skill: quick passes, capped. */
-const solidness = (k, sk) => Math.min(PASSES_FOR_SOLID, skill(k, sk).fast);
+/* How far an item is towards solid in one skill: quick passes, capped.
+   Writing is the exception — it's slow by nature, so any right answer counts. */
+const solidness = (k, sk) => Math.min(PASSES_FOR_SOLID, sk === "w" ? skill(k, sk).ok : skill(k, sk).fast);
 const isSolid = (k, sk) => solidness(k, sk) >= PASSES_FOR_SOLID;
 
 /* A skill over a set of items: the ring fills with every quick pass, and the
@@ -240,19 +244,34 @@ function phase() {
 }
 
 /* Lessons open to start today: the next unlearned ones in order, within the
-   day's allowance, and never katakana before the gate. */
+   day's allowance of new kana, and never katakana before the gate.
+
+   The allowance is counted in kana, not lessons (Settings → New kana a
+   day, 5 by default). Whole lessons only — half a row teaches nothing about
+   the row — and one kana of slack, so two three-kana rows (きゃ + しゃ) can
+   share a day at the default of five. */
 function lessonsLearnedToday() {
   const d = state.days[today()];
   if (!d) return [];
   return LESSONS.filter(L => L.items.some(k => d.learned.includes(k)) && lessonLearned(L));
 }
 
+const learnedTodayCount = () => (state.days[today()]?.learned || []).length;
+
 function nextLessons() {
   const p = phase();
   if (p === "check" || p === "done") return [];
   const pool = LESSONS.filter(L => (p === "hira" ? L.set === "h" : L.set === "k") && !lessonLearned(L));
-  const left = Math.max(0, state.settings.lessonsPerDay - lessonsLearnedToday().length);
-  return pool.slice(0, left);
+  const left = state.settings.newPerDay - learnedTodayCount();
+  const out = [];
+  let n = 0;
+  for (const L of pool) {
+    const size = L.items.filter(k => !isLearned(k)).length;
+    if (n >= left || n + size > left + 1) break;
+    out.push(L);
+    n += size;
+  }
+  return out;
 }
 
 const upcomingLesson = () => LESSONS.find(L => !lessonLearned(L)) || null;

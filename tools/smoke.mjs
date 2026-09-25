@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url';
 import { join } from 'path';
 import vm from 'vm';
 import { speakable } from './make-audio.mjs';
+import { wanted as strokeWanted } from './fetch-strokes.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const read = p => readFileSync(join(root, p), 'utf8');
@@ -48,12 +49,16 @@ const CONTRACT = {
   'js/srs.js': ['state', 'load', 'save', 'today', 'addDays', 'daysBetween', 'pad2', 'asList', 'day', 'dayOkList',
     'item', 'isLearned', 'learnedKana', 'isDue', 'skill', 'skillsFor', 'learn', 'grade', 'solidness', 'standing',
     'shakiest', 'dueKeys', 'lessonLearned', 'allHiraLearned', 'hiraDoneDay', 'hiraCheckDays', 'kataOpen', 'phase',
-    'lessonsLearnedToday', 'nextLessons', 'checkPassedToday', 'recordCheck', 'canRead', 'readableWords',
+    'lessonsLearnedToday', 'learnedTodayCount', 'nextLessons', 'checkPassedToday', 'recordCheck', 'canRead', 'readableWords',
     'wordsByNewest', 'streak', 'practisedDays', 'recordSprint', 'exportState', 'parseBackup', 'freshState',
     'QUICK_MS', 'HIRA_CHECK', 'PASSES_FOR_SOLID'],
   'js/sound.js': ['say', 'sayKana', 'hasAudio', 'clipCount', 'unlockAudio', 'loadAudioBundle', 'soundBlocked'],
+  'js/write.js': ['strokesFor', 'canWrite', 'markWriting', 'modelSvg', 'modelAnimMs', 'padHtml', 'bindPad', 'drawInk',
+    'padUndo', 'padClear', 'pad', 'WRITE_TOL'],
+  'js/guide.js': ['GUIDE', 'KIND_INTRO', 'infoCard', 'guideCards', 'infoHtml', 'startGuide'],
   'js/app.js': ['ACTS', 'render', 'go', 'view', 'S', 'askConfirm', 'crumb', 'shuffle', 'esc', '$', '$$',
-    'distractors', 'renderSoundBar', 'onAudioLoaded', 'toast'],
+    'distractors', 'renderSoundBar', 'onAudioLoaded', 'toast', 'openSession', 'closeSheet', 'SET_NAME',
+    'qWrite', 'showWrite', 'checkWrite', 'showStrokes', 'loadStrokes'],
   'js/sprint.js': ['renderSprint', 'sprintKey', 'sprintLabel'],
 };
 const declares = (src, name) => {
@@ -148,6 +153,37 @@ section('storage');
   ok(run('parseBackup(exportState()).app') === 'nihongo-quest', 'a backup should round-trip');
 }
 
+/* ---------- the daily allowance ---------- */
+
+section('the daily allowance');
+{
+  const s = sandbox();
+  const run = code => vm.runInContext(code, s);
+  run('load()');
+  /* walk every day of hiragana at the default of five */
+  const days = [];
+  for (let d = 0; d < 60 && run('phase()') === 'hira'; d++) {
+    run(`__.setShift(${d})`);
+    const ls = run('nextLessons().map(L => L.id + ":" + L.items.length)');
+    ok(ls.length > 0, `day ${d} offers nothing to learn`);
+    const n = ls.reduce((t, x) => t + +x.split(':')[1], 0);
+    ok(n <= 6, `day ${d} teaches ${n} kana (${ls.join(' ')}) — more than five and one of slack`);
+    run('nextLessons().forEach(L => L.items.forEach(learn))');
+    days.push(ls.length);
+  }
+  ok(days.length >= 18 && days.length <= 24, `hiragana should take about three weeks at five a day (took ${days.length})`);
+  ok(run('nextLessons().length') === 0, 'once today\'s five are learned, nothing more is offered');
+  const s2 = sandbox(); const run2 = code => vm.runInContext(code, s2);
+  run2('load(); state.settings.newPerDay = 10');
+  ok(run2('nextLessons().map(L => L.id).join()') === 'h-a,h-k', 'ten a day is two rows');
+  /* lessons never exceed five, so a day's size is always close to the setting */
+  ok(run('LESSONS.every(L => L.items.length <= 5)'), 'a lesson has more than five kana');
+  /* an old save with lessonsPerDay drops it */
+  run(`localStorage.setItem("nihongo-quest", JSON.stringify({ app: "nihongo-quest", settings: { lessonsPerDay: 2 } }))`);
+  run('load()');
+  ok(run('state.settings.lessonsPerDay') === undefined && run('state.settings.newPerDay') === 5, 'lessonsPerDay should migrate to newPerDay');
+}
+
 /* ---------- 4. the hiragana check ---------- */
 
 section('the hiragana check');
@@ -157,7 +193,8 @@ section('the hiragana check');
   run('load()');
   ok(run('phase()') === 'hira', 'a new learner starts on hiragana');
   ok(run('nextLessons().every(L => L.set === "h")'), 'no katakana before the gate');
-  ok(run('nextLessons().length') === 2, 'two lessons a day by default');
+  ok(run('state.settings.newPerDay') === 5, 'five new kana a day by default');
+  ok(run('nextLessons().map(L => L.id).join()') === 'h-a', 'day one is the あ row alone');
   /* learn every hiragana on day 0 */
   run('KANA.filter(e => e.set === "h").forEach(e => learn(e.k))');
   ok(run('phase()') === 'check', 'all hiragana learned → the check');
@@ -194,6 +231,58 @@ section('sprint');
   ok(!run('recordSprint("read-h-20-1", {right: 14, total: 20, ms: 20000, finished: true})'), 'fewer right is never better, however fast');
   ok(run('recordSprint("read-h-20-1", {right: 15, total: 20, ms: 40000, finished: true})'), 'same right and faster is better');
   ok(run('state.sprint.recent.length') === 4, 'every run goes into recent');
+}
+
+/* ---------- writing ---------- */
+
+section('writing');
+{
+  const w = { window: {}, Math, console };
+  vm.createContext(w);
+  vm.runInContext(read('js/strokes.js') + read('js/write.js') + ';globalThis.W = { markWriting, modelMedians };', w);
+  const { markWriting, modelMedians } = w.W;
+  const strokes = w.window.NQ_STROKES;
+  const missing = strokeWanted().filter(k => !strokes[k]);
+  ok(!missing.length, `no stroke data for: ${missing.join(' ')} — run node tools/fetch-strokes.mjs`);
+
+  /* The standard stroke counts for the base kana. AnimCJK splits looped
+     strokes into pieces; fetch-strokes.mjs merges them back, and the marking
+     depends on the count being right. */
+  const STD = { あ:3,い:2,う:2,え:2,お:3,か:3,き:4,く:1,け:3,こ:2,さ:3,し:1,す:2,せ:3,そ:1,た:4,ち:2,つ:1,て:1,と:2,
+    な:4,に:3,ぬ:2,ね:2,の:1,は:3,ひ:1,ふ:4,へ:1,ほ:4,ま:3,み:2,む:3,め:2,も:3,や:3,ゆ:2,よ:2,ら:2,り:2,る:1,れ:2,ろ:1,
+    わ:2,を:3,ん:1,ア:2,イ:2,ウ:3,エ:3,オ:3,カ:2,キ:3,ク:2,ケ:3,コ:2,サ:3,シ:3,ス:2,セ:2,ソ:2,タ:3,チ:3,ツ:3,テ:3,ト:2,
+    ナ:2,ニ:2,ヌ:2,ネ:4,ノ:1,ハ:2,ヒ:2,フ:1,ヘ:1,ホ:4,マ:2,ミ:3,ム:2,メ:2,モ:3,ヤ:2,ユ:2,ヨ:3,ラ:2,リ:2,ル:2,レ:1,ロ:3,
+    ワ:2,ヲ:3,ン:2 };
+  Object.entries(STD).forEach(([k, n]) => ok(strokes[k]?.m.length === n, `${k} has ${strokes[k]?.m.length} strokes, should be ${n}`));
+  Object.entries(strokes).forEach(([k, d]) => ok(d.s.length === d.m.length, `${k}: outlines and medians disagree`));
+
+  /* seeded, so a failure reproduces */
+  let seed = 7;
+  const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647 - 0.5; };
+  const sloppy = st => {
+    const sc = 1 + rnd() * 0.3, dx = rnd() * 200, dy = rnd() * 200;
+    return st.map(s => { const ox = rnd() * 50, oy = rnd() * 50;
+      return s.map(([x, y], i) => [512 + (x - 512) * sc + dx + ox + Math.sin(i) * 12, 512 + (y - 512) * sc + dy + oy + Math.cos(i) * 12]); });
+  };
+  const K = Object.keys(strokes);
+  let pass = 0, n = 0;
+  K.forEach(k => {
+    ok(markWriting(k, modelMedians(k), false).ok, `${k}: its own strokes don't pass`);
+    ok(markWriting(k, modelMedians(k), true).ok, `${k}: its own strokes don't pass in order`);
+    for (let t = 0; t < 4; t++) { n++; if (markWriting(k, sloppy(modelMedians(k)), false).ok) pass++; }
+  });
+  ok(pass / n >= 0.93, `sloppy but right handwriting passes only ${(pass / n * 100).toFixed(1)}%`);
+  /* look-alikes the marking must tell apart, even with order not checked */
+  [['ソ', 'ン'], ['ン', 'ソ'], ['シ', 'ツ'], ['ツ', 'シ'], ['れ', 'わ'], ['わ', 'れ'], ['ね', 'れ'], ['は', 'ほ'], ['ほ', 'は'],
+   ['さ', 'ち'], ['き', 'さ'], ['ぬ', 'め'], ['め', 'ぬ'], ['る', 'ろ'], ['ろ', 'る'], ['ば', 'ぱ'], ['ぱ', 'ば'], ['い', 'り']]
+    .forEach(([asked, drawn]) => ok(!markWriting(asked, modelMedians(drawn), false).ok, `writing ${drawn} passes for ${asked}`));
+  /* order: free ignores it, ordered doesn't */
+  const shuffled = [...modelMedians('あ')].reverse();
+  ok(markWriting('あ', shuffled, false).ok, 'free marking should accept any stroke order');
+  ok(!markWriting('あ', shuffled, true).ok, 'stroke-order marking should refuse the wrong order');
+  const backwards = modelMedians('し').map(st => [...st].reverse());
+  ok(!markWriting('し', backwards, true).ok, 'stroke-order marking should refuse a backwards stroke');
+  ok(!markWriting('は', modelMedians('は').slice(0, 2), false).ok, 'a missing stroke should fail');
 }
 
 /* ---------- 6. audio coverage ---------- */

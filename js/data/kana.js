@@ -18,49 +18,43 @@
             voiced and combined forms follow a rule, not a picture) */
 
 const LESSONS = [
-  /* ---- hiragana ---- */
-  { id: "h-a",  set: "h", title: "あ row",  kind: "base",   g: "あ い う え お",       r: "a i u e o" },
-  { id: "h-k",  set: "h", title: "か row",  kind: "base",   g: "か き く け こ",       r: "ka ki ku ke ko" },
-  { id: "h-s",  set: "h", title: "さ row",  kind: "base",   g: "さ し す せ そ",       r: "sa shi su se so" },
-  { id: "h-t",  set: "h", title: "た row",  kind: "base",   g: "た ち つ て と",       r: "ta chi tsu te to" },
-  { id: "h-n",  set: "h", title: "な row",  kind: "base",   g: "な に ぬ ね の",       r: "na ni nu ne no" },
-  { id: "h-h",  set: "h", title: "は row",  kind: "base",   g: "は ひ ふ へ ほ",       r: "ha hi fu he ho" },
-  { id: "h-m",  set: "h", title: "ま row",  kind: "base",   g: "ま み む め も",       r: "ma mi mu me mo" },
-  { id: "h-y",  set: "h", title: "や row",  kind: "base",   g: "や ゆ よ",           r: "ya yu yo" },
-  { id: "h-r",  set: "h", title: "ら row",  kind: "base",   g: "ら り る れ ろ",       r: "ra ri ru re ro" },
-  { id: "h-w",  set: "h", title: "わ, を and ん", kind: "base", g: "わ を ん",       r: "wa wo n" },
-  { id: "h-gz", set: "h", title: "が and ざ rows", kind: "voiced", g: "が ぎ ぐ げ ご ざ じ ず ぜ ぞ", r: "ga gi gu ge go za ji zu ze zo" },
-  { id: "h-db", set: "h", title: "だ and ば rows", kind: "voiced", g: "だ ぢ づ で ど ば び ぶ べ ぼ", r: "da ji zu de do ba bi bu be bo" },
-  { id: "h-p",  set: "h", title: "ぱ row",  kind: "voiced", g: "ぱ ぴ ぷ ぺ ぽ",       r: "pa pi pu pe po" },
-  { id: "h-y1", set: "h", title: "きゃ, しゃ, ちゃ", kind: "combo",
-    g: "きゃ きゅ きょ しゃ しゅ しょ ちゃ ちゅ ちょ", r: "kya kyu kyo sha shu sho cha chu cho" },
-  { id: "h-y2", set: "h", title: "にゃ, ひゃ, みゃ, りゃ", kind: "combo",
-    g: "にゃ にゅ にょ ひゃ ひゅ ひょ みゃ みゅ みょ りゃ りゅ りょ", r: "nya nyu nyo hya hyu hyo mya myu myo rya ryu ryo" },
-  { id: "h-y3", set: "h", title: "ぎゃ, じゃ, びゃ, ぴゃ", kind: "combo",
-    g: "ぎゃ ぎゅ ぎょ じゃ じゅ じょ びゃ びゅ びょ ぴゃ ぴゅ ぴょ", r: "gya gyu gyo ja ju jo bya byu byo pya pyu pyo" },
+  /* ---- hiragana: one row a lesson, so a day is about five kana ---- */
+  { id: "h-a",  set: "h", title: "あ row",  kind: "base",   g: "あ い う え お",  r: "a i u e o" },
+  { id: "h-k",  set: "h", title: "か row",  kind: "base",   g: "か き く け こ",  r: "ka ki ku ke ko" },
+  { id: "h-s",  set: "h", title: "さ row",  kind: "base",   g: "さ し す せ そ",  r: "sa shi su se so" },
+  { id: "h-t",  set: "h", title: "た row",  kind: "base",   g: "た ち つ て と",  r: "ta chi tsu te to" },
+  { id: "h-n",  set: "h", title: "な row",  kind: "base",   g: "な に ぬ ね の",  r: "na ni nu ne no" },
+  { id: "h-h",  set: "h", title: "は row",  kind: "base",   g: "は ひ ふ へ ほ",  r: "ha hi fu he ho" },
+  { id: "h-m",  set: "h", title: "ま row",  kind: "base",   g: "ま み む め も",  r: "ma mi mu me mo" },
+  { id: "h-y",  set: "h", title: "や row",  kind: "base",   g: "や ゆ よ",      r: "ya yu yo" },
+  { id: "h-r",  set: "h", title: "ら row",  kind: "base",   g: "ら り る れ ろ",  r: "ra ri ru re ro" },
+  { id: "h-w",  set: "h", title: "わ, を and ん", kind: "base", g: "わ を ん",  r: "wa wo n" },
+  { id: "h-g",  set: "h", title: "が row",  kind: "voiced", g: "が ぎ ぐ げ ご",  r: "ga gi gu ge go" },
+  { id: "h-z",  set: "h", title: "ざ row",  kind: "voiced", g: "ざ じ ず ぜ ぞ",  r: "za ji zu ze zo" },
+  { id: "h-d",  set: "h", title: "だ row",  kind: "voiced", g: "だ ぢ づ で ど",  r: "da ji zu de do" },
+  { id: "h-b",  set: "h", title: "ば row",  kind: "voiced", g: "ば び ぶ べ ぼ",  r: "ba bi bu be bo" },
+  { id: "h-p",  set: "h", title: "ぱ row",  kind: "voiced", g: "ぱ ぴ ぷ ぺ ぽ",  r: "pa pi pu pe po" },
+  { id: "h-ky", set: "h", title: "きゃ きゅ きょ", kind: "combo", g: "きゃ きゅ きょ", r: "kya kyu kyo" },
+  { id: "h-sh", set: "h", title: "しゃ しゅ しょ", kind: "combo", g: "しゃ しゅ しょ", r: "sha shu sho" },
+  { id: "h-ch", set: "h", title: "ちゃ ちゅ ちょ", kind: "combo", g: "ちゃ ちゅ ちょ", r: "cha chu cho" },
+  { id: "h-ny", set: "h", title: "にゃ にゅ にょ", kind: "combo", g: "にゃ にゅ にょ", r: "nya nyu nyo" },
+  { id: "h-hy", set: "h", title: "ひゃ ひゅ ひょ", kind: "combo", g: "ひゃ ひゅ ひょ", r: "hya hyu hyo" },
+  { id: "h-my", set: "h", title: "みゃ みゅ みょ", kind: "combo", g: "みゃ みゅ みょ", r: "mya myu myo" },
+  { id: "h-ry", set: "h", title: "りゃ りゅ りょ", kind: "combo", g: "りゃ りゅ りょ", r: "rya ryu ryo" },
+  { id: "h-gy", set: "h", title: "ぎゃ ぎゅ ぎょ", kind: "combo", g: "ぎゃ ぎゅ ぎょ", r: "gya gyu gyo" },
+  { id: "h-j",  set: "h", title: "じゃ じゅ じょ", kind: "combo", g: "じゃ じゅ じょ", r: "ja ju jo" },
+  { id: "h-by", set: "h", title: "びゃ びゅ びょ", kind: "combo", g: "びゃ びゅ びょ", r: "bya byu byo" },
+  { id: "h-py", set: "h", title: "ぴゃ ぴゅ ぴょ", kind: "combo", g: "ぴゃ ぴゅ ぴょ", r: "pya pyu pyo" },
   { id: "h-x",  set: "h", title: "Small っ and long vowels", kind: "concept", g: "っ", r: "(pause)" },
 
   /* ---- katakana: the same order, then the sounds only loanwords need ---- */
-  { id: "k-a",  set: "k", title: "ア row", kind: "base", from: "h-a" },
-  { id: "k-k",  set: "k", title: "カ row", kind: "base", from: "h-k" },
-  { id: "k-s",  set: "k", title: "サ row", kind: "base", from: "h-s" },
-  { id: "k-t",  set: "k", title: "タ row", kind: "base", from: "h-t" },
-  { id: "k-n",  set: "k", title: "ナ row", kind: "base", from: "h-n" },
-  { id: "k-h",  set: "k", title: "ハ row", kind: "base", from: "h-h" },
-  { id: "k-m",  set: "k", title: "マ row", kind: "base", from: "h-m" },
-  { id: "k-y",  set: "k", title: "ヤ row", kind: "base", from: "h-y" },
-  { id: "k-r",  set: "k", title: "ラ row", kind: "base", from: "h-r" },
-  { id: "k-w",  set: "k", title: "ワ, ヲ and ン", kind: "base", from: "h-w" },
-  { id: "k-gz", set: "k", title: "ガ and ザ rows", kind: "voiced", from: "h-gz" },
-  { id: "k-db", set: "k", title: "ダ and バ rows", kind: "voiced", from: "h-db" },
-  { id: "k-p",  set: "k", title: "パ row", kind: "voiced", from: "h-p" },
-  { id: "k-y1", set: "k", title: "キャ, シャ, チャ", kind: "combo", from: "h-y1" },
-  { id: "k-y2", set: "k", title: "ニャ, ヒャ, ミャ, リャ", kind: "combo", from: "h-y2" },
-  { id: "k-y3", set: "k", title: "ギャ, ジャ, ビャ, ピャ", kind: "combo", from: "h-y3" },
+  ...["a", "k", "s", "t", "n", "h", "m", "y", "r", "w", "g", "z", "d", "b", "p",
+      "ky", "sh", "ch", "ny", "hy", "my", "ry", "gy", "j", "by", "py"].map(id => ({ id: "k-" + id, set: "k", from: "h-" + id })),
   { id: "k-x",  set: "k", title: "Small ッ and the long bar ー", kind: "concept", g: "ッ ー", r: "(pause) (long)" },
-  { id: "k-l",  set: "k", title: "Loanword sounds", kind: "loan",
-    g: "ティ ディ ファ フィ フェ フォ ウィ ウェ ウォ シェ ジェ チェ ヴ",
-    r: "ti di fa fi fe fo wi we wo she je che vu" },
+  { id: "k-l1", set: "k", title: "ティ ディ ヴ", kind: "loan", g: "ティ ディ ヴ", r: "ti di vu" },
+  { id: "k-l2", set: "k", title: "ファ フィ フェ フォ", kind: "loan", g: "ファ フィ フェ フォ", r: "fa fi fe fo" },
+  { id: "k-l3", set: "k", title: "ウィ ウェ ウォ", kind: "loan", g: "ウィ ウェ ウォ", r: "wi we wo" },
+  { id: "k-l4", set: "k", title: "シェ ジェ チェ", kind: "loan", g: "シェ ジェ チェ", r: "she je che" },
 ];
 
 /* Pictures for the base glyphs. Written for this app; kept short, because a
@@ -314,6 +308,8 @@ LESSONS.forEach(L => {
     const src = LESSONS.find(x => x.id === L.from);
     L.g = toKata(src.g);
     L.r = src.r;
+    L.kind = src.kind;
+    L.title = toKata(src.title);
   }
   const gs = L.g.split(" "), rs = L.r.split(" ");
   L.items = gs;
