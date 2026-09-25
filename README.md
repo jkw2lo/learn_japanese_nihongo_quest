@@ -6,12 +6,14 @@ holding a simple conversation. It starts from nothing and runs to JLPT N5,
 then on towards N4. Writing is there if you want it and never in the way if
 you don't.
 
-> **Status: the kana stage and word stages 2–5 are built (0.4.0).** An
+> **Status: the kana stage and word stages 2–6 are built (0.5.0).** An
 > introduction to the three scripts, hiragana five a day, the hiragana check,
-> katakana, look-alikes, the pauses and long vowels, writing practice, then
-> 103 words in four stages (phrases, numbers and money, me and you, food)
-> with furigana and typed answers. There's a Words library of everything you
-> can read, plus Sprint, Record and Settings. Words, kanji and grammar (stage 2
+> katakana, look-alikes, the pauses and long vowels, and writing practice.
+> Then 127 words in five stages (phrases, numbers and money, me and you,
+> food, getting around), with furigana, typed answers and polite verb forms.
+> There's a Words library, the Read a Menu side quest (a café and a diner),
+> Sprint, Record and Settings, and the celebrations: the cat, the hanamaru,
+> the teacher's stamps and falling petals. Words, kanji and grammar (stage 2
 > onward) are still spec only — this README describes them so they can be
 > built against it. Much of the reasoning is lifted from Hanzi Quest, where
 > most of it was learned the hard way; where a decision came from there, it
@@ -240,11 +242,13 @@ a note, and example sentences for many.
   but the kana stage is gated the whole way through (hiragana cemented
   before katakana), so words wait for the last kana too.
 - **Five a day**, under the same **New kana a day** allowance, which counts
-  words once kana are done. There are 103 words in four stages, in lessons of five:
+  words once kana are done. There are 127 words in five stages, in lessons of five:
   - **2 · あいさつ** survival phrases (24)
   - **3 · 数** numbers, time and money (29)
   - **4 · 私** me and you (25)
   - **5 · 食べる** food and ordering (25)
+  - **6 · 行く** getting around (24): trains, stations, directions, eight
+    verbs, and the particles に, で and へ
 
   Each stage opens with a card saying what it's for. The very first word
   lesson opens with one explaining furigana.
@@ -274,8 +278,34 @@ a note, and example sentences for many.
   a kanji's reading. A word can set `say` where its spelling misleads: the
   particle は is said わ.
 
+Verbs get a fourth skill, `j` **conjugate it**: see the verb and a form,
+and type the form. A verb's card shows its four polite forms, each tappable.
+Every form is generated (`js/conj.js`), never typed into the data. See
+**Conjugation**.
+
 `s` (say it aloud and mark yourself) and `w` (write kanji) aren't built. See
 **Open questions** and **Kanji**.
+
+### Conjugation
+
+`conj(markup, pos, form)` works a form out from the dictionary form and the
+verb's class, and returns markup, so the result renders with furigana like
+any word. The classes are:
+
+- `v1` (ichidan)
+- `v5` + the last kana (godan: `v5u` `v5k` `v5g` `v5s` `v5t` `v5n` `v5b` `v5m` `v5r`)
+- `v5k-s` (行く, whose て-form is 行って)
+- `vs` (する, and noun + する)
+- `vk` (来る, whose kanji reading changes: 来ます is きます, 来ない is こない)
+
+The forms are ます, ません, ました, ませんでした, て, た and ない. Only the four
+polite ones are taught so far (`CONJ_TAUGHT`), because they're what a
+visitor says. The smoke test pins every form of a verb for each godan
+ending and each exception, and runs every verb in the data through every
+form.
+
+Every taught form of every verb is recorded, so the forms on a verb's card
+and the answers to a conjugation question can all be played.
 
 ### The Words library
 
@@ -291,7 +321,9 @@ drops off the end the way Today's short list does.
 - **Coming up**: how many kana words are still out of reach, and which
   single kana would unlock the most of them.
 
-Today's rail still shows the newest few, with a link to the whole list.
+Tapping a word **just says it**. The › at the end of the row opens its
+card. Today's rail works the same way: it shows the newest, scrolling in
+place, with a link to the whole list.
 
 ### Reading never outruns you, now with furigana
 
@@ -391,21 +423,72 @@ Quest's *What the numbers count* gives.
 
 Hanzi Quest's menu teaches one character a day from a real restaurant menu,
 with the glyphs you know inked in. It carries over well, because **Japanese
-menus are mostly katakana**: カレーライス, ハンバーグ, オムライス, ビール.
+menus are mostly katakana**. Built (`js/data/menu.js`, `js/menu-ui.js`):
 
-- It **opens after the katakana stage**, and on day one you can already read
-  half of it. No other part of the app pays off that quickly.
-- **Items are words, not glyphs.** A dish is readable when every word in it
-  is. Kanji dishes (焼き鳥, 生ビール, 定食) show with furigana until their
-  kanji are known, following the same furigana rule.
-- **Tiers:** a café menu (katakana plus prices) → a 定食 diner (kanji dish
-  names) → an izakaya board (handwritten-style specials, 本日のおすすめ).
-- **Ordering phrases come with it**: すみません, 〜をください, 〜をひとつ,
-  お会計お願いします. Reading the menu and ordering from it are one skill.
-- As in Hanzi Quest, a smoke check makes sure every word on every menu tier
-  is one the library teaches.
+- **カフェ さくら**, a café, all katakana: 26 drinks, dishes and desserts.
+  It **opens with katakana**, and each item inks itself in kana by kana as
+  you learn them. Kana you don't know yet stay faint, so you can watch it
+  fill up. Tapping something you can read says it and shows what it is;
+  tapping something you can't says which kana you still need.
+- **食堂 まるや**, a diner, is the real thing: 定食 set meals, bowls,
+  noodles, sides and drinks, with kanji dish names and furigana. It opens
+  once the food words (stage 5) are learned.
+- **Ordering for a friend.** They say what they want in English, and you
+  find it on the menu: three things, then the bill. A wrong tap tells you
+  what you actually picked. The **receipt** shows each item, the total in
+  yen, and, once the numbers stage is learned, the total **said in
+  Japanese** (`numberKana`: 1250 → せんにひゃくごじゅう, with the sound changes
+  a price meets). Then how you'd order each item: 〜をください.
+- **Useful at the table**: すみません, 〜をください, お会計をおねがいします.
+- It's practice: nothing here touches the review schedule. Orders are
+  counted (`state.menu`), and Today shows them on the menu card.
+- Each menu hangs a **noren**, the shop curtain over a Japanese doorway,
+  drawn in SVG with the shop's name.
+- The smoke test checks every item: sound markup, only taught kana,
+  sensible prices, and a café that stays kana-only.
+
+Still to do: the izakaya tier (本日のおすすめ).
 
 ---
+
+## Today on one screen
+
+On a desktop screen (wider than 900px and at least 620px tall), Today fits
+without scrolling:
+
+- the hero, compact
+- **Today's practice** as one row of tiles, however many tasks there are
+- **Go deeper** as one row, with a Words / Kana toggle once there are words
+- the **Read a Menu** card
+- in the rail, **Progress** as a small metric (a thin bar each for
+  hiragana, katakana and words), then **Words you can read** filling the
+  rest of the height and scrolling inside its own card
+
+On a phone it all stacks and scrolls as usual.
+
+## The drawings
+
+Everything is inline SVG drawn with the colour tokens (`js/art.js`), so it
+follows light and dark mode. There are **no emoji anywhere**: they look
+different on every device and can't be themed, so every icon is a small
+line drawing.
+
+- **The cat**, the mascot, with moods: happy, cheer (arms up, sparkles),
+  think, sleepy (done for the day), wow, and gambaru (a red headband —
+  keep going).
+- **The hanamaru** (花丸): the spiral flower a Japanese teacher draws in red
+  pen round good work. It draws itself round the score when a round is 90%
+  or better.
+- **The stamps**, a teacher's red hanko: よくできました (well done) for new
+  kana or words, 合格 (passed) for the hiragana check, 新記録 (new record) for
+  a sprint best, ごちそうさま after a menu order, and 完 for a finished stage.
+- **Sakura petals** drift down over the moments worth it: a lesson learned,
+  a check passed (a shower when katakana opens), a stage finished, the
+  day's whole list done (きょうは おわり！), a new best, a finished order.
+
+Red here is the seal family (the teacher's pen and stamp are seals), which
+is the one place the colour rules allow it. Motion respects
+`prefers-reduced-motion`.
 
 ## スプリント Sprint
 
@@ -705,18 +788,20 @@ you like.
     js/app.js               Today, the kana chart, Record, sessions, settings, backup
     js/guide.js             the introduction and the new-kind cards
     js/sprint.js            the Sprint tab
+    js/art.js               icons, the cat, the hanamaru, stamps, petals
+    js/conj.js              verb conjugation, generated, never stored
+    js/data/menu.js         the café and the diner; numbers as they're said
+    js/menu-ui.js           Read a Menu and the ordering game
     js/audio-kana.js        generated clips — do not hand-edit
     js/strokes.js           generated stroke data — do not hand-edit
     js/furi.js              furigana markup: parse, check, render, derive kana
-    js/data/words.js        stages 2–5: 103 words, their stages, lessons of five
+    js/data/words.js        stages 2–6: 127 words, their stages, lessons of five
     js/words-ui.js          word lessons and questions, typing, the Words library
     js/audio-n5.js          generated clips for the word stages — do not hand-edit
 
     not built yet (stubs, not loaded):
     js/data/kanji.js        kanji, taught through words
     js/data/patterns.js     grammar patterns with example sentences
-    js/data/menu.js         the side quest's menus, by tier
-    js/conj.js              verb and adjective conjugation (generated, never stored)
     js/sync.js              optional sync
     tools/server.mjs        dev server, http://localhost:8732
     tools/version.mjs       bump the version and re-stamp every asset

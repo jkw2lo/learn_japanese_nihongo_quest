@@ -158,7 +158,7 @@ function showSprintQ() {
     return;
   }
   body.innerHTML = `<div class="q sp-q">
-    ${SP.mode === "read" ? `<div class="glyph-l" lang="ja">${esc(q.k)}</div>` : `<button class="play" data-act="sp-replay">🔊</button>`}
+    ${SP.mode === "read" ? `<div class="glyph-l" lang="ja">${esc(q.k)}</div>` : `<button class="play" data-act="sp-replay" aria-label="Play again">${icon("speaker")}</button>`}
     <div class="opts n${q.opts.length}">${q.opts.map((o, i) => `<button class="opt ${o.jp ? "jp" : ""}" data-act="sp-opt" data-i="${i}" ${o.jp ? 'lang="ja"' : ""}><kbd>${i + 1}</kbd><span>${esc(o.label)}</span></button>`).join("")}</div>
   </div>`;
   if (SP.mode === "listen") sayKana(q.k);
@@ -197,6 +197,7 @@ function handIn(finished) {
   const g = GRADES.find(([lim]) => perQ <= lim);
   $$("#spStrip i").forEach((el, i) => { el.className = SP.ans[i] ? (SP.ans[i].ok ? "ok" : "miss") : "skip"; });
   $("#spBody").innerHTML = `<div class="finish sp-finish">
+    <div class="celebrate">${neko(!finished ? "think" : newBest ? "cheer" : "happy", "hop")}${newBest ? stamp("新記録") : ""}</div>
     ${finished
       ? `<div class="grade"><span lang="ja">${g[1]}</span><small>${g[2]}</small></div>
          <div class="muted">Finished in ${(ms / 1000).toFixed(1)}s of ${SP.mins * 60} · ${(ms / 1000 / total).toFixed(2)}s a question (par ${SPRINT_MODES[SP.mode].par})</div>`
@@ -210,6 +211,7 @@ function handIn(finished) {
       return `<span class="${cls}" title="${a && !a.ok ? "you: " + esc(SP.mode === "listen" ? a.val : a.val || "(blank)") : ""}"><b lang="ja">${esc(q.k)}</b><small>${esc(KANA_BY[q.k].r)}</small></span>`;
     }).join("")}</div>
   </div>`;
+  if (newBest) petals($("#sprint"), 24);
   $("#spFoot").innerHTML = `<button class="btn btn-ghost" data-act="sp-close">Done <kbd>Esc</kbd></button>
     <button class="btn" data-act="sp-again">Same sheet again <kbd>↵</kbd></button>`;
 }

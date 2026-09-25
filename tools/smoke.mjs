@@ -32,7 +32,7 @@ function sandbox() {
     },
   };
   vm.createContext(ctx);
-  vm.runInContext(['js/data/kana.js', 'js/furi.js', 'js/data/words.js', 'js/srs.js'].map(read).join('\n') + `
+  vm.runInContext(['js/data/kana.js', 'js/furi.js', 'js/conj.js', 'js/data/words.js', 'js/srs.js'].map(read).join('\n') + `
     ;globalThis.__ = { get state() { return state; }, set state(v) { state = v; },
        setShift: n => { clockShift = n; } };`, ctx);
   return ctx;
@@ -47,7 +47,11 @@ const CONTRACT = {
   'js/data/kana.js': ['LESSONS', 'KANA', 'KANA_BY', 'KANA_ALIKE', 'KANA_WORDS', 'KANA_PAIRS_WORDS',
     'KANA_CONCEPT', 'ROMAJI_ALT', 'kanaUnits', 'toRomaji', 'toHira', 'toKata', 'romajiToKana', 'kanaSame'],
   'js/data/words.js': ['WORDS', 'WORD_BY', 'WORD_STAGES', 'WORD_LESSONS'],
-  'js/words-ui.js': ['knowsKanji', 'wordHtml', 'learnedWords', 'sayWord', 'wordLessonCards', 'qWordRead', 'qWordHear',
+  'js/conj.js': ['conj', 'isVerb', 'stems', 'CONJ_FORMS', 'CONJ_TAUGHT'],
+  'js/data/menu.js': ['MENUS', 'MENU_PHRASES', 'menuItems', 'numberKana'],
+  'js/menu-ui.js': ['menuOpen', 'canReadItem', 'menuCardHtml', 'renderMenu', 'tapItem', 'startMenuGame', 'noren', 'inked'],
+  'js/art.js': ['icon', 'neko', 'hanamaru', 'hanamaruPath', 'stamp', 'petals'],
+  'js/words-ui.js': ['qWordConj', 'formsTable', 'knowsKanji', 'wordHtml', 'learnedWords', 'sayWord', 'wordLessonCards', 'qWordRead', 'qWordHear',
     'qWordType', 'wordPrompt', 'showType', 'checkType', 'typedRight', 'wordVerdict', 'renderWords', 'libraryEntries',
     'openLibWord', 'loadAudioN5', 'wordIntroHtml'],
   'js/srs.js': ['state', 'load', 'save', 'today', 'addDays', 'daysBetween', 'pad2', 'asList', 'day', 'dayOkList',
@@ -64,7 +68,7 @@ const CONTRACT = {
   'js/app.js': ['ACTS', 'render', 'go', 'view', 'S', 'askConfirm', 'crumb', 'shuffle', 'esc', '$', '$$',
     'distractors', 'renderSoundBar', 'onAudioLoaded', 'toast', 'openSession', 'closeSheet', 'SET_NAME',
     'qWrite', 'showWrite', 'checkWrite', 'showStrokes', 'loadStrokes', 'settle', 'afterAnswer', 'rebuild', 'quickMs',
-    'todaysWords', 'wordDay', 'wordTasks'],
+    'todaysWords', 'wordDay', 'wordTasks', 'allTasksDone', 'stagesFinished'],
   'js/sprint.js': ['renderSprint', 'sprintKey', 'sprintLabel'],
 };
 const declares = (src, name) => {
@@ -272,6 +276,70 @@ section('words');
   ok(due.includes(run('WORDS[0].key')), 'a due word should come up');
 }
 
+section('menu');
+{
+  const m = {};
+  vm.createContext(m);
+  vm.runInContext(['js/data/kana.js', 'js/furi.js', 'js/data/words.js', 'js/data/menu.js'].map(read).join('\n') +
+    ';globalThis.M = { MENUS, MENU_PHRASES, menuItems, numberKana, furiProblems, KANA_BY };', m);
+  const { MENUS, MENU_PHRASES, menuItems, numberKana, furiProblems, KANA_BY } = m.M;
+  MENUS.forEach(M => {
+    const items = menuItems(M);
+    ok(items.length >= 4, `${M.id} has fewer than four things to order`);
+    furiProblems(M.name).forEach(p => ok(false, p));
+    M.sections.forEach(S => furiProblems(S.jp).forEach(p => ok(false, p)));
+    items.forEach(it => {
+      furiProblems(it.w).forEach(p => ok(false, p));
+      it.units.forEach(u => ok(!!KANA_BY[u], `menu item ${it.w} uses ${u}, which no lesson teaches`));
+      ok(Number.isInteger(it.price) && it.price > 0, `${it.w} has no sensible price`);
+    });
+  });
+  ok(MENUS[0].sections.flatMap(S => S.items).every(it => !/[{]/.test(it.w)), 'the café must be kana only — it opens with katakana');
+  MENU_PHRASES.forEach(([jp]) => furiProblems(jp).forEach(p => ok(false, p)));
+  const N = { 400: 'よんひゃく', 1100: 'せんひゃく', 1250: 'せんにひゃくごじゅう', 300: 'さんびゃく', 600: 'ろっぴゃく',
+    800: 'はっぴゃく', 3000: 'さんぜん', 8000: 'はっせん', 2980: 'にせんきゅうひゃくはちじゅう', 10500: 'いちまんごひゃく', 15: 'じゅうご' };
+  Object.entries(N).forEach(([n, want]) => ok(numberKana(+n) === want, `numberKana(${n}) = ${numberKana(+n)}, want ${want}`));
+}
+
+section('conjugation');
+{
+  const k = sandbox();
+  const run = code => vm.runInContext(code, k);
+  /* every godan ending, ichidan, and each exception, against forms checked by hand */
+  const F = {
+    '{食|た}べる v1': 'たべます たべません たべました たべませんでした たべて たべた たべない',
+    '{飲|の}む v5m': 'のみます のみません のみました のみませんでした のんで のんだ のまない',
+    '{行|い}く v5k-s': 'いきます いきません いきました いきませんでした いって いった いかない',
+    '{書|か}く v5k': 'かきます かきません かきました かきませんでした かいて かいた かかない',
+    '{泳|およ}ぐ v5g': 'およぎます およぎません およぎました およぎませんでした およいで およいだ およがない',
+    '{話|はな}す v5s': 'はなします はなしません はなしました はなしませんでした はなして はなした はなさない',
+    '{待|ま}つ v5t': 'まちます まちません まちました まちませんでした まって まった またない',
+    '{死|し}ぬ v5n': 'しにます しにません しにました しにませんでした しんで しんだ しなない',
+    '{遊|あそ}ぶ v5b': 'あそびます あそびません あそびました あそびませんでした あそんで あそんだ あそばない',
+    '{帰|かえ}る v5r': 'かえります かえりません かえりました かえりませんでした かえって かえった かえらない',
+    '{買|か}う v5u': 'かいます かいません かいました かいませんでした かって かった かわない',
+    'する vs': 'します しません しました しませんでした して した しない',
+    '{勉強|べんきょう}する vs': 'べんきょうします べんきょうしません べんきょうしました べんきょうしませんでした べんきょうして べんきょうした べんきょうしない',
+    '{来|く}る vk': 'きます きません きました きませんでした きて きた こない',
+  };
+  const forms = ['masu', 'masen', 'mashita', 'masendeshita', 'te', 'ta', 'nai'];
+  Object.entries(F).forEach(([key, want]) => {
+    const [w, pos] = key.split(' ');
+    const got = forms.map(f => run(`furiKana(conj(${JSON.stringify(w)}, ${JSON.stringify(pos)}, "${f}"))`)).join(' ');
+    ok(got === want, `${w}: ${got}\n      want ${want}`);
+  });
+  ok(run('furiPlain(conj("{来|く}る", "vk", "masu"))') === '来ます', '来る should keep its kanji: 来ます');
+  /* every verb in the data conjugates, and its markup stays sound */
+  const verbs = run('WORDS.filter(w => isVerb(w.pos)).map(w => [w.w, w.pos])');
+  ok(verbs.length >= 8, 'expected verbs in the data');
+  verbs.forEach(([w, pos]) => forms.forEach(f => {
+    let m;
+    try { m = run(`conj(${JSON.stringify(w)}, ${JSON.stringify(pos)}, "${f}")`); } catch (e) { ok(false, `${w} ${f}: ${e.message}`); return; }
+    run(`furiProblems(${JSON.stringify(m)})`).forEach(p => ok(false, p));
+  }));
+  ok(run('skillsFor("w:食べる").includes("j") && !skillsFor("w:水").includes("j")'), 'only verbs get the conjugate skill');
+}
+
 section('typing');
 {
   const k = sandbox();
@@ -378,6 +446,8 @@ section('furigana');
   const strings = [];
   f.WORDS.forEach(w => { strings.push(w.w); if (w.note) strings.push(w.note); (w.ex || []).forEach(x => strings.push(x[0])); });
   f.PATTERNS.forEach(p => (p.ex || []).forEach(x => strings.push(x[0])));
+  vm.runInContext('globalThis.STAGES = WORD_STAGES', f);
+  f.STAGES.forEach(S => strings.push(S.about));
   strings.forEach(x => furiProblems(x).forEach(pr => ok(false, pr)));
   ok(strings.length > 0, 'no word data found to check');
 }

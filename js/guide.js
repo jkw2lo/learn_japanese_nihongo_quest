@@ -183,7 +183,7 @@ function infoHtml(c) {
     <div class="eyebrow">${g.eyebrow}</div>
     <h2>${esc(g.head)}</h2>
     ${g.body}
-    ${g.say ? `<button class="btn btn-ghost btn-sm" data-act="say" data-say="${esc(g.say)}">🔊 Hear it</button>` : ""}
+    ${g.say ? `<button class="btn btn-ghost btn-sm" data-act="say" data-say="${esc(g.say)}">${icon("speaker")} Hear it</button>` : ""}
   </div>`;
 }
 

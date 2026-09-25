@@ -15,6 +15,7 @@ const AUTO_ADVANCE_MS = 1100;
 const SET_NAME = { h: "hiragana", k: "katakana" };
 
 let view = "today";
+let deeperSet = "words";     /* Go deeper shows words or kana, once there are words */
 let chartSet = "h";
 
 /* ============================================================
@@ -70,6 +71,7 @@ function render() {
   if (view === "today") renderToday();
   else if (view === "kana") renderKana();
   else if (view === "words") renderWords();
+  else if (view === "menu") renderMenu();
   else if (view === "sprint") renderSprint();
   else if (view === "record") renderRecord();
   renderSaveDot();
@@ -116,6 +118,8 @@ function wordTasks() {
   drill("r", "読む", "Read them", ks);
   if (hasAudio()) drill("p", "聞く", "Hear them", ks.filter(k => clipFor(WORD_BY[k].say)));
   drill("c", "打つ", "Type them in kana", ks);
+  const verbs = ks.filter(k => isVerb(WORD_BY[k].pos));
+  if (verbs.length) drill("j", "活用", "Conjugate the verbs", verbs);
   return tasks;
 }
 
@@ -144,8 +148,8 @@ function todayTasks() {
   };
   drill("r", "読む", "Read them", plain, "No new sounds today");
   if (hasAudio()) drill("p", "聞く", "Hear them", plain, "No new sounds today");
-  if (state.settings.writing) drill("w", "書く", "Write them from memory", plain.filter(canWrite), "Nothing today has a shape to write");
-  drill("a", "似てる", "Tell the look-alikes apart", plain.filter(k => alikeOf(k).length), "None of today's kana has a look-alike you know yet");
+  if (state.settings.writing) drill("w", "書く", "Write from memory", plain.filter(canWrite), "Nothing today has a shape to write");
+  drill("a", "似てる", "Spot the look-alikes", plain.filter(k => alikeOf(k).length), "None of today's kana has a look-alike you know yet");
   if (concepts.length) drill("x", "っ", "Hear the pause", concepts, "");
   return tasks;
 }
@@ -159,8 +163,8 @@ function renderToday() {
 
   let hero = "";
   if (first) {
-    hero = `<section class="card hero">
-      <div class="hero-seal" aria-hidden="true">あ</div>
+    hero = `<section class="card hero hero-first">
+      <div class="hero-art">${neko("happy", "bob")}<div class="hero-seal" aria-hidden="true">あ</div></div>
       <h1>Start with five sounds.</h1>
       <p class="lede">Japanese is written with two alphabets of sounds — hiragana and katakana — plus kanji. Everything
       starts with hiragana, one row at a time. The first row is <b lang="ja">あ い う え お</b>: a, i, u, e, o${planned.length > 1 ? `, and today's second is the <span lang="ja">${esc(planned[1].title)}</span>` : ""}.</p>
@@ -190,11 +194,12 @@ function renderToday() {
     } else {
       hero = `<section class="card hero done">
         <div class="hero-row">
-          <div>
+          ${neko(p === "done" ? "cheer" : "sleepy", "bob hero-neko")}
+          <div class="hero-text">
             <div class="eyebrow">今日 · Today</div>
             <h1>${p === "done" ? "Every word so far is yours." : "Done for today."}</h1>
             <p class="lede">${p === "done"
-              ? "All the kana and every word in stages 2 to 5. Stage 6 onward isn't built yet — keep reviews ticking over, and browse the Words tab."
+              ? `All the kana and every word in stages 2 to ${WORD_STAGES[WORD_STAGES.length - 1].st}. The next stages aren't built yet — keep reviews ticking over, and take an order at the café.`
               : "Nothing due and today's lessons are learned. Practise below, or run a sprint."}</p>
           </div>
           ${heroRing()}
@@ -213,10 +218,10 @@ function renderToday() {
     <section class="card">
       <div class="card-head"><h2>Today's practice</h2>
         <span class="count">${doneN} of ${countable.length} done${locked ? ` · ${locked} locked` : ""}</span></div>
-      <ul class="tasks">${shown.map(t => `
+      <ul class="tasks grid">${shown.map(t => `
         <li><button class="task ${t.done ? "done" : ""} ${t.locked ? "locked" : ""}" ${t.locked ? "disabled" : ""}
              data-act="${t.kind === "learn" ? "start-today" : "task"}" data-kind="${t.kind}">
-          <span class="tick">${t.done ? "✓" : t.locked ? "🔒" : ""}</span>
+          <span class="tick">${t.done ? icon("check") : t.locked ? icon("lock") : ""}</span>
           <span class="task-jp" lang="ja">${t.jp}</span>
           <span class="task-en">${esc(t.en)}<small>${esc(t.locked || t.sub)}</small></span>
         </button></li>`).join("")}
@@ -228,8 +233,9 @@ function renderToday() {
       ${hero}
       ${taskHtml}
       ${first ? "" : deeperHtml()}
+      ${first ? "" : menuCardHtml()}
     </div>
-    <aside class="col-rail">${first ? "" : wordsDeckHtml()}${first ? "" : kanaProgressHtml()}</aside>
+    <aside class="col-rail">${first ? "" : kanaProgressHtml()}${first ? "" : wordsDeckHtml()}</aside>
   </div>`;
 }
 
@@ -264,13 +270,14 @@ function heroCheck(due) {
   const n = days.length + (passedToday ? 0 : 1);
   const tried = d && !d.passed;
   return `<section class="card hero check">
+    ${neko(passedToday ? "happy" : "gambaru", "hero-corner")}
     <div class="eyebrow">ひらがな · The hiragana check</div>
     <h1>${passedToday ? `Day ${days.length} of ${HIRA_CHECK.days} — passed.` : `Day ${n} of ${HIRA_CHECK.days}.`}</h1>
     <p class="lede">Every hiragana is learned. Before katakana, hiragana has to stick: on ${HIRA_CHECK.days} separate days,
       go through all of it once — every kana to read, twenty to hear, the pauses and some real words — and get
       ${Math.round(HIRA_CHECK.pass * 100)}% right first time.</p>
     <div class="check-days">${Array.from({ length: HIRA_CHECK.days }, (_, i) =>
-      `<span class="${i < days.length ? "on" : ""}">${i < days.length ? "✓" : i + 1}</span>`).join("")}</div>
+      `<span class="${i < days.length ? "on" : ""}">${i < days.length ? icon("check") : i + 1}</span>`).join("")}</div>
     ${passedToday
       ? `<p class="muted">Come back tomorrow for the next one. A day between is the point — it's what shows it stuck.</p>`
       : `${tried ? `<p class="warn">Best today: ${Math.round(d.best * 100)}%. ${Math.round(HIRA_CHECK.pass * 100)}% is needed — have another go whenever you like.</p>` : ""}
@@ -292,14 +299,21 @@ function deeperHtml() {
   const words = readableWords();
   const wordSt = { total: words.length, solid: 0, buckets: [words.length, 0, 0, 0], pct: 0 };
   const wk = Object.keys(state.words);
-  const wordTiles = wk.length ? `<div class="tiles tiles-words">
+  /* Once there are words, one row at a time: words or kana. */
+  const showWords = wk.length && deeperSet === "words";
+  const toggle = wk.length ? `<div class="seg seg-sm">
+      <button class="${showWords ? "on" : ""}" data-act="deeper-set" data-set="words"><span lang="ja">言葉</span> Words</button>
+      <button class="${showWords ? "" : "on"}" data-act="deeper-set" data-set="kana"><span lang="ja">かな</span> Kana</button></div>` : `<span class="count">everything you've learned, shakiest first</span>`;
+  if (showWords) return `<section class="card">
+    <div class="card-head"><h2>Go deeper</h2>${toggle}</div>
+    <div class="tiles">
       ${tile("wr", "読む", "Read words", standing(wk, "r"))}
       ${hasAudio() ? tile("wp", "聞く", "Hear words", standing(wk, "p")) : ""}
       ${tile("wc", "打つ", "Type words", standing(wk, "c"))}
-    </div>` : "";
+      ${wk.some(k => isVerb(WORD_BY[k].pos)) ? tile("wj", "活用", "Conjugate", standing(wk.filter(k => isVerb(WORD_BY[k].pos)), "j")) : ""}
+    </div></section>`;
   return `<section class="card">
-    <div class="card-head"><h2>Go deeper</h2><span class="count">everything you've learned, shakiest first</span></div>
-    ${wordTiles}
+    <div class="card-head"><h2>Go deeper</h2>${toggle}</div>
     <div class="tiles">
       ${tile("r", "読む", "Read", standing(keys, "r"))}
       ${hasAudio() ? tile("p", "聞く", "Hear", standing(keys, "p")) : ""}
@@ -316,31 +330,32 @@ function deeperHtml() {
 
 function wordsDeckHtml() {
   const ws = wordsByNewest();
+  const learnedW = learnedWords().slice().reverse();
+  const items = [
+    ...learnedW.map(x => ({ w: x.w, say: x.say, r: x.r, m: x.m, src: "stage", id: x.key })),
+    ...ws.map(x => ({ w: x.w, say: x.w, r: x.r, m: x.m, src: "kana", id: x.w })),
+  ];
   return `<section class="card deck">
     <div class="card-head"><h2>Words you can read</h2><button class="link" data-act="nav" data-nav="words">All ${libraryEntries().length} ›</button></div>
-    <p class="muted small">The newest. Every one stays in the Words tab.</p>
-    ${ws.length ? `<ul class="words">${ws.slice(0, 14).map(w => `
-      <li><button class="word" data-act="say" data-say="${esc(w.w)}">
-        <span class="word-jp" lang="ja">${esc(w.w)}</span>${romaji(w.r)}<span class="word-en">${esc(w.m)}</span>
-      </button></li>`).join("")}</ul>
-      ${ws.length > 14 ? `<p class="muted small">…and ${ws.length - 14} more.</p>` : ""}`
-    : `<p class="muted small">Real words appear here as soon as you know every kana in one. It won't take long — <span lang="ja">いえ</span> (house) needs just two.</p>`}
+    ${items.length ? `<ul class="words">${items.slice(0, 60).map(x => `
+      <li><button class="word" data-act="say" data-say="${esc(x.say)}" title="Hear it">
+        <span class="word-jp" lang="ja">${wordHtml(x.w)}</span>${romaji(x.r)}<span class="word-en">${esc(x.m)}</span>
+      </button><button class="more" data-act="lib-open" data-src="${x.src}" data-w="${esc(x.id)}" aria-label="Details">${icon("chevron")}</button></li>`).join("")}</ul>`
+    : `<div class="empty">${neko("think", "mini")}<p class="muted small">Real words appear here as soon as you know every kana in one — <span lang="ja">いえ</span> (house) needs just two.</p></div>`}
   </section>`;
 }
 
+/* Progress, as a small metric above the words: a thin bar a row. */
 function kanaProgressHtml() {
-  const row = set => {
-    const all = KANA.filter(e => e.set === set);
-    const n = all.filter(e => isLearned(e.k)).length;
-    return `<div class="prog-row"><span lang="ja">${set === "h" ? "ひらがな" : "カタカナ"}</span>
-      <div class="bar"><i style="width:${(n / all.length * 100).toFixed(1)}%"></i></div><small>${n}/${all.length}</small></div>`;
-  };
-  return `<section class="card">
-    <div class="card-head"><h2>Kana</h2><button class="link" data-act="nav" data-nav="kana">Chart ›</button></div>
-    ${row("h")}${row("k")}
-    ${wordsOpen() ? `<div class="prog-row"><span lang="ja">言葉</span>
-      <div class="bar"><i style="width:${(learnedWords().length / WORDS.length * 100).toFixed(1)}%"></i></div><small>${learnedWords().length}/${WORDS.length}</small></div>` : ""}
-    ${phase() === "hira" || phase() === "check" ? `<p class="muted small">Katakana opens after the hiragana check.</p>` : ""}
+  const row = (label, n, total) => `<div class="prog-row"><span lang="ja">${label}</span>
+    <div class="bar"><i style="width:${(n / total * 100).toFixed(1)}%"></i></div><small>${n}/${total}</small></div>`;
+  const count = set => KANA.filter(e => e.set === set && isLearned(e.k)).length;
+  return `<section class="card prog">
+    <div class="prog-head"><span class="eyebrow">Progress</span><button class="link" data-act="nav" data-nav="kana">Chart ›</button></div>
+    ${row("ひらがな", count("h"), KANA.filter(e => e.set === "h").length)}
+    ${row("カタカナ", count("k"), KANA.filter(e => e.set === "k").length)}
+    ${wordsOpen() ? row("言葉", learnedWords().length, WORDS.length) : ""}
+    ${phase() === "hira" || phase() === "check" ? `<p class="muted tiny">Katakana opens after the hiragana check.</p>` : ""}
   </section>`;
 }
 
@@ -434,6 +449,7 @@ function qFor(k, kind, mode) {
     if (kind === "r") return qWordRead(k, mode);
     if (kind === "p") return qWordHear(k, mode);
     if (kind === "c") return qWordType(k, mode);
+    if (kind === "j") return qWordConj(k, mode);
     return null;
   }
   if (kind === "w") return qWrite(k, mode);
@@ -505,7 +521,7 @@ function startAhead() {
 
 function startTask(kind) {
   if (wordDay()) {
-    const keys = todaysWords().filter(k => kind !== "p" || clipFor(WORD_BY[k].say));
+    const keys = todaysWords().filter(k => (kind !== "p" || clipFor(WORD_BY[k].say)) && (kind !== "j" || isVerb(WORD_BY[k].pos)));
     openSession({ kind: "practice", title: TASK_TITLES[kind] || "言葉", queue: shuffle(keys).map(k => () => qFor(k, kind, "practice")) });
     return;
   }
@@ -517,14 +533,14 @@ function startTask(kind) {
 }
 
 const TASK_TITLES = { r: "読む · Read", p: "聞く · Hear", a: "似てる · Look-alikes", x: "っ · The pause", w: "書く · Write", c: "打つ · Type",
-  word: "言葉 · Real words", wr: "言葉 · Read", wp: "言葉 · Hear", wc: "言葉 · Type" };
+  j: "活用 · Conjugate", word: "言葉 · Real words", wr: "言葉 · Read", wp: "言葉 · Hear", wc: "言葉 · Type", wj: "活用 · Conjugate" };
 
 function startDeeper(kind) {
   const keys = Object.keys(state.items);
   let queue;
-  if (/^w[rpc]$/.test(kind)) {
+  if (/^w[rpcj]$/.test(kind)) {
     const sk = kind[1];
-    const ws = Object.keys(state.words).filter(k => sk !== "p" || clipFor(WORD_BY[k].say));
+    const ws = Object.keys(state.words).filter(k => (sk !== "p" || clipFor(WORD_BY[k].say)) && (sk !== "j" || isVerb(WORD_BY[k].pos)));
     queue = shuffle(shakiest(ws, sk).slice(0, 15)).map(k => () => qFor(k, sk, "practice"));
   } else if (kind === "word") {
     queue = sample(readableWords(), 15).map(w => () => qWord(w));
@@ -573,6 +589,7 @@ function openSession(o) {
     ...o, i: 0, card: null, answered: false, t0: 0,
     first: 0, firstRight: 0, quick: 0, missed: new Set(), tries: new Map(), learned: [],
   };
+  S.tasksDoneAtStart = allTasksDone();
   crumb(`session ${o.kind} (${o.queue.length})`);
   $("#session").classList.add("on");
   $("#sTitle").innerHTML = `<span lang="ja">${esc(o.title)}</span>`;
@@ -614,7 +631,7 @@ function showCard() {
       <div class="intro-rom">${esc(e.r)}</div>
       ${introNote(e)}
     </div>`;
-    foot.innerHTML = `<button class="btn btn-ghost" data-act="say" data-say="${esc(e.say)}">🔊 Hear it <kbd>R</kbd></button>
+    foot.innerHTML = `<button class="btn btn-ghost" data-act="say" data-say="${esc(e.say)}">${icon("speaker")} Hear it <kbd>R</kbd></button>
       <button class="btn" data-act="next" id="nextBtn">Next <kbd>␣</kbd></button>`;
     if (state.settings.autoplay) sayKana(c.k);
     return;
@@ -649,21 +666,21 @@ function showCard() {
     learn(c.k); save();
     if (!S.learned.includes(c.k)) S.learned.push(c.k);
     body.innerHTML = wordIntroHtml(c);
-    foot.innerHTML = `<button class="btn btn-ghost" data-act="replay">🔊 Hear it <kbd>R</kbd></button>
+    foot.innerHTML = `<button class="btn btn-ghost" data-act="replay">${icon("speaker")} Hear it <kbd>R</kbd></button>
       <button class="btn" data-act="next" id="nextBtn">Next <kbd>␣</kbd></button>`;
     if (state.settings.autoplay) sayWord(WORD_BY[c.k]);
     return;
   }
 
   if (c.kind === "w") return showWrite(c);
-  if (c.kind === "c") return showType(c);
+  if (c.kind === "c" || c.kind === "j") return showType(c);
 
   /* a question */
   const prompts = {
     r: () => `<div class="q-ask">How is this read?</div><div class="glyph-l" lang="ja">${esc(c.k)}</div>`,
-    p: () => `<div class="q-ask">Which one did you hear?</div><button class="play" data-act="replay">🔊</button>`,
-    a: () => `<div class="q-ask">Which one is <b>${esc(KANA_BY[c.k].r)}</b>?</div><button class="play small" data-act="replay">🔊</button>`,
-    x: () => `<div class="q-ask">Which spelling did you hear?</div><button class="play" data-act="replay">🔊</button>
+    p: () => `<div class="q-ask">Which one did you hear?</div><button class="play" data-act="replay" aria-label="Play again">${icon("speaker")}</button>`,
+    a: () => `<div class="q-ask">Which one is <b>${esc(KANA_BY[c.k].r)}</b>?</div><button class="play small" data-act="replay" aria-label="Play again">${icon("speaker")}</button>`,
+    x: () => `<div class="q-ask">Which spelling did you hear?</div><button class="play" data-act="replay" aria-label="Play again">${icon("speaker")}</button>
               <div class="muted small">${esc(c.word.m)}</div>`,
     word: () => `<div class="q-ask">What does this mean?</div><div class="glyph-l word" lang="ja">${esc(c.word.w)}</div>`,
   };
@@ -675,7 +692,7 @@ function showCard() {
     </div>
     <div class="verdict" id="verdict" aria-live="polite"></div>
   </div>`;
-  foot.innerHTML = `${c.sound ? `<button class="btn btn-ghost" data-act="replay">🔊 Again <kbd>R</kbd></button>` : "<span></span>"}
+  foot.innerHTML = `${c.sound ? `<button class="btn btn-ghost" data-act="replay">${icon("speaker")} Again <kbd>R</kbd></button>` : "<span></span>"}
     <button class="btn" data-act="next" id="nextBtn" disabled>Next <kbd>␣</kbd></button>`;
   if (c.kind !== "r" && c.kind !== "word" && c.sound) say(c.sound);
   S.t0 = performance.now();
@@ -697,7 +714,7 @@ function showWrite(c) {
       <button class="btn btn-ghost btn-sm" data-act="w-undo">Undo <kbd>Z</kbd></button>
       <button class="btn btn-ghost btn-sm" data-act="w-clear">Clear</button>
       <button class="btn btn-ghost btn-sm" data-act="w-show">Show me <kbd>S</kbd></button>
-      <button class="btn btn-ghost btn-sm" data-act="replay">🔊 <kbd>R</kbd></button>
+      <button class="btn btn-ghost btn-sm" data-act="replay" aria-label="Hear it">${icon("speaker")} <kbd>R</kbd></button>
     </div>
     <div class="verdict" id="verdict" aria-live="polite"></div>
   </div>`;
@@ -745,7 +762,7 @@ function checkWrite() {
   const v = $("#verdict");
   if (ok) {
     v.className = "verdict ok";
-    v.innerHTML = `✓ <span lang="ja">${esc(e.k)}</span> <span class="rom-always">${esc(e.r)}</span>${S.peeked && !c.trace ? ` <span class="muted small">— after a peek, so it's practice this time</span>` : ""}`;
+    v.innerHTML = `${icon("check", "v-ico")} <span lang="ja">${esc(e.k)}</span> <span class="rom-always">${esc(e.r)}</span>${S.peeked && !c.trace ? ` <span class="muted small">— after a peek, so it's practice this time</span>` : ""}`;
   } else {
     v.className = "verdict miss";
     v.innerHTML = `${esc(res.reason)} <span class="muted small">Here's how it goes.</span>`;
@@ -857,7 +874,7 @@ function answer(idx) {
   const v = $("#verdict");
   if (ok) {
     v.className = "verdict ok";
-    v.innerHTML = `✓ ${verdictDetail(c)}${quick ? ` <span class="badge-quick">速 ${(ms / 1000).toFixed(1)}s</span>` : ""}`;
+    v.innerHTML = `${icon("check", "v-ico")} ${verdictDetail(c)}${quick ? ` <span class="badge-quick">速 ${(ms / 1000).toFixed(1)}s</span>` : ""}`;
   } else {
     v.className = "verdict miss";
     v.innerHTML = `It was ${verdictDetail(c)}`;
@@ -895,34 +912,75 @@ function replay() {
   if (c.sound) say(c.sound);
 }
 
+/* Is everything on today's practice list ticked? */
+function allTasksDone() {
+  if (!todaysGlyphs().length && !todaysWords().length) return false;
+  const ts = todayTasks().filter(t => !t.locked);
+  return ts.length > 0 && ts.every(t => t.done);
+}
+
+/* The word stages this session finished. */
+function stagesFinished() {
+  const sts = new Set(S.learned.filter(isWordKey).map(k => WORD_BY[k].st));
+  return [...sts].filter(st => WORDS.filter(x => x.st === st).every(x => isLearned(x.key)));
+}
+
+/* The end of a session — worth marking. The cat, a teacher's stamp, the
+   hanamaru round a good score and falling petals are the celebration; how
+   much of it you get depends on what just happened. */
 function finishSession() {
+  if (S.kind === "guide") { S.finished = true; return closeSession(); }
   stopTimer();
   $("#sTimer").classList.remove("run");
   const body = $("#sBody"), foot = $("#sFoot");
   const acc = S.first ? S.firstRight / S.first : 1;
-  let head = "", extra = "";
+  const pct = Math.round(acc * 100);
+  let head = "", extra = "", mood = acc >= 0.6 ? "happy" : "think", stampText = "", maru = S.first >= 5 && acc >= 0.9, petalN = 0;
 
   if (S.kind === "check") {
     const r = recordCheck(S.firstRight, S.first);
     const days = hiraCheckDays().length;
     const opened = kataOpen();
     save();
-    head = r.passed ? (opened ? "カタカナ is open." : "Passed.") : "Not this time.";
-    extra = r.passed
-      ? opened
+    if (r.passed) {
+      mood = "cheer"; stampText = "合格"; petalN = opened ? 40 : 18;
+      head = opened ? "カタカナ is open!" : "Passed.";
+      extra = opened
         ? `<p>${HIRA_CHECK.days} days, ${HIRA_CHECK.days} passes. Hiragana has stuck — katakana is ready on Today.</p>`
-        : `<p>That's day ${days} of ${HIRA_CHECK.days}. Come back tomorrow for the next.</p>`
-      : `<p>${Math.round(HIRA_CHECK.pass * 100)}% first time is needed. Your misses are listed below — a round of Go deeper on them, then try again. There's no limit on tries.</p>`;
+        : `<p>That's day ${days} of ${HIRA_CHECK.days}. Come back tomorrow for the next.</p>`;
+    } else {
+      mood = "gambaru"; maru = false;
+      head = "Not this time — がんばって!";
+      extra = `<p>${Math.round(HIRA_CHECK.pass * 100)}% first time is needed. Your misses are listed below — a round of Go deeper on them, then try again. There's no limit on tries.</p>`;
+    }
     crumb(`check ${Math.round(r.acc * 100)}% ${r.passed ? "pass" : "fail"}`);
   } else if (S.learned.length) {
-    head = "Learned.";
+    mood = "cheer"; stampText = "よくできました"; petalN = 16;
+    head = S.learned.some(isWordKey) ? `${S.learned.length} new word${S.learned.length > 1 ? "s" : ""}.` : `${S.learned.length} new kana.`;
     extra = `<p class="learned-list ${S.learned.some(isWordKey) ? "words" : ""}" lang="ja">${S.learned.map(k => isWordKey(k) ? wordHtml(WORD_BY[k].w) : esc(k)).join(isWordKey(S.learned[0]) ? "<br>" : " ")}</p>`;
-    if (phase() === "check" && S.kind === "today") extra += `<p><b>That's all of hiragana.</b> Next: the hiragana check, on ${HIRA_CHECK.days} separate days from tomorrow, before katakana.</p>`;
-  } else head = acc >= 0.9 ? "Nicely done." : "Done.";
+    if (phase() === "check" && S.kind === "today") {
+      petalN = 36;
+      extra += `<div class="banner-done">${neko("wow", "mini")}<div><b>That's all of hiragana.</b> Next: the hiragana check, on ${HIRA_CHECK.days} separate days from tomorrow, before katakana.</div></div>`;
+    }
+    stagesFinished().forEach(st => {
+      const W = WORD_STAGES.find(x => x.st === st);
+      petalN = 36;
+      extra += `<div class="banner-done">${stamp("完", "mini")}<div><b>Stage ${st} · <span lang="ja">${esc(W.jp)}</span> complete.</b> Every ${esc(W.en.toLowerCase())} word is yours.</div></div>`;
+    });
+  } else {
+    head = acc >= 0.9 ? "Nicely done." : acc >= 0.6 ? "Done." : "Worth another round.";
+    if (acc >= 0.9 && S.first >= 5) petalN = 8;
+  }
+
+  if (S.kind !== "check" && S.kind !== "guide" && !S.tasksDoneAtStart && allTasksDone()) {
+    petalN = Math.max(petalN, 30);
+    extra += `<div class="banner-done">${neko("happy", "mini")}<div><b lang="ja">きょうは おわり！</b> Everything on today's list is done.</div></div>`;
+  }
 
   const missed = [...S.missed];
   body.innerHTML = `<div class="finish">
-    <div class="finish-big">${Math.round(acc * 100)}<small>%</small></div>
+    <div class="celebrate">${neko(mood, "hop")}${stampText ? stamp(stampText) : ""}</div>
+    <div class="score-wrap"><div class="finish-big">${pct}<small>%</small></div>${maru ? hanamaru() : ""}</div>
     <div class="muted">${S.firstRight} of ${S.first} right first time${S.quick ? ` · ${S.quick} quick` : ""}</div>
     <h2>${esc(head)}</h2>
     ${extra}
@@ -933,6 +991,7 @@ function finishSession() {
   foot.innerHTML = `<span></span><button class="btn" data-act="close-session" id="nextBtn">Done <kbd>␣</kbd></button>`;
   $("#sProg").style.width = "100%";
   $("#sCount").textContent = "";
+  if (petalN) petals($("#session"), petalN);
   S.i = S.queue.length;
   S.card = null;
   S.finished = true;
@@ -1037,7 +1096,7 @@ function renderKana() {
         passes reading${hasAudio() ? " and hearing" : ""} it.</p>
       <button class="btn btn-ghost btn-sm" data-act="guide">Read the full introduction</button>
     </details>
-    ${locked ? `<div class="card banner">🔒 Katakana opens after the hiragana check — ${HIRA_CHECK.days} days of it, once every hiragana is learned. You can look, but not start.</div>` : ""}
+    ${locked ? `<div class="card banner">${icon("lock")} Katakana opens after the hiragana check — ${HIRA_CHECK.days} days of it, once every hiragana is learned. You can look, but not start.</div>` : ""}
     <div class="chart-cols">
       <div>${section("Basic", "清音", ["base"], 5, ["a", "i", "u", "e", "o"])}</div>
       <div>
@@ -1186,7 +1245,7 @@ function openSettings() {
     <div class="set-block">
       <h3>Your data</h3>
       <p class="small">Progress lives in this browser only. Save a copy now and then — clearing site data loses it.</p>
-      <button class="btn btn-ghost btn-sm" data-act="backup">💾 Save or load a backup</button>
+      <button class="btn btn-ghost btn-sm" data-act="backup">${icon("save")} Save or load a backup</button>
       <button class="btn btn-ghost btn-sm" data-act="report">Report a problem</button>
       <button class="btn btn-ghost btn-sm danger" data-act="reset">Reset everything</button>
     </div>
@@ -1343,6 +1402,7 @@ const ACTS = {
   "chart-set": el => { chartSet = el.dataset.set; renderKana(); },
   opt: el => answer(+el.dataset.i),
   next: () => { if (S && (S.card?.t === "intro" || S.card?.t === "concept" || S.card?.t === "info" || S.card?.t === "wintro" || S.answered || S.finished)) next(); },
+  "deeper-set": el => { deeperSet = el.dataset.set; renderToday(); },
   "w-check": () => checkWrite(),
   "w-undo": () => padUndo(),
   "w-clear": () => padClear(),
@@ -1387,7 +1447,7 @@ document.addEventListener("keydown", guard(e => {
   const inField = /INPUT|TEXTAREA|SELECT/.test(e.target.tagName);
   if (askDone) { if (e.key === "Escape") closeAsk(false); return; }
   if (typeof sprintKey === "function" && sprintKey(e)) return;
-  if (S && S.card?.kind === "c" && !S.finished) {
+  if (S && (S.card?.kind === "c" || S.card?.kind === "j") && !S.finished) {
     if (e.key === "Enter") { e.preventDefault(); S.answered ? ACTS.next() : checkType(); return; }
     if (e.key === " " && S.answered) { e.preventDefault(); ACTS.next(); return; }
     if (e.key === "Escape") { closeSession(); return; }

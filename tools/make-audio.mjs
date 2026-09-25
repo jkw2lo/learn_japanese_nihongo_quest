@@ -29,9 +29,9 @@ const BITRATE = '32000';
 const MIN_SECONDS = 0.06;
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const { KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana } = new Function(
-  ['js/data/kana.js', 'js/furi.js', 'js/data/words.js'].map(f => readFileSync(join(root, f), 'utf8')).join('\n') +
-  '\nreturn {KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana};')();
+const { KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, CONJ_TAUGHT } = new Function(
+  ['js/data/kana.js', 'js/furi.js', 'js/conj.js', 'js/data/words.js', 'js/data/menu.js'].map(f => readFileSync(join(root, f), 'utf8')).join('\n') +
+  '\nreturn {KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, CONJ_TAUGHT};')();
 
 /* The text actually handed to `say` for a clip key, for any key the voice
    misreads on its own. A lone は or へ could be taken as the particles "wa"
@@ -50,6 +50,8 @@ function speakableKana() {
   KANA_PAIRS_WORDS.forEach(p => out.add(p.w));
   Object.values(KANA_CONCEPT).forEach(c => c.ex.forEach(x => out.add(x)));
   GUIDE_SAY.forEach(x => out.add(x));
+  /* the café opens with katakana, so its dishes ship with the kana */
+  menuItems(MENUS[0]).forEach(it => out.add(it.kana));
   return [...out];
 }
 
@@ -58,6 +60,10 @@ function speakableN5() {
   const kana = new Set(speakableKana());
   const out = new Set();
   WORDS.forEach(w => { out.add(w.say); w.ex.forEach(([jp]) => out.add(furiKana(jp))); });
+  menuItems(MENUS[1]).forEach(it => out.add(it.kana));
+  /* every taught form of every verb */
+  WORDS.filter(w => isVerb(w.pos)).forEach(w => CONJ_TAUGHT.forEach(f => out.add(furiKana(conj(w.w, w.pos, f)))));
+  MENU_PHRASES.forEach(([jp]) => out.add(furiKana(jp).replace('〜', '')));
   return [...out].filter(t => !kana.has(t));
 }
 

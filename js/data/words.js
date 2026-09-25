@@ -25,6 +25,7 @@ const WORD_STAGES = [
   { st: 3, jp: "数", en: "Numbers, time and money", about: "Counting to ten thousand, telling the time, and asking how much. Japanese numbers are regular: 11 is ten-one, 20 is two-ten." },
   { st: 4, jp: "私", en: "Me and you", about: "Saying who you are and asking about others: X は Y です — “X is Y”. は (read wa) marks what you're talking about." },
   { st: 5, jp: "食べる", en: "Food and ordering", about: "Food, drink, and how to order it. 〜をください — “~, please” — gets you a long way." },
+  { st: 6, jp: "行く", en: "Getting around", about: "Trains, stations and directions. に marks where you're going and で how you get there: {電車|でんしゃ}で{行|い}きます, I'll go by train. Verbs get their polite forms here — {行|い}きます, {行|い}きません, {行|い}きました." },
 ];
 
 const WORDS = [
@@ -144,6 +145,36 @@ const WORDS = [
   { w: "{店|みせ}", m: "shop; restaurant", pos: "n", st: 5 },
   { w: "{一人|ひとり}", m: "one person", pos: "n", st: 5, note: "Two people is {二人|ふたり}; after that, さんにん, よにん…",
     ex: [["{二人|ふたり}です。", "Two of us. (at the door)"]] },
+
+  /* ---- stage 6 · getting around ---- */
+  { w: "{行|い}く", m: "to go", pos: "v5k-s", st: 6, note: "Its て-form is {行|い}って — the one exception among く verbs.",
+    ex: [["{駅|えき}に{行|い}きます。", "I'm going to the station."]] },
+  { w: "{来|く}る", m: "to come", pos: "vk", st: 6, note: "Irregular: {来|き}ます, {来|こ}ない — even the kanji's reading changes.",
+    ex: [["{明日|あした}また{来|き}ます。", "I'll come again tomorrow."]] },
+  { w: "{帰|かえ}る", m: "to go home; to return", pos: "v5r", st: 6, note: "Looks like {食|た}べる but conjugates like {乗|の}る: {帰|かえ}ります.",
+    ex: [["{家|うち}に{帰|かえ}ります。", "I'm going home."]] },
+  { w: "{乗|の}る", m: "to ride; to get on", pos: "v5r", st: 6, note: "What you get on takes に: {電車|でんしゃ}に{乗|の}ります.",
+    ex: [["バスに{乗|の}ります。", "I get on the bus."]] },
+  { w: "{降|お}りる", m: "to get off", pos: "v1", st: 6, ex: [["{次|つぎ}の{駅|えき}で{降|お}ります。", "I get off at the next station."]] },
+  { w: "{歩|ある}く", m: "to walk", pos: "v5k", st: 6 },
+  { w: "{待|ま}つ", m: "to wait", pos: "v5t", st: 6, ex: [["バスを{待|ま}ちます。", "I'm waiting for the bus."]] },
+  { w: "わかる", m: "to understand", pos: "v5r", st: 6, note: "You met わかりました and わかりません as phrases — here's the verb they come from." },
+  { w: "{駅|えき}", m: "station", pos: "n", st: 6, ex: [["{駅|えき}は{近|ちか}いですか。", "Is the station near?"]] },
+  { w: "{電車|でんしゃ}", m: "train", pos: "n", st: 6, ex: [["{電車|でんしゃ}で{行|い}きます。", "I'll go by train."]] },
+  { w: "{地下鉄|ちかてつ}", m: "subway", pos: "n", st: 6 },
+  { w: "{切符|きっぷ}", m: "ticket", pos: "n", st: 6 },
+  { w: "{出口|でぐち}", m: "exit", pos: "n", st: 6, ex: [["{出口|でぐち}はどこですか。", "Where's the exit?"]] },
+  { w: "{入口|いりぐち}", m: "entrance", pos: "n", st: 6 },
+  { w: "{右|みぎ}", m: "right", pos: "n", st: 6 },
+  { w: "{左|ひだり}", m: "left", pos: "n", st: 6 },
+  { w: "まっすぐ", m: "straight ahead", pos: "adv", st: 6 },
+  { w: "そこ", m: "there (near you)", pos: "pron", st: 6, note: "ここ here, そこ there, あそこ over there — like これ, それ, あれ." },
+  { w: "あそこ", m: "over there", pos: "pron", st: 6 },
+  { w: "{近|ちか}い", m: "near", pos: "adj-i", st: 6 },
+  { w: "{遠|とお}い", m: "far", pos: "adj-i", st: 6 },
+  { w: "に", m: "to; at (where you're going; a time)", pos: "part", st: 6, ex: [["{三時|さんじ}に{行|い}きます。", "I'll go at three."]] },
+  { w: "で", m: "by; at (how; where something happens)", pos: "part", st: 6, ex: [["{駅|えき}で{待|ま}ちます。", "I'll wait at the station."]] },
+  { w: "へ", m: "towards", pos: "part", st: 6, r: "e", say: "え", note: "Written へ, read e — like は read wa.", ex: [["{日本|にほん}へ{行|い}きます。", "I'm going to Japan."]] },
 ];
 
 /* ---- derived: keys, kana, lessons of five ---- */

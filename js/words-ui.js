@@ -24,6 +24,7 @@ function wordLessonCards(L) {
     drill.push(() => qWordRead(key, "learn"));
     drill.push(() => qWordHear(key, "learn"));
     drill.push(() => qWordType(key, "learn"));
+    if (isVerb(WORD_BY[key].pos)) drill.push(() => qWordConj(key, "learn", "masu"));
   });
   return [...cards, ...shuffle(drill)];
 }
@@ -34,7 +35,7 @@ function stageIntro(st) {
   return {
     eyebrow: `Stage ${st} · ${S.jp}`,
     head: S.en + ".",
-    body: `<p>${esc(S.about)}</p><p class="muted">${n} words, five at a time.</p>`,
+    body: `<p>${wordHtml(S.about)}</p><p class="muted">${n} words, five at a time.</p>`,
   };
 }
 
@@ -46,9 +47,18 @@ function wordIntroHtml(c) {
     ${state.settings.showRomaji ? `<div class="intro-rom">${esc(x.r)}</div>` : ""}
     <div class="word-m">${esc(x.m)}</div>
     ${x.note ? `<p class="rule">${wordHtml(x.note)}</p>` : ""}
+    ${isVerb(x.pos) ? formsTable(x) : ""}
     ${x.ex.map(([jp, en]) => `<button class="ex-sent" data-act="say" data-say="${esc(furiKana(jp))}">
       <span lang="ja">${wordHtml(jp)}</span><small>${esc(en)}</small></button>`).join("")}
   </div>`;
+}
+
+/* A verb's polite forms, each one tappable. */
+function formsTable(x) {
+  return `<div class="forms">${CONJ_TAUGHT.map(f => {
+    const m = conj(x.w, x.pos, f);
+    return `<button class="form" data-act="say" data-say="${esc(furiKana(m))}"><span lang="ja">${wordHtml(m)}</span><small>${esc(CONJ_FORMS[f].en)}</small></button>`;
+  }).join("")}</div>`;
 }
 
 /* ---------- questions ---------- */
@@ -90,10 +100,19 @@ function qWordType(key, mode) {
   return { t: "q", kind: "c", wk: true, k: key, mode, answer: key, sound: x.say };
 }
 
+/* Conjugate: see the verb and a form, type the form. */
+function qWordConj(key, mode, form) {
+  const x = WORD_BY[key];
+  if (!isVerb(x.pos)) return null;
+  const f = form || sample(CONJ_TAUGHT, 1)[0];
+  const m = conj(x.w, x.pos, f);
+  return { t: "q", kind: "j", wk: true, k: key, mode, answer: key, form: f, target: m, sound: furiKana(m) };
+}
+
 function wordPrompt(c) {
   const x = WORD_BY[c.k];
   if (c.kind === "r") return `<div class="q-ask">What does this mean?</div><div class="glyph-l word" lang="ja">${wordHtml(x.w)}</div>`;
-  if (c.kind === "p") return `<div class="q-ask">Which one did you hear?</div><button class="play" data-act="replay">🔊</button>`;
+  if (c.kind === "p") return `<div class="q-ask">Which one did you hear?</div><button class="play" data-act="replay" aria-label="Play again">${icon("speaker")}</button>`;
   return "";
 }
 
@@ -103,9 +122,12 @@ const isKataWord = x => /^[゠-ヿ]+$/.test(x.kana);
 
 function showType(c) {
   const x = WORD_BY[c.k];
+  const F = c.kind === "j" ? CONJ_FORMS[c.form] : null;
   $("#sBody").innerHTML = `<div class="q q-c">
-    <div class="q-ask">Type it in ${isKataWord(x) ? "katakana" : "kana"}:</div>
-    <div class="type-m">${esc(x.m)}</div>
+    ${F ? `<div class="q-ask">Make it <b>${esc(F.en)}</b> <span lang="ja">(${esc(F.jp)})</span>:</div>
+      <div class="type-m conj-verb"><span lang="ja">${wordHtml(x.w)}</span> <small>${esc(x.m)}</small></div>`
+    : `<div class="q-ask">Type it in ${isKataWord(x) ? "katakana" : "kana"}:</div>
+    <div class="type-m">${esc(x.m)}</div>`}
     <input class="sp-input type-in" id="typeIn" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="romaji — it turns into kana">
     <div class="type-preview" lang="ja" id="typePreview">&nbsp;</div>
     <div class="verdict" id="verdict" aria-live="polite"></div>
@@ -114,7 +136,7 @@ function showType(c) {
     <button class="btn" data-act="type-check" id="nextBtn">Check <kbd>↵</kbd></button>`;
   const inp = $("#typeIn");
   inp.addEventListener("input", () => {
-    $("#typePreview").textContent = romajiToKana(inp.value, isKataWord(x)) || " ";
+    $("#typePreview").textContent = romajiToKana(inp.value, c.kind !== "j" && isKataWord(x)) || "\u00a0";
   });
   inp.focus();
   S.hinted = false;
@@ -132,29 +154,36 @@ function typedRight(x, typed) {
 
 function checkType() {
   const c = S?.card;
-  if (!c || c.kind !== "c" || S.answered) return;
+  if (!c || (c.kind !== "c" && c.kind !== "j") || S.answered) return;
   const inp = $("#typeIn");
   if (!inp.value.trim()) { toast("Type the romaji first — or ask for a hint."); inp.focus(); return; }
   const x = WORD_BY[c.k];
-  const ok = typedRight(x, inp.value);
+  const ok = c.kind === "j" ? kanaSame(romajiToKana(inp.value), furiKana(c.target)) : typedRight(x, inp.value);
   settle(c, ok, performance.now() - S.t0, !S.hinted);
   inp.disabled = true;
   const v = $("#verdict");
   v.className = "verdict " + (ok ? "ok" : "miss");
-  v.innerHTML = (ok ? "✓ " : "It's ") + wordVerdict(x) + (S.hinted && ok ? ` <span class="muted small">— after a hint, so it's practice this time</span>` : "");
-  if (state.settings.autoplay) sayWord(x);
+  const shown = c.kind === "j"
+    ? `<span lang="ja">${wordHtml(c.target, "always")}</span> <span class="rom-always">${esc(toRomaji(furiKana(c.target)))}</span>`
+    : wordVerdict(x);
+  v.innerHTML = (ok ? icon("check", "v-ico") + " " : "It's ") + shown + (S.hinted && ok ? ` <span class="muted small">— after a hint, so it's practice this time</span>` : "");
+  if (state.settings.autoplay) { if (c.kind === "j") say(furiKana(c.target)); else sayWord(x); }
   const hint = $('[data-act="type-hint"]');
-  if (hint) { hint.dataset.act = "replay"; hint.innerHTML = `🔊 Again <kbd>R</kbd>`; }
+  if (hint) { hint.dataset.act = "replay"; hint.innerHTML = `${icon("speaker")} Again <kbd>R</kbd>`; }
   afterAnswer(ok);
 }
 
 function typeHint() {
   const c = S?.card;
-  if (!c || c.kind !== "c" || S.answered) return;
+  if (!c || (c.kind !== "c" && c.kind !== "j") || S.answered) return;
   const x = WORD_BY[c.k];
   S.hinted = true;
-  const first = kanaUnits(x.kana)[0];
-  $("#typePreview").innerHTML = `<span class="muted">starts with</span> ${esc(first)}… <span class="muted">· ${kanaUnits(x.kana).length} kana</span>`;
+  if (c.kind === "j") {
+    $("#typePreview").innerHTML = `<span class="muted">like</span> ${esc(CONJ_FORMS[c.form].ex)} <span class="muted">· ${kanaUnits(furiKana(c.target)).length} kana</span>`;
+  } else {
+    const first = kanaUnits(x.kana)[0];
+    $("#typePreview").innerHTML = `<span class="muted">starts with</span> ${esc(first)}… <span class="muted">· ${kanaUnits(x.kana).length} kana</span>`;
+  }
   $("#typeIn").focus();
 }
 
@@ -198,12 +227,13 @@ function renderWords() {
   notYet.forEach(x => { const miss = [...new Set(x.units.filter(u => !isLearned(u)))]; if (miss.length === 1) need[miss[0]] = (need[miss[0]] || 0) + 1; });
   const topNeed = Object.entries(need).sort((a, b) => b[1] - a[1]).slice(0, 6);
 
-  const row = e => `<li><button class="lib-row" data-act="lib-open" data-src="${e.src}" data-w="${esc(e.src === "stage" ? e.x.key : e.w)}">
+  /* Tapping a word just says it; the chevron opens its card. */
+  const row = e => `<li><button class="lib-row" data-act="say" data-say="${esc(e.src === "stage" ? e.x.say : e.w)}" title="Hear it">
     <span class="lib-jp" lang="ja">${wordHtml(e.w)}</span>
     ${state.settings.showRomaji ? `<span class="lib-rom">${esc(e.r)}</span>` : ""}
     <span class="lib-m">${esc(e.m)}</span>
     ${e.src === "stage" ? `<span class="lib-st" title="Stage ${e.st}">${e.st}</span>` : ""}
-  </button></li>`;
+  </button><button class="more" data-act="lib-open" data-src="${e.src}" data-w="${esc(e.src === "stage" ? e.x.key : e.w)}" aria-label="Details">${icon("chevron")}</button></li>`;
 
   const groups = [];
   WORD_STAGES.forEach(S => {
@@ -226,9 +256,9 @@ function renderWords() {
           `<button class="${libFilter === f ? "on" : ""}" data-act="lib-filter" data-f="${f}" ${f === "learned" && !stageN ? "disabled" : ""}><span lang="ja">${t}</span></button>`).join("")}
       </div>
       <input class="lib-search" id="libSearch" type="search" placeholder="Search kana, romaji or English" value="${esc(libQuery)}">
-      <span class="muted">${all.length} word${all.length === 1 ? "" : "s"} you can read${stageN ? ` · ${stageN} learned` : ""} · tap one to hear it</span>
+      <span class="muted">${all.length} word${all.length === 1 ? "" : "s"} you can read${stageN ? ` · ${stageN} learned` : ""} · tap to hear, › for the card</span>
     </div>
-    ${!all.length ? `<section class="card"><p>Words appear here as soon as you know every kana in one — <span lang="ja">いえ</span> (house)
+    ${!all.length ? `<section class="card empty">${neko("think", "mini")}<p>Words appear here as soon as you know every kana in one — <span lang="ja">いえ</span> (house)
       needs just the first row. Every word stays here once it arrives; this is the whole list, not just today's.</p></section>` : ""}
     ${groups.join("") || (all.length ? `<section class="card"><p class="muted">Nothing matches that.</p></section>` : "")}
     ${notYet.length ? `<section class="card not-yet"><div class="card-head"><h2>Coming up</h2><span class="count">${notYet.length} more kana words</span></div>

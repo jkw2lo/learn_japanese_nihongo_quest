@@ -10,7 +10,7 @@ const PASSES_FOR_SOLID = 3;
    still slow reading — see README → Kana. */
 const QUICK_MS = { r: 3000, p: 4000, a: 4000, w: 5000 };
 /* Words are longer than a kana, and typing one takes a while. */
-const QUICK_WORD_MS = { r: 5000, p: 5000, c: 12000 };
+const QUICK_WORD_MS = { r: 5000, p: 5000, c: 12000, j: 15000 };
 /* The consolidation gate between hiragana and katakana: this many separate
    days, each after the last hiragana was learned, on which a full hiragana
    sweep was finished at this first-try accuracy. */
@@ -61,6 +61,7 @@ const freshState = () => ({
   sprint: { best: {}, recent: [] },
   mistakes: {},       /* glyph -> count, from drills and sprints */
   kataOpen: null,     /* the day katakana unlocked; never relocks */
+  menu: { orders: 0, days: {} },   /* the side quest: orders taken, per day */
   backupAt: null,
 });
 
@@ -82,6 +83,7 @@ function normalise(s) {
   out.sprint = { best: {}, ...(s.sprint || {}) };
   out.sprint.recent = asList(out.sprint.recent);
   out.mistakes = s.mistakes && typeof s.mistakes === "object" ? s.mistakes : {};
+  out.menu = { orders: 0, days: {}, ...(s.menu || {}) };
   return out;
 }
 
@@ -130,7 +132,9 @@ function skill(k, sk) {
    shape to name on its own, so it only ever comes up as a word pair. "a",
    telling look-alikes apart, only applies to kana that have one — callers
    narrow the keys for that. */
-const skillsFor = k => isWordKey(k) ? ["r", "p", "c"] : KANA_BY[k]?.concept ? ["x"] : ["r", "p", "a", "w"];
+/* Verbs have one more: j, conjugate it. */
+const skillsFor = k => isWordKey(k) ? (isVerb(WORD_BY[k]?.pos) ? ["r", "p", "c", "j"] : ["r", "p", "c"])
+  : KANA_BY[k]?.concept ? ["x"] : ["r", "p", "a", "w"];
 
 function learn(k) {
   if (isLearned(k)) return;

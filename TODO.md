@@ -24,19 +24,28 @@ Build order. Each step should run end to end before the next one starts.
    bundle, solid kana retiring from reviews. Plus the Words library tab, and
    a–o / consonant labels on the kana charts.
 
+6. ~~Menu side quest~~ (0.5.0): カフェ さくら (katakana, opens with
+   katakana) and 食堂 まるや (kanji with furigana, after stage 5), the ordering
+   game, the receipt with the total said in Japanese.
+7. ~~Conjugation~~ (0.5.0): `js/conj.js` with fixtures for every class; the
+   polite forms taught; a conjugate skill and drill; stage 6 (getting
+   around) with eight verbs. Also 0.5.0: Today fits one desktop screen,
+   tap-to-hear words, SVG icons in place of emoji, and the cat, hanamaru,
+   stamps and petals.
+
 ## Next
 
-6. **Menu side quest, tier 1** (katakana café): README → The side quest.
-7. **Conjugation**: `js/conj.js`, fixtures, the conjugate Sprint mode, and
-   the ます forms of the stage 5 verbs.
 8. **Patterns, then kanji** (kanji stroke data from AnimCJK's graphicsJa;
-   `knowsKanji` in words-ui.js starts returning true), then the rest of N5
-   (stages 6–10).
+   `knowsKanji` in words-ui.js starts returning true), then the rest of N5:
+   stages 7 買う shopping (adjectives), 8 毎日 daily life, 9 て-form, and
+   10 the wrap-up. The て-form and plain forms are already generated.
 9. Sync, N4.
 
 ## Smaller, from 0.4.0
 
-- Sprint modes for words: 言葉 read and 書く type (README → Sprint).
+- Sprint modes for words and conjugation: 言葉 read, 書く type, 活用 conjugate
+  (README → Sprint).
+- The menu's third tier: an izakaya board (本日のおすすめ).
 - A missed word should drop a review onto the kana you got wrong.
 - Word mistakes in Record's mistake notebook (it lists kana only).
 

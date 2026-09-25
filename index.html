@@ -9,13 +9,13 @@
      cached js/app.js keeps serving it until the URL changes, so a push can be
      live and invisible at once. It lives here and nowhere else.
      Bump with: node tools/version.mjs patch -->
-<script>const APP_VERSION = "0.4.0", APP_DATE = "2026-09-25";</script>
+<script>const APP_VERSION = "0.5.0", APP_DATE = "2026-09-25";</script>
 <!-- First, before anything it could report on. -->
-<script src="js/diag.js?v=0.4.0"></script>
+<script src="js/diag.js?v=0.5.0"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@500;700&display=swap">
-<link rel="stylesheet" href="css/app.css?v=0.4.0">
+<link rel="stylesheet" href="css/app.css?v=0.5.0">
 
 <body>
 <div class="app">
@@ -33,8 +33,8 @@
       <button data-act="nav" data-nav="record"><span class="nz" lang="ja">記録</span> Record</button>
     </nav>
     <div class="top-actions">
-      <button class="icon-btn" id="saveBtn" data-act="backup" title="Save or load a backup" aria-label="Backup">💾</button>
-      <button class="icon-btn" data-act="settings" title="Settings" aria-label="Settings">⚙</button>
+      <button class="icon-btn" id="saveBtn" data-act="backup" title="Save or load a backup" aria-label="Backup"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3.5v9"/><path d="M6.2 9l3.8 3.8L13.8 9"/><path d="M4 13.5v2.5h12v-2.5"/></svg></button>
+      <button class="icon-btn" data-act="settings" title="Settings" aria-label="Settings"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6h8M15 6h1M4 14h1M8 14h8"/><circle cx="13.5" cy="6" r="1.8"/><circle cx="6.5" cy="14" r="1.8"/></svg></button>
     </div>
   </header>
 
@@ -42,6 +42,7 @@
     <section class="view on" id="v-today"></section>
     <section class="view" id="v-kana"></section>
     <section class="view" id="v-words"></section>
+    <section class="view" id="v-menu"></section>
     <section class="view" id="v-sprint"></section>
     <section class="view" id="v-record"></section>
   </main>
@@ -58,7 +59,7 @@
 <!-- A study session: lessons, reviews, practice, the hiragana check. -->
 <div class="overlay" id="session" role="dialog" aria-modal="true" aria-labelledby="sTitle">
   <div class="s-top">
-    <button class="icon-btn" data-act="close-session" aria-label="Close" title="Close (Esc)">✕</button>
+    <button class="icon-btn" data-act="close-session" aria-label="Close" title="Close (Esc)"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9"/></svg></button>
     <div class="s-title" id="sTitle"></div>
     <div class="s-count" id="sCount"></div>
   </div>
@@ -71,7 +72,7 @@
 <!-- A sprint sheet. -->
 <div class="overlay" id="sprint" role="dialog" aria-modal="true" aria-label="Sprint">
   <div class="s-top">
-    <button class="icon-btn" data-act="sp-close" aria-label="Give up" title="Give up (Esc)">✕</button>
+    <button class="icon-btn" data-act="sp-close" aria-label="Give up" title="Give up (Esc)"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9"/></svg></button>
     <div class="sp-strip" id="spStrip"></div>
     <div class="sp-clock" id="spClock">0:00</div>
   </div>
@@ -82,7 +83,7 @@
 <!-- Settings, backup, a kana's details. -->
 <div class="sheet-wrap" id="sheet">
   <div class="sheet" role="dialog" aria-modal="true">
-    <button class="icon-btn sheet-x" data-act="sheet-close" aria-label="Close">✕</button>
+    <button class="icon-btn sheet-x" data-act="sheet-close" aria-label="Close"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9"/></svg></button>
     <div id="sheetBody"></div>
   </div>
 </div>
@@ -111,18 +112,22 @@
   </div>
 </div>
 
-<button class="sound-bar" id="soundBar" data-act="sound-unblock">🔇 Sound was blocked — tap to allow</button>
+<button class="sound-bar" id="soundBar" data-act="sound-unblock"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 8h3l4.5-3.5v11L6.5 12h-3z"/><path d="M14.5 8l4 4M18.5 8l-4 4"/></svg> Sound was blocked — tap to allow</button>
 <div class="toast" id="toast" role="status"></div>
 
-<script src="js/data/kana.js?v=0.4.0"></script>
-<script src="js/furi.js?v=0.4.0"></script>
-<script src="js/data/words.js?v=0.4.0"></script>
-<script src="js/srs.js?v=0.4.0"></script>
-<script src="js/sound.js?v=0.4.0"></script>
-<script src="js/write.js?v=0.4.0"></script>
-<script src="js/app.js?v=0.4.0"></script>
-<script src="js/guide.js?v=0.4.0"></script>
-<script src="js/words-ui.js?v=0.4.0"></script>
-<script src="js/sprint.js?v=0.4.0"></script>
+<script src="js/data/kana.js?v=0.5.0"></script>
+<script src="js/furi.js?v=0.5.0"></script>
+<script src="js/conj.js?v=0.5.0"></script>
+<script src="js/data/words.js?v=0.5.0"></script>
+<script src="js/data/menu.js?v=0.5.0"></script>
+<script src="js/srs.js?v=0.5.0"></script>
+<script src="js/sound.js?v=0.5.0"></script>
+<script src="js/art.js?v=0.5.0"></script>
+<script src="js/write.js?v=0.5.0"></script>
+<script src="js/app.js?v=0.5.0"></script>
+<script src="js/guide.js?v=0.5.0"></script>
+<script src="js/words-ui.js?v=0.5.0"></script>
+<script src="js/menu-ui.js?v=0.5.0"></script>
+<script src="js/sprint.js?v=0.5.0"></script>
 </body>
 </html>
