@@ -184,6 +184,7 @@ function handIn(finished) {
   SP.done = true;
   clearInterval(SP.timer);
   const ms = Math.min(SP.limit, performance.now() - SP.t0);
+  addStudyTime(ms);
   const sk = SPRINT_MODES[SP.mode].sk;
   SP.ans.forEach((a, i) => { if (a) grade(SP.qs[i].k, sk, a.ok, a.ms, "speed"); });
   const right = SP.ans.filter(a => a && a.ok).length;
@@ -228,6 +229,7 @@ async function closeSprint() {
   $("#spFoot").innerHTML = "";
   document.body.style.overflow = "";
   render();
+  milestoneCheckpoint();
 }
 
 /* Keys while a sheet is up. Returns true if it took the key. */

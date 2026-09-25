@@ -52,6 +52,7 @@ const CONTRACT = {
   'js/patterns-ui.js': ['patternLessonCards', 'qPatFill', 'qPatMean', 'patPrompt', 'patVerdict', 'patIntroHtml', 'gapHtml', 'hasGaps', 'learnedPatterns'],
   'js/data/grammar.js': ['SENTENCE_SHAPE', 'PARTICLE_GUIDE', 'ENDINGS', 'GRAMMAR_SAY', 'SHAPE_SENTENCE'],
   'js/grammar-ui.js': ['renderGrammar'],
+  'js/stats.js': ['MILESTONES', 'checkMilestones', 'medal', 'celebrate', 'milestoneCheckpoint', 'cheerLine', 'comboPill', 'statsTilesHtml', 'minutesChartHtml', 'learnedChartHtml', 'milestonesHtml', 'heroStatsHtml', 'n5Projection', 'weekAccuracy'],
   'js/cards-ui.js': ['DECKS', 'deckKeys', 'orderKeys', 'cardFaces', 'startDeck', 'renderCards', 'flipCard', 'rateCard', 'cardsKey', 'stepCard', 'bindCardGestures'],
   'js/data/kanji.js': ['KANJI'],
   'js/data/kanji-lessons.js': ['KANJI_BY'],
@@ -67,6 +68,7 @@ const CONTRACT = {
     'shakiest', 'dueKeys', 'lessonLearned', 'allHiraLearned', 'hiraDoneDay', 'hiraCheckDays', 'kataOpen', 'phase',
     'lessonsLearnedToday', 'learnedTodayCount', 'nextLessons', 'checkPassedToday', 'recordCheck', 'canRead', 'readableWords',
     'wordsByNewest', 'streak', 'practisedDays', 'recordSprint', 'exportState', 'parseBackup', 'freshState',
+    'noteActivity', 'startActivity', 'addStudyTime', 'totalMs', 'totalAnswers', 'bestStreak', 'learnedCount', 'msOn',
     'QUICK_MS', 'QUICK_WORD_MS', 'HIRA_CHECK', 'PASSES_FOR_SOLID', 'isWordKey', 'wordsOpen', 'allKanaLearned'],
   'js/sound.js': ['say', 'sayKana', 'hasAudio', 'clipCount', 'unlockAudio', 'loadAudioBundle', 'soundBlocked'],
   'js/write.js': ['strokesFor', 'canWrite', 'markWriting', 'modelSvg', 'modelAnimMs', 'padHtml', 'bindPad', 'drawInk',
@@ -204,6 +206,20 @@ section('the daily allowance');
 }
 
 /* ---------- 4. the hiragana check ---------- */
+
+section('time and streaks');
+{
+  const k = sandbox();
+  const run = code => vm.runInContext(code, k);
+  run('load(); startActivity(1000); noteActivity(31000)');
+  ok(run('msOn(today())') === 30000, 'a 30-second gap between answers should count');
+  run('noteActivity(31000 + 200000)');
+  ok(run('msOn(today())') === 30000, 'a gap longer than ACTIVE_GAP_MS means you stepped away — it must not count');
+  run('addStudyTime(60000)');
+  ok(run('totalMs()') === 90000, 'addStudyTime adds straight to today');
+  run(`["2026-01-01","2026-01-02","2026-01-03","2026-01-05","2026-01-06"].forEach(k => state.days[k] = { n: 3, ok: {}, learned: [], rev: [] })`);
+  ok(run('bestStreak()') === 3, 'best streak should find the longest run (3), not the latest (2)');
+}
 
 section('the hiragana check');
 {

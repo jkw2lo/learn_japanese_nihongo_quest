@@ -25,6 +25,9 @@ const ICONS = {
   chevron: '<path d="M8 5l5 5-5 5"/>',
   back: '<path d="M12 5l-5 5 5 5"/>',
   sparkle: '<path d="M10 3v4M10 13v4M3 10h4M13 10h4"/>',
+  flame: '<path d="M10 17.5c-3.2 0-5.5-2.2-5.5-5.2 0-2.6 1.8-4 2.8-6 .4 1.3 1.2 2.2 2 2.6.2-2.6 1.4-4.6 3.2-6.4.3 2.5 3 4.4 3 8.6 0 3.3-2.3 6.4-5.5 6.4z"/>',
+  clock: '<circle cx="10" cy="10" r="7"/><path d="M10 6v4l2.8 1.8"/>',
+  target: '<circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="3.5"/><circle cx="10" cy="10" r=".8"/>',
 };
 
 function icon(name, cls = "") {

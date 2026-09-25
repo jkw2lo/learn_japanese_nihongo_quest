@@ -66,6 +66,7 @@ const freshState = () => ({
   sprint: { best: {}, recent: [] },
   mistakes: {},       /* glyph -> count, from drills and sprints */
   kataOpen: null,     /* the day katakana unlocked; never relocks */
+  milestones: {},     /* id -> the day it was reached */
   menu: { orders: 0, days: {} },   /* the side quest: orders taken, per day */
   backupAt: null,
 });
@@ -91,6 +92,7 @@ function normalise(s) {
   out.sprint.recent = asList(out.sprint.recent);
   out.mistakes = s.mistakes && typeof s.mistakes === "object" ? s.mistakes : {};
   out.menu = { orders: 0, days: {}, ...(s.menu || {}) };
+  out.milestones = s.milestones && typeof s.milestones === "object" ? s.milestones : {};
   return out;
 }
 
@@ -149,7 +151,8 @@ const skillsFor = k => isKanjiKey(k) ? ["m", "y", "w"] : isPatternKey(k) ? ["f",
 function learn(k) {
   if (isLearned(k)) return;
   const t = today();
-  storeOf(k)[k] = { at: t, lvl: 1, due: addDays(t, INTERVALS[1]), sk: {} };
+  storeOf(k)[k] = { at: t, lvl: 1, due: addDays(t, INTERVALS[1]), sk: {}, t: Date.now() };
+  noteActivity();
   const d = day();
   if (!d.learned.includes(k)) d.learned.push(k);
 }
@@ -169,6 +172,8 @@ function grade(k, sk, ok, ms, mode = "practice") {
   if (!it) return;
   if (mode === "auto") mode = isDue(k) ? "review" : "practice";
   it.sk = it.sk || {};
+  it.t = Date.now();               /* last touched: what a sync merge compares */
+  if (mode !== "speed") noteActivity();
   const s = it.sk[sk] || (it.sk[sk] = { n: 0, ok: 0, fast: 0, miss: 0 });
   s.n++;
   if (ok) {
@@ -190,6 +195,7 @@ function grade(k, sk, ok, ms, mode = "practice") {
   }
   const d = day();
   d.n++;
+  if (mode !== "speed") { d.g = (d.g || 0) + 1; if (ok) d.right = (d.right || 0) + 1; }
   if (ok && mode !== "speed") {
     const list = d.ok[sk] || (d.ok[sk] = []);
     if (!list.includes(k)) list.push(k);
@@ -336,7 +342,43 @@ function wordsByNewest(set) {
   return readableWords(set).sort((a, b) => when(b).localeCompare(when(a)));
 }
 
+/* ---------- time spent ----------
+
+   Active time, not time with the tab open: each thing done (an answer, a
+   card, a tap on the menu) adds the gap since the last one, capped — a gap
+   longer than ACTIVE_GAP_MS means you'd stepped away, and counts for
+   nothing. Kept per day, in ms. */
+const ACTIVE_GAP_MS = 90000;
+let lastActivity = 0;
+function noteActivity(now = Date.now()) {
+  if (lastActivity && now - lastActivity < ACTIVE_GAP_MS) {
+    const d = day();
+    d.ms = (d.ms || 0) + (now - lastActivity);
+  }
+  lastActivity = now;
+}
+/* Start the clock without counting anything — the first answer of a
+   session counts from when the session opened. */
+const startActivity = (now = Date.now()) => { lastActivity = now; };
+function addStudyTime(ms) { const d = day(); d.ms = (d.ms || 0) + Math.max(0, ms); }
+
+const msOn = k => state.days[k]?.ms || 0;
+const totalMs = () => Object.values(state.days).reduce((t, d) => t + (d.ms || 0), 0);
+const totalAnswers = () => Object.values(state.days).reduce((t, d) => t + (d.n || 0), 0);
+
 /* ---------- streak and totals ---------- */
+
+/* The longest run of days with any practice, ever. */
+function bestStreak() {
+  const ks = Object.keys(state.days).filter(k => state.days[k].n > 0).sort();
+  let best = 0, run = 0, prev = null;
+  ks.forEach(k => { run = prev && addDays(prev, 1) === k ? run + 1 : 1; best = Math.max(best, run); prev = k; });
+  return best;
+}
+
+/* Everything learned: kana, words, patterns, kanji. */
+const learnedCount = () => Object.keys(state.items).length + Object.keys(state.words).length
+  + Object.keys(state.patterns).length + Object.keys(state.kanji).length;
 
 function streak() {
   let n = 0, k = today();

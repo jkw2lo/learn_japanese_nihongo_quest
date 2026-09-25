@@ -211,6 +211,7 @@ function bindCardGestures() {
 
 function flipCard() {
   if (!CD.deck || CD.done) return;
+  noteActivity();
   CD.flipped = !CD.flipped;
   if (CD.flipped && state.settings.autoplay) say(cardFaces(CD.keys[CD.i]).say);
   renderCards();
@@ -220,6 +221,7 @@ function rateCard(v) {
   if (!CD.flipped) return;
   if (v === "again") { CD.again++; CD.keys.push(CD.keys[CD.i]); } else CD.got++;
   day().n++;
+  noteActivity();
   save();
   CD.i++;
   CD.flipped = false;

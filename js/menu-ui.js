@@ -155,6 +155,7 @@ function tapItem(key) {
     return;
   }
   say(it.kana);
+  noteActivity();
   if (game && !game.done) {
     const want = game.targets[game.i];
     if (it === want) {
@@ -171,6 +172,7 @@ function tapItem(key) {
         crumb("menu order done");
         renderMenu();
         petals($("#v-menu").closest("main") || document.body, 20);
+        milestoneCheckpoint();
         return;
       }
     } else {

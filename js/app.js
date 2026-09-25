@@ -212,6 +212,7 @@ function renderToday() {
             <div class="eyebrow">今日 · Today</div>
             <h1>${p === "done" ? "Keep it fresh." : planned.length ? `Today: <span lang="ja">${esc(planned.map(L => L.title).join(" · "))}</span>` : "Reviews are waiting."}</h1>
             <p class="lede">${esc(bits.join(" · "))}</p>
+            ${heroStatsHtml()}
           </div>
           ${heroRing()}
         </div>
@@ -227,6 +228,7 @@ function renderToday() {
             <p class="lede">${p === "done"
               ? `All the kana and every word in stages 2 to ${WORD_STAGES[WORD_STAGES.length - 1].st}. The next stages aren't built yet — keep reviews ticking over, and take an order at the café.`
               : "Nothing due and today's lessons are learned. Practise below, or run a sprint."}</p>
+            ${heroStatsHtml()}
           </div>
           ${heroRing()}
         </div>
@@ -649,6 +651,7 @@ function openSession(o) {
     first: 0, firstRight: 0, quick: 0, missed: new Set(), tries: new Map(), learned: [],
   };
   S.tasksDoneAtStart = allTasksDone();
+  startActivity();
   crumb(`session ${o.kind} (${o.queue.length})`);
   $("#session").classList.add("on");
   $("#sTitle").innerHTML = `<span lang="ja">${esc(o.title)}</span>`;
@@ -919,6 +922,8 @@ function settle(c, ok, ms, credit = true) {
   S.tries.set(key, tries);
   if (tries === 1) { S.first++; if (ok) S.firstRight++; }
   if (quick) S.quick++;
+  S.combo = ok ? (S.combo || 0) + 1 : 0;
+  if (ok) comboPill(S.combo);
   if (c.kind === "word" || !credit) day().n++;
   else grade(c.k, c.kind, ok, ms, c.mode);
   if (!ok && c.k) S.missed.add(c.k);
@@ -1076,6 +1081,7 @@ function finishSession() {
     <div class="celebrate">${neko(mood, "hop")}${stampText ? stamp(stampText) : ""}</div>
     <div class="score-wrap"><div class="finish-big">${pct}<small>%</small></div>${maru ? hanamaru() : ""}</div>
     <div class="muted">${S.firstRight} of ${S.first} right first time${S.quick ? ` · ${S.quick} quick` : ""}</div>
+    ${S.first ? cheerLine(acc, S.first) : ""}
     <h2>${esc(head)}</h2>
     ${extra}
     ${missed.length ? `<div class="missed"><div class="eyebrow">To look at again</div>${missed.map(k => isKanjiKey(k)
@@ -1090,6 +1096,8 @@ function finishSession() {
   $("#sProg").style.width = "100%";
   $("#sCount").textContent = "";
   if (petalN) petals($("#session"), petalN);
+  /* a flawless round of fifteen or more earns its own badge */
+  if (S.first >= 15 && acc === 1 && S.kind !== "guide") { state.perfectRound = true; save(); }
   S.i = S.queue.length;
   S.card = null;
   S.finished = true;
@@ -1112,6 +1120,7 @@ async function closeSession() {
   document.body.style.overflow = "";
   save();
   render();
+  milestoneCheckpoint();
 }
 
 /* ============================================================
@@ -1258,13 +1267,12 @@ function renderRecord() {
   const recent = asList(state.sprint.recent).slice(0, 5);
 
   el.innerHTML = `
-    <div class="stats">
-      <div class="stat"><b>${streak()}</b><span>day streak</span></div>
-      <div class="stat"><b>${practisedDays()}</b><span>days practised</span></div>
-      <div class="stat"><b>${keys.length}</b><span>of ${KANA.length} kana</span></div>
-      ${wordsOpen() ? `<div class="stat"><b>${learnedWords().length}</b><span>of ${WORDS.length} words</span></div>` : ""}
-      <div class="stat"><b>${state.days[today()]?.n || 0}</b><span>answers today</span></div>
+    ${statsTilesHtml()}
+    <div class="record-charts">
+      <section class="card"><div class="card-head"><h2>Minutes a day</h2><span class="count">the last two weeks · active time</span></div>${minutesChartHtml()}</section>
+      <section class="card"><div class="card-head"><h2>Learned so far</h2><span class="count">kana, words, patterns and kanji, added up</span></div>${learnedChartHtml()}</section>
     </div>
+    ${milestonesHtml()}
     <div class="record-grid">
       <section class="card">
         <div class="card-head"><h2>Skills</h2><span class="count">solid = three quick passes</span></div>
@@ -1557,6 +1565,7 @@ document.addEventListener("keydown", guard(e => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const inField = /INPUT|TEXTAREA|SELECT/.test(e.target.tagName);
   if (askDone) { if (e.key === "Escape") closeAsk(false); return; }
+  if ($(".ms-pop")) { if (e.key === "Escape" || e.key === "Enter" || e.key === " ") { e.preventDefault(); ACTS["ms-close"](); } return; }
   if (typeof sprintKey === "function" && sprintKey(e)) return;
   if (typeof cardsKey === "function" && cardsKey(e)) return;
   if (S && (S.card?.kind === "c" || S.card?.kind === "j") && !S.finished) {
@@ -1615,5 +1624,7 @@ addEventListener("DOMContentLoaded", guard(() => {
   /* A timeout, not requestAnimationFrame: a tab opened in the background
      runs no frames, and the sound would never start loading. */
   setTimeout(loadAudioBundle, 60);
+  /* anything reached while away (or before milestones existed) gets its moment */
+  setTimeout(milestoneCheckpoint, 900);
   setTimeout(loadStrokes, 90);
 }));
