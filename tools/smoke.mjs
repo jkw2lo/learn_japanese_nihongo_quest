@@ -55,6 +55,7 @@ const CONTRACT = {
   'js/sound.js': ['say', 'sayKana', 'hasAudio', 'clipCount', 'unlockAudio', 'loadAudioBundle', 'soundBlocked'],
   'js/write.js': ['strokesFor', 'canWrite', 'markWriting', 'modelSvg', 'modelAnimMs', 'padHtml', 'bindPad', 'drawInk',
     'padUndo', 'padClear', 'pad', 'WRITE_TOL'],
+  'js/furi.js': ['furiParse', 'furiKana', 'furiPlain', 'furiKanji', 'furiProblems', 'furiHtml'],
   'js/guide.js': ['GUIDE', 'KIND_INTRO', 'infoCard', 'guideCards', 'infoHtml', 'startGuide'],
   'js/app.js': ['ACTS', 'render', 'go', 'view', 'S', 'askConfirm', 'crumb', 'shuffle', 'esc', '$', '$$',
     'distractors', 'renderSoundBar', 'onAudioLoaded', 'toast', 'openSession', 'closeSheet', 'SET_NAME',
@@ -283,6 +284,42 @@ section('writing');
   const backwards = modelMedians('し').map(st => [...st].reverse());
   ok(!markWriting('し', backwards, true).ok, 'stroke-order marking should refuse a backwards stroke');
   ok(!markWriting('は', modelMedians('は').slice(0, 2), false).ok, 'a missing stroke should fail');
+}
+
+/* ---------- furigana ---------- */
+
+section('furigana');
+{
+  const f = {};
+  vm.createContext(f);
+  vm.runInContext(read('js/furi.js') + `;globalThis.F = { furiParse, furiKana, furiPlain, furiKanji, furiProblems, furiHtml };
+    ${read('js/data/words.js')};globalThis.WORDS = WORDS;
+    ${read('js/data/patterns.js')};globalThis.PATTERNS = PATTERNS;`, f);
+  const { furiKana, furiPlain, furiKanji, furiProblems, furiHtml } = f.F;
+  ok(furiKana('{食|た}べ{物|もの}') === 'たべもの', 'furiKana should take the reading side');
+  ok(furiPlain('{食|た}べ{物|もの}') === '食べ物', 'furiPlain should take the kanji side');
+  ok(furiKanji('{今日|きょう}は{日本|にほん}') .join('') === '今日本', 'furiKanji should list each kanji once');
+  ok(furiKana('パンを{食|た}べます。') === 'パンをたべます。', 'kana and punctuation pass through');
+  /* the checker catches what hand-typed data gets wrong */
+  ok(furiProblems('{食|た}べる').length === 0, 'good markup should have no problems');
+  ok(furiProblems('食べる').length === 1, 'a kanji with no reading should be caught');
+  ok(furiProblems('{食|た べる').length === 1, 'an unclosed brace should be caught');
+  ok(furiProblems('{食べ|たべ}る').length === 1, 'okurigana inside the braces should be caught');
+  ok(furiProblems('{食|ta}べる').length === 1, 'a romaji reading should be caught');
+  ok(furiProblems('{食|}べる').length === 1, 'an empty reading should be caught');
+  /* rendering: bare only when every kanji in the run is known */
+  const knows = k => k === '今';
+  ok(furiHtml('{今日|きょう}', knows) === '<ruby>今日<rt>きょう</rt></ruby>', '今日 needs both kanji known to go bare');
+  ok(furiHtml('{今|いま}', knows) === '今', 'a known kanji is shown bare');
+  ok(furiHtml('{今|いま}', knows, 'always').includes('<ruby>'), '"always" shows furigana on known kanji');
+  ok(!furiHtml('{日|ひ}', knows, 'never').includes('<ruby>'), '"never" hides furigana everywhere');
+  ok(furiHtml('<b>', knows) === '&lt;b&gt;', 'text is escaped');
+  /* and every string in the data that exists so far */
+  const strings = [];
+  f.WORDS.forEach(w => { strings.push(w.w); (w.ex || []).forEach(x => strings.push(x[0])); });
+  f.PATTERNS.forEach(p => (p.ex || []).forEach(x => strings.push(x[0])));
+  strings.forEach(x => furiProblems(x).forEach(pr => ok(false, pr)));
+  ok(strings.length > 0, 'no word data found to check');
 }
 
 /* ---------- 6. audio coverage ---------- */

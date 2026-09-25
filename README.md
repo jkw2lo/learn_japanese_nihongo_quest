@@ -583,7 +583,11 @@ contains kanji marks each kanji run with its reading:
   disagree with the markup.
 
 A smoke check parses every string and fails on anything unbalanced, or on a
-kanji outside a `{…|…}` run.
+kanji outside a `{…|…}` run, or on okurigana inside the braces
+(`{食べ|たべ}る` should be `{食|た}べる`), or on a reading that isn't all
+kana. `furiHtml(s, knows, mode)` shows a run bare only when *every* kanji
+in it is known, so 今日 keeps its furigana until both 今 and 日 are yours.
+Its modes are `auto`, `always` and `never`.
 
 ### Shapes
 
@@ -652,13 +656,14 @@ you like.
     js/sprint.js            the Sprint tab
     js/audio-kana.js        generated clips — do not hand-edit
     js/strokes.js           generated stroke data — do not hand-edit
+    js/furi.js              furigana markup: parse, check, render, derive kana (built and
+                            tested; loaded once word data arrives)
 
     not built yet (stubs, not loaded):
     js/data/words.js        vocabulary, by stage
     js/data/kanji.js        kanji, taught through words
     js/data/patterns.js     grammar patterns with example sentences
     js/data/menu.js         the side quest's menus, by tier
-    js/furi.js              furigana markup: parse, render, derive kana
     js/conj.js              verb and adjective conjugation (generated, never stored)
     js/sync.js              optional sync
     tools/server.mjs        dev server, http://localhost:8732

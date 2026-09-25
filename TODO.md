@@ -16,12 +16,13 @@ Build order. Each step should run end to end before the next one starts.
      with stroke order as an opt-in; AnimCJK stroke data. は / へ / を
      checked by ear.
 
+4. ~~Furigana~~: `js/furi.js` (parse, check, render, derive kana) and its
+   smoke checks, run over every string in the word and pattern data.
+
 ## Next
 
-4. **Furigana**: `js/furi.js` and its smoke checks, before any word data
-   exists to get wrong.
 5. **Words, stages 2–5**: word data, srs for words, Today, words audio,
-   romaji→kana typing. Kana leave the review queue here (README → Kana).
+   romaji→kana typing, load js/furi.js and add a furigana setting. Kana leave the review queue here (README → Kana).
 6. **Menu side quest, tier 1** (katakana café).
 7. **Conjugation**: `js/conj.js`, fixtures, the conjugate Sprint mode.
 8. **Patterns, then kanji** (kanji stroke data from AnimCJK's graphicsJa),
