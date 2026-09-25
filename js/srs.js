@@ -144,7 +144,7 @@ function skill(k, sk) {
    narrow the keys for that. */
 /* Verbs have one more: j, conjugate it. */
 /* Kanji: m, what it means; y, reading it in a word; w, writing it (opt-in). */
-const skillsFor = k => isKanjiKey(k) ? ["m", "y", "w"] : isPatternKey(k) ? ["f", "r"] : isWordKey(k) ? (isVerb(WORD_BY[k]?.pos) ? ["r", "p", "c", "j"] : ["r", "p", "c"])
+const skillsFor = k => isKanjiKey(k) ? ["m", "y", "w"] : isPatternKey(k) ? ["f", "r"] : isWordKey(k) ? (isConjugable(WORD_BY[k]?.pos) ? ["r", "p", "c", "j"] : ["r", "p", "c"])
   : KANA_BY[k]?.concept ? ["x"] : ["r", "p", "a", "w"];
 
 function learn(k) {

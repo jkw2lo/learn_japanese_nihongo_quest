@@ -131,7 +131,7 @@ function wordTasks() {
     drill("r", "読む", "Read them", ks);
     if (hasAudio()) drill("p", "聞く", "Hear them", ks.filter(k => clipFor(WORD_BY[k].say)));
     drill("c", "打つ", "Type them in kana", ks);
-    const verbs = ks.filter(k => isVerb(WORD_BY[k].pos));
+    const verbs = ks.filter(k => isConjugable(WORD_BY[k].pos));
     if (verbs.length) drill("j", "活用", "Conjugate the verbs", verbs);
   }
   if (patDay) {
@@ -334,7 +334,7 @@ function deeperHtml() {
       ${tile("wr", "読む", "Read words", standing(wk, "r"))}
       ${hasAudio() ? tile("wp", "聞く", "Hear words", standing(wk, "p")) : ""}
       ${tile("wc", "打つ", "Type words", standing(wk, "c"))}
-      ${wk.some(k => isVerb(WORD_BY[k].pos)) ? tile("wj", "活用", "Conjugate", standing(wk.filter(k => isVerb(WORD_BY[k].pos)), "j")) : ""}
+      ${wk.some(k => isConjugable(WORD_BY[k].pos)) ? tile("wj", "活用", "Conjugate", standing(wk.filter(k => isConjugable(WORD_BY[k].pos)), "j")) : ""}
       ${Object.keys(state.patterns).length ? tile("g", "文型", "Patterns", standing(Object.keys(state.patterns), "f")) : ""}
       ${Object.keys(state.kanji).length ? tile("kj", "漢字", "Kanji", standing(Object.keys(state.kanji), "y")) : ""}
     </div></section>`;
@@ -566,7 +566,7 @@ function startTask(kind) {
     return;
   }
   if (wordDay()) {
-    const keys = todaysWords().filter(k => (kind !== "p" || clipFor(WORD_BY[k].say)) && (kind !== "j" || isVerb(WORD_BY[k].pos)));
+    const keys = todaysWords().filter(k => (kind !== "p" || clipFor(WORD_BY[k].say)) && (kind !== "j" || isConjugable(WORD_BY[k].pos)));
     openSession({ kind: "practice", title: TASK_TITLES[kind] || "言葉", queue: shuffle(keys).map(k => () => qFor(k, kind, "practice")) });
     return;
   }
@@ -597,7 +597,7 @@ function startDeeper(kind) {
   }
   if (/^w[rpcj]$/.test(kind)) {
     const sk = kind[1];
-    const ws = Object.keys(state.words).filter(k => (sk !== "p" || clipFor(WORD_BY[k].say)) && (sk !== "j" || isVerb(WORD_BY[k].pos)));
+    const ws = Object.keys(state.words).filter(k => (sk !== "p" || clipFor(WORD_BY[k].say)) && (sk !== "j" || isConjugable(WORD_BY[k].pos)));
     queue = shuffle(shakiest(ws, sk).slice(0, 15)).map(k => () => qFor(k, sk, "practice"));
   } else if (kind === "word") {
     queue = sample(readableWords(), 15).map(w => () => qWord(w));

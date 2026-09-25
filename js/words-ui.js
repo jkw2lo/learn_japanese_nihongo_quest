@@ -24,7 +24,7 @@ function wordLessonCards(L) {
     drill.push(() => qWordRead(key, "learn"));
     drill.push(() => qWordHear(key, "learn"));
     drill.push(() => qWordType(key, "learn"));
-    if (isVerb(WORD_BY[key].pos)) drill.push(() => qWordConj(key, "learn", "masu"));
+    if (isConjugable(WORD_BY[key].pos)) drill.push(() => qWordConj(key, "learn", formsFor(WORD_BY[key].pos)[0] === "masu" ? "masu" : "adj-nai"));
   });
   return [...cards, ...shuffle(drill)];
 }
@@ -47,7 +47,7 @@ function wordIntroHtml(c) {
     ${state.settings.showRomaji ? `<div class="intro-rom">${esc(x.r)}</div>` : ""}
     <div class="word-m">${esc(x.m)}</div>
     ${x.note ? `<p class="rule">${wordHtml(x.note)}</p>` : ""}
-    ${isVerb(x.pos) ? formsTable(x) : ""}
+    ${isConjugable(x.pos) ? formsTable(x) : ""}
     ${x.ex.map(([jp, en]) => `<button class="ex-sent" data-act="say" data-say="${esc(furiKana(jp))}">
       <span lang="ja">${wordHtml(jp)}</span><small>${esc(en)}</small></button>`).join("")}
   </div>`;
@@ -55,7 +55,7 @@ function wordIntroHtml(c) {
 
 /* A verb's polite forms, each one tappable. */
 function formsTable(x) {
-  return `<div class="forms">${CONJ_TAUGHT.map(f => {
+  return `<div class="forms">${formsFor(x.pos).map(f => {
     const m = conj(x.w, x.pos, f);
     return `<button class="form" data-act="say" data-say="${esc(furiKana(m))}"><span lang="ja">${wordHtml(m)}</span><small>${esc(CONJ_FORMS[f].en)}</small></button>`;
   }).join("")}</div>`;
@@ -103,8 +103,8 @@ function qWordType(key, mode) {
 /* Conjugate: see the verb and a form, type the form. */
 function qWordConj(key, mode, form) {
   const x = WORD_BY[key];
-  if (!isVerb(x.pos)) return null;
-  const f = form || sample(CONJ_TAUGHT, 1)[0];
+  if (!isConjugable(x.pos)) return null;
+  const f = form || sample(formsFor(x.pos), 1)[0];
   const m = conj(x.w, x.pos, f);
   return { t: "q", kind: "j", wk: true, k: key, mode, answer: key, form: f, target: m, sound: furiKana(m) };
 }

@@ -29,9 +29,9 @@ const BITRATE = '32000';
 const MIN_SECONDS = 0.06;
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const { KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, CONJ_TAUGHT, PATTERNS } = new Function(
+const { KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS } = new Function(
   ['js/data/kana.js', 'js/furi.js', 'js/conj.js', 'js/data/words.js', 'js/data/patterns.js', 'js/data/menu.js'].map(f => readFileSync(join(root, f), 'utf8')).join('\n') +
-  '\nreturn {KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, CONJ_TAUGHT, PATTERNS};')();
+  '\nreturn {KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS};')();
 
 /* The text actually handed to `say` for a clip key, for any key the voice
    misreads on its own. A lone は or へ could be taken as the particles "wa"
@@ -63,7 +63,7 @@ function speakableN5() {
   menuItems(MENUS[1]).forEach(it => out.add(it.kana));
   PATTERNS.forEach(p => p.ex.forEach(e => out.add(e.kana)));
   /* every taught form of every verb */
-  WORDS.filter(w => isVerb(w.pos)).forEach(w => CONJ_TAUGHT.forEach(f => out.add(furiKana(conj(w.w, w.pos, f)))));
+  WORDS.filter(w => isConjugable(w.pos)).forEach(w => formsFor(w.pos).forEach(f => out.add(furiKana(conj(w.w, w.pos, f)))));
   MENU_PHRASES.forEach(([jp]) => out.add(furiKana(jp).replace('〜', '')));
   return [...out].filter(t => !kana.has(t));
 }

@@ -8,6 +8,9 @@
      v5k-s     行く: godan く, but its て-form is 行って, not 行いて
      vs        する, and noun + する
      vk        来る — its kanji's reading changes: 来る, 来ます (き), 来ない (こ)
+     v5r-i     ある: godan る, but its plain negative is just ない
+     adj-i     い-adjectives: 高いです, 高くないです, 高かったです (いい → よ-)
+     adj-na    な-adjectives: きれいです, きれいじゃないです, きれいでした
 
    Each form comes back as furigana markup, so it renders like any word and
    its kana (for typing and audio) comes from furiKana(). Pinned by fixtures
@@ -25,11 +28,24 @@ const CONJ_FORMS = {
 /* The forms taught so far: polite ones, which is what a visitor says. */
 const CONJ_TAUGHT = ["masu", "masen", "mashita", "masendeshita"];
 
+const ADJ_FORMS = {
+  desu:     { jp: "〜です",           en: "polite",            ex: "高いです" },
+  nai:      { jp: "〜くないです",     en: "polite, not",       ex: "高くないです" },
+  katta:    { jp: "〜かったです",     en: "polite, past",      ex: "高かったです" },
+  nakatta:  { jp: "〜くなかったです", en: "polite, past, not", ex: "高くなかったです" },
+};
+const ADJ_TAUGHT = ["desu", "nai", "katta", "nakatta"];
+Object.entries(ADJ_FORMS).forEach(([k, v]) => { CONJ_FORMS["adj-" + k] = v; });
+
 const GODAN_I = { う: "い", く: "き", ぐ: "ぎ", す: "し", つ: "ち", ぬ: "に", ぶ: "び", む: "み", る: "り" };
 const GODAN_A = { う: "わ", く: "か", ぐ: "が", す: "さ", つ: "た", ぬ: "な", ぶ: "ば", む: "ま", る: "ら" };
 const GODAN_TE = { う: "って", つ: "って", る: "って", む: "んで", ぶ: "んで", ぬ: "んで", く: "いて", ぐ: "いで", す: "して" };
 
 const isVerb = pos => /^(v1|v5|vs|vk)/.test(pos || "");
+const isAdj = pos => pos === "adj-i" || pos === "adj-na";
+const isConjugable = pos => isVerb(pos) || isAdj(pos);
+/* The forms a word of this kind is drilled on. */
+const formsFor = pos => isAdj(pos) ? ADJ_TAUGHT.map(f => "adj-" + f) : CONJ_TAUGHT;
 
 /* Split markup into what stays and the last kana, which conjugation
    changes. Regular verbs always end in kana outside the braces. */
@@ -55,9 +71,24 @@ function stems(markup, pos) {
   return { i: head + GODAN_I[last], a: head + GODAN_A[last], te: head + te, ta: head + te.replace(/て$/, "た").replace(/で$/, "だ") };
 }
 
-/* One form of a verb, as markup: conj("{飲|の}む", "v5m", "masu") → "{飲|の}みます". */
+/* An adjective's polite forms. い-adjectives swap the final い: 高い →
+   高くない, 高かった; いい borrows the stem of its old form よい. な-adjectives
+   don't change — じゃない and でした do the work. */
+function conjAdj(markup, pos, form) {
+  if (pos === "adj-na") {
+    return markup + { "adj-desu": "です", "adj-nai": "じゃないです", "adj-katta": "でした", "adj-nakatta": "じゃなかったです" }[form];
+  }
+  if (!markup.endsWith("い")) throw new Error(`${markup} isn't an い-adjective`);
+  if (form === "adj-desu") return markup + "です";
+  const stem = markup === "いい" ? "よ" : markup.slice(0, -1);
+  return stem + { "adj-nai": "くないです", "adj-katta": "かったです", "adj-nakatta": "くなかったです" }[form];
+}
+
+/* One form of a verb or adjective, as markup: conj("{飲|の}む", "v5m", "masu") → "{飲|の}みます". */
 function conj(markup, pos, form) {
-  const s = stems(markup, pos);
+  if (isAdj(pos)) return conjAdj(markup, pos, form);
+  if (pos === "v5r-i" && form === "nai") return "ない";
+  const s = stems(markup, pos === "v5r-i" ? "v5r" : pos);
   switch (form) {
     case "masu": return s.i + "ます";
     case "masen": return s.i + "ません";
