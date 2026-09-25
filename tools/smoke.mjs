@@ -52,7 +52,7 @@ const CONTRACT = {
   'js/patterns-ui.js': ['patternLessonCards', 'qPatFill', 'qPatMean', 'patPrompt', 'patVerdict', 'patIntroHtml', 'gapHtml', 'hasGaps', 'learnedPatterns'],
   'js/data/grammar.js': ['SENTENCE_SHAPE', 'PARTICLE_GUIDE', 'ENDINGS', 'GRAMMAR_SAY', 'SHAPE_SENTENCE'],
   'js/grammar-ui.js': ['renderGrammar'],
-  'js/cards-ui.js': ['DECKS', 'deckKeys', 'orderKeys', 'cardFaces', 'startDeck', 'renderCards', 'flipCard', 'rateCard', 'cardsKey'],
+  'js/cards-ui.js': ['DECKS', 'deckKeys', 'orderKeys', 'cardFaces', 'startDeck', 'renderCards', 'flipCard', 'rateCard', 'cardsKey', 'stepCard', 'bindCardGestures'],
   'js/data/kanji.js': ['KANJI'],
   'js/data/kanji-lessons.js': ['KANJI_BY'],
   'js/kanji-ui.js': ['kanjiLessonCards', 'kanjiIntroHtml', 'qKanjiMean', 'qKanjiRead', 'kanjiPrompt', 'kanjiVerdict', 'kanjiChartHtml', 'openKanji', 'wordsWith', 'kanjiSay', 'learnedKanji', 'bareRun'],
@@ -561,6 +561,7 @@ section('phone layer');
   const topbar = html.slice(html.indexOf('<header class="topbar">'), html.indexOf('</header>'));
   ok(!topbar.includes('burger'), 'the burger must not be inside .topbar');
   ok(!html.includes('bottom-nav'), 'the old bottom nav should be gone');
+  ok(!/insertBefore\(el\.cloneNode/.test(read('js/phone.js')), 'the rolodex copy in front must keep its order (one fragment, not clone-by-clone at the start)');
 }
 
 /* ---------- 7. version stamps ---------- */

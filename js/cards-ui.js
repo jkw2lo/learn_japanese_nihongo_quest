@@ -85,10 +85,12 @@ function startDeck(deck) {
 
 function renderCards() {
   const el = $("#v-cards");
+  /* each deck its own little stack of cards, not a segment of one bar */
   const picker = `<div class="cards-pick">
-    <div class="seg cd-decks">${Object.entries(DECKS).map(([id, d]) => {
+    <div class="cd-decks">${Object.entries(DECKS).map(([id, d]) => {
       const n = deckKeys(id).length;
-      return `<button class="${CD.deck === id ? "on" : ""}" data-act="cd-deck" data-id="${id}" ${n ? "" : "disabled"}><span lang="ja">${d.jp}</span> ${d.en}<small>${n}</small></button>`;
+      return `<button class="deck-tile ${CD.deck === id ? "on" : ""}" data-act="cd-deck" data-id="${id}" ${n ? "" : "disabled"}>
+        <span class="dt-card"><span class="dt-jp" lang="ja">${d.jp}</span><span class="dt-en">${d.en}</span><span class="dt-n">${n} card${n === 1 ? "" : "s"}</span></span></button>`;
     }).join("")}</div>
     <div class="cd-opts">
       <div class="seg seg-sm">
@@ -127,23 +129,84 @@ function renderCards() {
   el.innerHTML = `${picker}
     <div class="cd-stage">
       <div class="cd-count">${CD.i + 1} / ${CD.keys.length}${CD.again ? ` · ${CD.again} again` : ""}</div>
-      <button class="flashcard ${CD.flipped ? "flipped" : ""}" data-act="cd-flip" aria-label="Flip the card">
+      <div class="flashcard ${CD.flipped ? "flipped" : ""}" id="flashcard" role="button" tabindex="0" aria-label="Flashcard — tap to hear, hold to flip">
         <div class="fc-inner">
-          <div class="fc-face fc-front">${front}<span class="fc-hint">tap to flip</span></div>
+          <div class="fc-face fc-front">${front}<span class="fc-hint">${isPhone() ? "tap to hear · hold to flip · swipe for the next" : "click to hear · hold Space to flip · double-click for the next"}</span></div>
           <div class="fc-face fc-back">${back}</div>
         </div>
-      </button>
+      </div>
       <div class="cd-btns">
         <button class="btn btn-ghost" data-act="cd-prev" ${CD.i ? "" : "disabled"} aria-label="Previous">${icon("back")}</button>
         ${CD.flipped
           ? `<button class="btn btn-ghost cd-again" data-act="cd-rate" data-v="again">Again <kbd>1</kbd></button>
              <button class="btn cd-got" data-act="cd-rate" data-v="got">Got it <kbd>2</kbd></button>`
-          : `<button class="btn cd-flip" data-act="cd-flip">Flip <kbd>␣</kbd></button>`}
+          : `<button class="btn cd-flip" data-act="cd-flip">Flip <kbd>hold ␣</kbd></button>`}
+        <button class="btn btn-ghost" data-act="cd-next" ${CD.i < CD.keys.length - 1 ? "" : "disabled"} aria-label="Next">${icon("chevron")}</button>
         <button class="btn btn-ghost" data-act="say" data-say="${esc(f.say)}" aria-label="Hear it">${icon("speaker")}</button>
       </div>
     </div>`;
   /* the deck strip scrolls on a phone — keep the chosen deck in sight */
   $(".cd-decks .on")?.scrollIntoView({ inline: "center", block: "nearest" });
+  bindCardGestures();
+}
+
+/* ---------- touching the card ----------
+
+   Tap (or click): hear it. Double-tap: the next card. Long-press: flip.
+   Swipe left / right on a phone: next / previous. A tap waits a moment to
+   see whether a second one follows, so a double-tap never plays the sound. */
+const LONG_MS = 420, DOUBLE_MS = 260, SWIPE_PX = 56;
+
+function stepCard(dir, how = "") {
+  const n = CD.i + dir;
+  if (n < 0 || n >= CD.keys.length) return;
+  const card = $("#flashcard");
+  if (card && how) {
+    card.classList.add(dir > 0 ? "out-left" : "out-right");
+    setTimeout(() => { CD.i = n; CD.flipped = false; renderCards(); }, 140);
+    return;
+  }
+  CD.i = n; CD.flipped = false; renderCards();
+}
+
+function bindCardGestures() {
+  const card = $("#flashcard");
+  if (!card) return;
+  let x0 = 0, y0 = 0, pressT = null, held = false, down = false;
+  card.addEventListener("pointerdown", e => {
+    down = true; held = false; x0 = e.clientX; y0 = e.clientY;
+    clearTimeout(pressT);
+    pressT = setTimeout(() => { held = true; flipCard(); }, LONG_MS);
+  });
+  card.addEventListener("pointermove", e => {
+    if (!down) return;
+    const dx = e.clientX - x0;
+    if (Math.abs(dx) > 12 || Math.abs(e.clientY - y0) > 12) clearTimeout(pressT);
+    if (Math.abs(dx) > 12) card.style.transform = `translateX(${dx * .6}px) rotate(${dx / 40}deg)`;
+  });
+  const up = e => {
+    if (!down) return;
+    down = false;
+    clearTimeout(pressT);
+    card.style.transform = "";
+    const dx = e.clientX - x0, dy = e.clientY - y0;
+    if (held) return;
+    if (Math.abs(dx) > SWIPE_PX && Math.abs(dx) > Math.abs(dy)) { stepCard(dx < 0 ? 1 : -1, "swipe"); return; }
+    if (Math.abs(dx) > 12 || Math.abs(dy) > 12) return;
+    const now = Date.now();
+    if (now - (bindCardGestures.lastTap || 0) < DOUBLE_MS) {
+      clearTimeout(bindCardGestures.hearT);
+      bindCardGestures.lastTap = 0;
+      stepCard(1, "double");
+      return;
+    }
+    bindCardGestures.lastTap = now;
+    clearTimeout(bindCardGestures.hearT);
+    bindCardGestures.hearT = setTimeout(() => say(cardFaces(CD.keys[CD.i]).say), DOUBLE_MS);
+  };
+  card.addEventListener("pointerup", up);
+  card.addEventListener("pointercancel", () => { down = false; clearTimeout(pressT); card.style.transform = ""; });
+  card.addEventListener("contextmenu", e => e.preventDefault());
 }
 
 function flipCard() {
@@ -164,14 +227,28 @@ function rateCard(v) {
   renderCards();
 }
 
-/* Keys while the Cards tab is up. Returns true if it took the key. */
+/* Keys while the Cards tab is up. Returns true if it took the key.
+   Space held flips the card; a quick Space just says it. Enter is next. */
+let spaceT = null, spaceHeld = false;
+addEventListener("keyup", e => {
+  if (e.key !== " " || view !== "cards" || !spaceT) return;
+  clearTimeout(spaceT); spaceT = null;
+  if (!spaceHeld && CD.deck && !CD.done) say(cardFaces(CD.keys[CD.i]).say);
+});
 function cardsKey(e) {
   if (view !== "cards" || S || !CD.deck || CD.done || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return false;
-  if (e.key === " " || e.key === "Enter") { e.preventDefault(); flipCard(); return true; }
+  if (e.key === " ") {
+    e.preventDefault();
+    if (e.repeat || spaceT) return true;
+    spaceHeld = false;
+    spaceT = setTimeout(() => { spaceHeld = true; flipCard(); }, 300);
+    return true;
+  }
+  if (e.key === "Enter") { e.preventDefault(); stepCard(1); return true; }
   if (e.key === "1" && CD.flipped) { rateCard("again"); return true; }
   if (e.key === "2" && CD.flipped) { rateCard("got"); return true; }
-  if (e.key === "ArrowRight") { if (CD.i < CD.keys.length - 1) { CD.i++; CD.flipped = false; renderCards(); } return true; }
-  if (e.key === "ArrowLeft") { if (CD.i) { CD.i--; CD.flipped = false; renderCards(); } return true; }
+  if (e.key === "ArrowRight") { stepCard(1); return true; }
+  if (e.key === "ArrowLeft") { stepCard(-1); return true; }
   if (e.key === "r" || e.key === "R") { say(cardFaces(CD.keys[CD.i]).say); return true; }
   return false;
 }
@@ -182,5 +259,6 @@ Object.assign(ACTS, {
   "cd-order": el => { CD.order = el.dataset.v; if (CD.deck) startDeck(CD.deck); else renderCards(); },
   "cd-flip": () => flipCard(),
   "cd-rate": el => rateCard(el.dataset.v),
-  "cd-prev": () => { if (CD.i) { CD.i--; CD.flipped = false; renderCards(); } },
+  "cd-prev": () => stepCard(-1),
+  "cd-next": () => stepCard(1),
 });

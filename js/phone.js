@@ -22,7 +22,12 @@ function initDrawerLoop() {
   const original = [...nav.children];
   nav._len = original.length;
   original.forEach(el => nav.appendChild(el.cloneNode(true)));
-  original.forEach(el => nav.insertBefore(el.cloneNode(true), nav.firstChild));
+  /* the copy in front has to keep the same order — inserting each clone at
+     the very start, one by one, reversed it, and scrolling left from Today
+     met Today again */
+  const before = document.createDocumentFragment();
+  original.forEach(el => before.appendChild(el.cloneNode(true)));
+  nav.insertBefore(before, nav.firstChild);
   let settle = null, ticking = false;
   nav.addEventListener("scroll", () => {
     if (!ticking) { ticking = true; requestAnimationFrame(() => { ticking = false; drawerTick(); }); }
@@ -31,7 +36,7 @@ function initDrawerLoop() {
       const third = nav.scrollWidth / 3;
       if (nav.scrollLeft < third * 0.5) nav.scrollLeft += third;
       else if (nav.scrollLeft > third * 1.5) nav.scrollLeft -= third;
-    }, 140);
+    }, 90);
   }, { passive: true });
 }
 
@@ -46,18 +51,30 @@ function centerDrawer() {
   nav.scrollLeft += (elBox.left + elBox.width / 2) - (navBox.left + navBox.width / 2);
 }
 
-/* The wheel look: a chip scales and fades as it moves away from centre. */
+/* The wheel look: a chip scales and fades as it moves away from centre.
+   The one in the middle is marked, and a phone that can buzz gives the
+   faintest tick as each new section lands there — what makes a wheel feel
+   like it clicks into place. */
+let drawerMid = null;
 function drawerTick() {
   const nav = $("#drawerNav");
   if (!nav) return;
   const box = nav.getBoundingClientRect();
   const mid = box.left + box.width / 2;
+  let best = null, bestD = 2;
   [...nav.children].forEach(b => {
     const r = b.getBoundingClientRect();
     const d = Math.min(1, Math.abs(r.left + r.width / 2 - mid) / (box.width / 2 || 1));
-    b.style.transform = `scale(${(1 - d * 0.24).toFixed(3)})`;
-    b.style.opacity = (1 - d * 0.6).toFixed(3);
+    b.style.transform = `scale(${(1 - d * 0.3).toFixed(3)})`;
+    b.style.opacity = (1 - d * 0.7).toFixed(3);
+    if (d < bestD) { bestD = d; best = b; }
   });
+  if (best && best !== drawerMid) {
+    drawerMid?.classList.remove("mid");
+    best.classList.add("mid");
+    if (drawerMid && navigator.vibrate) { try { navigator.vibrate(6); } catch {} }
+    drawerMid = best;
+  }
 }
 
 function openDrawer() {
@@ -66,7 +83,6 @@ function openDrawer() {
   d.hidden = false;
   d.classList.add("on");
   $("#burger").setAttribute("aria-expanded", "true");
-  $("#burger").classList.add("open");
   /* reading offsetLeft forces the layout, so this can run straight away —
      no waiting on a frame, which a backgrounded tab never gets */
   centerDrawer();
@@ -79,7 +95,6 @@ function closeDrawer() {
   d.classList.remove("on");
   d.hidden = true;
   $("#burger").setAttribute("aria-expanded", "false");
-  $("#burger").classList.remove("open");
 }
 
 const drawerOpen = () => $("#drawer").classList.contains("on");
@@ -89,7 +104,7 @@ const drawerOpen = () => $("#drawer").classList.contains("on");
    before the delegated handler in app.js. */
 document.addEventListener("click", e => {
   const el = e.target.closest("[data-act]");
-  if (el && el.closest(".drawer-nav")) closeDrawer();
+  if (el && (el.closest(".drawer-nav") || el.closest(".drawer-tools"))) closeDrawer();
 }, true);
 
 addEventListener("keydown", e => { if (e.key === "Escape" && drawerOpen()) { closeDrawer(); e.stopPropagation(); } }, true);

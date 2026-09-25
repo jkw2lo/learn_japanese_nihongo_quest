@@ -261,7 +261,7 @@ function renderToday() {
       ${first ? "" : deeperHtml()}
       ${first ? "" : menuCardHtml()}
     </div>
-    <aside class="col-rail">${first ? "" : kanaProgressHtml()}${first ? "" : wordsDeckHtml()}</aside>
+    <aside class="col-rail"><div class="rail-in">${first ? "" : kanaProgressHtml()}${first ? "" : wordsDeckHtml()}</div></aside>
   </div>`;
 }
 
