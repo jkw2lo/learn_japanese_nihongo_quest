@@ -100,14 +100,16 @@ function alikeOf(k) {
 const lessonNames = ls => ls.slice(0, 2).map(L => L.title).join(" · ") + (ls.length > 2 ? ` +${ls.length - 2} more` : "");
 
 const todaysWords = () => (state.days[today()]?.learned || []).filter(isWordKey);
+const todaysPatterns = () => (state.days[today()]?.learned || []).filter(isPatternKey);
 /* A day of words rather than kana: words were learned today, or it's the
    words stage and no kana were. */
-const wordDay = () => todaysWords().length > 0 || (phase() === "words" || phase() === "done") && !todaysGlyphs().length;
+const wordDay = () => todaysWords().length > 0 || todaysPatterns().length > 0 || (phase() === "words" || phase() === "done") && !todaysGlyphs().length;
 
 function wordTasks() {
   const ks = todaysWords();
+  const gs = todaysPatterns();
   const planned = nextLessons();
-  const learnedAny = ks.length > 0;
+  const learnedAny = ks.length > 0 || gs.length > 0;
   const tasks = [{
     kind: "learn", jp: "学ぶ", en: "Learn today's words",
     sub: lessonNames(planned.length ? planned : lessonsLearnedToday()),
@@ -115,15 +117,24 @@ function wordTasks() {
     locked: !learnedAny && !planned.length ? "Nothing new to learn today" : null,
   }];
   const drill = (kind, jp, en, keys) => {
-    const n = keys.filter(k => dayOkList(kind).includes(k)).length;
+    const n = keys.filter(k => dayOkList(kind === "gr" ? "r" : kind).includes(k)).length;
     tasks.push({ kind, jp, en, keys, sub: keys.length ? `${n} of ${keys.length}` : "",
       done: keys.length > 0 && n === keys.length, locked: !learnedAny ? "Learn today's words first" : null });
   };
-  drill("r", "読む", "Read them", ks);
-  if (hasAudio()) drill("p", "聞く", "Hear them", ks.filter(k => clipFor(WORD_BY[k].say)));
-  drill("c", "打つ", "Type them in kana", ks);
-  const verbs = ks.filter(k => isVerb(WORD_BY[k].pos));
-  if (verbs.length) drill("j", "活用", "Conjugate the verbs", verbs);
+  /* a day whose lesson is patterns gets the pattern tasks, before and after it's learned */
+  const patDay = gs.length > 0 || planned.some(L => L.kind === "patterns");
+  if (ks.length || !patDay) {
+    drill("r", "読む", "Read them", ks);
+    if (hasAudio()) drill("p", "聞く", "Hear them", ks.filter(k => clipFor(WORD_BY[k].say)));
+    drill("c", "打つ", "Type them in kana", ks);
+    const verbs = ks.filter(k => isVerb(WORD_BY[k].pos));
+    if (verbs.length) drill("j", "活用", "Conjugate the verbs", verbs);
+  }
+  if (patDay) {
+    const gapped = gs.filter(k => hasGaps(PATTERN_BY[k]));
+    if (gapped.length || !gs.length) drill("f", "文型", "Fill the gaps", gapped);
+    drill("gr", "文", "Understand them", gs);
+  }
   return tasks;
 }
 
@@ -315,6 +326,7 @@ function deeperHtml() {
       ${hasAudio() ? tile("wp", "聞く", "Hear words", standing(wk, "p")) : ""}
       ${tile("wc", "打つ", "Type words", standing(wk, "c"))}
       ${wk.some(k => isVerb(WORD_BY[k].pos)) ? tile("wj", "活用", "Conjugate", standing(wk.filter(k => isVerb(WORD_BY[k].pos)), "j")) : ""}
+      ${Object.keys(state.patterns).length ? tile("g", "文型", "Patterns", standing(Object.keys(state.patterns), "f")) : ""}
     </div></section>`;
   return `<section class="card">
     <div class="card-head"><h2>Go deeper</h2>${toggle}</div>
@@ -449,6 +461,7 @@ function qWrite(k, mode, trace = false) {
 }
 
 function qFor(k, kind, mode) {
+  if (isPatternKey(k)) return kind === "f" ? qPatFill(k, mode) : kind === "r" ? qPatMean(k, mode) : null;
   if (isWordKey(k)) {
     if (kind === "r") return qWordRead(k, mode);
     if (kind === "p") return qWordHear(k, mode);
@@ -466,6 +479,7 @@ function qFor(k, kind, mode) {
 
 /* The weaker of reading and hearing, for a review. */
 function reviewKind(k) {
+  if (isPatternKey(k)) return hasGaps(PATTERN_BY[k]) && solidness(k, "f") <= solidness(k, "r") ? "f" : "r";
   if (isWordKey(k)) {
     const ks = hasAudio() ? ["r", "p", "c"] : ["r", "c"];
     return ks.sort((a, b) => solidness(k, a) - solidness(k, b))[0];
@@ -480,6 +494,7 @@ function reviewKind(k) {
    ============================================================ */
 
 function lessonCards(L) {
+  if (L.kind === "patterns") return patternLessonCards(L);
   if (L.set === "w") return wordLessonCards(L);
   /* the first lesson of a new kind opens with a card saying what's new */
   const cards = KIND_INTRO[L.id] ? [infoCard(KIND_INTRO[L.id])] : [];
@@ -524,6 +539,11 @@ function startAhead() {
 }
 
 function startTask(kind) {
+  if (wordDay() && (kind === "f" || kind === "gr")) {
+    const keys = todaysPatterns().filter(k => kind !== "f" || hasGaps(PATTERN_BY[k]));
+    openSession({ kind: "practice", title: kind === "f" ? "文型 · Fill the gaps" : "文 · Understand", queue: shuffle(keys).map(k => () => qFor(k, kind === "gr" ? "r" : "f", "practice")) });
+    return;
+  }
   if (wordDay()) {
     const keys = todaysWords().filter(k => (kind !== "p" || clipFor(WORD_BY[k].say)) && (kind !== "j" || isVerb(WORD_BY[k].pos)));
     openSession({ kind: "practice", title: TASK_TITLES[kind] || "言葉", queue: shuffle(keys).map(k => () => qFor(k, kind, "practice")) });
@@ -542,6 +562,12 @@ const TASK_TITLES = { r: "読む · Read", p: "聞く · Hear", a: "似てる ·
 function startDeeper(kind) {
   const keys = Object.keys(state.items);
   let queue;
+  if (kind === "g") {
+    const ps = Object.keys(state.patterns);
+    queue = shuffle(ps).slice(0, 12).flatMap(k => [() => qFor(k, hasGaps(PATTERN_BY[k]) ? "f" : "r", "practice"), () => qFor(k, "r", "practice")]);
+    openSession({ kind: "practice", title: "文型 · Patterns", queue: shuffle(queue) });
+    return;
+  }
   if (/^w[rpcj]$/.test(kind)) {
     const sk = kind[1];
     const ws = Object.keys(state.words).filter(k => (sk !== "p" || clipFor(WORD_BY[k].say)) && (sk !== "j" || isVerb(WORD_BY[k].pos)));
@@ -666,6 +692,16 @@ function showCard() {
     return;
   }
 
+  if (c.t === "gintro") {
+    learn(c.k); save();
+    if (!S.learned.includes(c.k)) S.learned.push(c.k);
+    body.innerHTML = patIntroHtml(c);
+    foot.innerHTML = `<button class="btn btn-ghost" data-act="replay">${icon("speaker")} Hear it <kbd>R</kbd></button>
+      <button class="btn" data-act="next" id="nextBtn">Next <kbd>␣</kbd></button>`;
+    if (state.settings.autoplay) say(PATTERN_BY[c.k].ex[0].kana);
+    return;
+  }
+
   if (c.t === "wintro") {
     learn(c.k); save();
     if (!S.learned.includes(c.k)) S.learned.push(c.k);
@@ -690,17 +726,18 @@ function showCard() {
   };
   const n = c.opts.length;
   body.innerHTML = `<div class="q q-${c.kind}">
-    ${c.wk ? wordPrompt(c) : prompts[c.kind]()}
+    ${c.gk ? patPrompt(c) : c.wk ? wordPrompt(c) : prompts[c.kind]()}
     <div class="opts n${n} ${c.wk ? "words" : ""}">${c.opts.map((o, i) => `
       <button class="opt ${o.jp ? "jp" : ""} ${o.furi ? "furi" : ""}" data-act="opt" data-i="${i}" ${o.jp ? 'lang="ja"' : ""}><kbd>${i + 1}</kbd><span>${o.furi ? wordHtml(o.label) : esc(o.label)}</span></button>`).join("")}
     </div>
     <div class="verdict" id="verdict" aria-live="polite"></div>
   </div>`;
-  foot.innerHTML = `${c.sound ? `<button class="btn btn-ghost" data-act="replay">${icon("speaker")} Again <kbd>R</kbd></button>` : "<span></span>"}
+  /* a fill-the-gap sentence can't be played before it's answered — the sound gives the gap away */
+  foot.innerHTML = `${c.sound && c.kind !== "f" ? `<button class="btn btn-ghost" data-act="replay">${icon("speaker")} Again <kbd>R</kbd></button>` : "<span></span>"}
     <button class="btn" data-act="next" id="nextBtn" disabled>Next <kbd>␣</kbd></button>`;
-  if (c.kind !== "r" && c.kind !== "word" && c.sound) say(c.sound);
+  if (c.kind !== "r" && c.kind !== "word" && c.kind !== "f" && c.sound) say(c.sound);
   S.t0 = performance.now();
-  startTimer(c.kind, c.wk);
+  startTimer(quickMs(c));
 }
 
 /* ---------- writing ---------- */
@@ -798,9 +835,8 @@ function introNote(e) {
     ${twin ? `<p class="twin">Same sound as <span lang="ja">${esc(twin)}</span> in hiragana.</p>` : ""}`;
 }
 
-function startTimer(kind, wk = false) {
+function startTimer(ms) {
   const el = $("#sTimer");
-  const ms = (wk ? QUICK_WORD_MS : QUICK_MS)[kind];
   if (!state.settings.timer || !ms) { el.classList.remove("run"); return; }
   el.style.setProperty("--dur", ms + "ms");
   el.classList.remove("run", "stop");
@@ -815,7 +851,7 @@ function updateProgress() {
   $("#sCount").textContent = total ? `${Math.min(i + 1, total)} / ${total}` : "";
 }
 
-const quickMs = c => (c.wk ? QUICK_WORD_MS : QUICK_MS)[c.kind];
+const quickMs = c => (c.gk ? QUICK_PATTERN_MS : c.wk ? QUICK_WORD_MS : QUICK_MS)[c.kind];
 
 /* A fresh copy of a question, for when a miss comes back at the end. */
 function rebuild(c) {
@@ -883,12 +919,13 @@ function answer(idx) {
     v.className = "verdict miss";
     v.innerHTML = `It was ${verdictDetail(c)}`;
   }
-  if (state.settings.autoplay && c.sound && (c.kind === "r" || c.kind === "word")) say(c.sound);
+  if (state.settings.autoplay && c.sound && (c.kind === "r" || c.kind === "word" || c.kind === "f")) say(c.sound);
   else if (c.kind === "r" && state.settings.autoplay && !c.wk) sayKana(c.k);
   afterAnswer(ok);
 }
 
 function verdictDetail(c) {
+  if (c.gk) return patVerdict(c);
   if (c.wk) return wordVerdict(WORD_BY[c.k]);
   if (c.kind === "word") {
     return `<span lang="ja">${esc(c.word.w)}</span> <span class="rom-always">${esc(c.word.r)}</span> · ${esc(c.word.m)}${c.word.note ? `<div class="note">${esc(c.word.note)}</div>` : ""}`;
@@ -913,6 +950,8 @@ function replay() {
   if (!c) return;
   if (c.t === "intro") return sayKana(c.k);
   if (c.t === "wintro") return sayWord(WORD_BY[c.k]);
+  if (c.t === "gintro") return say(PATTERN_BY[c.k].ex[0].kana);
+  if (c.kind === "f" && !S.answered) return;
   if (c.sound) say(c.sound);
 }
 
@@ -960,8 +999,11 @@ function finishSession() {
     crumb(`check ${Math.round(r.acc * 100)}% ${r.passed ? "pass" : "fail"}`);
   } else if (S.learned.length) {
     mood = "cheer"; stampText = "よくできました"; petalN = 16;
-    head = S.learned.some(isWordKey) ? `${S.learned.length} new word${S.learned.length > 1 ? "s" : ""}.` : `${S.learned.length} new kana.`;
-    extra = `<p class="learned-list ${S.learned.some(isWordKey) ? "words" : ""}" lang="ja">${S.learned.map(k => isWordKey(k) ? wordHtml(WORD_BY[k].w) : esc(k)).join(isWordKey(S.learned[0]) ? "<br>" : " ")}</p>`;
+    head = S.learned.some(isPatternKey) ? `${S.learned.length} new pattern${S.learned.length > 1 ? "s" : ""}.`
+      : S.learned.some(isWordKey) ? `${S.learned.length} new word${S.learned.length > 1 ? "s" : ""}.` : `${S.learned.length} new kana.`;
+    const label = k => isPatternKey(k) ? wordHtml(PATTERN_BY[k].pat) : isWordKey(k) ? wordHtml(WORD_BY[k].w) : esc(k);
+    const long = S.learned.some(k => isWordKey(k) || isPatternKey(k));
+    extra = `<p class="learned-list ${long ? "words" : ""}" lang="ja">${S.learned.map(label).join(long ? "<br>" : " ")}</p>`;
     if (phase() === "check" && S.kind === "today") {
       petalN = 36;
       extra += `<div class="banner-done">${neko("wow", "mini")}<div><b>That's all of hiragana.</b> Next: the hiragana check, on ${HIRA_CHECK.days} separate days from tomorrow, before katakana.</div></div>`;
@@ -988,7 +1030,9 @@ function finishSession() {
     <div class="muted">${S.firstRight} of ${S.first} right first time${S.quick ? ` · ${S.quick} quick` : ""}</div>
     <h2>${esc(head)}</h2>
     ${extra}
-    ${missed.length ? `<div class="missed"><div class="eyebrow">To look at again</div>${missed.map(k => isWordKey(k)
+    ${missed.length ? `<div class="missed"><div class="eyebrow">To look at again</div>${missed.map(k => isPatternKey(k)
+      ? `<button class="chip" lang="ja" data-act="say" data-say="${esc(PATTERN_BY[k].ex[0].kana)}">${wordHtml(PATTERN_BY[k].pat)} <small>${esc(PATTERN_BY[k].m)}</small></button>`
+      : isWordKey(k)
       ? `<button class="chip" lang="ja" data-act="say" data-say="${esc(WORD_BY[k].say)}">${wordHtml(WORD_BY[k].w)} <small>${esc(WORD_BY[k].m)}</small></button>`
       : `<button class="chip" lang="ja" data-act="say" data-say="${esc(KANA_BY[k]?.say || k)}">${esc(k)} <small>${esc(KANA_BY[k]?.r || "")}</small></button>`).join("")}</div>` : ""}
   </div>`;
@@ -1178,6 +1222,8 @@ function renderRecord() {
         ${Object.keys(state.words).length ? skillRow('<span lang="ja">言葉</span> read', Object.keys(state.words), "r")
           + (hasAudio() ? skillRow('<span lang="ja">言葉</span> hear', Object.keys(state.words), "p") : "")
           + skillRow('<span lang="ja">言葉</span> type', Object.keys(state.words), "c") : ""}
+        ${Object.keys(state.patterns).length ? skillRow('<span lang="ja">文型</span> fill', Object.keys(state.patterns), "f")
+          + skillRow('<span lang="ja">文型</span> understand', Object.keys(state.patterns), "r") : ""}
         ${state.settings.writing ? skillRow('<span lang="ja">ひらがな</span> write', hk.filter(canWrite), "w") + skillRow('<span lang="ja">カタカナ</span> write', kk.filter(canWrite), "w") : ""}
       </section>
       <section class="card">
@@ -1410,7 +1456,7 @@ const ACTS = {
   "kana-cell": el => openKana(el.dataset.k),
   "chart-set": el => { chartSet = el.dataset.set; renderKana(); },
   opt: el => answer(+el.dataset.i),
-  next: () => { if (S && (S.card?.t === "intro" || S.card?.t === "concept" || S.card?.t === "info" || S.card?.t === "wintro" || S.answered || S.finished)) next(); },
+  next: () => { if (S && (S.card?.t === "intro" || S.card?.t === "concept" || S.card?.t === "info" || S.card?.t === "wintro" || S.card?.t === "gintro" || S.answered || S.finished)) next(); },
   "deeper-set": el => { deeperSet = el.dataset.set; renderToday(); },
   "w-check": () => checkWrite(),
   "w-undo": () => padUndo(),

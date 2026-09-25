@@ -368,27 +368,39 @@ Kanji are a layer over words, never the way in.
 
 ## Patterns (grammar)
 
-This is the new part. Chinese barely needed a grammar track; Japanese does.
+Chinese barely needed a grammar track; Japanese does. Built
+(`js/data/patterns.js`, `js/patterns-ui.js`), with 19 patterns for stages
+3 to 6: 〜はいくらですか, 〜は〜です, じゃないです, か, の, この/その/あの, も,
+〜が好きです, 〜をください, 〜を〜ます, ません, ました, に (going), で (by and at),
+〜はどこですか, 〜に乗ります, and に for a time.
 
-- **One pattern, one card.** `〜てください` is "please do ~": a meaning, a
-  short note on how it's built, and three to five example sentences.
-- **Example sentences follow the reading rule.** A pattern's examples are
-  filtered to words you know, and the pattern isn't offered until at least
-  two examples qualify. That's `readingMaterial()` again, applied to grammar.
-- **Particles get a fill-in-the-gap drill.** 私＿学生です → は. This is where
-  most real beginner mistakes happen (は/が, に/で, を), so the particle
-  drill is its own practice row.
-- **Conjugations are generated in code, never typed into the data.** Each
-  verb is tagged `v1` (ichidan), `v5` (godan, with the ending) or `irr`
-  (する, くる, and 行く's て-form). `js/conj.js` produces ます, ません,
-  ました, ませんでした, て, た, ない, and later potential, volitional,
-  ば and たら.
-  A fixture table in `tools/smoke.mjs` pins the output for a set of verbs
-  chosen to cover every godan ending and every exception. Typing 1,500 forms
-  by hand is how data drifts. Hanzi Quest's component checker found 32 of 302
-  hand-written claims wrong, and this is the same risk.
-- **Conjugation is a Sprint mode.** Verb + target form → type it. It's minute
-  math in its purest form.
+- **One pattern, one card**: the pattern, what it means, how it's built,
+  and two or three example sentences, each tappable to hear.
+- **Lessons come after the stage's words.** A stage's patterns get a lesson
+  (four at most) placed right after its last word lesson, under the same
+  daily allowance. Someone already past a stage meets its patterns next.
+  The very first pattern lesson opens with a card on what particles are.
+- **Examples only use what you know.** Every kanji in a pattern's examples
+  must appear in a word from that stage or earlier, and the smoke test
+  checks every one. Names are in katakana (スミスさん) for the same reason.
+- **Two skills**, `f` and `r`:
+  - **Fill the gap** (`f`). Each example marks its gap in the data
+    (`{私|わたし}«は»{学生|がくせい}です。`), and the drill blanks it. For a
+    particle, the wrong answers are the confusions people actually make
+    first (は/が/も, に/で/へ, を/が), then others. For a form (ません/ました)
+    or a word (この/これ), the pattern lists its own choices. The sentence
+    can't be played until it's answered, because the sound gives the gap away.
+  - **Understand it** (`r`): pick what a sentence means from other
+    patterns' sentences.
+- Patterns live in `state.patterns` (key `g:` + id) and go through the same
+  scheduling as everything else. Today's list on a pattern day is 学ぶ,
+  文型 fill the gaps and 文 understand them. Go deeper has a 文型 tile, and
+  the Words tab lists **Patterns you know**, each opening to its examples.
+- **Conjugations are generated in code**, never typed into the data. See
+  **Conjugation** under Words.
+
+Still to come: patterns for stages 7 and on (adjectives, the て-form and
+more), and Sprint modes for conjugation and particles.
 
 ---
 

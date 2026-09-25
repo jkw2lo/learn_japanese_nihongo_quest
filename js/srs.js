@@ -11,6 +11,8 @@ const PASSES_FOR_SOLID = 3;
 const QUICK_MS = { r: 3000, p: 4000, a: 4000, w: 5000 };
 /* Words are longer than a kana, and typing one takes a while. */
 const QUICK_WORD_MS = { r: 5000, p: 5000, c: 12000, j: 15000 };
+/* A pattern question is a whole sentence to read. */
+const QUICK_PATTERN_MS = { f: 8000, r: 9000 };
 /* The consolidation gate between hiragana and katakana: this many separate
    days, each after the last hiragana was learned, on which a full hiragana
    sweep was finished at this first-try accuracy. */
@@ -56,6 +58,7 @@ const freshState = () => ({
   items: {},          /* glyph -> { at, lvl, due, sk: { r: {n, ok, fast, miss}, p: … } } */
   words: {},          /* "w:食べる" -> the same shape. Kept apart so everything
                          that walks the kana never trips over a word. */
+  patterns: {},       /* "g:wa-desu" -> the same shape, for grammar patterns */
   days: {},           /* date  -> { n, ok: {r:[],p:[],a:[],x:[]}, learned:[], rev:[], check } */
   settings: { ...DEFAULT_SETTINGS },
   sprint: { best: {}, recent: [] },
@@ -73,6 +76,7 @@ function normalise(s) {
   delete out.settings.lessonsPerDay;      /* replaced by newPerDay in 0.3 */
   out.items = s.items && typeof s.items === "object" ? s.items : {};
   out.words = s.words && typeof s.words === "object" ? s.words : {};
+  out.patterns = s.patterns && typeof s.patterns === "object" ? s.patterns : {};
   out.days = s.days && typeof s.days === "object" ? s.days : {};
   Object.values(out.days).forEach(d => {
     d.learned = asList(d.learned);
@@ -117,7 +121,8 @@ const dayOkList = (kind, k = today()) => (state.days[k]?.ok?.[kind]) || [];
 /* ---------- items ---------- */
 
 const isWordKey = k => typeof k === "string" && k.startsWith("w:");
-const storeOf = k => isWordKey(k) ? state.words : state.items;
+const isPatternKey = k => typeof k === "string" && k.startsWith("g:");
+const storeOf = k => isWordKey(k) ? state.words : isPatternKey(k) ? state.patterns : state.items;
 const item = k => storeOf(k)[k] || null;
 const isLearned = k => !!storeOf(k)[k];
 const learnedKana = set => KANA.filter(e => (!set || e.set === set) && isLearned(e.k));
@@ -133,7 +138,7 @@ function skill(k, sk) {
    telling look-alikes apart, only applies to kana that have one — callers
    narrow the keys for that. */
 /* Verbs have one more: j, conjugate it. */
-const skillsFor = k => isWordKey(k) ? (isVerb(WORD_BY[k]?.pos) ? ["r", "p", "c", "j"] : ["r", "p", "c"])
+const skillsFor = k => isPatternKey(k) ? ["f", "r"] : isWordKey(k) ? (isVerb(WORD_BY[k]?.pos) ? ["r", "p", "c", "j"] : ["r", "p", "c"])
   : KANA_BY[k]?.concept ? ["x"] : ["r", "p", "a", "w"];
 
 function learn(k) {
@@ -163,7 +168,7 @@ function grade(k, sk, ok, ms, mode = "practice") {
   s.n++;
   if (ok) {
     s.ok++;
-    if (ms != null && ms <= ((isWordKey(k) ? QUICK_WORD_MS : QUICK_MS)[sk] || 4000)) s.fast++;
+    if (ms != null && ms <= ((isPatternKey(k) ? QUICK_PATTERN_MS : isWordKey(k) ? QUICK_WORD_MS : QUICK_MS)[sk] || 4000)) s.fast++;
   } else {
     s.miss++;
     state.mistakes[k] = (state.mistakes[k] || 0) + 1;
@@ -222,7 +227,8 @@ function dueKeys() {
   const retired = k => wordsOpen() && (KANA_BY[k]?.concept ? isSolid(k, "x") : isSolid(k, "r") && isSolid(k, "p"));
   const kana = Object.keys(state.items).filter(k => state.items[k].due <= t && !retired(k));
   const words = Object.keys(state.words).filter(k => state.words[k].due <= t);
-  return [...kana, ...words].sort((a, b) => item(a).due.localeCompare(item(b).due));
+  const patterns = Object.keys(state.patterns).filter(k => state.patterns[k].due <= t);
+  return [...kana, ...words, ...patterns].sort((a, b) => item(a).due.localeCompare(item(b).due));
 }
 
 /* ---------- lessons and the gates ---------- */

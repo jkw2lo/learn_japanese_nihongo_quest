@@ -32,7 +32,7 @@ function sandbox() {
     },
   };
   vm.createContext(ctx);
-  vm.runInContext(['js/data/kana.js', 'js/furi.js', 'js/conj.js', 'js/data/words.js', 'js/srs.js'].map(read).join('\n') + `
+  vm.runInContext(['js/data/kana.js', 'js/furi.js', 'js/conj.js', 'js/data/words.js', 'js/data/patterns.js', 'js/srs.js'].map(read).join('\n') + `
     ;globalThis.__ = { get state() { return state; }, set state(v) { state = v; },
        setShift: n => { clockShift = n; } };`, ctx);
   return ctx;
@@ -48,6 +48,8 @@ const CONTRACT = {
     'KANA_CONCEPT', 'ROMAJI_ALT', 'kanaUnits', 'toRomaji', 'toHira', 'toKata', 'romajiToKana', 'kanaSame'],
   'js/data/words.js': ['WORDS', 'WORD_BY', 'WORD_STAGES', 'WORD_LESSONS'],
   'js/conj.js': ['conj', 'isVerb', 'stems', 'CONJ_FORMS', 'CONJ_TAUGHT'],
+  'js/data/patterns.js': ['PATTERNS', 'PATTERN_BY', 'PARTICLES', 'PARTICLE_CONFUSIONS'],
+  'js/patterns-ui.js': ['patternLessonCards', 'qPatFill', 'qPatMean', 'patPrompt', 'patVerdict', 'patIntroHtml', 'gapHtml', 'hasGaps', 'learnedPatterns', 'patternsSectionHtml'],
   'js/data/menu.js': ['MENUS', 'MENU_PHRASES', 'menuItems', 'numberKana'],
   'js/menu-ui.js': ['menuOpen', 'canReadItem', 'menuCardHtml', 'renderMenu', 'tapItem', 'startMenuGame', 'noren', 'inked'],
   'js/art.js': ['icon', 'neko', 'hanamaru', 'hanamaruPath', 'stamp', 'petals'],
@@ -302,6 +304,36 @@ section('menu');
   Object.entries(N).forEach(([n, want]) => ok(numberKana(+n) === want, `numberKana(${n}) = ${numberKana(+n)}, want ${want}`));
 }
 
+section('patterns');
+{
+  const k = sandbox();
+  const run = code => vm.runInContext(code, k);
+  const P = run('PATTERNS.map(p => ({ key: p.key, st: p.st, alts: p.alts || null, ex: p.ex.map(e => ({ gapped: e.gapped, gap: e.gap, jp: e.jp })) }))');
+  ok(new Set(P.map(p => p.key)).size === P.length, 'two patterns share an id');
+  const particles = run('PARTICLES');
+  P.forEach(p => {
+    ok(p.ex.length >= 2, `${p.key} needs at least two examples`);
+    p.ex.forEach(e => {
+      const gaps = (e.gapped.match(/«/g) || []).length;
+      ok(gaps <= 1, `${p.key}: more than one gap in ${e.gapped}`);
+      if (e.gap) ok((p.alts || particles).includes(e.gap), `${p.key}: the gap ${e.gap} isn't among its choices`);
+    });
+  });
+  /* examples only use kanji the learner has met by that stage */
+  const kanjiBy = run('(() => { const m = {}; WORDS.forEach(w => furiKanji(w.w).forEach(c => { m[c] = Math.min(m[c] || 99, w.st); })); return m; })()');
+  P.forEach(p => p.ex.forEach(e => run(`furiKanji(${JSON.stringify(e.jp)})`).forEach(c =>
+    ok(kanjiBy[c] && kanjiBy[c] <= p.st, `${p.key}: 「${c}」 in ${e.jp} isn't in any word by stage ${p.st}`))));
+  /* each pattern lesson sits after its stage's last word lesson */
+  const order = run('WORD_LESSONS.map(L => [L.id, L.kind, L.st])');
+  order.forEach(([id, kind, st], i) => {
+    if (kind !== 'patterns') return;
+    ok(!order.slice(i + 1).some(([, k2, st2]) => k2 === 'words' && st2 === st), `${id} comes before some of stage ${st}'s words`);
+  });
+  ok(run('skillsFor("g:wa-desu").join()') === 'f,r', 'patterns have the fill and understand skills');
+  run('load(); learn("g:wa-desu")');
+  ok(run('!!state.patterns["g:wa-desu"] && !state.words["g:wa-desu"]'), 'patterns are stored apart');
+}
+
 section('conjugation');
 {
   const k = sandbox();
@@ -446,7 +478,7 @@ section('furigana');
   /* and every string in the data that exists so far */
   const strings = [];
   f.WORDS.forEach(w => { strings.push(w.w); if (w.note) strings.push(w.note); (w.ex || []).forEach(x => strings.push(x[0])); });
-  f.PATTERNS.forEach(p => (p.ex || []).forEach(x => strings.push(x[0])));
+  f.PATTERNS.forEach(p => { strings.push(p.pat, p.note); p.ex.forEach(x => strings.push(x.jp)); });
   vm.runInContext('globalThis.STAGES = WORD_STAGES', f);
   f.STAGES.forEach(S => strings.push(S.about));
   strings.forEach(x => furiProblems(x).forEach(pr => ok(false, pr)));

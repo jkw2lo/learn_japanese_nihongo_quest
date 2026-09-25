@@ -141,7 +141,7 @@ function showType(c) {
   inp.focus();
   S.hinted = false;
   S.t0 = performance.now();
-  startTimer("c");
+  startTimer(quickMs(c));
 }
 
 /* Right if the kana match (script and long-vowel spelling don't matter), or
@@ -260,6 +260,7 @@ function renderWords() {
     </div>
     ${!all.length ? `<section class="card empty">${neko("think", "mini")}<p>Words appear here as soon as you know every kana in one — <span lang="ja">いえ</span> (house)
       needs just the first row. Every word stays here once it arrives; this is the whole list, not just today's.</p></section>` : ""}
+    ${patternsSectionHtml()}
     ${groups.join("") || (all.length ? `<section class="card"><p class="muted">Nothing matches that.</p></section>` : "")}
     ${notYet.length ? `<section class="card not-yet"><div class="card-head"><h2>Coming up</h2><span class="count">${notYet.length} more kana words</span></div>
       ${topNeed.length ? `<p class="small">One kana away:</p><div class="chips">${topNeed.map(([k, n]) =>
