@@ -67,6 +67,7 @@ const freshState = () => ({
   mistakes: {},       /* glyph -> count, from drills and sprints */
   kataOpen: null,     /* the day katakana unlocked; never relocks */
   milestones: {},     /* id -> the day it was reached */
+  scenes: {},         /* out and about: id -> { got: [item indices recognised] } */
   menu: { orders: 0, days: {} },   /* the side quest: orders taken, per day */
   backupAt: null,
 });
@@ -93,6 +94,8 @@ function normalise(s) {
   out.mistakes = s.mistakes && typeof s.mistakes === "object" ? s.mistakes : {};
   out.menu = { orders: 0, days: {}, ...(s.menu || {}) };
   out.milestones = s.milestones && typeof s.milestones === "object" ? s.milestones : {};
+  out.scenes = s.scenes && typeof s.scenes === "object" ? s.scenes : {};
+  for (const [id, x] of Object.entries(out.scenes)) out.scenes[id] = { got: asList(x && x.got) };
   return out;
 }
 
@@ -107,10 +110,14 @@ function load() {
   return state;
 }
 
-let saveFailed = false;
+let saveFailed = false, pushTimer = null;
 function save() {
+  state.updated = Date.now();
   try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); saveFailed = false; }
   catch (e) { saveFailed = true; console.warn("save failed", e); }
+  /* a burst of answers is one write, not one per answer */
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(pushRemote, 1500);
 }
 
 /* ---------- days ---------- */
@@ -398,6 +405,125 @@ function recordSprint(key, res) {
   if (better) state.sprint.best[key] = { right: res.right, total: res.total, ms: res.ms, at: today() };
   state.sprint.recent = [{ key, ...res, at: today() }, ...asList(state.sprint.recent)].slice(0, 30);
   return better;
+}
+
+/* ---------- merging two records (sync) ----------
+
+   Two devices each hold a whole record; signing in hands this both and
+   keeps one. Nothing learned on either side may be lost, so:
+     counts that only grow      the larger (a day's answers, a skill's passes)
+     lists of things done       the union (learned today, scenes recognised)
+     firsts                     the earlier (started, katakana opened, a milestone)
+     preferences                the side saved last (settings)
+     an item's schedule         the side that touched it last (its `t`)
+   The larger count, not the sum: the same day counted on both devices would
+   otherwise double every time the two met. It can undercount a day spent
+   half on each, which is the right way round to be wrong. */
+
+const bigger = (a, b) => Math.max(a || 0, b || 0);
+const earlierOf = (a, b) => (!a ? b || null : !b ? a : a < b ? a : b);
+const laterOf = (a, b) => (!a ? b || null : !b ? a : a > b ? a : b);
+const unionList = (a, b) => [...new Set([...asList(a), ...asList(b)])];
+function mergeBy(a, b, fn) {
+  const out = {};
+  new Set([...Object.keys(a || {}), ...Object.keys(b || {})]).forEach(k => {
+    const x = a && a[k], y = b && b[k];
+    out[k] = x == null ? y : y == null ? x : fn(x, y, k);
+  });
+  return out;
+}
+
+function mergeItem(x, y) {
+  const n = it => Object.values(it.sk || {}).reduce((t, s) => t + (s.n || 0), 0);
+  const newer = (y.t || 0) > (x.t || 0) || ((y.t || 0) === (x.t || 0) && n(y) > n(x)) ? y : x;
+  const sk = mergeBy(x.sk, y.sk, (p, q) => ({ n: bigger(p.n, q.n), ok: bigger(p.ok, q.ok), fast: bigger(p.fast, q.fast), miss: bigger(p.miss, q.miss) }));
+  return { ...newer, at: earlierOf(x.at, y.at), sk, t: bigger(x.t, y.t) };
+}
+
+function mergeDay(x, y) {
+  const out = { ...x, ...y };
+  ["n", "g", "right", "ms"].forEach(f => { if (x[f] != null || y[f] != null) out[f] = bigger(x[f], y[f]); });
+  out.learned = unionList(x.learned, y.learned);
+  out.rev = unionList(x.rev, y.rev);
+  out.ok = mergeBy(x.ok, y.ok, unionList);
+  Object.keys(out.ok).forEach(k => { out.ok[k] = asList(out.ok[k]); });
+  if (x.check || y.check) {
+    const p = x.check || {}, q = y.check || {};
+    out.check = { passed: !!(p.passed || q.passed), best: bigger(p.best, q.best), tries: bigger(p.tries, q.tries) };
+  }
+  return out;
+}
+
+function mergeState(a, b) {
+  if (!a) return b;
+  if (!b) return a;
+  a = normalise(a); b = normalise(b);
+  const newer = (b.updated || 0) >= (a.updated || 0) ? b : a;
+  const older = newer === a ? b : a;
+  const out = normalise({ ...older, ...newer });
+  out.settings = { ...older.settings, ...newer.settings };
+  ["items", "words", "patterns", "kanji"].forEach(st => { out[st] = mergeBy(a[st], b[st], mergeItem); });
+  out.days = mergeBy(a.days, b.days, mergeDay);
+  out.mistakes = mergeBy(a.mistakes, b.mistakes, bigger);
+  out.milestones = mergeBy(a.milestones, b.milestones, earlierOf);
+  out.scenes = mergeBy(a.scenes, b.scenes, (x, y) => ({ got: unionList(x.got, y.got).sort((i, j) => i - j) }));
+  out.menu = { orders: bigger(a.menu.orders, b.menu.orders), days: mergeBy(a.menu.days, b.menu.days, bigger) };
+  const betterRun = (x, y) => (y.right > x.right || (y.right === x.right && y.ms < x.ms) ? y : x);
+  const seen = new Set();
+  out.sprint = {
+    best: mergeBy(a.sprint.best, b.sprint.best, betterRun),
+    recent: [...asList(newer.sprint.recent), ...asList(older.sprint.recent)]
+      .filter(r => { const id = JSON.stringify(r); return !seen.has(id) && seen.add(id); })
+      .sort((x, y) => (y.at || "").localeCompare(x.at || "")).slice(0, 30),
+  };
+  out.created = earlierOf(a.created, b.created);
+  out.kataOpen = earlierOf(a.kataOpen, b.kataOpen);
+  out.backupAt = laterOf(a.backupAt, b.backupAt);
+  out.updated = bigger(a.updated, b.updated);
+  return out;
+}
+
+/* ---------- optional cross-device sync ----------
+
+   One document per person holding the whole record, supplied by js/sync.js
+   when someone signs in: an object with get() and set(). With none,
+   remoteDoc stays null, pushRemote does nothing, and the app is the
+   localStorage-only app it always was. */
+
+let remoteDoc = null;
+let onRemoteChange = null;             /* set by app.js, so a pull can repaint */
+
+/* Pull, merge, keep, push back. Returns whether this device's record changed. */
+async function useRemote(doc) {
+  remoteDoc = null;
+  if (!doc) return false;
+  const snap = await doc.get();          /* throws if refused — and stays unhooked */
+  remoteDoc = doc;
+  const remote = snap && snap.exists ? snap.data() : null;
+  let changed = false;
+  if (remote && remote.app === "nihongo-quest") {
+    const merged = mergeState(state, remote);
+    changed = JSON.stringify(merged) !== JSON.stringify(state);
+    state = merged;
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch {}
+  }
+  /* always: the remote may be missing what this device knew */
+  await pushRemote();
+  return changed;
+}
+
+function dropRemote() { remoteDoc = null; }
+
+async function pushRemote() {
+  if (!remoteDoc) return;
+  try { await remoteDoc.set(JSON.parse(JSON.stringify(state))); } catch (e) { console.warn("sync push failed", e); }
+}
+
+/* A reset or a restored backup is meant to replace the record, not join
+   it — so it's written over the account's copy rather than merged into it. */
+async function replaceRemote() {
+  clearTimeout(pushTimer);
+  await pushRemote();
 }
 
 /* ---------- backup ---------- */

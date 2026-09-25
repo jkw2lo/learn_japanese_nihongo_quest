@@ -42,6 +42,8 @@ Build order. Each step should run end to end before the next one starts.
    in a word, furigana dropping away as they're learned; the 漢字 chart;
    KANJIDIC2 readings, AnimCJK strokes.
 
+8d. ~~Metrics and milestones~~ (0.10.0).
+
 8c. ~~The rest of N5~~ (0.9.0): stages 7 買う, 8 毎日, 9 て形, 10 まとめ (92
    more words, 21 more patterns, 52 more kanji); adjectives conjugate; the
    て-form and casual forms join the drill as their patterns are learned.
@@ -50,12 +52,13 @@ Build order. Each step should run end to end before the next one starts.
 
 ## Next
 
-9. **Sync** — progress lives in one browser. A static GitHub Pages site has
-   no server to sync through; the choices are in the 0.9.0 notes to the
-   user (publish as a Claude artifact with its shared store, a small
-   backend, or keep to file backups).
-10. **N4** — about 600 more words, 170 kanji and 80 patterns: stages 11+,
-   built the same way (words → patterns → kanji per stage).
+9. ~~Sync~~ (0.11.0): Firebase, lifted from Hanzi Quest, with a merge that
+   loses nothing. ~~Out and about~~: nine real-life scenes beside the
+   menus.
+10. **More recognition practice at N5**: more scenes (a train ticket, a
+   bento label, a konbini's shelf tags, a clinic), a "spot the kanji you
+   know" mode over the scenes, and scenes in Sprint.
+11. **N4**: on hold. Staying at N5 for now.
 
 ## Smaller, from 0.4.0
 

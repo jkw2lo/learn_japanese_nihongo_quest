@@ -6,12 +6,15 @@ holding a simple conversation. It starts from nothing and runs to JLPT N5,
 then on towards N4. Writing is there if you want it and never in the way if
 you don't.
 
-> **Status: all of N5 is built (0.9.0).** The kana stage, then 219 words
+> **Status: all of N5 is built (0.11.0).** The kana stage, then 219 words
 > in nine stages (phrases, numbers and money, me and you, food, getting
 > around, shopping, daily life, the て-form, and an N5 wrap-up), 40 grammar
 > patterns, 131 kanji (74 N5, 57 N4) taught through the words, verbs and
-> adjectives conjugated, a Grammar reference tab, flashcards, the Read a Menu
-> side quest, Sprint, Record and Settings.
+> adjectives conjugated, a Grammar reference tab, flashcards, Out and about
+> (menus, station signs and announcements, shop, door and road signs, a
+> receipt, shop talk, asking for things and the way, casual Japanese,
+> compliments), Sprint, Record with milestones, and optional sync across
+> devices through Firebase.
 
 **Live at:** https://jkw2lo.github.io/learn_japanese_nihongo_quest/
 **Repo:** https://github.com/jkw2lo/learn_japanese_nihongo_quest (`main`, over
@@ -490,7 +493,7 @@ The daily loop, lifted almost whole from Hanzi Quest (*The blocks on Today*,
    extra practice, so it can never make tomorrow's reviews worse: a right
    answer doesn't push the next review back, and a miss still brings one
    forward (`grade(..., {practice: true})`).
-4. **Read a Menu**: the side quest.
+4. **Out and about**: the menus and the real-life scenes.
 
 Every number on Today counts items, never answers, for the reason Hanzi
 Quest's *What the numbers count* gives.
@@ -526,6 +529,35 @@ menus are mostly katakana**. Built (`js/data/menu.js`, `js/menu-ui.js`):
   sensible prices, and a café that stays kana-only.
 
 Still to do: the izakaya tier (本日のおすすめ).
+
+### Out and about: the scenes
+
+The Menu section grew into **街 Out and about**: the two menus, then nine
+scenes of the Japanese you meet off the page (`js/data/scenes.js`,
+`js/scenes-ui.js`). Recognition is the point. Stay at N5, but be able to
+read the sign and catch the announcement.
+
+| Scene | Drawn as | What's in it |
+|---|---|---|
+| 駅 At the station | blue station plates, then announcements | 出口, 改札, 乗り換え, the exits, 各駅停車 / 快速 / 急行; まもなく…, 黄色い線…, 次は… |
+| 看板 Shop and door signs | wooden shop plates | 営業中 / 準備中, 押す / 引く, お手洗い, 禁煙, 割引, 半額, 売り切れ |
+| 道路 Road signs | road signs; 止まれ is the red triangle | 止まれ, 徐行, 一方通行, 通行止め, 横断歩道 |
+| レシート Reading a receipt | a paper receipt; each term on it is tappable | 小計, 消費税, 合計, 税込み, お預かり, お釣り, 点数 |
+| お店 What shop staff say | a speaker line each | いらっしゃいませ, 温めますか, 袋はご利用ですか |
+| 頼む, 道を聞く, 口語, ほめる | a chat: your lines on the right, what you'll hear from the cat on the left | asking for things, asking the way, casual Japanese, compliments |
+
+- Tap anything to hear it and see what it means. **Show every meaning**
+  reveals them all.
+- **Test yourself** runs a quiz through the usual session screen, starting
+  with what you haven't recognised yet. The receipt adds three sums (your
+  change, the total, the tax), which the smoke test checks against
+  `receiptSums`.
+- Like the menu, it never touches the review schedule. What you've
+  recognised is kept per scene (`state.scenes`), and the ring and the
+  picker show it.
+- Everything is furigana markup, so readings drop away as kanji are
+  learned, and everything is recorded (`js/audio-scenes.js`, loaded when
+  a scene opens).
 
 ---
 
@@ -892,6 +924,28 @@ this mean" question must not contain the English gloss).
 
 ---
 
+## Sync
+
+Progress lives in `localStorage`, and optionally in your Google account
+(`js/sync.js`, lifted from Hanzi Quest and using the same Firebase
+project). **Settings → Your other devices → Sign in with Google**, once on
+each device. Each device then reads and writes one Firestore document,
+`progress-nihongo/<uid>`. Nobody who never signs in loads the SDK.
+
+- **The merge** (`mergeState` in `js/srs.js`) loses nothing learned on
+  either side. Counts that only grow take the larger. Lists of things done
+  are joined. Firsts take the earlier. Settings follow the device saved
+  last, and an item's schedule follows whichever side touched it last (its
+  `t`). It's the larger count, not the sum, so a day isn't doubled each
+  time two devices meet. The smoke test checks it both ways round.
+- **Writes** are debounced: a burst of answers makes one write.
+- **Pulls** happen at sign-in and whenever the tab comes back into view,
+  but never mid-session.
+- **A reset or a restored backup** overwrites the account's copy instead
+  of merging into it.
+- **Firestore rules** need a block for this app's collection:
+  `match /progress-nihongo/{uid} { allow read, write: if request.auth != null && request.auth.uid == uid; }`
+
 ## Sources and licensing
 
 | what | source | licence | notes |
@@ -927,7 +981,11 @@ you like.
     js/art.js               icons, the cat, the hanamaru, stamps, petals
     js/conj.js              verb conjugation, generated, never stored
     js/data/menu.js         the café and the diner; numbers as they're said
-    js/menu-ui.js           Read a Menu and the ordering game
+    js/menu-ui.js           Out and about: the menus and the ordering game
+    js/data/scenes.js       out and about: station, signs, road, receipt, shop, chats
+    js/scenes-ui.js         drawing the scenes, and their quizzes
+    js/sync.js              optional sync: Google sign-in, one Firestore document
+    js/audio-scenes.js      generated clips for the scenes
     js/audio-kana.js        generated clips — do not hand-edit
     js/strokes.js           generated stroke data — do not hand-edit
     js/furi.js              furigana markup: parse, check, render, derive kana
@@ -944,8 +1002,6 @@ you like.
     js/audio-s<N>.js        generated clips, one bundle per word stage — do not hand-edit
     js/audio-grammar.js     generated clips for the Grammar tab
 
-    not built yet (stubs, not loaded):
-    js/sync.js              optional sync
     tools/server.mjs        dev server, http://localhost:8732
     tools/version.mjs       bump the version and re-stamp every asset
     tools/smoke.mjs         contract, data, scheduling, allowance, the check, writing, audio, versions

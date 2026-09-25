@@ -996,6 +996,108 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 }
 
 
+/* ---------- out and about: the scenes ---------- */
+.ob-head .eyebrow { margin: 0 0 .5rem; }
+.scene-strip { display: flex; flex-wrap: wrap; gap: 10px; padding: 4px 2px 12px; margin-bottom: 8px; scrollbar-width: thin; }
+.scene-tile { flex: 0 0 auto; position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  min-width: 7.6rem; padding: 10px 14px 10px 12px; border: 1px solid var(--rule); border-radius: var(--r);
+  background: var(--sheet); box-shadow: var(--shadow); cursor: pointer; text-align: left; color: var(--ink);
+  transition: transform .12s, box-shadow .12s, border-color .12s; }
+.scene-tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); }
+.scene-tile.on { border-color: var(--seal); background: var(--seal-wash); }
+.st-jp { font-family: var(--f-ja-serif); font-size: 1.25rem; line-height: 1.2; }
+.st-en { font-size: .76rem; color: var(--ink-2); }
+.st-n { position: absolute; top: 6px; right: 8px; font-size: .68rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.st-lock { position: absolute; top: 6px; right: 8px; color: var(--ink-3); }
+.st-lock svg { width: 12px; height: 12px; }
+
+.scene-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1rem; }
+.scene-head h1 { margin: 0 0 .2rem; }
+.scene-head .lede { margin: 0; max-width: 40rem; }
+.scene-score { position: relative; display: grid; justify-items: center; flex: 0 0 auto; }
+.scene-score > span { position: absolute; top: 14px; left: 0; right: 0; text-align: center; font-weight: 600; font-size: .95rem; }
+.scene-score > span small { font-weight: 400; color: var(--ink-3); font-size: .7rem; }
+.scene-score > small { font-size: .68rem; color: var(--ink-3); margin-top: 2px; }
+.scene-sub { display: flex; align-items: center; gap: 6px; font-size: 1rem; margin: 1.4rem 0 .6rem; }
+.scene-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 1.2rem; }
+.si-jp { display: block; font-family: var(--f-ja); }
+.si-m { display: block; font-size: .78rem; margin-top: 4px; opacity: .75; }
+.open .si-m { opacity: 1; font-weight: 500; }
+
+/* sign plates */
+.plates { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: 12px; }
+.plate { position: relative; border: 0; border-radius: 8px; padding: 14px 10px 10px; min-height: 5.6rem; cursor: pointer;
+  text-align: center; box-shadow: var(--shadow); transition: transform .12s; font: inherit; }
+.plate:hover { transform: translateY(-2px); }
+.plate .si-jp { font-size: 1.35rem; font-weight: 700; letter-spacing: .04em; }
+.plate.known::after, .voice.known::after, .bubble.known::after { content: ""; position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--jade); }
+.plates-station .plate { background: #1F4E8C; color: #fff; border-top: 5px solid #F2B705; }
+.plates-shop .plate { background: #5B3A21; color: #FBEBD3; border: 3px solid #3E2714; border-radius: 6px;
+  background-image: repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 6px, transparent 6px 14px); }
+.plates-road .plate { background: #fff; color: #1E4FA3; border: 4px solid #1E4FA3; border-radius: 10px; }
+.plates-road .plate.tri { background: #C8102E; color: #fff; border: 0; border-radius: 0;
+  clip-path: polygon(0 0, 100% 0, 50% 100%); padding: 10px 10px 34px; }
+.plates-road .plate.tri .si-m { display: none; }
+.plate ruby rt { color: inherit; opacity: .8; }
+
+/* announcements and staff: a speaker line */
+.voices { display: grid; gap: 8px; }
+.voice { position: relative; display: block; width: 100%; border: 1px solid var(--rule); border-left: 4px solid var(--ai);
+  border-radius: 8px; background: var(--sheet); padding: 10px 14px; text-align: left; cursor: pointer; font: inherit; color: var(--ink); }
+.voice:hover { background: var(--ai-wash); }
+.voice .si-jp { font-size: 1.15rem; }
+
+/* conversations */
+.chat { display: grid; gap: 10px; max-width: 40rem; }
+.bubble-row { display: flex; align-items: flex-end; gap: 8px; }
+.bubble-row.you { justify-content: flex-end; }
+.neko.avatar { width: 38px; height: 38px; flex: 0 0 38px; }
+.bubble { position: relative; max-width: 80%; border: 0; border-radius: 16px; padding: 10px 14px; cursor: pointer; text-align: left; font: inherit; }
+.bubble .si-jp { font-size: 1.12rem; }
+.bubble.them { background: var(--sunken); color: var(--ink); border-bottom-left-radius: 4px; }
+.bubble.you { background: var(--jade); color: #fff; border-bottom-right-radius: 4px; }
+.bubble.you ruby rt { color: inherit; opacity: .85; }
+.bubble.you.known::after { background: #fff; }
+.chat-key { margin-top: .8rem; }
+.key-you, .key-them { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: -1px; }
+.key-you { background: var(--jade); } .key-them { background: var(--sunken); border: 1px solid var(--rule); }
+
+/* the receipt */
+.receipt-wrap { display: grid; grid-template-columns: minmax(16rem, 20rem) 1fr; gap: 1.6rem; align-items: start; }
+.paper-receipt { background: #FFFEFA; color: #222; font-family: var(--f-ja); font-size: .95rem; padding: 18px 18px 26px;
+  box-shadow: var(--shadow-lift); position: relative;
+  -webkit-mask: radial-gradient(circle 6px at 50% 100%, #0000 98%, #000) 50% 100% / 14px 100% repeat-x;
+          mask: radial-gradient(circle 6px at 50% 100%, #0000 98%, #000) 50% 100% / 14px 100% repeat-x; }
+.pr-store { text-align: center; font-weight: 700; font-size: 1.15rem; letter-spacing: .1em; }
+.pr-meta { text-align: center; font-size: .72rem; color: #777; margin: 2px 0 12px; }
+.pr-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 2px 0; font-variant-numeric: tabular-nums; }
+.pr-row.big { font-size: 1.1rem; font-weight: 700; }
+.pr-row.small { font-size: .82rem; }
+.pr-rule { border-top: 1px dashed #999; margin: 8px 0; }
+.pr-foot { text-align: center; margin-top: 14px; font-size: .82rem; color: #555; }
+.paper-receipt ruby rt { color: #777; }
+.rc-term { border: 0; background: #FDF2C4; color: inherit; font: inherit; padding: 0 4px; border-radius: 3px; cursor: pointer; }
+.rc-term:hover { background: #F8E08A; }
+.rc-term.open { background: #D8EEDF; }
+.rc-gloss > div { padding: 4px 0; }
+.rc-gloss .eyebrow { margin-top: 1rem; }
+.rc-gloss .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-item { position: relative; border: 1px solid var(--rule); background: var(--sheet); border-radius: 10px; padding: 8px 12px; cursor: pointer; font: inherit; color: var(--ink); text-align: left; }
+.paper-receipt.mini { max-width: 18rem; margin: .8rem auto 0; font-size: .9rem; padding-bottom: 20px; }
+
+/* in a quiz */
+.q-scene { display: flex; justify-content: center; margin: 1rem 0; }
+.q-scene .static { cursor: default; max-width: 30rem; }
+.q-scene .plate { min-width: 12rem; min-height: 0; padding: 18px 22px; }
+.q-scene .plate .si-jp { font-size: 1.8rem; }
+.q-scene .plates-road .plate.tri, .q-scene.plates-road .plate.tri { padding-bottom: 44px; }
+.q-scene .voice .si-jp, .q-scene .bubble .si-jp { font-size: 1.4rem; }
+
+@media (max-width: 900px) {
+  .receipt-wrap { grid-template-columns: 1fr; }
+}
+
+
 /* ============================================================
    PHONE LAYER
 
@@ -1349,4 +1451,15 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
   .record-charts { grid-template-columns: 1fr; }
   .ms-grid { grid-template-columns: repeat(4, 1fr); }
   .combo { top: 70px; }
+
+  /* out and about */
+  .scene-strip { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -16px 6px; padding: 4px 16px 12px; scroll-snap-type: x mandatory; }
+  .scene-tile { scroll-snap-align: start; min-width: 7rem; min-height: 3.6rem; }
+  .scene-head { flex-direction: row; }
+  .scene-head h1 { font-size: 1.5rem; }
+  .plates { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .plate { min-height: 5rem; }
+  .bubble { max-width: 86%; }
+  .scene-actions .btn-ghost { width: 100%; min-height: 48px; }
+  .paper-receipt { font-size: 1rem; }
 }

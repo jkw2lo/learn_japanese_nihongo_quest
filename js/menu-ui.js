@@ -40,20 +40,27 @@ function menuCardHtml() {
   const items = menuItems(M);
   const n = items.filter(canReadItem).length;
   const orders = state.menu.days[today()] || 0;
+  const recognised = SCENES.reduce((t, sc) => t + asList(state.scenes[sc.id]?.got).length, 0);
+  const total = SCENES.reduce((t, sc) => t + sc.all.length, 0);
   return `<section class="card menu-card">
     ${noren("さくら", "mini")}
     <div class="menu-card-text">
-      <div class="eyebrow">メニュー · Read a Menu</div>
+      <div class="eyebrow">街 · Out and about</div>
       ${open
-        ? `<b lang="ja">カフェ さくら</b> — you can read ${n} of ${items.length} things on it${menuOpen(MENUS[1]) ? `, and <b lang="ja">まるや</b>, the diner, is open` : ""}${orders ? ` · ${orders} order${orders > 1 ? "s" : ""} today` : ""}.`
-        : `A café menu, all in katakana. It opens with katakana — then it inks itself in as you learn.`}
+        ? `A café menu to read and order from${menuOpen(MENUS[1]) ? " (and the diner)" : ""}, plus station signs, receipts, shop talk and more — <b>${recognised} of ${total}</b> recognised${orders ? ` · ${orders} order${orders > 1 ? "s" : ""} today` : ""}.`
+        : `Menus, station signs, receipts, shop talk and more — the Japanese you meet off the page.`}
     </div>
-    <button class="btn btn-sm ${open ? "" : "btn-ghost"}" data-act="nav" data-nav="menu">${open ? "Open the menu" : "Have a look"}</button>
+    <button class="btn btn-sm" data-act="nav" data-nav="menu">Go out</button>
   </section>`;
 }
 
 function renderMenu() {
   const el = $("#v-menu");
+  /* one of the out-and-about scenes, rather than a menu */
+  if (typeof SCENE_BY !== "undefined" && SCENE_BY[menuId]) {
+    el.innerHTML = `<div class="ob-head"><div class="eyebrow">街 · Out and about</div></div>${scenePickerHtml()}${renderScene(SCENE_BY[menuId])}`;
+    return;
+  }
   const M = MENUS.find(m => m.id === menuId) || MENUS[0];
   const open = menuOpen(M);
   const items = menuItems(M);
@@ -69,8 +76,6 @@ function renderMenu() {
     </button></li>`;
   };
 
-  const tabs = MENUS.map(m => `<button class="${m.id === M.id ? "on" : ""}" data-act="menu-pick" data-id="${m.id}">
-    ${menuOpen(m) ? "" : icon("lock")} <span lang="ja">${furiPlain(m.name)}</span></button>`).join("");
 
   let side;
   if (!open) {
@@ -114,9 +119,9 @@ function renderMenu() {
   }
 
   el.innerHTML = `
+    <div class="ob-head"><div class="eyebrow">街 · Out and about</div></div>
+    ${scenePickerHtml()}
     <div class="chart-head">
-      <button class="link" data-act="nav" data-nav="today">${icon("back")} Today</button>
-      <div class="seg">${tabs}</div>
       <span class="muted">${open ? `${readable.length} of ${items.length} you can read · tap one to hear it` : ""}</span>
     </div>
     <div class="menu-layout">

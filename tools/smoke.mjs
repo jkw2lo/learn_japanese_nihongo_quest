@@ -25,6 +25,7 @@ function sandbox() {
   const store = {};
   const ctx = {
     console, Math, JSON, Date, Object, Array, Set, Map, String, Number, Error,
+    setTimeout: () => 0, clearTimeout: () => {},
     localStorage: {
       getItem: k => (k in store ? store[k] : null),
       setItem: (k, v) => { store[k] = String(v); },
@@ -52,6 +53,8 @@ const CONTRACT = {
   'js/patterns-ui.js': ['patternLessonCards', 'qPatFill', 'qPatMean', 'patPrompt', 'patVerdict', 'patIntroHtml', 'gapHtml', 'hasGaps', 'learnedPatterns'],
   'js/data/grammar.js': ['SENTENCE_SHAPE', 'PARTICLE_GUIDE', 'ENDINGS', 'GRAMMAR_SAY', 'SHAPE_SENTENCE'],
   'js/grammar-ui.js': ['renderGrammar'],
+  'js/data/scenes.js': ['SCENES', 'SCENE_BY', 'receiptSums'],
+  'js/scenes-ui.js': ['scenePickerHtml', 'renderScene', 'tapSceneItem', 'qScene', 'startSceneQuiz', 'scenePrompt', 'sceneAnswered', 'sceneGot'],
   'js/stats.js': ['MILESTONES', 'checkMilestones', 'medal', 'celebrate', 'milestoneCheckpoint', 'cheerLine', 'comboPill', 'statsTilesHtml', 'minutesChartHtml', 'learnedChartHtml', 'milestonesHtml', 'heroStatsHtml', 'n5Projection', 'weekAccuracy'],
   'js/cards-ui.js': ['DECKS', 'deckKeys', 'orderKeys', 'cardFaces', 'startDeck', 'renderCards', 'flipCard', 'rateCard', 'cardsKey', 'stepCard', 'bindCardGestures'],
   'js/data/kanji.js': ['KANJI'],
@@ -69,7 +72,9 @@ const CONTRACT = {
     'lessonsLearnedToday', 'learnedTodayCount', 'nextLessons', 'checkPassedToday', 'recordCheck', 'canRead', 'readableWords',
     'wordsByNewest', 'streak', 'practisedDays', 'recordSprint', 'exportState', 'parseBackup', 'freshState',
     'noteActivity', 'startActivity', 'addStudyTime', 'totalMs', 'totalAnswers', 'bestStreak', 'learnedCount', 'msOn',
+    'mergeState', 'useRemote', 'pushRemote', 'dropRemote', 'replaceRemote', 'onRemoteChange',
     'QUICK_MS', 'QUICK_WORD_MS', 'HIRA_CHECK', 'PASSES_FOR_SOLID', 'isWordKey', 'wordsOpen', 'allKanaLearned'],
+  'js/sync.js': ['SYNC_CONFIG', 'SYNC_STORE', 'sync', 'syncInit', 'syncSignIn', 'syncSignOut', 'syncConfigured'],
   'js/sound.js': ['say', 'sayKana', 'hasAudio', 'clipCount', 'unlockAudio', 'loadAudioBundle', 'soundBlocked'],
   'js/write.js': ['strokesFor', 'canWrite', 'markWriting', 'modelSvg', 'modelAnimMs', 'padHtml', 'bindPad', 'drawInk',
     'padUndo', 'padClear', 'pad', 'WRITE_TOL'],
@@ -206,6 +211,59 @@ section('the daily allowance');
 }
 
 /* ---------- 4. the hiragana check ---------- */
+
+section('sync');
+{
+  const X = sandbox();
+  const run = code => vm.runInContext(code, X);
+  const both = run(`(() => {
+    const a = freshState(), b = freshState();
+    a.updated = 100; b.updated = 200;
+    a.settings.newPerDay = 8; b.settings.newPerDay = 10;
+    a.items['あ'] = { at: '2026-09-01', lvl: 3, due: '2026-09-20', t: 50, sk: { r: { n: 5, ok: 4, fast: 3, miss: 1 } } };
+    b.items['あ'] = { at: '2026-09-02', lvl: 2, due: '2026-09-10', t: 90, sk: { r: { n: 3, ok: 2, fast: 1, miss: 2 }, p: { n: 1, ok: 1, fast: 1, miss: 0 } } };
+    a.items['い'] = { at: '2026-09-01', lvl: 1, due: '2026-09-02', t: 10, sk: {} };
+    b.words['w:ねこ'] = { at: '2026-09-05', lvl: 1, due: '2026-09-06', t: 70, sk: {} };
+    a.days['2026-09-20'] = { n: 30, g: 20, right: 18, ms: 600000, ok: { r: ['あ'] }, learned: ['い'], rev: [] };
+    b.days['2026-09-20'] = { n: 12, ok: { r: ['う'], p: ['あ'] }, learned: ['う'], rev: ['あ'], check: { passed: true, best: .9, tries: 1 } };
+    b.days['2026-09-21'] = { n: 4, ok: {}, learned: [], rev: [] };
+    a.milestones = { 'kana-10': '2026-09-03' }; b.milestones = { 'kana-10': '2026-09-05', 'streak-3': '2026-09-21' };
+    a.scenes = { station: { got: [0, 2] } }; b.scenes = { station: { got: [2, 5] }, road: { got: [1] } };
+    a.menu = { orders: 7, days: { '2026-09-20': 3 } }; b.menu = { orders: 4, days: { '2026-09-20': 1, '2026-09-21': 2 } };
+    a.sprint.best.h = { right: 40, total: 46, ms: 90000, at: '2026-09-10' }; b.sprint.best.h = { right: 40, total: 46, ms: 80000, at: '2026-09-11' };
+    a.kataOpen = '2026-09-15'; b.kataOpen = null; a.created = '2026-08-30'; b.created = '2026-09-01';
+    a.mistakes = { 'ぬ': 3 }; b.mistakes = { 'ぬ': 1, 'め': 2 };
+    return { m: mergeState(a, b), m2: mergeState(b, a) };
+  })()`);
+  const { m, m2 } = both;
+  /* the same record either way round — lists as sets, keys in any order */
+  const canon = v => JSON.stringify(v, (k, x) => Array.isArray(x) ? [...x].sort() : x && typeof x === 'object' ? Object.fromEntries(Object.keys(x).sort().map(j => [j, x[j]])) : x);
+  ok(canon(m) === canon(m2), 'merging should not depend on argument order');
+  ok(m.settings.newPerDay === 10, 'settings follow the device saved last');
+  ok(m.items['あ'].lvl === 2 && m.items['あ'].due === '2026-09-10', "an item's schedule follows the side that touched it last");
+  ok(m.items['あ'].at === '2026-09-01', 'first learned is the earlier day');
+  ok(m.items['あ'].sk.r.n === 5 && m.items['あ'].sk.r.fast === 3 && m.items['あ'].sk.r.miss === 2 && m.items['あ'].sk.p.ok === 1, 'skill counts take the larger of each');
+  ok(!!m.items['い'] && !!m.words['w:ねこ'], 'something learned on only one side is kept');
+  const d = m.days['2026-09-20'];
+  ok(d.n === 30 && d.ms === 600000 && d.g === 20, "a day's counts take the larger");
+  ok(d.learned.includes('い') && d.learned.includes('う') && d.rev.includes('あ'), "a day's lists are joined");
+  ok(d.ok.r.includes('あ') && d.ok.r.includes('う') && d.ok.p.includes('あ'), "a day's right answers are joined");
+  ok(d.check && d.check.passed, 'a passed check stays passed');
+  ok(!!m.days['2026-09-21'], 'a day from one side is kept');
+  ok(m.milestones['kana-10'] === '2026-09-03' && m.milestones['streak-3'], 'milestones: every one, on its earlier day');
+  ok(JSON.stringify(m.scenes.station.got) === '[0,2,5]' && m.scenes.road, 'scenes recognised are joined');
+  ok(m.menu.orders === 7 && m.menu.days['2026-09-21'] === 2, 'menu orders take the larger');
+  ok(m.sprint.best.h.ms === 80000, 'the better sprint is kept');
+  ok(m.kataOpen === '2026-09-15' && m.created === '2026-08-30', 'firsts are the earlier');
+  ok(m.mistakes['ぬ'] === 3 && m.mistakes['め'] === 2, 'mistakes take the larger');
+  ok(m.updated === 200, 'updated is the later');
+  const again = run('(m) => mergeState(m, m)')(m);
+  ok(JSON.stringify(again) === JSON.stringify(m), 'merging a record with itself changes nothing');
+  /* a list that came back from Firestore as a map is still a list (Hanzi Quest porting.md, B1) */
+  const odd = run(`mergeState(freshState(), { ...freshState(), days: { '2026-09-20': { n: 1, ok: { r: { 0: 'あ' } }, learned: { 0: 'あ' }, rev: [] } }, scenes: { road: { got: { 0: 3 } } } })`);
+  ok(Array.isArray(odd.days['2026-09-20'].learned) && Array.isArray(odd.days['2026-09-20'].ok.r) && Array.isArray(odd.scenes.road.got), 'lists stored as maps come back as lists');
+  ok(read('js/sync.js').includes('"progress-nihongo"'), 'sync writes to its own collection, not Hanzi Quest’s');
+}
 
 section('time and streaks');
 {
@@ -508,7 +566,8 @@ section('furigana');
   vm.createContext(f);
   vm.runInContext(read('js/data/kana.js') + read('js/furi.js') + `;globalThis.F = { furiParse, furiKana, furiPlain, furiKanji, furiProblems, furiHtml };
     ${read('js/data/words.js')};globalThis.WORDS = WORDS;
-    ${read('js/data/patterns.js')};globalThis.PATTERNS = PATTERNS;`, f);
+    ${read('js/data/patterns.js')};globalThis.PATTERNS = PATTERNS;
+    ${read('js/data/scenes.js')};globalThis.SCENES = SCENES; globalThis.receiptSums = receiptSums;`, f);
   const { furiKana, furiPlain, furiKanji, furiProblems, furiHtml } = f.F;
   ok(furiKana('{食|た}べ{物|もの}') === 'たべもの', 'furiKana should take the reading side');
   ok(furiPlain('{食|た}べ{物|もの}') === '食べ物', 'furiPlain should take the kanji side');
@@ -534,6 +593,19 @@ section('furigana');
   f.PATTERNS.forEach(p => { strings.push(p.pat, p.note); p.ex.forEach(x => strings.push(x.jp)); });
   vm.runInContext('globalThis.STAGES = WORD_STAGES', f);
   f.STAGES.forEach(S => strings.push(S.about));
+  /* out and about: every sign, line and bubble */
+  f.SCENES.forEach(sc => { sc.all.forEach(x => strings.push(x.w)); (sc.lines || []).forEach(([w]) => strings.push(w)); });
+  const ids = f.SCENES.map(sc => sc.id);
+  ok(new Set(ids).size === ids.length, 'scene ids should be unique');
+  f.SCENES.forEach(sc => ok(sc.all.length >= 6, `scene ${sc.id} needs at least six items for a quiz`));
+  f.SCENES.filter(sc => sc.look === 'chat').forEach(sc => sc.all.forEach(x => ok(x.who === 'you' || x.who === 'them', `chat line ${x.w} needs who`)));
+  /* the receipt's quiz answers agree with its sums */
+  const rc = f.SCENES.find(sc => sc.id === 'receipt');
+  const sum = f.receiptSums(rc), yen = n => '¥' + n.toLocaleString('en');
+  ok(rc.quiz[0][1] === yen(sum.change), `receipt change should be ${yen(sum.change)}`);
+  ok(rc.quiz[1][1] === yen(sum.total), `receipt total should be ${yen(sum.total)}`);
+  ok(rc.quiz[2][1] === yen(sum.tax), `receipt tax should be ${yen(sum.tax)}`);
+  rc.quiz.forEach(q => ok(new Set(q.slice(1)).size === 4, `receipt quiz "${q[0]}" has duplicate options`));
   strings.forEach(x => furiProblems(x).forEach(pr => ok(false, pr)));
   ok(strings.length > 0, 'no word data found to check');
 }

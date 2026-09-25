@@ -768,7 +768,7 @@ function showCard() {
   };
   const n = c.opts.length;
   body.innerHTML = `<div class="q q-${c.kind}">
-    ${c.kk ? kanjiPrompt(c) : c.gk ? patPrompt(c) : c.wk ? wordPrompt(c) : prompts[c.kind]()}
+    ${c.kind === "sc" ? scenePrompt(c) : c.kk ? kanjiPrompt(c) : c.gk ? patPrompt(c) : c.wk ? wordPrompt(c) : prompts[c.kind]()}
     <div class="opts n${n} ${c.wk ? "words" : ""}">${c.opts.map((o, i) => `
       <button class="opt ${o.jp ? "jp" : ""} ${o.furi ? "furi" : ""}" data-act="opt" data-i="${i}" ${o.jp ? 'lang="ja"' : ""}><kbd>${i + 1}</kbd><span>${o.furi ? wordHtml(o.label) : esc(o.label)}</span></button>`).join("")}
     </div>
@@ -777,7 +777,7 @@ function showCard() {
   /* a fill-the-gap sentence can't be played before it's answered — the sound gives the gap away */
   foot.innerHTML = `${c.sound && c.kind !== "f" && !c.kk ? `<button class="btn btn-ghost" data-act="replay">${icon("speaker")} Again <kbd>R</kbd></button>` : "<span></span>"}
     <button class="btn" data-act="next" id="nextBtn" disabled>Next <kbd>␣</kbd></button>`;
-  if (c.kind !== "r" && c.kind !== "word" && c.kind !== "f" && !c.kk && c.sound) say(c.sound);
+  if (c.kind !== "r" && c.kind !== "word" && c.kind !== "f" && c.kind !== "sc" && !c.kk && c.sound) say(c.sound);
   S.t0 = performance.now();
   startTimer(quickMs(c));
 }
@@ -906,6 +906,7 @@ const quickMs = c => (c.kk ? QUICK_KANJI_MS : c.gk ? QUICK_PATTERN_MS : c.wk ? Q
 function rebuild(c) {
   const mode = c.mode === "review" || c.mode === "auto" ? "practice" : c.mode;
   if (c.kind === "word") return () => qWord(c.word);
+  if (c.kind === "sc") return () => ({ ...c, opts: shuffle([...c.opts]) });
   if (c.kind === "x") return () => qPair(c.k, mode);
   return () => qFor(c.k, c.kind, mode);
 }
@@ -924,7 +925,8 @@ function settle(c, ok, ms, credit = true) {
   if (quick) S.quick++;
   S.combo = ok ? (S.combo || 0) + 1 : 0;
   if (ok) comboPill(S.combo);
-  if (c.kind === "word" || !credit) day().n++;
+  if (c.kind === "word" || c.kind === "sc" || !credit) day().n++;
+  if (c.kind === "sc") sceneAnswered(c, ok);
   else grade(c.k, c.kind, ok, ms, c.mode);
   if (!ok && c.k) S.missed.add(c.k);
   /* a miss comes back at the end of the session, freshly shuffled */
@@ -970,12 +972,13 @@ function answer(idx) {
     v.className = "verdict miss";
     v.innerHTML = `It was ${verdictDetail(c)}`;
   }
-  if (state.settings.autoplay && c.sound && (c.kind === "r" || c.kind === "word" || c.kind === "f" || c.kk)) say(c.sound);
+  if (state.settings.autoplay && c.sound && (c.kind === "r" || c.kind === "word" || c.kind === "f" || c.kind === "sc" || c.kk)) say(c.sound);
   else if (c.kind === "r" && state.settings.autoplay && !c.wk) sayKana(c.k);
   afterAnswer(ok);
 }
 
 function verdictDetail(c) {
+  if (c.kind === "sc") return c.item ? `<span lang="ja">${wordHtml(c.item.w, "always")}</span> · ${esc(c.item.m)}` : esc(c.answer);
   if (c.kk) return kanjiVerdict(c);
   if (c.gk) return patVerdict(c);
   if (c.wk) return wordVerdict(WORD_BY[c.k]);
@@ -1358,15 +1361,37 @@ function openSettings() {
       <p class="small">Hiragana, katakana and kanji, how the kana chart is laid out, and why it's in that order.</p>
       <button class="btn btn-ghost btn-sm" data-act="guide">Read the introduction again</button>
     </div>
+    ${syncConfigured() ? `<div class="set-block" id="syncBlock">${syncBlockHtml()}</div>` : ""}
     <div class="set-block">
       <h3>Your data</h3>
-      <p class="small">Progress lives in this browser only. Save a copy now and then — clearing site data loses it.</p>
+      <p class="small">${sync.status === "in" ? "Progress is kept in this browser and in your account." : "Progress lives in this browser only. Save a copy now and then — clearing site data loses it."}</p>
       <button class="btn btn-ghost btn-sm" data-act="backup">${icon("save")} Save or load a backup</button>
       <button class="btn btn-ghost btn-sm" data-act="report">Report a problem</button>
       <button class="btn btn-ghost btn-sm danger" data-act="reset">Reset everything</button>
     </div>
     <p class="muted small">Version ${esc(APP_VERSION)} · ${esc(APP_DATE)}. If this doesn't match what was just published, you're looking at a cached copy.</p>`);
 }
+
+/* Sync: one block in Settings, and the only place it shows. */
+function syncBlockHtml() {
+  const st = sync.status;
+  const who = sync.user && (sync.user.email || sync.user.name);
+  const note = st === "in" ? `Signed in${who ? ` as <b>${esc(who)}</b>` : ""}. Your progress follows you to any device you sign in on.`
+    : st === "error" ? `<b>Sync is off:</b> ${esc(sync.msg)}`
+    : st === "loading" ? "Checking…"
+    : "Sign in with Google on each device — phone and laptop — and they share one record. Nothing learned on either is lost.";
+  return `<h3>${icon("sync")} Your other devices</h3>
+    <p class="small">${note}</p>
+    ${st === "in" ? `<button class="btn btn-ghost btn-sm" data-act="sync-out">Sign out</button>`
+      : `<button class="btn btn-sm" data-act="sync-in" ${st === "loading" ? "disabled" : ""}>${st === "loading" ? "…" : "Sign in with Google"}</button>`}`;
+}
+onSyncChange = () => { const b = $("#syncBlock"); if (b) b.innerHTML = syncBlockHtml(); };
+/* a pull brought in another device's progress */
+onRemoteChange = () => {
+  applyTheme();
+  if (!S) render();
+  setTimeout(milestoneCheckpoint, 400);
+};
 
 function onSetting(el) {
   const key = el.dataset.set;
@@ -1440,17 +1465,19 @@ async function doImport(text) {
   });
   if (!yes) return;
   state = next; save();
+  await replaceRemote();
   location.reload();
 }
 
 async function doReset() {
   const yes = await askConfirm({
     k: "消去", title: "Reset everything?",
-    body: "Every kana, every review date, your streak and your sprint records — gone, with no way back unless you saved a backup.",
+    body: "Every kana, every review date, your streak and your sprint records — gone, with no way back unless you saved a backup." + (sync.status === "in" ? " This clears your account's copy too. Another device still holding the old progress will bring it back when it next syncs — reset there as well, or sign it out first." : ""),
     yes: "Reset everything", danger: true,
   });
   if (!yes) return;
   state = freshState(); save();
+  await replaceRemote();
   location.reload();
 }
 
@@ -1536,6 +1563,8 @@ const ACTS = {
   export: () => doExport(),
   "import-paste": () => doImport($("#importText").value),
   reset: () => doReset(),
+  "sync-in": () => syncSignIn(),
+  "sync-out": () => syncSignOut(),
   report: () => openReport(),
   "copy-report": () => { navigator.clipboard?.writeText($("#reportText").value).then(() => toast("Copied."), () => toast("Couldn't copy — select the text instead.")); },
   "ask-yes": () => closeAsk(true),
@@ -1627,4 +1656,5 @@ addEventListener("DOMContentLoaded", guard(() => {
   /* anything reached while away (or before milestones existed) gets its moment */
   setTimeout(milestoneCheckpoint, 900);
   setTimeout(loadStrokes, 90);
+  syncInit();
 }));

@@ -3,6 +3,7 @@
      js/audio-kana.js     the kana stage — loaded after the first screen
      js/audio-s<N>.js     one per word stage — loaded as the learner reaches it
      js/audio-grammar.js  the Grammar tab's sentences — loaded when it opens
+     js/audio-scenes.js   out and about: signs, announcements, shop talk
    Both add to window.NQ_AUDIO rather than replace it, so they load in any order.
 
    Why bundle at all: see js/sound.js. Why record words whole, from kana:
@@ -30,9 +31,9 @@ const BITRATE = '24000';     /* speech is clear at 24k; 32k was a quarter bigger
 const MIN_SECONDS = 0.06;
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const { KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS, GRAMMAR_SAY } = new Function(
-  ['js/data/kana.js', 'js/furi.js', 'js/conj.js', 'js/data/words.js', 'js/data/patterns.js', 'js/data/menu.js', 'js/data/grammar.js'].map(f => readFileSync(join(root, f), 'utf8')).join('\n') +
-  '\nreturn {KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS, GRAMMAR_SAY};')();
+const { KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS, GRAMMAR_SAY, SCENES } = new Function(
+  ['js/data/kana.js', 'js/furi.js', 'js/conj.js', 'js/data/words.js', 'js/data/patterns.js', 'js/data/menu.js', 'js/data/grammar.js', 'js/data/scenes.js'].map(f => readFileSync(join(root, f), 'utf8')).join('\n') +
+  '\nreturn {KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS, GRAMMAR_SAY, SCENES};')();
 
 /* The text actually handed to `say` for a clip key, for any key the voice
    misreads on its own. A lone は or へ could be taken as the particles "wa"
@@ -86,6 +87,8 @@ function stageBundles() {
     out[`js/audio-s${st}.js`].forEach(t => seen.add(t));
   });
   out['js/audio-grammar.js'] = GRAMMAR_SAY.map(s => furiKana(s)).filter(t => !seen.has(t));
+  out['js/audio-grammar.js'].forEach(t => seen.add(t));
+  out['js/audio-scenes.js'] = [...new Set(SCENES.flatMap(sc => [...sc.all.map(x => x.kana), ...(sc.lines || []).map(([w]) => furiKana(w))]))].filter(t => !seen.has(t));
   return out;
 }
 
