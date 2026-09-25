@@ -68,8 +68,9 @@ const CONTRACT = {
   'js/app.js': ['ACTS', 'render', 'go', 'view', 'S', 'askConfirm', 'crumb', 'shuffle', 'esc', '$', '$$',
     'distractors', 'renderSoundBar', 'onAudioLoaded', 'toast', 'openSession', 'closeSheet', 'SET_NAME',
     'qWrite', 'showWrite', 'checkWrite', 'showStrokes', 'loadStrokes', 'settle', 'afterAnswer', 'rebuild', 'quickMs',
-    'todaysWords', 'wordDay', 'wordTasks', 'allTasksDone', 'stagesFinished'],
+    'todaysWords', 'wordDay', 'wordTasks', 'allTasksDone', 'stagesFinished', 'lessonNames'],
   'js/sprint.js': ['renderSprint', 'sprintKey', 'sprintLabel'],
+  'js/phone.js': ['isPhone', 'openDrawer', 'closeDrawer', 'initDrawerLoop', 'centerDrawer', 'drawerTick', 'phoneAfterRender', 'drawerOpen'],
 };
 const declares = (src, name) => {
   const n = name.replace(/\$/g, '\\$');
@@ -464,6 +465,32 @@ if (existsSync(join(root, 'js/audio-kana.js')) && existsSync(join(root, 'js/audi
   ok(!missing.length, `no clip for: ${missing.slice(0, 20).join(' ')}${missing.length > 20 ? ' …' : ''} — run node tools/make-audio.mjs`);
 } else {
   console.log('  (js/audio-kana.js not built — skipped; run node tools/make-audio.mjs)');
+}
+
+/* ---------- the phone layer stays on the phone ---------- */
+
+section('phone layer');
+{
+  /* Everything after the marker must be one @media (max-width: 720px)
+     block and nothing else: a bare rule down there would reach a desktop. */
+  const css = read('css/app.css');
+  const at = css.indexOf('PHONE LAYER');
+  ok(at > 0, 'css/app.css has no PHONE LAYER marker');
+  const tail = css.slice(css.indexOf('*/', at) + 2).replace(/\/\*[\s\S]*?\*\//g, '').trim();
+  ok(tail.startsWith('@media (max-width: 720px) {'), 'the phone layer must open with @media (max-width: 720px)');
+  let depth = 0, closedAt = -1;
+  for (let i = tail.indexOf('{'); i < tail.length; i++) {
+    if (tail[i] === '{') depth++;
+    else if (tail[i] === '}') { depth--; if (depth === 0) { closedAt = i; break; } }
+  }
+  ok(closedAt > 0 && tail.slice(closedAt + 1).trim() === '', 'something after the phone @media block would reach a desktop');
+  /* the phone-only pieces are hidden everywhere else */
+  const before = css.slice(0, at);
+  ok(/\.burger, \.drawer, \.sheet-done, \.m-title \{ display: none; \}/.test(before), 'the burger, drawer, sheet Done and phone title must be display: none outside the phone layer');
+  /* the burger must not sit inside .topbar (its backdrop-filter would trap a fixed child) */
+  const topbar = html.slice(html.indexOf('<header class="topbar">'), html.indexOf('</header>'));
+  ok(!topbar.includes('burger'), 'the burger must not be inside .topbar');
+  ok(!html.includes('bottom-nav'), 'the old bottom nav should be gone');
 }
 
 /* ---------- 7. version stamps ---------- */

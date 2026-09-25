@@ -233,7 +233,9 @@ main { max-width: 72rem; margin: 0 auto; padding: 20px 16px; }
 .view.on { display: block; animation: fade .18s ease-out; }
 @keyframes fade { from { opacity: 0; transform: translateY(4px); } }
 
-.bottom-nav { display: none; }
+/* Phone-only pieces: nothing on a desktop. The phone layer at the end of
+   this file is the only thing that shows them. */
+.burger, .drawer, .sheet-done, .m-title { display: none; }
 
 .card {
   background: var(--sheet); border: 1px solid var(--rule-2); border-radius: var(--r);
@@ -332,7 +334,6 @@ main { max-width: 72rem; margin: 0 auto; padding: 20px 16px; }
 /* ---------- Today, compact ---------- */
 
 .tasks.grid { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; }
-@media (max-width: 720px) { .tasks.grid { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .tasks.grid .task-en { min-width: 0; font-size: .9rem; line-height: 1.3; }
 .tasks.grid .task-en small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tasks.grid .task {
@@ -784,33 +785,311 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 @media (max-width: 900px) {
   .today-grid, .sprint-grid { grid-template-columns: 1fr; }
 }
+
+
+/* ============================================================
+   PHONE LAYER
+
+   Everything from this marker to the end of the file is inside
+   @media (max-width: 720px) and can't reach a desktop window; smoke.mjs
+   reads this file from the marker and fails on any rule outside it.
+
+   Designed for a phone held in one hand. The bottom third of the screen
+   is where the thumb lives, so that's where the doing is: the one main
+   button of each screen, pinned bottom-left; the round sections button,
+   bottom-right; answers and Next at the foot of every question. The top is
+   for reading, and for the rare Close — out of the way of a stray tap.
+   Targets are at least 48px, and the ones next to each other are spaced
+   so a thumb can't land between them on the wrong one.
+   ============================================================ */
+
 @media (max-width: 720px) {
-  body { font-size: 15px; }
-  .top-nav { display: none; }
-  .brand-name { font-size: 1.02rem; }
-  .app { padding-bottom: 90px; }
-  .bottom-nav {
-    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
-    background: color-mix(in srgb, var(--sheet) 94%, transparent); backdrop-filter: blur(10px);
-    border-top: 1px solid var(--rule-2); padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+
+  /* ---------- the page ---------- */
+
+  html { -webkit-tap-highlight-color: transparent; }
+  body { font-size: 16px; }
+  button, .btn, input, select { touch-action: manipulation; }
+  main { padding: 12px 12px calc(104px + env(safe-area-inset-bottom)); }
+  .card { padding: 16px; margin-bottom: 12px; border-radius: 16px; }
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.18rem; }
+  .muted.small, .small { font-size: .88rem; }
+  .tiny { font-size: .8rem; }
+  .card-head { flex-wrap: wrap; row-gap: .15rem; }
+  .card-head .count { flex-basis: 100%; }
+  /* the fade-in moves the view with a transform, and a transformed ancestor
+     would pin the bottom buttons to the view instead of the screen */
+  .view.on { animation: fadeOnly .18s ease-out; }
+  @keyframes fadeOnly { from { opacity: 0; } }
+  .btn { min-height: 48px; padding: 12px 20px; font-size: 1rem; }
+  .btn-sm { min-height: 44px; }
+  kbd { display: none; }
+
+  /* ---------- the top bar: the name and where you are, nothing to tap by mistake ---------- */
+
+  .topbar { padding: 8px 16px; padding-top: calc(8px + env(safe-area-inset-top)); gap: .6rem; }
+  .top-nav, .top-actions { display: none; }
+  .brand-name { font-size: 1.05rem; }
+  .brand-seal { width: 30px; height: 30px; }
+  .m-title { display: block; margin-left: auto; color: var(--ink-2); font-size: .95rem; font-weight: 500; }
+  .m-title [lang="ja"] { color: var(--ink-3); margin-right: .2em; }
+
+  /* ---------- the sections button and the rolodex ---------- */
+
+  .burger {
+    display: grid; place-items: center; position: fixed; z-index: 45;
+    right: calc(16px + env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom));
+    width: 60px; height: 60px; border-radius: 50%;
+    background: var(--ink); color: var(--paper); box-shadow: 0 4px 16px rgba(0, 0, 0, .22);
   }
-  .bottom-nav button { flex: 1; display: flex; flex-direction: column; align-items: center; font-size: .7rem; color: var(--ink-3); padding: 4px 0; }
-  .bottom-nav button span { font-size: 1.05rem; }
-  .bottom-nav button.on { color: var(--ink); }
-  main { padding: 14px 12px; }
-  .card { padding: 16px; }
-  .hero { padding: 20px; }
-  h1 { font-size: 1.45rem; }
-  .stats { grid-template-columns: repeat(2, 1fr); }
+  .burger-bars { display: grid; gap: 5px; width: 22px; }
+  .burger-bars i { display: block; height: 2.2px; border-radius: 2px; background: currentColor; transition: transform .2s, opacity .2s; }
+  .burger.open .burger-bars i:nth-child(1) { transform: translateY(7.2px) rotate(45deg); }
+  .burger.open .burger-bars i:nth-child(2) { opacity: 0; }
+  .burger.open .burger-bars i:nth-child(3) { transform: translateY(-7.2px) rotate(-45deg); }
+  .burger.nudge::after, .d-save.nudge::after {
+    content: ""; position: absolute; top: 6px; right: 6px; width: 11px; height: 11px; border-radius: 50%;
+    background: var(--amber); border: 2px solid var(--ink);
+  }
+  .d-save.nudge::after { border-color: var(--paper); top: 8px; right: 14px; }
+
+  .drawer { position: fixed; inset: 0; z-index: 44; }
+  .drawer.on { display: block; }
+  .drawer-veil { position: absolute; inset: 0; background: rgba(20, 19, 17, .42); animation: fade .18s both; }
+  /* a capsule floating above the button, rounded all round so it reads as a
+     wheel to spin rather than a panel */
+  .drawer-sheet {
+    position: absolute; left: 12px; right: 12px; bottom: calc(92px + env(safe-area-inset-bottom));
+    background: var(--sheet); border: 1px solid var(--rule-2); border-radius: 999px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, .25); padding: 10px 6px;
+    animation: rise .24s cubic-bezier(.22, .9, .3, 1) both;
+  }
+  @keyframes rise { from { transform: translateY(16px); opacity: 0; } }
+  .drawer-grip { display: none; }
+  .drawer-nav {
+    display: flex; gap: 4px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 0 30%;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  .drawer-nav::-webkit-scrollbar { display: none; }
+  .drawer-nav button {
+    flex: none; width: 5.2rem; height: 5.2rem; border-radius: 50%; scroll-snap-align: center; position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    color: var(--ink-2); font-size: .8rem; font-weight: 500;
+  }
+  .drawer-nav button [lang="ja"] { font-size: 1.3rem; color: var(--ink-3); line-height: 1.2; }
+  .drawer-nav button .ico { width: 24px; height: 24px; margin-bottom: 2px; }
+  .drawer-nav button.on { background: var(--ink); color: var(--paper); }
+  .drawer-nav button.on [lang="ja"] { color: var(--paper); }
+  .drawer-nav .d-tool { color: var(--ink-3); }
+
+  /* ---------- the one main button of a screen: bottom-left, beside the sections button ---------- */
+
+  .view.on .cta {
+    position: fixed; z-index: 40; margin: 0;
+    left: calc(16px + env(safe-area-inset-left)); right: calc(92px + env(safe-area-inset-right));
+    bottom: calc(16px + env(safe-area-inset-bottom)); height: 60px; min-height: 60px;
+    font-size: 1.05rem; border-radius: 999px; box-shadow: 0 4px 16px rgba(0, 0, 0, .18);
+  }
+
+  /* ---------- Today ---------- */
+
+  .today-grid { gap: 0; }
+  .hero { padding: 18px 18px 16px; }
+  .hero h1 { font-size: 1.45rem; }
+  .hero .lede { font-size: 1rem; margin-bottom: .2rem; }
+  .hero-row { align-items: center; }
+  /* with the cat: the cat and the ring share the top line, the words get the full width under them */
+  .hero-row:has(.hero-neko) { display: grid; grid-template-columns: 1fr auto; row-gap: .4rem; }
+  .hero-row:has(.hero-neko) .hero-neko { grid-area: 1 / 1; }
+  .hero-row:has(.hero-neko) .hero-ring { grid-area: 1 / 2; }
+  .hero-row:has(.hero-neko) .hero-text { grid-area: 2 / 1 / 3 / 3; }
+  .hero .hero-neko { width: 60px; height: 60px; }
+  .hero-ring, .hero-ring .ring { width: 56px; height: 56px; }
+  .hero-first .hero-art .neko { width: 72px; height: 72px; }
+  .hero-seal { width: 52px; height: 52px; font-size: 30px; }
+  .hero .btn-ghost { width: 100%; margin-top: .6rem; }
+  .hero.check .hero-corner { width: 52px; height: 52px; }
+
+  .tasks.grid { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .tasks.grid .task { min-height: 76px; padding: 12px; grid-template-columns: 26px 1fr; column-gap: .6rem; border-radius: 14px; }
+  .tasks.grid .task-en { font-size: .98rem; }
+  .tasks.grid .task-en small { font-size: .82rem; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .tasks.grid .task { align-content: center; }
+  .tasks.grid .task-jp { font-size: .85rem; }
+  .task .tick { width: 26px; height: 26px; }
+
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .tile { padding: 12px; min-height: 96px; border-radius: 14px; }
+  .tile .ring { width: 40px; height: 40px; }
+  .tile-jp { font-size: 1.15rem; }
+  .tile-en { font-size: .9rem; }
+  .tile small { font-size: .8rem; }
+  .seg.seg-sm button { padding: 6px 12px; font-size: .88rem; }
+
+  .menu-card { flex-wrap: wrap; gap: .8rem; }
+  .menu-card .noren.mini { width: 88px; }
+  .menu-card-text { flex: 1 1 12rem; font-size: .98rem; }
+  /* a way in, not the screen's main job: outlined, so the one filled button stays the one to press */
+  .menu-card .btn { flex: 1 1 100%; background: transparent; color: var(--ink); border: 1.5px solid var(--ink); }
+
+  .prog { padding: 14px 16px; }
+  .prog .prog-row { grid-template-columns: 4.6rem 1fr 3.6rem; font-size: .9rem; margin: .35rem 0; }
+  .prog .bar { height: 6px; }
+
+  /* the rail's word list: a taste, not the whole list — the Words tab has it */
+  .deck .words li:nth-child(n+11) { display: none; }
+  .word { padding: 11px 6px; min-height: 52px; }
+  .word-jp { font-size: 1.25rem; }
+  .word-en { font-size: .92rem; }
+  .more { width: 44px; }
+  .more .ico { width: 20px; height: 20px; }
+
+  /* ---------- the kana chart ---------- */
+
+  .chart-head { gap: .6rem; }
+  .chart-head > .muted { font-size: .86rem; flex-basis: 100%; }
+  .seg { width: 100%; }
+  .seg button { flex: 1; min-height: 44px; font-size: 1rem; }
+  .chart-cols { grid-template-columns: 1fr; }
+  .chart-sec { padding: 14px 10px; }
+  .kgrid { gap: 5px; }
   .kgrid.c5 { grid-template-columns: repeat(5, 1fr); }
   .kgrid.c3 { grid-template-columns: repeat(3, 1fr); }
-  .kgrid.c5.labelled { grid-template-columns: 1.3rem repeat(5, 1fr); }
-  .kgrid.c3.labelled { grid-template-columns: 1.6rem repeat(3, 1fr); }
   .kgrid.c4 { grid-template-columns: repeat(4, 1fr); }
-  .kg { font-size: 1.5rem; }
-  .pick-l { width: 100%; }
-  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .card-head { flex-wrap: wrap; row-gap: .1rem; }
-  .card-head .count { flex-basis: 100%; }
-  .opt.jp { font-size: 1.6rem; }
+  .kgrid.c5.labelled { grid-template-columns: 1.5rem repeat(5, 1fr); }
+  .kgrid.c3.labelled { grid-template-columns: 1.8rem repeat(3, 1fr); }
+  .kc { border-radius: 12px; }
+  .kg { font-size: 1.7rem; }
+  .c3 .kg, .c4 .kg { font-size: 1.6rem; }
+  .kh { font-size: .95rem; }
+  .how-chart summary h2 { font-size: 1.1rem; }
+
+  /* ---------- the Words library ---------- */
+
+  .lib-search { flex: 1 1 100%; max-width: none; min-height: 48px; font-size: 1rem; order: -1; }
+  .chart-head .seg { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+  .chart-head .seg::-webkit-scrollbar { display: none; }
+  .chart-head .seg button { flex: 1 0 auto; }
+  ul.lib { columns: 1; }
+  .lib-row { min-height: 56px; padding: 8px 6px; }
+  .lib-jp { font-size: 1.3rem; }
+  .lib-m { font-size: .95rem; }
+
+  /* ---------- sessions: read at the top, answer at the bottom ---------- */
+
+  .s-top { padding: 8px 12px; padding-top: calc(8px + env(safe-area-inset-top)); }
+  .s-top .icon-btn { width: 44px; height: 44px; }
+  .s-title { font-size: .95rem; }
+  .s-body { padding: 10px 16px 6px; align-items: stretch; }
+  .s-body > * { margin: 0 auto; }
+  .s-foot { padding: 10px 16px calc(14px + env(safe-area-inset-bottom)); gap: 12px; }
+  .s-foot .btn { height: 60px; min-height: 60px; font-size: 1.05rem; border-radius: 999px; }
+  .s-foot .btn:not(.btn-ghost) { flex: 1; }
+  .s-foot .btn-ghost { flex: 0 0 auto; padding: 12px 18px; }
+  .s-foot > span:empty { display: none; }
+
+  /* a question fills the screen: prompt in the middle of the top, the
+     verdict under it, the answers down where the thumb is */
+  .q { display: flex; flex-direction: column; min-height: 100%; }
+  .q > :first-child { margin-top: auto; }
+  .q > .q-ask { font-size: 1.05rem; }
+  .q > .opts { order: 3; margin-top: auto; margin-bottom: 10px; }
+  .q > .verdict { order: 2; min-height: 3.6rem; margin: .4rem 0 .6rem; font-size: 1.05rem; }
+  .glyph-l { font-size: min(7.5rem, 32vw); margin: .2rem 0 .6rem; }
+  .play { width: 112px; height: 112px; margin: .4rem auto .6rem; }
+  .opts { gap: 12px; max-width: none; width: 100%; }
+  .opts.n3 { grid-template-columns: repeat(3, 1fr); }
+  .opt { min-height: 78px; font-size: 1.35rem; border-radius: 16px; }
+  .opt.jp { font-size: 2.1rem; }
+  .opt.furi { font-size: 1.55rem; }
+  .opts.words .opt { font-size: 1.1rem; padding: 12px 10px; }
+  .opt kbd { display: none; }
+
+  .intro { display: flex; flex-direction: column; justify-content: center; min-height: 100%; }
+  .glyph-xl { font-size: min(10rem, 40vw); }
+  .word-xl { font-size: min(3.6rem, 14vw); }
+  .story, .rule { font-size: 1rem; }
+  .info { padding-top: 6px; }
+  .info h2 { font-size: 1.5rem; }
+  .info p { font-size: 1.02rem; }
+  .sc-sentence { font-size: 1.9rem; }
+
+  /* writing: a big pad in the middle, its tools spaced out beneath */
+  /* as big as the screen allows: the full width, unless the height runs out first */
+  .q-w .pad { width: min(92vw, calc(100svh - 330px)); margin-top: .4rem; }
+  .pad-tools { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; width: min(92vw, calc(100svh - 330px)); min-width: 17rem; margin: 0 auto; }
+  .pad-tools .btn { min-height: 48px; padding: 8px 4px; font-size: .92rem; }
+  .q-w > .verdict { order: 4; }
+
+  /* typing: the input high up, so the keyboard doesn't cover it */
+  .q-c > .q-ask { margin-top: 1rem; }
+  .type-in { font-size: 1.4rem; min-height: 56px; max-width: none; }
+  .type-preview { font-size: 2rem; }
+
+  .finish { padding-top: .5rem; }
+  .ex-sent { width: 100%; }
+
+  /* ---------- sprint ---------- */
+
+  .pick { gap: .4rem; }
+  .pick-l { width: 100%; font-size: .9rem; }
+  .pick .seg button { min-height: 48px; line-height: 1.25; }
+  .pick .seg button [lang="ja"] { display: block; font-size: 1.05rem; }
+  .sprint-grid { gap: 0; }
+  .sp-strip { gap: 1px; }
+  .sp-clock { font-size: 1.2rem; }
+  .sp-input { font-size: 1.5rem; min-height: 56px; }
+  .sp-count { font-size: 7rem; }
+
+  /* ---------- Read a Menu ---------- */
+
+  .menu-layout { grid-template-columns: 1fr; gap: 0; }
+  .menu-board { padding: 16px 12px 20px; }
+  .menu-name { font-size: 1.6rem; }
+  .mi-list { columns: 1; }
+  .mi { min-height: 52px; padding: 8px 8px; }
+  .mi-name { font-size: 1.3rem; }
+  .mi-price { font-size: 1rem; }
+  .noren { width: 200px; height: 78px; }
+  /* while an order is on, the request rides along at the top of the screen */
+  .menu-side { display: flex; flex-direction: column; }
+  .menu-layout:has(.order-ask) .menu-side {
+    order: -1; position: sticky; top: calc(56px + env(safe-area-inset-top)); z-index: 5;
+  }
+  .menu-layout:has(.order-ask) .menu-side > :not(.order) { display: none; }
+  .menu-side .order:has(.order-ask) { box-shadow: var(--shadow-lift); padding: 12px 14px; margin-bottom: 10px; }
+  .order:has(.order-ask) .neko.mini { width: 44px; height: 44px; }
+  .order:has(.order-ask) .order-ask { font-size: 1.12rem; margin: 0; }
+  .order:has(.order-ask) .tiny { display: none; }
+  .order:has(.order-ask) .order-dots { margin: .4rem 0; }
+  .order:has(.order-ask) .btn-sm { min-height: 36px; padding: 6px 14px; font-size: .88rem; }
+
+  /* ---------- Record ---------- */
+
+  .stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat { padding: 14px; border-radius: 14px; }
+  .stat:last-child:nth-child(odd) { grid-column: span 2; }
+  /* the calendar: twelve weeks across the whole card, not two-thirds of it */
+  .cal { grid-auto-columns: minmax(0, 1fr); grid-template-rows: repeat(7, 18px); gap: 4px; }
+  .record-grid { grid-template-columns: 1fr; }
+  .sk-line { grid-template-columns: 7rem 1fr 3rem; font-size: .92rem; }
+
+  /* ---------- sheets and questions: full-width, with Done where the thumb is ---------- */
+
+  .sheet { max-height: 86vh; padding: 20px 18px calc(18px + env(safe-area-inset-bottom)); border-radius: 22px 22px 0 0; }
+  .sheet-x { width: 44px; height: 44px; }
+  .sheet-done { display: flex; width: 100%; height: 56px; margin-top: 1rem; border-radius: 999px; font-size: 1.05rem;
+    position: sticky; bottom: 0; box-shadow: 0 -10px 14px 6px var(--sheet); }
+  .set-row { padding: 14px 0; min-height: 60px; }
+  .set-row input[type="checkbox"] { width: 26px; height: 26px; }
+  .set-row select { min-height: 44px; font-size: 1rem; }
+  .set-block .btn { width: 100%; margin: 0 0 8px; }
+  /* the safe choice at the bottom, the one that can't be undone above it */
+  .ask-btns { flex-direction: column-reverse; gap: 10px; }
+  .ask-btns .btn { width: 100%; min-height: 54px; font-size: 1.02rem; }
+  .ask .sheet-done { display: none; }
+
+  .toast { bottom: calc(96px + env(safe-area-inset-bottom)); }
+  .sound-bar { bottom: calc(96px + env(safe-area-inset-bottom)); }
 }

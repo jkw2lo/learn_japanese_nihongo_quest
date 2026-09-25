@@ -33,6 +33,10 @@ Build order. Each step should run end to end before the next one starts.
    tap-to-hear words, SVG icons in place of emoji, and the cat, hanamaru,
    stamps and petals.
 
+8a. ~~Mobile, one-handed~~ (0.6.0): the round sections button and looping
+   rolodex, the main button pinned bottom-left, answers at the foot, larger
+   type and targets. Desktop checked identical before and after.
+
 ## Next
 
 8. **Patterns, then kanji** (kanji stroke data from AnimCJK's graphicsJa;

@@ -76,6 +76,7 @@ function render() {
   else if (view === "record") renderRecord();
   renderSaveDot();
   loadAudioN5();
+  if (typeof phoneAfterRender === "function") phoneAfterRender();
 }
 
 /* ============================================================
@@ -95,6 +96,9 @@ function alikeOf(k) {
 
 /* Today's practice: each task scoped to today's kana, ticked on evidence —
    every one of them answered correctly in that drill kind today. */
+/* Two lesson names and a count, not a list that runs down the tile. */
+const lessonNames = ls => ls.slice(0, 2).map(L => L.title).join(" · ") + (ls.length > 2 ? ` +${ls.length - 2} more` : "");
+
 const todaysWords = () => (state.days[today()]?.learned || []).filter(isWordKey);
 /* A day of words rather than kana: words were learned today, or it's the
    words stage and no kana were. */
@@ -106,7 +110,7 @@ function wordTasks() {
   const learnedAny = ks.length > 0;
   const tasks = [{
     kind: "learn", jp: "学ぶ", en: "Learn today's words",
-    sub: (planned.length ? planned : lessonsLearnedToday()).map(L => L.title).join(" · "),
+    sub: lessonNames(planned.length ? planned : lessonsLearnedToday()),
     done: learnedAny && !planned.length,
     locked: !learnedAny && !planned.length ? "Nothing new to learn today" : null,
   }];
@@ -133,7 +137,7 @@ function todayTasks() {
   const learnedAny = ks.length > 0;
   tasks.push({
     kind: "learn", jp: "学ぶ", en: "Learn today's kana",
-    sub: planned.length ? planned.map(L => L.title).join(" · ") : lessonsLearnedToday().map(L => L.title).join(" · ") || "",
+    sub: lessonNames(planned.length ? planned : lessonsLearnedToday()),
     done: learnedAny && !planned.length,
     locked: !learnedAny && !planned.length ? "Nothing new to learn today" : null,
   });
@@ -170,7 +174,7 @@ function renderToday() {
       starts with hiragana, one row at a time. The first row is <b lang="ja">あ い う え お</b>: a, i, u, e, o${planned.length > 1 ? `, and today's second is the <span lang="ja">${esc(planned[1].title)}</span>` : ""}.</p>
       <p class="muted">About ten minutes a day, five new kana at a time. Hiragana takes about three weeks; then a check on
       two separate days to make sure it stuck; then katakana. First, a two-minute tour of how Japanese is written.</p>
-      <button class="btn btn-lg" data-act="start-today">Start learning <kbd>↵</kbd></button>
+      <button class="btn btn-lg cta" data-act="start-today">Start learning <kbd>↵</kbd></button>
     </section>`;
   } else if (p === "check") {
     hero = heroCheck(due);
@@ -189,7 +193,7 @@ function renderToday() {
           </div>
           ${heroRing()}
         </div>
-        <button class="btn btn-lg" data-act="start-today">Start today's session <kbd>↵</kbd></button>
+        <button class="btn btn-lg cta" data-act="start-today">Start today's session <kbd>↵</kbd></button>
       </section>`;
     } else {
       hero = `<section class="card hero done">
@@ -281,7 +285,7 @@ function heroCheck(due) {
     ${passedToday
       ? `<p class="muted">Come back tomorrow for the next one. A day between is the point — it's what shows it stuck.</p>`
       : `${tried ? `<p class="warn">Best today: ${Math.round(d.best * 100)}%. ${Math.round(HIRA_CHECK.pass * 100)}% is needed — have another go whenever you like.</p>` : ""}
-         <button class="btn btn-lg" data-act="start-check">Start today's check <kbd>↵</kbd></button>`}
+         <button class="btn btn-lg cta" data-act="start-check">Start today's check <kbd>↵</kbd></button>`}
     ${due.length ? `<p class="muted small">${due.length} due for review — the check covers them.</p>` : ""}
   </section>`;
 }
@@ -1205,7 +1209,9 @@ function renderRecord() {
    ============================================================ */
 
 function openSheet(html) {
-  $("#sheetBody").innerHTML = html;
+  /* the Done at the foot is for a phone, where the corner ✕ is a stretch;
+     it's display: none on a desktop */
+  $("#sheetBody").innerHTML = html + `<button class="btn sheet-done" data-act="sheet-close">Done</button>`;
   $("#sheet").classList.add("on");
 }
 function closeSheet() {
@@ -1272,7 +1278,10 @@ function applyTheme() {
 function renderSaveDot() {
   const n = Object.keys(state.items).length;
   const stale = !state.backupAt || daysBetween(state.backupAt, today()) >= 14;
-  $("#saveBtn").classList.toggle("nudge", n >= 10 && stale);
+  const nudge = n >= 10 && stale;
+  $("#saveBtn").classList.toggle("nudge", nudge);
+  $("#burger")?.classList.toggle("nudge", nudge);
+  $$(".d-save").forEach(b => b.classList.toggle("nudge", nudge));
 }
 
 function openBackup() {

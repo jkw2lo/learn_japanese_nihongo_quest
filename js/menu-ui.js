@@ -88,7 +88,7 @@ function renderMenu() {
       <div class="eyebrow">To order, you'd say</div>
       ${got.map(it => `<button class="ex-sent" data-act="say" data-say="${esc(it.kana)}"><span lang="ja">${wordHtml(it.w)}をください</span><small>${esc(it.m)}, please</small></button>`).join("")}
       <p class="muted tiny">${game.misses ? `${game.misses} wrong turn${game.misses > 1 ? "s" : ""} on the way.` : "Straight to every one."}</p>
-      <button class="btn" data-act="menu-game">Another order</button>
+      <button class="btn cta" data-act="menu-game">Another order</button>
     </section>`;
   } else if (game) {
     side = `<section class="card order">
@@ -107,7 +107,7 @@ function renderMenu() {
         <div class="eyebrow">注文 · Order for a friend</div>
         <p>They say what they want in English; you find it on the menu. Three things, then the bill.</p>
       </div></div>
-      ${readable.length >= 4 ? `<button class="btn" data-act="menu-game">Take an order</button>`
+      ${readable.length >= 4 ? `<button class="btn cta" data-act="menu-game">Take an order</button>`
         : `<p class="muted small">You need to be able to read four things on the menu first — ${readable.length} so far.</p>`}
       <p class="muted tiny">${state.menu.orders} order${state.menu.orders === 1 ? "" : "s"} taken so far.</p>
     </section>`;

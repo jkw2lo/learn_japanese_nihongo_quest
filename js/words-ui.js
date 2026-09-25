@@ -128,7 +128,7 @@ function showType(c) {
       <div class="type-m conj-verb"><span lang="ja">${wordHtml(x.w)}</span> <small>${esc(x.m)}</small></div>`
     : `<div class="q-ask">Type it in ${isKataWord(x) ? "katakana" : "kana"}:</div>
     <div class="type-m">${esc(x.m)}</div>`}
-    <input class="sp-input type-in" id="typeIn" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="romaji — it turns into kana">
+    <input class="sp-input type-in" id="typeIn" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" placeholder="romaji — it turns into kana">
     <div class="type-preview" lang="ja" id="typePreview">&nbsp;</div>
     <div class="verdict" id="verdict" aria-live="polite"></div>
   </div>`;

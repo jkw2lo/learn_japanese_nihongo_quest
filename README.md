@@ -466,6 +466,54 @@ without scrolling:
 
 On a phone it all stacks and scrolls as usual.
 
+## On a phone
+
+Designed for a phone held in **one hand**. The bottom third of the screen
+is where the thumb lives, so that's where the doing is. The top is for
+reading, and for the rare Close, out of the way of a stray tap.
+
+- **Sections** open from a round **button at the bottom right** (with the
+  backup reminder dot when it's due). It opens a **rolodex**: a rounded
+  capsule of round section buttons above it, scrolling sideways, snapping to
+  the centre, and **looping** so it never runs out. It's Hanzi Quest's loop
+  (porting.md C4): three copies back to back, with a silent jump back to
+  the middle once scrolling settles. Settings and Backup live there too, so
+  the top bar is just the name and the section you're in. The button sits
+  outside `.topbar` on purpose: the header's `backdrop-filter` would make it
+  the containing block for a fixed child (porting.md C3).
+- **The one main button** of a screen (start today's session, start the
+  check, start the sheet, take an order) is pinned **bottom-left**, 60px
+  tall, beside the sections button. It's marked `.cta`, which does nothing
+  on a desktop.
+- **Questions**: the prompt sits in the middle of the top half, the verdict
+  under it, and the answers are **large tiles at the foot** (78px, a 2×2
+  grid), with a full-width Next under them. Answers never move when the
+  verdict appears.
+- **Writing**: the pad is as big as the screen allows (the full width,
+  unless the height runs out first), with its four tools spaced out beneath
+  it and Check at the foot.
+- **Typing**: the input sits high up, where the keyboard won't cover it,
+  and Enter on the phone's keyboard checks the answer.
+- **Menu orders**: while an order is on, the request sticks to the top of
+  the screen as you scroll the menu, and a finished order scrolls its
+  receipt into view.
+- **Sheets** get a big **Done** at the foot. **Confirmations** stack their
+  buttons full width, with the safe choice at the bottom and the one that
+  can't be undone above it.
+- **Sizes**: 16px body text, targets of at least 48px, and neighbouring
+  targets spaced so a thumb can't land on the wrong one. The rail's word
+  list shows ten words; the Words tab has the rest. There's no sideways
+  scroll anywhere, even at 320px.
+
+**None of it touches a desktop.** Every phone rule lives in one
+`@media (max-width: 720px)` block after the `PHONE LAYER` marker at the end
+of `css/app.css`. A smoke check fails if anything after the marker sits
+outside that block, if the phone-only pieces aren't hidden elsewhere, or if
+the button moves inside the top bar. When this was built, a layout
+fingerprint (every key element's position, size and font size on nine
+desktop screens, from a seeded state) was taken before and after, and came
+out identical.
+
 ## The drawings
 
 Everything is inline SVG drawn with the colour tokens (`js/art.js`), so it
@@ -788,6 +836,7 @@ you like.
     js/app.js               Today, the kana chart, Record, sessions, settings, backup
     js/guide.js             the introduction and the new-kind cards
     js/sprint.js            the Sprint tab
+    js/phone.js             the sections button and the rolodex (inert on a desktop)
     js/art.js               icons, the cat, the hanamaru, stamps, petals
     js/conj.js              verb conjugation, generated, never stored
     js/data/menu.js         the café and the diner; numbers as they're said

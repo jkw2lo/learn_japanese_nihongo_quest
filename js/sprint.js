@@ -69,7 +69,7 @@ function renderSprint() {
       <div class="pick"><span class="pick-l">Minutes</span>${seg("mins", SPRINT_MINS)}</div>
       ${tooFew ? `<p class="warn">Learn a few more kana first — a sheet needs at least four to choose from.</p>`
         : p.count > pool.length * SPRINT_MAX_LOOPS ? `<p class="warn">That's more questions than ${pool.length} kana can fill sensibly — pick fewer.</p>`
-        : `<button class="btn btn-lg" data-act="sp-start">Start the sheet <kbd>↵</kbd></button>`}
+        : `<button class="btn btn-lg cta" data-act="sp-start">Start the sheet <kbd>↵</kbd></button>`}
       <p class="muted small">${best ? `Best on this sheet: <b>${best.right}/${best.total}</b> in ${(best.ms / 1000).toFixed(1)}s (${esc(best.at)}).` : "No run on this sheet yet."}</p>
     </section>
     <aside>
@@ -152,7 +152,7 @@ function showSprintQ() {
   const body = $("#spBody");
   if (SP.mode === "type") {
     body.innerHTML = `<div class="q sp-q"><div class="glyph-l" lang="ja">${esc(q.k)}</div>
-      <input class="sp-input" id="spInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="romaji, then Enter">
+      <input class="sp-input" id="spInput" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" placeholder="romaji, then Enter">
       <div class="muted small">Enter hands it in · an empty Enter skips</div></div>`;
     $("#spInput").focus();
     return;
