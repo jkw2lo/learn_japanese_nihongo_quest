@@ -1,0 +1,5 @@
+# macOS
+.DS_Store
+
+# Cached upstream data for the check tools (re-fetched on demand)
+tools/.cache/

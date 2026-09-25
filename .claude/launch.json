@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "nihongo-quest",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["tools/server.mjs"],
+      "port": 8732
+    }
+  ]
+}

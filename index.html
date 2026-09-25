@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Nihongo Quest</title>
+<!-- Without this a phone lays the page out at 980px and every narrow-screen
+     rule in css/app.css is unreachable (Hanzi Quest learned this the hard way). -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- One version, stamped onto every asset URL below. A browser that has
+     cached js/app.js keeps serving it until the URL changes, so a push can be
+     live and invisible at once. It lives here and nowhere else.
+     Bump with: node tools/version.mjs patch -->
+<script>const APP_VERSION = "0.2.0", APP_DATE = "2026-09-25";</script>
+<!-- First, before anything it could report on. -->
+<script src="js/diag.js?v=0.2.0"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@500;700&display=swap">
+<link rel="stylesheet" href="css/app.css?v=0.2.0">
+
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <button class="brand" data-act="nav" data-nav="today" title="Today">
+      <span class="brand-seal" aria-hidden="true">日</span>
+      <span class="brand-name">Nihongo Quest</span>
+    </button>
+    <nav class="top-nav" aria-label="Sections">
+      <button data-act="nav" data-nav="today" class="on"><span class="nz" lang="ja">今日</span> Today</button>
+      <button data-act="nav" data-nav="kana"><span class="nz" lang="ja">かな</span> Kana</button>
+      <button data-act="nav" data-nav="sprint"><span class="nz" lang="ja">速</span> Sprint</button>
+      <button data-act="nav" data-nav="record"><span class="nz" lang="ja">記録</span> Record</button>
+    </nav>
+    <div class="top-actions">
+      <button class="icon-btn" id="saveBtn" data-act="backup" title="Save or load a backup" aria-label="Backup">💾</button>
+      <button class="icon-btn" data-act="settings" title="Settings" aria-label="Settings">⚙</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="view on" id="v-today"></section>
+    <section class="view" id="v-kana"></section>
+    <section class="view" id="v-sprint"></section>
+    <section class="view" id="v-record"></section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Sections">
+    <button data-act="nav" data-nav="today" class="on"><span lang="ja">今日</span>Today</button>
+    <button data-act="nav" data-nav="kana"><span lang="ja">かな</span>Kana</button>
+    <button data-act="nav" data-nav="sprint"><span lang="ja">速</span>Sprint</button>
+    <button data-act="nav" data-nav="record"><span lang="ja">記録</span>Record</button>
+  </nav>
+</div>
+
+<!-- A study session: lessons, reviews, practice, the hiragana check. -->
+<div class="overlay" id="session" role="dialog" aria-modal="true" aria-labelledby="sTitle">
+  <div class="s-top">
+    <button class="icon-btn" data-act="close-session" aria-label="Close" title="Close (Esc)">✕</button>
+    <div class="s-title" id="sTitle"></div>
+    <div class="s-count" id="sCount"></div>
+  </div>
+  <div class="s-prog"><i id="sProg"></i></div>
+  <div class="s-timer" id="sTimer"><i></i></div>
+  <div class="s-body" id="sBody"></div>
+  <div class="s-foot" id="sFoot"></div>
+</div>
+
+<!-- A sprint sheet. -->
+<div class="overlay" id="sprint" role="dialog" aria-modal="true" aria-label="Sprint">
+  <div class="s-top">
+    <button class="icon-btn" data-act="sp-close" aria-label="Give up" title="Give up (Esc)">✕</button>
+    <div class="sp-strip" id="spStrip"></div>
+    <div class="sp-clock" id="spClock">0:00</div>
+  </div>
+  <div class="s-body" id="spBody"></div>
+  <div class="s-foot" id="spFoot"></div>
+</div>
+
+<!-- Settings, backup, a kana's details. -->
+<div class="sheet-wrap" id="sheet">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <button class="icon-btn sheet-x" data-act="sheet-close" aria-label="Close">✕</button>
+    <div id="sheetBody"></div>
+  </div>
+</div>
+
+<!-- askConfirm(): never window.confirm(). -->
+<div class="sheet-wrap ask" id="ask">
+  <div class="sheet ask-box" role="alertdialog" aria-modal="true" aria-labelledby="askTitle">
+    <div class="ask-k" id="askK" lang="ja"></div>
+    <h2 id="askTitle"></h2>
+    <p id="askBody"></p>
+    <div class="ask-btns">
+      <button class="btn btn-ghost btn-sm" id="askNo" data-act="ask-no">Cancel</button>
+      <button class="btn btn-sm" id="askYes" data-act="ask-yes">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="crash" id="crash" role="alert">
+  <div class="sheet">
+    <h2>Something went wrong.</h2>
+    <p>Your progress is saved. Reloading usually clears it. If it keeps happening, a report says what the app was doing just before.</p>
+    <div class="ask-btns">
+      <button class="btn btn-ghost btn-sm" data-act="crash-report">Report a problem</button>
+      <button class="btn btn-sm" data-act="reload">Reload</button>
+    </div>
+  </div>
+</div>
+
+<button class="sound-bar" id="soundBar" data-act="sound-unblock">🔇 Sound was blocked — tap to allow</button>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="js/data/kana.js?v=0.2.0"></script>
+<script src="js/srs.js?v=0.2.0"></script>
+<script src="js/sound.js?v=0.2.0"></script>
+<script src="js/app.js?v=0.2.0"></script>
+<script src="js/sprint.js?v=0.2.0"></script>
+</body>
+</html>
