@@ -19,15 +19,26 @@ Build order. Each step should run end to end before the next one starts.
 4. ~~Furigana~~: `js/furi.js` (parse, check, render, derive kana) and its
    smoke checks, run over every string in the word and pattern data.
 
+5. ~~Words, stages 2–5~~ (0.4.0): 103 words in lessons of five,
+   read / hear / type drills, romaji→kana typing, furigana, the N5 audio
+   bundle, solid kana retiring from reviews. Plus the Words library tab, and
+   a–o / consonant labels on the kana charts.
+
 ## Next
 
-5. **Words, stages 2–5**: word data, srs for words, Today, words audio,
-   romaji→kana typing, load js/furi.js and add a furigana setting. Kana leave the review queue here (README → Kana).
-6. **Menu side quest, tier 1** (katakana café).
-7. **Conjugation**: `js/conj.js`, fixtures, the conjugate Sprint mode.
-8. **Patterns, then kanji** (kanji stroke data from AnimCJK's graphicsJa),
-   then the rest of N5 (stages 6–10).
+6. **Menu side quest, tier 1** (katakana café): README → The side quest.
+7. **Conjugation**: `js/conj.js`, fixtures, the conjugate Sprint mode, and
+   the ます forms of the stage 5 verbs.
+8. **Patterns, then kanji** (kanji stroke data from AnimCJK's graphicsJa;
+   `knowsKanji` in words-ui.js starts returning true), then the rest of N5
+   (stages 6–10).
 9. Sync, N4.
+
+## Smaller, from 0.4.0
+
+- Sprint modes for words: 言葉 read and 書く type (README → Sprint).
+- A missed word should drop a review onto the kana you got wrong.
+- Word mistakes in Record's mistake notebook (it lists kana only).
 
 ## Later, maybe
 

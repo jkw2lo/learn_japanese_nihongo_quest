@@ -32,7 +32,7 @@ function sandbox() {
     },
   };
   vm.createContext(ctx);
-  vm.runInContext(read('js/data/kana.js') + '\n' + read('js/srs.js') + `
+  vm.runInContext(['js/data/kana.js', 'js/furi.js', 'js/data/words.js', 'js/srs.js'].map(read).join('\n') + `
     ;globalThis.__ = { get state() { return state; }, set state(v) { state = v; },
        setShift: n => { clockShift = n; } };`, ctx);
   return ctx;
@@ -45,21 +45,26 @@ section('contract');
    file while another still calls it fails only at runtime, on a click. */
 const CONTRACT = {
   'js/data/kana.js': ['LESSONS', 'KANA', 'KANA_BY', 'KANA_ALIKE', 'KANA_WORDS', 'KANA_PAIRS_WORDS',
-    'KANA_CONCEPT', 'ROMAJI_ALT', 'kanaUnits', 'toRomaji', 'toHira', 'toKata'],
+    'KANA_CONCEPT', 'ROMAJI_ALT', 'kanaUnits', 'toRomaji', 'toHira', 'toKata', 'romajiToKana', 'kanaSame'],
+  'js/data/words.js': ['WORDS', 'WORD_BY', 'WORD_STAGES', 'WORD_LESSONS'],
+  'js/words-ui.js': ['knowsKanji', 'wordHtml', 'learnedWords', 'sayWord', 'wordLessonCards', 'qWordRead', 'qWordHear',
+    'qWordType', 'wordPrompt', 'showType', 'checkType', 'typedRight', 'wordVerdict', 'renderWords', 'libraryEntries',
+    'openLibWord', 'loadAudioN5', 'wordIntroHtml'],
   'js/srs.js': ['state', 'load', 'save', 'today', 'addDays', 'daysBetween', 'pad2', 'asList', 'day', 'dayOkList',
     'item', 'isLearned', 'learnedKana', 'isDue', 'skill', 'skillsFor', 'learn', 'grade', 'solidness', 'standing',
     'shakiest', 'dueKeys', 'lessonLearned', 'allHiraLearned', 'hiraDoneDay', 'hiraCheckDays', 'kataOpen', 'phase',
     'lessonsLearnedToday', 'learnedTodayCount', 'nextLessons', 'checkPassedToday', 'recordCheck', 'canRead', 'readableWords',
     'wordsByNewest', 'streak', 'practisedDays', 'recordSprint', 'exportState', 'parseBackup', 'freshState',
-    'QUICK_MS', 'HIRA_CHECK', 'PASSES_FOR_SOLID'],
+    'QUICK_MS', 'QUICK_WORD_MS', 'HIRA_CHECK', 'PASSES_FOR_SOLID', 'isWordKey', 'wordsOpen', 'allKanaLearned'],
   'js/sound.js': ['say', 'sayKana', 'hasAudio', 'clipCount', 'unlockAudio', 'loadAudioBundle', 'soundBlocked'],
   'js/write.js': ['strokesFor', 'canWrite', 'markWriting', 'modelSvg', 'modelAnimMs', 'padHtml', 'bindPad', 'drawInk',
     'padUndo', 'padClear', 'pad', 'WRITE_TOL'],
   'js/furi.js': ['furiParse', 'furiKana', 'furiPlain', 'furiKanji', 'furiProblems', 'furiHtml'],
-  'js/guide.js': ['GUIDE', 'KIND_INTRO', 'infoCard', 'guideCards', 'infoHtml', 'startGuide'],
+  'js/guide.js': ['WORDS_INTRO', 'GUIDE', 'KIND_INTRO', 'infoCard', 'guideCards', 'infoHtml', 'startGuide'],
   'js/app.js': ['ACTS', 'render', 'go', 'view', 'S', 'askConfirm', 'crumb', 'shuffle', 'esc', '$', '$$',
     'distractors', 'renderSoundBar', 'onAudioLoaded', 'toast', 'openSession', 'closeSheet', 'SET_NAME',
-    'qWrite', 'showWrite', 'checkWrite', 'showStrokes', 'loadStrokes'],
+    'qWrite', 'showWrite', 'checkWrite', 'showStrokes', 'loadStrokes', 'settle', 'afterAnswer', 'rebuild', 'quickMs',
+    'todaysWords', 'wordDay', 'wordTasks'],
   'js/sprint.js': ['renderSprint', 'sprintKey', 'sprintLabel'],
 };
 const declares = (src, name) => {
@@ -234,6 +239,61 @@ section('sprint');
   ok(run('state.sprint.recent.length') === 4, 'every run goes into recent');
 }
 
+/* ---------- words ---------- */
+
+section('words');
+{
+  const s = sandbox();
+  const run = code => vm.runInContext(code, s);
+  run('load()');
+  ok(run('new Set(WORDS.map(x => x.key)).size === WORDS.length'), 'two words share a key');
+  ok(run('WORD_LESSONS.every(L => L.items.length <= 5)'), 'a word lesson has more than five words');
+  ok(run('WORD_STAGES.every(S => WORDS.some(x => x.st === S.st))'), 'a stage has no words');
+  run('WORDS.forEach(x => x.units.forEach(u => { if (!KANA_BY[u]) throw new Error(x.w + " uses " + u) }))');
+  ok(true, 'every word spells with taught kana');
+  /* the gate: words wait for every kana */
+  ok(run('!wordsOpen() && phase() === "hira"'), 'words must not be open at the start');
+  run('KANA.forEach(e => learn(e.k)); state.kataOpen = today()');
+  ok(run('wordsOpen() && phase() === "words"'), 'all kana learned → words');
+  ok(run('nextLessons().length') === 0, 'today\'s allowance went on kana');
+  run('__.setShift(1)');
+  ok(run('nextLessons().map(L => L.id).join()') === 'w2-1', 'the next day, the first word lesson is w2-1');
+  /* words go through the same scheduling */
+  run('learn(WORDS[0].key)');
+  ok(run('!!state.words[WORDS[0].key] && !state.items[WORDS[0].key]'), 'words are stored apart from kana');
+  run('grade(WORDS[0].key, "c", true, 8000, "practice")');
+  ok(run('skill(WORDS[0].key, "c").fast') === 1, 'an 8-second typed word should count as quick');
+  /* solid kana retire from the review queue once words are open */
+  run('__.setShift(400)');
+  run('["r", "p"].forEach(sk => { for (let i = 0; i < 3; i++) grade("あ", sk, true, 500, "practice") })');
+  const due = run('dueKeys()');
+  ok(!due.includes('あ'), 'a solid kana should leave the review queue once words are open');
+  ok(due.includes('い'), 'a kana that isn\'t solid should still come up');
+  ok(due.includes(run('WORDS[0].key')), 'a due word should come up');
+}
+
+section('typing');
+{
+  const k = sandbox();
+  const r2k = (x, kata) => vm.runInContext(`romajiToKana(${JSON.stringify(x)}, ${!!kata})`, k);
+  const same = (a, b) => vm.runInContext(`kanaSame(${JSON.stringify(a)}, ${JSON.stringify(b)})`, k);
+  const T = { taberu: 'たべる', kitte: 'きって', konnichiha: 'こんにちは', onna: 'おんな', "sen'en": 'せんえん', shinbun: 'しんぶん',
+    matcha: 'まっちゃ', kyou: 'きょう', si: 'し', tu: 'つ', zya: 'じゃ', gohan: 'ごはん' };
+  Object.entries(T).forEach(([r, want]) => ok(r2k(r) === want, `romajiToKana(${r}) = ${r2k(r)}, want ${want}`));
+  ok(r2k('ko-hi-', true) === 'コーヒー', 'ko-hi- should type コーヒー');
+  ok(r2k('pa-ti-', true) === 'パーティー', 'pa-ti- should type パーティー');
+  ok(same(r2k('koohii', true), 'コーヒー'), 'koohii should count as コーヒー');
+  ok(same('おおきい', 'おうきい'), 'おお and おう are both a long o');
+  ok(!same('たべる', 'たべた'), 'different words must not match');
+  /* every word can be typed from its own romaji */
+  const words = vm.runInContext('WORDS.map(x => [x.kana, x.r, /^[\u30a0-\u30ff]+$/.test(x.kana)])', k);
+  words.forEach(([kana, r, kata]) => {
+    const typed = r.replace(/\s+/g, '');
+    const flat = t => t.toLowerCase().replace(/[\s'\-]/g, '');
+    ok(same(r2k(typed, kata), kana) || flat(typed) === flat(r), `typing "${r}" doesn't give ${kana}`);
+  });
+}
+
 /* ---------- writing ---------- */
 
 section('writing');
@@ -292,7 +352,7 @@ section('furigana');
 {
   const f = {};
   vm.createContext(f);
-  vm.runInContext(read('js/furi.js') + `;globalThis.F = { furiParse, furiKana, furiPlain, furiKanji, furiProblems, furiHtml };
+  vm.runInContext(read('js/data/kana.js') + read('js/furi.js') + `;globalThis.F = { furiParse, furiKana, furiPlain, furiKanji, furiProblems, furiHtml };
     ${read('js/data/words.js')};globalThis.WORDS = WORDS;
     ${read('js/data/patterns.js')};globalThis.PATTERNS = PATTERNS;`, f);
   const { furiKana, furiPlain, furiKanji, furiProblems, furiHtml } = f.F;
@@ -316,7 +376,7 @@ section('furigana');
   ok(furiHtml('<b>', knows) === '&lt;b&gt;', 'text is escaped');
   /* and every string in the data that exists so far */
   const strings = [];
-  f.WORDS.forEach(w => { strings.push(w.w); (w.ex || []).forEach(x => strings.push(x[0])); });
+  f.WORDS.forEach(w => { strings.push(w.w); if (w.note) strings.push(w.note); (w.ex || []).forEach(x => strings.push(x[0])); });
   f.PATTERNS.forEach(p => (p.ex || []).forEach(x => strings.push(x[0])));
   strings.forEach(x => furiProblems(x).forEach(pr => ok(false, pr)));
   ok(strings.length > 0, 'no word data found to check');
@@ -325,10 +385,10 @@ section('furigana');
 /* ---------- 6. audio coverage ---------- */
 
 section('audio');
-if (existsSync(join(root, 'js/audio-kana.js'))) {
+if (existsSync(join(root, 'js/audio-kana.js')) && existsSync(join(root, 'js/audio-n5.js'))) {
   const a = { window: {} };
   vm.createContext(a);
-  vm.runInContext(read('js/audio-kana.js'), a);
+  vm.runInContext(read('js/audio-kana.js') + read('js/audio-n5.js'), a);
   const clips = a.window.NQ_AUDIO || {};
   const missing = speakable().filter(t => !clips[t]);
   ok(!missing.length, `no clip for: ${missing.slice(0, 20).join(' ')}${missing.length > 20 ? ' …' : ''} — run node tools/make-audio.mjs`);

@@ -156,6 +156,19 @@ const KIND_INTRO = {
   },
 };
 
+/* Before the very first word lesson. */
+const WORDS_INTRO = {
+  eyebrow: "言葉 · Words",
+  head: "Now, words.",
+  body: `<p>Every kana is yours, so from here you learn words — five a day, in stages: survival phrases, then numbers and
+    money, then talking about yourself, then food and ordering.</p>
+    <p>Many words are written with kanji. You don't need to learn those yet: small kana over each one — furigana —
+    tell you how to read it.</p>
+    <p class="sc-sentence" style="font-size:2rem"><ruby lang="ja">食<rt>た</rt></ruby><span lang="ja">べる</span></p>
+    <p class="muted">That's たべる, to eat. Each word gets three drills: read it, hear it, and type it — in romaji, which
+    turns into kana as you type, the way a Japanese keyboard does.</p>`,
+};
+
 function infoCard(g, last = false) {
   return { t: "info", g, last };
 }

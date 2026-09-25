@@ -9,6 +9,8 @@ const PASSES_FOR_SOLID = 3;
 /* A pass only counts towards "solid" if it was quick. Reading kana slowly is
    still slow reading — see README → Kana. */
 const QUICK_MS = { r: 3000, p: 4000, a: 4000, w: 5000 };
+/* Words are longer than a kana, and typing one takes a while. */
+const QUICK_WORD_MS = { r: 5000, p: 5000, c: 12000 };
 /* The consolidation gate between hiragana and katakana: this many separate
    days, each after the last hiragana was learned, on which a full hiragana
    sweep was finished at this first-try accuracy. */
@@ -23,6 +25,7 @@ const DEFAULT_SETTINGS = {
   newPerDay: 5,          /* new kana a day — about one row */
   writing: true,         /* writing drills as reinforcement */
   strokeOrder: false,    /* also check stroke order and direction */
+  furigana: "auto",      /* over kanji you don't know | always | never */
   theme: "auto",
 };
 
@@ -51,6 +54,8 @@ const freshState = () => ({
   app: "nihongo-quest", v: 1,
   created: today(),
   items: {},          /* glyph -> { at, lvl, due, sk: { r: {n, ok, fast, miss}, p: … } } */
+  words: {},          /* "w:食べる" -> the same shape. Kept apart so everything
+                         that walks the kana never trips over a word. */
   days: {},           /* date  -> { n, ok: {r:[],p:[],a:[],x:[]}, learned:[], rev:[], check } */
   settings: { ...DEFAULT_SETTINGS },
   sprint: { best: {}, recent: [] },
@@ -66,6 +71,7 @@ function normalise(s) {
   out.settings = { ...DEFAULT_SETTINGS, ...(s.settings || {}) };
   delete out.settings.lessonsPerDay;      /* replaced by newPerDay in 0.3 */
   out.items = s.items && typeof s.items === "object" ? s.items : {};
+  out.words = s.words && typeof s.words === "object" ? s.words : {};
   out.days = s.days && typeof s.days === "object" ? s.days : {};
   Object.values(out.days).forEach(d => {
     d.learned = asList(d.learned);
@@ -108,8 +114,10 @@ const dayOkList = (kind, k = today()) => (state.days[k]?.ok?.[kind]) || [];
 
 /* ---------- items ---------- */
 
-const item = k => state.items[k] || null;
-const isLearned = k => !!state.items[k];
+const isWordKey = k => typeof k === "string" && k.startsWith("w:");
+const storeOf = k => isWordKey(k) ? state.words : state.items;
+const item = k => storeOf(k)[k] || null;
+const isLearned = k => !!storeOf(k)[k];
 const learnedKana = set => KANA.filter(e => (!set || e.set === set) && isLearned(e.k));
 const isDue = k => { const it = item(k); return !!it && it.due <= today(); };
 
@@ -122,12 +130,12 @@ function skill(k, sk) {
    shape to name on its own, so it only ever comes up as a word pair. "a",
    telling look-alikes apart, only applies to kana that have one — callers
    narrow the keys for that. */
-const skillsFor = k => KANA_BY[k]?.concept ? ["x"] : ["r", "p", "a", "w"];
+const skillsFor = k => isWordKey(k) ? ["r", "p", "c"] : KANA_BY[k]?.concept ? ["x"] : ["r", "p", "a", "w"];
 
 function learn(k) {
-  if (state.items[k]) return;
+  if (isLearned(k)) return;
   const t = today();
-  state.items[k] = { at: t, lvl: 1, due: addDays(t, INTERVALS[1]), sk: {} };
+  storeOf(k)[k] = { at: t, lvl: 1, due: addDays(t, INTERVALS[1]), sk: {} };
   const d = day();
   if (!d.learned.includes(k)) d.learned.push(k);
 }
@@ -151,7 +159,7 @@ function grade(k, sk, ok, ms, mode = "practice") {
   s.n++;
   if (ok) {
     s.ok++;
-    if (ms != null && ms <= (QUICK_MS[sk] || 4000)) s.fast++;
+    if (ms != null && ms <= ((isWordKey(k) ? QUICK_WORD_MS : QUICK_MS)[sk] || 4000)) s.fast++;
   } else {
     s.miss++;
     state.mistakes[k] = (state.mistakes[k] || 0) + 1;
@@ -202,10 +210,15 @@ function shakiest(keys, sk) {
     skill(a, sk).n - skill(b, sk).n);
 }
 
+/* Everything due, kana and words. Once words are open, a kana that's solid
+   in reading and hearing stops being scheduled on its own: every word you
+   read keeps it fresh (README → Kana). One that isn't solid yet stays. */
 function dueKeys() {
   const t = today();
-  return Object.keys(state.items).filter(k => state.items[k].due <= t)
-    .sort((a, b) => state.items[a].due.localeCompare(state.items[b].due));
+  const retired = k => wordsOpen() && (KANA_BY[k]?.concept ? isSolid(k, "x") : isSolid(k, "r") && isSolid(k, "p"));
+  const kana = Object.keys(state.items).filter(k => state.items[k].due <= t && !retired(k));
+  const words = Object.keys(state.words).filter(k => state.words[k].due <= t);
+  return [...kana, ...words].sort((a, b) => item(a).due.localeCompare(item(b).due));
 }
 
 /* ---------- lessons and the gates ---------- */
@@ -235,11 +248,18 @@ function kataOpen() {
   return false;
 }
 
+/* Words open once every kana is learned. README's tiers open at 80%, but
+   the kana stage is gated the whole way (hiragana cemented before katakana),
+   so words wait for the last of it too. */
+const allKanaLearned = () => LESSONS.every(lessonLearned);
+const wordsOpen = () => allKanaLearned() && kataOpen();
+
 /* Where the learner is. Drives what Today offers. */
 function phase() {
   if (!allHiraLearned()) return "hira";
   if (!kataOpen()) return "check";
   if (!kataLessons().every(lessonLearned)) return "kata";
+  if (!WORD_LESSONS.every(lessonLearned)) return "words";
   return "done";
 }
 
@@ -253,7 +273,7 @@ function phase() {
 function lessonsLearnedToday() {
   const d = state.days[today()];
   if (!d) return [];
-  return LESSONS.filter(L => L.items.some(k => d.learned.includes(k)) && lessonLearned(L));
+  return [...LESSONS, ...WORD_LESSONS].filter(L => L.items.some(k => d.learned.includes(k)) && lessonLearned(L));
 }
 
 const learnedTodayCount = () => (state.days[today()]?.learned || []).length;
@@ -261,7 +281,8 @@ const learnedTodayCount = () => (state.days[today()]?.learned || []).length;
 function nextLessons() {
   const p = phase();
   if (p === "check" || p === "done") return [];
-  const pool = LESSONS.filter(L => (p === "hira" ? L.set === "h" : L.set === "k") && !lessonLearned(L));
+  const pool = p === "words" ? WORD_LESSONS.filter(L => !lessonLearned(L))
+    : LESSONS.filter(L => (p === "hira" ? L.set === "h" : L.set === "k") && !lessonLearned(L));
   const left = state.settings.newPerDay - learnedTodayCount();
   const out = [];
   let n = 0;
@@ -274,7 +295,7 @@ function nextLessons() {
   return out;
 }
 
-const upcomingLesson = () => LESSONS.find(L => !lessonLearned(L)) || null;
+const upcomingLesson = () => [...LESSONS, ...WORD_LESSONS].find(L => !lessonLearned(L)) || null;
 
 /* The hiragana check passed today? */
 const checkPassedToday = () => !!state.days[today()]?.check?.passed;
@@ -289,6 +310,8 @@ function recordCheck(correct, total) {
 
 /* ---------- words ---------- */
 
+/* A word you can read: every kana in it is learned. Kanji don't count
+   against it — they come with furigana until you know them. */
 const canRead = w => w.units.every(isLearned);
 const readableWords = set => KANA_WORDS.filter(w => (!set || w.set === set) && canRead(w));
 

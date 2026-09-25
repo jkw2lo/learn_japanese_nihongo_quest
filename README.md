@@ -6,10 +6,12 @@ holding a simple conversation. It starts from nothing and runs to JLPT N5,
 then on towards N4. Writing is there if you want it and never in the way if
 you don't.
 
-> **Status: the kana stage is built (0.3.0).** An introduction to the three
-> scripts, hiragana five a day, the hiragana check, katakana, look-alikes, the
-> pauses and long vowels, real words to read, writing practice, Sprint,
-> Record and Settings all work. Words, kanji and grammar (stage 2
+> **Status: the kana stage and word stages 2–5 are built (0.4.0).** An
+> introduction to the three scripts, hiragana five a day, the hiragana check,
+> katakana, look-alikes, the pauses and long vowels, writing practice, then
+> 103 words in four stages (phrases, numbers and money, me and you, food)
+> with furigana and typed answers. There's a Words library of everything you
+> can read, plus Sprint, Record and Settings. Words, kanji and grammar (stage 2
 > onward) are still spec only — this README describes them so they can be
 > built against it. Much of the reasoning is lifted from Hanzi Quest, where
 > most of it was learned the hard way; where a decision came from there, it
@@ -147,15 +149,18 @@ gets its own flow and doesn't go into the review queue:
   recognised correctly *and* quickly, several times over. Being right slowly
   isn't enough, because reading slowly is still slow reading. This is where
   Sprint earns its place from day one.
-- **Kana will leave the queue early, once words exist.** Today every kana
-  stays on the review schedule. When stage 2 lands, a kana that's solid in
-  reading and hearing stops being scheduled on its own, and every word you
-  read keeps it fresh instead. A miss on a word will still drop a review onto
-  the kana you got wrong.
+- **Kana leave the queue once words are open.** A kana that's solid in
+  reading and hearing (three quick passes each) stops being scheduled on its
+  own, and the words you read keep it fresh instead. One that isn't solid
+  yet keeps coming up. (Still to do: dropping a review onto the kana behind a
+  missed word.)
 - **っ, ッ and ー are drilled by ear.** They have no sound of their own, so
   their lessons are an explanation card plus word pairs: hear きって or きて,
   pick the spelling (`KANA_PAIRS_WORDS`). びょういん (hospital) against
   びよういん (hair salon) is in there too, because it's a real trap.
+- **Katakana through loanwords.** You learn コ, ー and ヒ, and the reward is
+  コーヒー straight away. Guessing the English word is the fun bit (パソコン,
+  アイスクリーム, コンビニ), and it's how katakana actually turns up in real life.
 - **Real words from the first day.** `KANA_WORDS` is ~190 words spelled only in
   kana. A word shows up in *Words you can read* the moment every kana in it
   is learned — いえ (house) after the first row. Katakana words are mostly
@@ -216,34 +221,77 @@ Romaji is **hidden by default** and switched on in **Settings → Show romaji**.
 It's hidden so your eyes learn to read the kana, not the letters under
 them. Kana lessons always show it, because that's what they teach, and so do
 a question's answers and verdicts. The setting governs everything else: the
-word deck, the chart and (later) word cards.
-- **Katakana through loanwords.** You learn コ, ー and ヒ, and the reward is
-  コーヒー straight away. Guessing the English word is the fun bit (パソコン,
-  アイスクリーム, コンビニ), and it's how katakana actually turns up in real life.
+word lists, the romaji under each kana on the chart, and word cards.
+
+The chart's **axes** are always labelled, whatever the setting: a i u e o
+across the top, and the consonant at the start of each row (k, s, t… and
+ky, sh, ch… for the combined sounds). They're how the chart is read, and a
+new learner needs them most.
 
 ---
 
 ## Words
 
-The scheduled core. Each word has a written form, its kana spelling, a
-meaning, a part of speech, a stage, and one example sentence or more.
+The scheduled core, from stage 2. Each word (`js/data/words.js`) has a
+written form in furigana markup, a meaning, a part of speech, a stage, often
+a note, and example sentences for many.
 
-- **Skills are tracked separately**, as in Hanzi Quest:
-  - `r` read it: see the written form, pick the meaning
-  - `p` hear it: hear it, pick the word
-  - `s` say it: see the meaning, say it aloud, reveal, mark yourself honestly
-  - `c` recall it: see the meaning, type it
-  - `w` write it, for kana, and for kanji only if you've opted in
+- **Words open when every kana is learned.** README's tiers open at 80%,
+  but the kana stage is gated the whole way through (hiragana cemented
+  before katakana), so words wait for the last kana too.
+- **Five a day**, under the same **New kana a day** allowance, which counts
+  words once kana are done. There are 103 words in four stages, in lessons of five:
+  - **2 · あいさつ** survival phrases (24)
+  - **3 · 数** numbers, time and money (29)
+  - **4 · 私** me and you (25)
+  - **5 · 食べる** food and ordering (25)
 
-  They're separate knowledge: you'll recognise 大丈夫 long before you can
-  produce it.
-- **Typing is in kana, from romaji.** You type `taberu` and get たべる, the way a
-  Japanese keyboard on a phone or laptop works. It's the direct counterpart of
-  Hanzi Quest's pinyin 打字 input (probably via wanakana, MIT). Kanji
-  conversion is left out on purpose: at this level, typing the kana spelling
-  proves you know the word.
-- **"Words you can read"** carries over directly: every word whose kana and
-  kanji are all already yours, newest first.
+  Each stage opens with a card saying what it's for. The very first word
+  lesson opens with one explaining furigana.
+- **Meet it, then three drills.** A word card shows the word with furigana,
+  its meaning, a note and any examples, all tappable to hear. Then:
+  - `r` **read it**: see the word, pick the meaning
+  - `p` **hear it**: hear it, pick the word
+  - `c` **type it**: see the meaning, type it in romaji. It turns into kana
+    as you type (`romajiToKana`), the way a Japanese keyboard does. Kanji
+    conversion is left out on purpose: typing the kana spelling proves you
+    know the word.
+
+  Each is a separate skill, as in Hanzi Quest: you'll recognise 大丈夫 long
+  before you can produce it. Today's practice for a word day is 学ぶ, 読む,
+  聞く and 打つ; Go deeper gets three word tiles.
+- **Typing is marked kindly.** It's right if the kana say the same thing
+  (`kanaSame`). Script doesn't matter, so typing コーヒー as koohii is fine,
+  and nor do ー against a doubled vowel or おお against おう. It's also right
+  if the romaji matches the word's own, so こんにちは can be typed
+  konnichiwa. **Hint** shows the first kana and the length, and turns the
+  answer into practice, not credit.
+- **Stored apart from kana.** Word items live in `state.words`, keyed
+  `w:` + the written form, so nothing that walks the kana ever meets a word.
+  They go through the same `grade()` and `dueKeys()`.
+- **Spoken from kana.** Every word and example is recorded from its kana
+  (`js/audio-n5.js`, loaded once words are open), so the voice never guesses
+  a kanji's reading. A word can set `say` where its spelling misleads: the
+  particle は is said わ.
+
+`s` (say it aloud and mark yourself) and `w` (write kanji) aren't built. See
+**Open questions** and **Kanji**.
+
+### The Words library
+
+The **Words** tab lists **every word you can read**. It only grows: nothing
+drops off the end the way Today's short list does.
+
+- **Learned words**, grouped by stage, each opening a card with its note,
+  examples and how it's doing in each skill.
+- **Spelled in kana**: every word in `KANA_WORDS` whose kana are all yours,
+  newest first. There are ~190, and the first arrives with the first row.
+- **Filters** (All, Learned, ひらがな, カタカナ) and a **search** across kana,
+  romaji and English.
+- **Coming up**: how many kana words are still out of reach, and which
+  single kana would unlock the most of them.
+
+Today's rail still shows the newest few, with a link to the whole list.
 
 ### Reading never outruns you, now with furigana
 
@@ -372,9 +420,9 @@ dealt from a shuffled deck, not drawn at random.
 | **読む Read** | a kana | pick its romaji | 1.5 | kana `r` | ✓ |
 | **聞く Listen** | a sound | pick the kana | 2.5 | kana `p` | ✓ |
 | **打つ Type** | a kana | type its romaji (`si` for し is fine) | 2.5 | kana `r` | ✓ |
-| **言葉 Words** | a word | pick the meaning | 2.4 | `r` | stage 2 |
-| **書く Type words** | a meaning | type it in kana | 4.5 | `c` | stage 2 |
-| **活用 Conjugate** | 食べる + て-form | type 食べて | 4.0 | pattern | stage 2 |
+| **言葉 Words** | a word | pick the meaning | 2.4 | `r` | next |
+| **書く Type words** | a meaning | type it in kana | 4.5 | `c` | next |
+| **活用 Conjugate** | 食べる + て-form | type 食べて | 4.0 | pattern | with conjugation |
 
 Each sheet can be hiragana, katakana or both, 20–100 questions, 1–5
 minutes. Only a **finished** sheet can set a best: finishing comes first,
@@ -414,7 +462,10 @@ when that tier opens.
 
 Built so far: `js/audio-kana.js`, 305 clips (every kana sound, every kana
 word and pair, and the introduction's example sentence), 2.4 MB, fetched
-after the first screen draws. `make-audio.mjs` only records what's missing,
+after the first screen draws. `js/audio-n5.js` has 95 more (every stage word
+and example not already in the kana bundle), about 1 MB, fetched once words
+are open. Both add to one table (`window.NQ_AUDIO`), so they load in any
+order. `make-audio.mjs` only records what's missing,
 so adding a word takes seconds; `--all` re-records everything. Katakana plays
 its hiragana twin's clip, and じ/ぢ and ず/づ share one, since they sound the
 same. A lone kana is sometimes read as something else: は and へ on their
@@ -656,11 +707,12 @@ you like.
     js/sprint.js            the Sprint tab
     js/audio-kana.js        generated clips — do not hand-edit
     js/strokes.js           generated stroke data — do not hand-edit
-    js/furi.js              furigana markup: parse, check, render, derive kana (built and
-                            tested; loaded once word data arrives)
+    js/furi.js              furigana markup: parse, check, render, derive kana
+    js/data/words.js        stages 2–5: 103 words, their stages, lessons of five
+    js/words-ui.js          word lessons and questions, typing, the Words library
+    js/audio-n5.js          generated clips for the word stages — do not hand-edit
 
     not built yet (stubs, not loaded):
-    js/data/words.js        vocabulary, by stage
     js/data/kanji.js        kanji, taught through words
     js/data/patterns.js     grammar patterns with example sentences
     js/data/menu.js         the side quest's menus, by tier

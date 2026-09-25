@@ -274,6 +274,11 @@ main { max-width: 72rem; margin: 0 auto; padding: 20px 16px; }
 .kgrid { display: grid; gap: 6px; }
 .kgrid.c5 { grid-template-columns: repeat(5, minmax(0, 4.6rem)); }
 .kgrid.c3 { grid-template-columns: repeat(3, minmax(0, 5.6rem)); }
+.kgrid.c5.labelled { grid-template-columns: 1.6rem repeat(5, minmax(0, 4.6rem)); }
+.kgrid.c3.labelled { grid-template-columns: 1.6rem repeat(3, minmax(0, 5.6rem)); }
+.kh { display: flex; align-items: center; justify-content: center; font: 600 .95rem var(--f-body); color: var(--ink-2); }
+.kh-col { padding-bottom: 2px; }
+.kh-row { justify-content: flex-end; padding-right: 4px; }
 .kgrid.c4 { grid-template-columns: repeat(4, minmax(0, 5rem)); }
 .kc {
   aspect-ratio: 1 / 1; border-radius: 10px; border: 1px solid var(--rule-2); background: var(--paper);
@@ -462,6 +467,45 @@ ol.how li { margin: .35rem 0; }
 .how-chart[open] summary { margin-bottom: .6rem; }
 .how-chart p { color: var(--ink-2); max-width: 44rem; }
 
+/* ---------- words ---------- */
+
+ruby { ruby-position: over; }
+rt { font-size: .45em; color: var(--c-hira); font-weight: 400; letter-spacing: 0; }
+.word-xl {
+  font: 500 min(4.2rem, 13vw)/1.5 var(--f-ja-serif); display: block; margin: .3rem auto 0; padding: 0 .3em; border-radius: 14px;
+}
+.word-xl:hover { background: var(--sunken); }
+.word-m { font: 600 1.4rem var(--f-display); margin: .3rem 0 .9rem; }
+.ex-sent {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; margin: .4rem auto; padding: 8px 16px;
+  border: 1px solid var(--rule); border-radius: 12px; background: var(--sheet); max-width: 32rem;
+}
+.ex-sent span { font-size: 1.3rem; line-height: 1.8; }
+.ex-sent small { color: var(--ink-3); }
+.ex-sent:hover { border-color: var(--ink-3); }
+.glyph-l.word { line-height: 1.6; }
+.opts.words .opt { font-size: 1.05rem; }
+.opt.furi { font-size: 1.5rem; line-height: 1.7; padding-top: 18px; }
+.type-m { font: 600 1.6rem var(--f-display); margin: .2rem 0 1rem; }
+.type-in { max-width: 20rem; }
+.type-preview { font-size: 1.8rem; min-height: 2.6rem; color: var(--c-hira); margin-bottom: .4rem; }
+.learned-list.words { font-size: 1.5rem; letter-spacing: 0; line-height: 1.9; }
+.tiles-words { margin-bottom: 10px; }
+
+.lib-search { flex: 1 1 14rem; max-width: 22rem; width: auto; }
+ul.lib { list-style: none; margin: 0; padding: 0; columns: 2 18rem; column-gap: 1.5rem; }
+ul.lib li { break-inside: avoid; }
+.lib-row {
+  width: 100%; display: grid; grid-template-columns: auto 1fr auto; column-gap: .8rem; align-items: center;
+  text-align: left; padding: 7px 6px; border-radius: 6px; border-top: 1px solid var(--rule-2);
+}
+.lib-row:hover { background: var(--sunken); }
+.lib-jp { font-size: 1.2rem; line-height: 1.7; }
+.lib-rom { grid-column: 1; grid-row: 2; font-size: .76rem; color: var(--ink-3); }
+.lib-m { color: var(--ink-2); font-size: .88rem; text-align: right; grid-row: 1 / span 2; grid-column: 2; }
+.lib-st { grid-column: 3; grid-row: 1 / span 2; font-size: .7rem; color: var(--ink-3); border: 1px solid var(--rule); border-radius: 999px; padding: 0 6px; }
+.not-yet .chips { margin-top: .3rem; }
+
 /* ---------- the sprint sheet ---------- */
 
 .sp-strip { flex: 1; display: flex; gap: 2px; align-items: center; min-width: 0; }
@@ -555,6 +599,8 @@ ol.how li { margin: .35rem 0; }
   .stats { grid-template-columns: repeat(2, 1fr); }
   .kgrid.c5 { grid-template-columns: repeat(5, 1fr); }
   .kgrid.c3 { grid-template-columns: repeat(3, 1fr); }
+  .kgrid.c5.labelled { grid-template-columns: 1.3rem repeat(5, 1fr); }
+  .kgrid.c3.labelled { grid-template-columns: 1.6rem repeat(3, 1fr); }
   .kgrid.c4 { grid-template-columns: repeat(4, 1fr); }
   .kg { font-size: 1.5rem; }
   .pick-l { width: 100%; }

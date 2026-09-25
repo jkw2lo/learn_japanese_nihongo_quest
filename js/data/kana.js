@@ -368,3 +368,55 @@ KANA_WORDS.forEach(w => {
   w.set = /[゠-ヿ]/.test(w.w) ? "k" : "h";
 });
 KANA_PAIRS_WORDS.forEach(p => { p.units = kanaUnits(p.w); });
+
+/* ---- typing: romaji in, kana out ----
+
+   The way a Japanese keyboard on a phone or laptop works: you type `taberu`
+   and get たべる. Doubled consonants become っ (kitte → きって), n before a
+   consonant or at the end is ん (nn and n' work too), and - is ー. Built
+   from the kana table, so it can't disagree with the romaji the app teaches;
+   ROMAJI_ALT adds the other common spellings (si, tu, hu, zya…). */
+const ROMAJI_TO_HIRA = {};
+const ROMAJI_TO_KATA_LOAN = {};
+KANA.forEach(e => {
+  if (e.concept) return;
+  if (e.set === "h" && !(e.r in ROMAJI_TO_HIRA)) ROMAJI_TO_HIRA[e.r] = e.k;
+  if (LESSONS.find(L => L.id === e.lesson).kind === "loan") ROMAJI_TO_KATA_LOAN[e.r] = e.k;
+});
+Object.entries(ROMAJI_ALT).forEach(([r, alts]) => alts.forEach(a => {
+  if (!(a in ROMAJI_TO_HIRA) && ROMAJI_TO_HIRA[r]) ROMAJI_TO_HIRA[a] = ROMAJI_TO_HIRA[r];
+}));
+
+function romajiToKana(input, kata = false) {
+  const s = String(input).toLowerCase().replace(/\s+/g, "");
+  let out = "";
+  for (let i = 0; i < s.length;) {
+    const c = s[i], n1 = s[i + 1];
+    if (c === "-") { out += "ー"; i++; continue; }
+    /* nn is ん — but in konnichiha and onna the second n starts the next
+       syllable, so only swallow both when no vowel follows */
+    if (c === "n" && n1 === "'") { out += "ん"; i += 2; continue; }
+    if (c === "n" && n1 === "n") { out += "ん"; i += /[aiueoy]/.test(s[i + 2] || "") ? 1 : 2; continue; }
+    if (c === "n" && (n1 === undefined || !/[aiueoy]/.test(n1))) { out += "ん"; i++; continue; }
+    if (c === n1 && /[bcdfghjkmpqrstvwxz]/.test(c)) { out += "っ"; i++; continue; }
+    if (c === "t" && n1 === "c") { out += "っ"; i++; continue; }         /* matcha */
+    let hit = null;
+    for (const len of [3, 2, 1]) {
+      const chunk = s.slice(i, i + len);
+      if (kata && ROMAJI_TO_KATA_LOAN[chunk]) { hit = [chunk, toHira(ROMAJI_TO_KATA_LOAN[chunk])]; break; }
+      if (ROMAJI_TO_HIRA[chunk]) { hit = [chunk, ROMAJI_TO_HIRA[chunk]]; break; }
+    }
+    if (!hit) { out += c; i++; continue; }
+    out += hit[1];
+    i += hit[0].length;
+  }
+  return kata ? toKata(out) : out;
+}
+
+/* Do two kana spellings say the same thing? Compared as romaji, so script
+   doesn't matter (typing コーヒー as koohii gives コオヒイ), ー is the vowel
+   before it held, and おお / おう are both a long o. */
+function kanaSame(a, b) {
+  const norm = x => toRomaji(x).replace(/'/g, "").replace(/ou/g, "oo");
+  return norm(a) === norm(b);
+}
