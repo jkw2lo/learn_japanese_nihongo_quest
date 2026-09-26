@@ -6,14 +6,14 @@ holding a simple conversation. It starts from nothing and runs to JLPT N5,
 then on towards N4. Writing is there if you want it and never in the way if
 you don't.
 
-> **Status: all of N5 is built (0.11.0).** The kana stage, then 219 words
+> **Status: all of N5 is built (0.12.0).** The kana stage, then 219 words
 > in nine stages (phrases, numbers and money, me and you, food, getting
 > around, shopping, daily life, the て-form, and an N5 wrap-up), 40 grammar
 > patterns, 131 kanji (74 N5, 57 N4) taught through the words, verbs and
 > adjectives conjugated, a Grammar reference tab, flashcards, Out and about
 > (menus, station signs and announcements, shop, door and road signs, a
 > receipt, shop talk, asking for things and the way, casual Japanese,
-> compliments), Sprint, Record with milestones, and optional sync across
+> compliments), a 練習帳 Notebook for free writing, Sprint, Record with milestones, and optional sync across
 > devices through Firebase.
 
 **Live at:** https://jkw2lo.github.io/learn_japanese_nihongo_quest/
@@ -453,6 +453,37 @@ A reference to come back to (`js/data/grammar.js`, `js/grammar-ui.js`):
 - **Every pattern**, by stage. Learned ones open to their examples;
   upcoming ones are there to look ahead at, marked with the stage that
   teaches them. There's a button to practise the ones you know.
+
+### 練習帳 The Notebook
+
+A place to just write, lifted from Hanzi Quest's exercise book
+(`js/book-ui.js`). It keeps the shape Hanzi Quest's phone version proved
+out, on the desktop too. There's **one big box** to write a character in,
+and **Add to page** (Enter) sets it in the next square of today's page and
+wipes the box for the next one. You never zoom in on a page to fill one
+square: the box stays big and the page fills itself.
+
+- **Guides.** The squares' lines can be 十字 (a cross), 米字 (a star) or
+  none. You can also pick a character to trace: hiragana, katakana or
+  kanji, including ones not learned yet, which show faintly. It appears
+  faintly in the box, copybook style, and its stroke order plays beside
+  the box, with Again and Hear it.
+- **Pens and nibs.** Pen, brush, pencil and marker; fine, medium and broad.
+  The nib sets the width and the pen scales it, so a fine brush and a
+  broad brush still differ. Each square keeps the pen it was written with.
+- **Dated pages.** A page has 36 squares (6 × 6). When it's full, the next
+  square starts a new page. You can also start a new page yourself, or
+  take back the last square (it goes back into the box). Every page is
+  kept under its date in **Your pages**, and any page can be opened again
+  or deleted.
+- **Keys:** Enter adds to the page; Z or Backspace undoes a stroke.
+- **Storage.** Pages are vectors: each square's strokes in the same 1024
+  box the writing drills use, so they redraw crisply and re-ink with the
+  theme. They're kept in IndexedDB (`nihongo-quest-book`), outside the
+  progress record, so they don't sync. They do go into the backup file
+  (`pages`), and loading a backup that has them restores them. Characters
+  written count towards the day's study time and are tallied per day
+  (`days[d].bk`).
 
 ### Flashcards
 
@@ -994,6 +1025,7 @@ you like.
     js/data/grammar.js      the Grammar tab's reference: sentence shape, particles, endings
     js/grammar-ui.js        the Grammar tab
     js/cards-ui.js          flashcards
+    js/book-ui.js           練習帳 the notebook: the box, the dated pages, pens and guides
     js/patterns-ui.js       pattern cards, fill-the-gap and understand drills
     js/data/kanji.js        131 kanji with KANJIDIC readings — generated, do not hand-edit
     js/data/kanji-lessons.js where the kanji lessons go

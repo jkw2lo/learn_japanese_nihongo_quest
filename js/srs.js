@@ -30,6 +30,10 @@ const DEFAULT_SETTINGS = {
   writeKanji: false,     /* writing drills for kanji too — opt-in */
   furigana: "auto",      /* over kanji you don't know | always | never */
   theme: "auto",
+  bookPen: "pen",        /* the notebook: pen, brush, pencil, marker */
+  bookNib: "medium",     /* fine, medium, broad */
+  bookGrid: "cross",     /* the squares' guide lines: cross, star, none */
+  bookTrace: true,       /* show the chosen character faintly in the box */
 };
 
 /* ---------- dates, in local time ---------- */
@@ -442,7 +446,7 @@ function mergeItem(x, y) {
 
 function mergeDay(x, y) {
   const out = { ...x, ...y };
-  ["n", "g", "right", "ms"].forEach(f => { if (x[f] != null || y[f] != null) out[f] = bigger(x[f], y[f]); });
+  ["n", "g", "right", "ms", "bk"].forEach(f => { if (x[f] != null || y[f] != null) out[f] = bigger(x[f], y[f]); });
   out.learned = unionList(x.learned, y.learned);
   out.rev = unionList(x.rev, y.rev);
   out.ok = mergeBy(x.ok, y.ok, unionList);
@@ -528,8 +532,9 @@ async function replaceRemote() {
 
 /* ---------- backup ---------- */
 
-function exportState() {
-  return JSON.stringify({ app: "nihongo-quest", exported: new Date().toISOString(), state }, null, 1);
+/* pages: the notebook's, which live outside the record (js/book-ui.js) */
+function exportState(pages) {
+  return JSON.stringify({ app: "nihongo-quest", exported: new Date().toISOString(), state, ...(pages ? { pages } : {}) }, null, 1);
 }
 
 /* Returns the state it would install, or throws with a reason a person can read. */

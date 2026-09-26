@@ -55,6 +55,9 @@ Build order. Each step should run end to end before the next one starts.
 9. ~~Sync~~ (0.11.0): Firebase, lifted from Hanzi Quest, with a merge that
    loses nothing. ~~Out and about~~: nine real-life scenes beside the
    menus.
+9b. ~~Notebook~~ (0.12.0): the 練習帳 writing workspace (box → Add to
+   page, dated pages, pens, nibs, guides, tracing with stroke order).
+   Pages could sync too (they're in IndexedDB, not the record).
 10. **More recognition practice at N5**: more scenes (a train ticket, a
    bento label, a konbini's shelf tags, a clinic), a "spot the kanji you
    know" mode over the scenes, and scenes in Sprint.

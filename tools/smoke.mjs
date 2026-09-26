@@ -56,6 +56,7 @@ const CONTRACT = {
   'js/data/scenes.js': ['SCENES', 'SCENE_BY', 'receiptSums'],
   'js/scenes-ui.js': ['scenePickerHtml', 'renderScene', 'tapSceneItem', 'qScene', 'startSceneQuiz', 'scenePrompt', 'sceneAnswered', 'sceneGot'],
   'js/stats.js': ['MILESTONES', 'checkMilestones', 'medal', 'celebrate', 'milestoneCheckpoint', 'cheerLine', 'comboPill', 'statsTilesHtml', 'minutesChartHtml', 'learnedChartHtml', 'milestonesHtml', 'heroStatsHtml', 'n5Projection', 'weekAccuracy'],
+  'js/book-ui.js': ['BOOK_PENS', 'BOOK_NIBS', 'BOOK_GRIDS', 'BOOK_CAP', 'renderBook', 'bookKey', 'bookAll', 'bookReplaceAll', 'pageSvg', 'inkG', 'strokePath'],
   'js/cards-ui.js': ['DECKS', 'deckKeys', 'orderKeys', 'cardFaces', 'startDeck', 'renderCards', 'flipCard', 'rateCard', 'cardsKey', 'stepCard', 'bindCardGestures'],
   'js/data/kanji.js': ['KANJI'],
   'js/data/kanji-lessons.js': ['KANJI_BY'],

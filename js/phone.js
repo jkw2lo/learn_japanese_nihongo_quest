@@ -110,7 +110,7 @@ document.addEventListener("click", e => {
 addEventListener("keydown", e => { if (e.key === "Escape" && drawerOpen()) { closeDrawer(); e.stopPropagation(); } }, true);
 
 /* The section's name in the top bar, since there's no tab row to show it. */
-const SECTION_NAME = { today: ["今日", "Today"], kana: ["かな", "Kana"], words: ["言葉", "Words"], grammar: ["文法", "Grammar"], cards: ["札", "Cards"], menu: ["街", "Out &amp; about"], sprint: ["速", "Sprint"], record: ["記録", "Record"] };
+const SECTION_NAME = { today: ["今日", "Today"], kana: ["かな", "Kana"], words: ["言葉", "Words"], grammar: ["文法", "Grammar"], cards: ["札", "Cards"], book: ["帳", "Notebook"], menu: ["街", "Out &amp; about"], sprint: ["速", "Sprint"], record: ["記録", "Record"] };
 function phoneTitle() {
   const t = $("#mTitle");
   const n = SECTION_NAME[view];

@@ -74,6 +74,7 @@ function render() {
   else if (view === "menu") renderMenu();
   else if (view === "grammar") renderGrammar();
   else if (view === "cards") renderCards();
+  else if (view === "book") renderBook();
   else if (view === "sprint") renderSprint();
   else if (view === "record") renderRecord();
   renderSaveDot();
@@ -1435,8 +1436,9 @@ function openBackup() {
     </div>`);
 }
 
-function doExport() {
-  const text = exportState();
+async function doExport() {
+  const pages = typeof bookAll === "function" ? await bookAll() : null;
+  const text = exportState(pages && pages.length ? pages : null);
   const name = `nihongo-quest-${today()}.json`;
   let ok = false;
   try {
@@ -1465,6 +1467,8 @@ async function doImport(text) {
   });
   if (!yes) return;
   state = next; save();
+  /* the notebook's pages, if the file has them */
+  try { const pages = JSON.parse(text).pages; if (Array.isArray(pages)) await bookReplaceAll(pages); } catch {}
   await replaceRemote();
   location.reload();
 }
@@ -1472,11 +1476,12 @@ async function doImport(text) {
 async function doReset() {
   const yes = await askConfirm({
     k: "消去", title: "Reset everything?",
-    body: "Every kana, every review date, your streak and your sprint records — gone, with no way back unless you saved a backup." + (sync.status === "in" ? " This clears your account's copy too. Another device still holding the old progress will bring it back when it next syncs — reset there as well, or sign it out first." : ""),
+    body: "Every kana, every review date, your streak, your sprint records and your notebook pages — gone, with no way back unless you saved a backup." + (sync.status === "in" ? " This clears your account's copy too. Another device still holding the old progress will bring it back when it next syncs — reset there as well, or sign it out first." : ""),
     yes: "Reset everything", danger: true,
   });
   if (!yes) return;
   state = freshState(); save();
+  await bookReplaceAll([]);
   await replaceRemote();
   location.reload();
 }
@@ -1597,6 +1602,7 @@ document.addEventListener("keydown", guard(e => {
   if ($(".ms-pop")) { if (e.key === "Escape" || e.key === "Enter" || e.key === " ") { e.preventDefault(); ACTS["ms-close"](); } return; }
   if (typeof sprintKey === "function" && sprintKey(e)) return;
   if (typeof cardsKey === "function" && cardsKey(e)) return;
+  if (typeof bookKey === "function" && bookKey(e)) return;
   if (S && (S.card?.kind === "c" || S.card?.kind === "j") && !S.finished) {
     if (e.key === "Enter") { e.preventDefault(); S.answered ? ACTS.next() : checkType(); return; }
     if (e.key === " " && S.answered) { e.preventDefault(); ACTS.next(); return; }
