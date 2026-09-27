@@ -50,6 +50,9 @@ const GUIDE = [
     body: `<p>46 basic characters, each one a syllable: <span lang="ja">か</span> is ka, <span lang="ja">さ</span> is sa.
       Hiragana writes the grammar — verb endings like <span lang="ja">飲<b class="sc-h">みます</b></span>, and the little
       markers <span lang="ja">は</span> and <span lang="ja">を</span> — plus any word that has no kanji.</p>
+      <p>Think of kana as letters. A kana is a sound, never a meaning; put some together and they spell a word:
+      <span lang="ja">あ</span> a + <span lang="ja">い</span> i = <span lang="ja">あい</span> ai, “love”. The meaning belongs
+      to the whole word, not its pieces — so from the first row on, you'll sound out real words.</p>
       ${exWords([["ありがとう", "thank you"], ["すし", "sushi"], ["ねこ", "cat"]])}
       <p class="muted">It's what Japanese children learn first, and anything at all can be written in it. You start here too.</p>`,
   },

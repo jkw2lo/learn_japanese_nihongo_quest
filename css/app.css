@@ -257,6 +257,9 @@ main { max-width: 72rem; margin: 0 auto; padding: 20px 16px; }
 }
 .hero.done::before { background: var(--jade); }
 .hero.check::before { background: var(--ai); }
+.hero.review::before { background: var(--amber); }
+.hero.review .eyebrow { color: var(--amber); }
+.hero.review .btn-ghost { margin-left: 8px; }
 .hero-row { display: flex; gap: 1rem; justify-content: space-between; align-items: flex-start; }
 .hero-seal {
   width: 64px; height: 64px; border-radius: 12px; border: 2px solid var(--seal); color: var(--seal);
@@ -514,6 +517,30 @@ button.glyph-xl:hover:not(:disabled) { background: var(--sunken); }
 .ex small { color: var(--ink-3); font-size: .78rem; }
 .ex:hover { border-color: var(--ink-3); }
 .ex.dim { opacity: .55; }
+
+/* "Now you can read": a word taken apart into its kana, then whole */
+.spell-why { max-width: 32rem; margin: 0 auto 1rem; text-align: left; }
+.spell-why h2 { text-align: center; margin: .3rem 0 .6rem; }
+.spell-why p { color: var(--ink-2); margin: 0 0 .6rem; font-size: .95rem; }
+.spell-why [lang="ja"] { color: var(--ink); font-size: 1.1em; }
+.spell-word { border: 1px solid var(--rule); border-radius: var(--r); background: var(--sheet); padding: 12px 14px; width: 100%; box-sizing: border-box;
+  max-width: 32rem; margin: 0 auto 10px; }
+.spell-parts { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px; }
+.spell-k { display: flex; flex-direction: column; align-items: center; min-width: 44px; padding: 4px 8px;
+  border-radius: 8px; background: var(--ai-wash); }
+.spell-k span { font: 500 1.6rem/1.2 var(--f-ja); }
+.spell-k small, .spell-whole small { color: var(--ai); font-weight: 600; font-size: .8rem; }
+.spell-k:hover { background: var(--sunken); }
+.spell-plus { color: var(--ink-3); font-size: .9rem; }
+.spell-eq { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 8px; color: var(--ink-3); }
+.spell-whole { display: inline-flex; flex-direction: column; align-items: center; padding: 2px 10px; border-radius: 8px; }
+.spell-whole span { font: 500 2rem/1.2 var(--f-ja); color: var(--ink); }
+.spell-whole:hover { background: var(--sunken); }
+.spell-m { font: 600 1.15rem var(--f-display); color: var(--ink); }
+.spell-hook { margin-top: 8px; font-size: .9rem; color: var(--ink-2); }
+.spell-hook .ico { width: 14px; height: 14px; vertical-align: -2px; color: var(--amber); }
+.spell-kj { margin-top: 4px; font-size: .8rem; color: var(--ink-3); }
+.spell-kj [lang="ja"] { font-size: 1.15em; color: var(--ink-2); }
 
 .q { text-align: center; }
 .q-ask { color: var(--ink-2); margin-bottom: .6rem; font-size: 1rem; }

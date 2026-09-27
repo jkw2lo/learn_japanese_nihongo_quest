@@ -106,15 +106,58 @@ function syncSet(status, msg = "") {
   if (typeof onSyncChange === "function") onSyncChange();
 }
 
+/* Set just before handing the page to Google in a redirect, so the page that
+   comes back knows to finish the job — without it, a browser that had never
+   signed in skipped the SDK on return and the sign-in simply vanished. */
+const SYNC_PENDING = "nq-sign-in-pending";
+const syncFlag = (k, v) => { try { v ? localStorage.setItem(k, "1") : localStorage.removeItem(k); } catch {} };
+const syncHas = k => { try { return localStorage.getItem(k) === "1"; } catch { return false; } };
+
+/* How long "Checking…" may last before it gives up and says so. A phone on a
+   bad connection, a blocked script or a Firestore that never answers used to
+   leave the button greyed out for good. */
+const SYNC_PATIENCE_MS = 20000;
+let syncWatchdog = null;
+function syncLoading() {
+  syncSet("loading");
+  clearTimeout(syncWatchdog);
+  syncWatchdog = setTimeout(() => {
+    if (sync.status === "loading") syncSet("error", "Google didn't answer. Check the connection and try again.");
+  }, SYNC_PATIENCE_MS);
+}
+
 /* Called once at boot. It does nothing at all unless a project is configured,
-   and it only pulls the SDK down if this browser has signed in before — a
-   first-time visitor pays nothing until they ask for it. */
+   and it only pulls the SDK down if this browser has signed in before (or is
+   on its way back from Google) — a first-time visitor pays nothing until they
+   ask for it. */
 async function syncInit() {
   if (!syncConfigured()) return;
-  let seen = false;
-  try { seen = localStorage.getItem(SYNC_SEEN) === "1"; } catch {}
-  if (!seen) return syncSet("out");
-  try { await syncStart(); } catch (e) { syncSet("error", e.message); }
+  const pending = syncHas(SYNC_PENDING);
+  if (!syncHas(SYNC_SEEN) && !pending) return syncSet("out");
+  syncLoading();
+  try {
+    const fb = await syncStart();
+    if (pending) {
+      syncFlag(SYNC_PENDING, false);
+      /* surfaces the redirect's error, if it had one; the user itself arrives
+         through onAuthStateChanged */
+      const res = await fb.auth().getRedirectResult();
+      if (!res.user && !fb.auth().currentUser) {
+        syncSet("error", "The sign-in didn't make it back to this page — some phone browsers block that on the way. "
+          + "Tap Sign in again. If it keeps happening, open the page in Safari or Chrome itself, not inside another app.");
+      }
+    }
+  } catch (e) { syncSet("error", syncReason(e)); }
+}
+
+/* Settings calls this as it opens, so the SDK is already here by the time
+   the button is tapped. It matters on a phone: a popup is only allowed as
+   the direct result of a tap, and waiting half a megabyte of script first
+   used the tap up — the popup was blocked and the fallback redirect is the
+   part phones break. */
+function syncWarm() {
+  if (!syncConfigured() || sync.status === "in") return;
+  syncSdk().then(() => syncStart()).catch(() => {});
 }
 
 let syncWatching = false;
@@ -127,16 +170,24 @@ async function syncStart() {
      one. It also fires after signInWithRedirect returns. */
   fb.auth().onAuthStateChanged(async user => {
     sync.user = user ? { name: user.displayName || "", email: user.email || "" } : null;
-    if (!user) { dropRemote(); return syncSet("out"); }
-    try { localStorage.setItem(SYNC_SEEN, "1"); } catch {}
-    syncSet("loading");
+    if (!user) {
+      dropRemote();
+      /* a redirect still being finished, or an error already on screen, says more than "out" */
+      if (syncHas(SYNC_PENDING) || sync.status === "error") return;
+      return syncSet("out");
+    }
+    syncFlag(SYNC_SEEN, true);
+    syncFlag(SYNC_PENDING, false);
+    syncLoading();
     try {
       const changed = await useRemote(syncDoc(user.uid));
+      clearTimeout(syncWatchdog);
       syncSet("in");
       /* the pull merged somebody else's afternoon into this device — repaint */
       if (changed && typeof onRemoteChange === "function") onRemoteChange();
     } catch (e) {
-      syncSet("error", e.message || "could not reach the record");
+      clearTimeout(syncWatchdog);
+      syncSet("error", syncReason(e));
     }
   });
   return fb;
@@ -144,25 +195,39 @@ async function syncStart() {
 
 async function syncSignIn() {
   if (!syncConfigured()) return;
-  syncSet("loading");
+  /* The SDK usually arrived while Settings was open (syncWarm). If it did,
+     the popup opens synchronously, inside the tap, which is the only way
+     Safari on a phone lets it open at all. */
+  const ready = typeof firebase !== "undefined" && firebase.apps && firebase.apps.length && syncWatching;
+  let fb;
   try {
-    const fb = await syncStart();
-    const provider = new fb.auth.GoogleAuthProvider();
+    fb = ready ? firebase : null;
+    const popup = fb ? fb.auth().signInWithPopup(new fb.auth.GoogleAuthProvider()) : null;
+    syncLoading();
+    if (!fb) fb = await syncStart();
     try {
-      await fb.auth().signInWithPopup(provider);
+      await (popup || fb.auth().signInWithPopup(new fb.auth.GoogleAuthProvider()));
     } catch (e) {
-      /* A popup is the better experience — you stay on the page and keep your
-         scroll position — but phones and in-app browsers block or simply do
-         not support them. Falling back rather than reporting a failure means
-         the button works everywhere without asking the device what it is. */
-      const fall = ["auth/popup-blocked", "auth/popup-closed-by-user",
-                    "auth/cancelled-popup-request",
-                    "auth/operation-not-supported-in-this-environment"];
+      if (e.code === "auth/popup-closed-by-user" || e.code === "auth/cancelled-popup-request") {
+        clearTimeout(syncWatchdog);
+        return syncSet(sync.user ? "in" : "out");
+      }
+      if (e.code === "auth/popup-blocked" && !ready) {
+        /* The SDK had to be fetched first and the tap went stale on the way.
+           It's here now, so a second tap opens the window properly. */
+        clearTimeout(syncWatchdog);
+        return syncSet("out", "retry");
+      }
+      /* Last resort, for browsers with no popups at all (some in-app
+         browsers). A phone that blocks the redirect's return is caught by
+         syncInit when the page comes back. */
+      const fall = ["auth/popup-blocked", "auth/operation-not-supported-in-this-environment"];
       if (!fall.includes(e.code)) throw e;
-      if (e.code === "auth/popup-closed-by-user") return syncSet("out");
-      await fb.auth().signInWithRedirect(provider);
+      syncFlag(SYNC_PENDING, true);
+      await fb.auth().signInWithRedirect(new fb.auth.GoogleAuthProvider());
     }
   } catch (e) {
+    clearTimeout(syncWatchdog);
     syncSet("error", syncReason(e));
   }
 }
@@ -173,7 +238,8 @@ async function syncSignOut() {
     await fb.auth().signOut();
   } catch { /* already gone */ }
   dropRemote();
-  try { localStorage.removeItem(SYNC_SEEN); } catch {}
+  syncFlag(SYNC_SEEN, false);
+  syncFlag(SYNC_PENDING, false);
   sync.user = null;
   syncSet("out");
 }
@@ -189,6 +255,10 @@ function syncReason(e) {
   if (code === "auth/operation-not-allowed") {
     return "Google sign-in isn't switched on for this project — enable it under "
          + "Authentication → Sign-in method.";
+  }
+  if (code === "auth/network-request-failed") return "Couldn't reach Google — check the connection and try again.";
+  if (code === "auth/web-storage-unsupported") {
+    return "This browser is blocking the storage sign-in needs (private mode, or an in-app browser). Open the page in Safari or Chrome.";
   }
   if (code === "permission-denied") {
     return "Signed in, but the database refused the write — check the Firestore rules.";

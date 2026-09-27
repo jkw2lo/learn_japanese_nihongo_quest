@@ -86,8 +86,25 @@ function render() {
    Today
    ============================================================ */
 
+/* What today's practice is about: what was learned today — or, on a review
+   day, what was learned over the last few (README → Review days). */
+function todayFocus() {
+  const learned = state.days[today()]?.learned || [];
+  return learned.length || !reviewDay() ? learned : recentLearned();
+}
+
 function todaysGlyphs() {
-  return (state.days[today()]?.learned || []).filter(k => KANA_BY[k]);
+  return todayFocus().filter(k => KANA_BY[k]);
+}
+
+/* The words today's kana spell — every kana in them known, at least one of
+   them from today — shortest first, so the first you meet are the easiest
+   to sound out. */
+function todaysKanaWords(max = 8) {
+  const focus = new Set(todaysGlyphs());
+  if (!focus.size) return [];
+  return readableWords().filter(w => w.units.some(u => focus.has(u)))
+    .sort((a, b) => spellOrder(a) - spellOrder(b)).slice(0, max);
 }
 
 /* The look-alikes of k that are also learned. */
@@ -102,9 +119,9 @@ function alikeOf(k) {
 /* Two lesson names and a count, not a list that runs down the tile. */
 const lessonNames = ls => ls.slice(0, 2).map(L => L.title).join(" · ") + (ls.length > 2 ? ` +${ls.length - 2} more` : "");
 
-const todaysWords = () => (state.days[today()]?.learned || []).filter(isWordKey);
-const todaysPatterns = () => (state.days[today()]?.learned || []).filter(isPatternKey);
-const todaysKanji = () => (state.days[today()]?.learned || []).filter(isKanjiKey);
+const todaysWords = () => todayFocus().filter(isWordKey);
+const todaysPatterns = () => todayFocus().filter(isPatternKey);
+const todaysKanji = () => todayFocus().filter(isKanjiKey);
 /* A day of words rather than kana: words were learned today, or it's the
    words stage and no kana were. */
 const wordDay = () => todaysWords().length > 0 || todaysPatterns().length > 0 || todaysKanji().length > 0 || (phase() === "words" || phase() === "done") && !todaysGlyphs().length;
@@ -119,7 +136,7 @@ function wordTasks() {
     kind: "learn", jp: "学ぶ", en: "Learn today's words",
     sub: lessonNames(planned.length ? planned : lessonsLearnedToday()),
     done: learnedAny && !planned.length,
-    locked: !learnedAny && !planned.length ? "Nothing new to learn today" : null,
+    locked: reviewDay() ? "Review day" : !learnedAny && !planned.length ? "Nothing new to learn today" : null,
   }];
   const drill = (kind, jp, en, keys) => {
     const sk = kind === "gr" ? "r" : /^k[myw]$/.test(kind) ? kind[1] : kind;
@@ -162,7 +179,7 @@ function todayTasks() {
     kind: "learn", jp: "学ぶ", en: "Learn today's kana",
     sub: lessonNames(planned.length ? planned : lessonsLearnedToday()),
     done: learnedAny && !planned.length,
-    locked: !learnedAny && !planned.length ? "Nothing new to learn today" : null,
+    locked: reviewDay() ? "Review day" : !learnedAny && !planned.length ? "Nothing new to learn today" : null,
   });
   const drill = (kind, jp, en, keys, why) => {
     const okList = dayOkList(kind);
@@ -178,6 +195,12 @@ function todayTasks() {
   if (state.settings.writing) drill("w", "書く", "Write from memory", plain.filter(canWrite), "Nothing today has a shape to write");
   drill("a", "似てる", "Spot the look-alikes", plain.filter(k => alikeOf(k).length), "None of today's kana has a look-alike you know yet");
   if (concepts.length) drill("x", "っ", "Hear the pause", concepts, "");
+  /* the point of the kana: the words they spell */
+  const words = todaysKanaWords().map(w => w.w);
+  if (words.length) {
+    const n = words.filter(w => dayOkList("word").includes(w)).length;
+    tasks.push({ kind: "word", jp: "言葉", en: "Read the words they spell", keys: words, sub: `${n} of ${words.length}`, done: n === words.length, locked: null });
+  }
   return tasks;
 }
 
@@ -201,6 +224,8 @@ function renderToday() {
     </section>`;
   } else if (p === "check") {
     hero = heroCheck(due);
+  } else if (reviewDay()) {
+    hero = heroReview(due);
   } else {
     const bits = [];
     if (due.length) bits.push(`${due.length} to review`);
@@ -245,7 +270,7 @@ function renderToday() {
   const doneN = countable.filter(t => t.done).length;
   const taskHtml = first || p === "check" || !todaysGlyphs().length && !todaysWords().length && !planned.length ? "" : `
     <section class="card">
-      <div class="card-head"><h2>Today's practice</h2>
+      <div class="card-head"><h2>${reviewDay() ? "Review day practice" : "Today's practice"}</h2>
         <span class="count">${doneN} of ${countable.length} done${locked ? ` · ${locked} locked` : ""}</span></div>
       <ul class="tasks grid">${shown.map(t => `
         <li><button class="task ${t.done ? "done" : ""} ${t.locked ? "locked" : ""}" ${t.locked ? "disabled" : ""}
@@ -278,6 +303,33 @@ function heroRing() {
   const pct = all.length / KANA.length;
   return `<div class="hero-ring" title="${all.length} of ${KANA.length} kana learned">${ring(pct, 64, 6)}
     <span>${all.length}<small>/${KANA.length}</small></span></div>`;
+}
+
+/* A review day: nothing new, and the reason why, since a learner who wanted
+   the next row deserves to know it isn't a bug. */
+function heroReview(due) {
+  const rd = reviewDay();
+  const recent = recentLearned();
+  const older = due.filter(k => !recent.includes(k));
+  const noun = recent.some(isWordKey) ? "words" : recent.some(isKanjiKey) ? "kanji" : "kana";
+  const ahead = aheadLesson();
+  const why = rd.why === "break"
+    ? `It's been ${rd.gap} days. Going back over what you'd learned before adding more makes the next lesson land on something solid.`
+    : `After ${rd.run} days of new ${noun}, a day of going back over them is what moves them from “seen it yesterday” to “know it”. Most forgetting happens in the first day or two.`;
+  return `<section class="card hero review">
+    <div class="hero-row">
+      <div>
+        <div class="eyebrow">復習の日 · Review day</div>
+        <h1>${rd.why === "break" ? "Welcome back. Warm up first." : "Today, let it stick."}</h1>
+        <p class="lede">No new lesson today. Go back over the ${recent.length} ${noun} from your last few days${older.length ? `, plus ${older.length} older ones due for review` : ""}${noun === "kana" ? ", and read the words they spell" : ""}.</p>
+        <p class="muted small">${esc(why)}</p>
+        ${heroStatsHtml()}
+      </div>
+      ${heroRing()}
+    </div>
+    <button class="btn btn-lg cta" data-act="start-today">Start the review <kbd>↵</kbd></button>
+    ${ahead ? `<button class="btn btn-ghost" data-act="start-ahead"><span>Learn something new anyway: <span lang="ja">${esc(ahead.title)}</span></span></button>` : ""}
+  </section>`;
 }
 
 function heroCheck(due) {
@@ -533,12 +585,48 @@ function lessonCards(L) {
       drill.push(() => qFor(k, "p", "learn"));       /* null, and skipped, without audio */
     }
   });
-  return [...cards, ...shuffle(drill)];
+  /* and then what they're for: real words these kana spell, sounded out
+     kana by kana, then read. Chosen when the card comes up, so they're
+     the words readable by then. */
+  const reads = [() => spellCard(L)];
+  for (let i = 0; i < 3; i++) reads.push(() => { const w = S.spell?.[L.id]?.[i]; return w ? qWord(w) : null; });
+  return [...cards, ...shuffle(drill), ...reads];
+}
+
+/* Up to three words this lesson's kana have just made readable — ones not
+   sounded out in an earlier lesson first. */
+function spellCard(L) {
+  const fresh = readableWords().filter(w => w.units.some(u => L.items.includes(u)));
+  const seen = new Set(asList(state.spelled));
+  const words = [...fresh.filter(w => !seen.has(w.w)), ...fresh.filter(w => seen.has(w.w))]
+    .sort((a, b) => seen.has(a.w) - seen.has(b.w) || spellOrder(a) - spellOrder(b)).slice(0, 3);
+  if (!words.length) return null;
+  S.spell = { ...(S.spell || {}), [L.id]: words };
+  return { t: "spell", L, words, first: !state.seenSpell };
+}
+
+/* Two kana first: short enough to sound out, long enough to show spelling.
+   A one-kana word (え, picture) shows nothing about putting sounds together. */
+const spellOrder = w => w.units.length === 1 ? 99 : w.units.length;
+
+/* One word, taken apart: each kana with its sound, then the whole. */
+function spellHtml(w) {
+  const part = u => { const e = KANA_BY[u];
+    return `<button class="spell-k" data-act="say" data-say="${esc(e?.say || u)}"><span lang="ja">${esc(u)}</span><small>${esc(e?.concept ? "pause" : e?.r || "")}</small></button>`; };
+  return `<div class="spell-word">
+    <div class="spell-parts">${w.units.map(part).join('<span class="spell-plus" aria-hidden="true">+</span>')}</div>
+    <div class="spell-eq"><span aria-hidden="true">=</span>
+      <button class="spell-whole" data-act="say" data-say="${esc(w.w)}" title="Hear it"><span lang="ja">${esc(w.w)}</span><small>${esc(w.r)}</small></button>
+      <span class="spell-m">${esc(w.m)}</span></div>
+    ${w.hook ? `<div class="spell-hook">${icon("sparkle")} ${esc(w.hook)}</div>` : ""}
+    ${w.kj ? `<div class="spell-kj">Usually written <span lang="ja">${esc(w.kj)}</span> in kanji</div>` : ""}
+  </div>`;
 }
 
 function startToday() {
   const p = phase();
   if (p === "check") return startCheck();
+  if (reviewDay()) return startReviewDay();
   const due = dueKeys().slice(0, 60);
   const lessons = nextLessons();
   const queue = [];
@@ -553,6 +641,25 @@ function startToday() {
   });
 }
 
+/* A review day's session: what's due, then everything from the last few
+   days — each once in its weaker skill, the shakiest ten a second time in
+   the other — and, in the kana stage, a handful of the words they spell.
+   Graded "auto": a review for anything due, practice for the rest. */
+function startReviewDay() {
+  const due = dueKeys().slice(0, 40);
+  const recent = recentLearned().filter(k => !KANA_BY[k]?.concept);
+  const queue = [];
+  shuffle(due).forEach(k => queue.push(() => qFor(k, reviewKind(k), "review")));
+  const second = k => skillsFor(k).find(sk => sk !== reviewKind(k) && !["w", "a", "j", "x"].includes(sk));
+  const drill = [];
+  recent.filter(k => !due.includes(k)).forEach(k => drill.push(() => qFor(k, reviewKind(k), "auto")));
+  shakiest(recent, "r").slice(0, 10).forEach(k => { const sk = second(k); if (sk) drill.push(() => qFor(k, sk, "practice")); });
+  queue.push(...shuffle(drill));
+  sample(todaysKanaWords(), 6).forEach(w => queue.push(() => qWord(w)));
+  if (!queue.length) { toast("Nothing to go back over yet."); return; }
+  openSession({ kind: "today", review: true, title: "復習 · Review day", queue, lessons: [] });
+}
+
 function startAhead() {
   const L = aheadLesson();
   if (!L) return;
@@ -560,6 +667,10 @@ function startAhead() {
 }
 
 function startTask(kind) {
+  if (kind === "word") {
+    openSession({ kind: "practice", title: TASK_TITLES.word, queue: shuffle(todaysKanaWords()).map(w => () => qWord(w)) });
+    return;
+  }
   if (/^k[myw]$/.test(kind)) {
     const keys = todaysKanji().filter(k => kind !== "kw" || canWrite(k.slice(2)));
     openSession({ kind: "practice", title: { km: "意味 · Meanings", ky: "読み · Readings", kw: "書く · Write" }[kind], queue: shuffle(keys).map(k => () => qFor(k, kind[1], "practice")) });
@@ -715,6 +826,29 @@ function showCard() {
       }).join("")}</div>
     </div>`;
     foot.innerHTML = `<button class="btn" data-act="next" id="nextBtn">Next <kbd>␣</kbd></button>`;
+    return;
+  }
+
+  if (c.t === "spell") {
+    if (!state.spelled) state.spelled = [];
+    c.words.forEach(w => { if (!state.spelled.includes(w.w)) state.spelled.push(w.w); });
+    if (c.first) state.seenSpell = true;
+    save();
+    body.innerHTML = `<div class="intro spell">
+      <div class="eyebrow"><span lang="ja">${esc(c.L.title)}</span> · Now you can read</div>
+      ${c.first ? `<div class="spell-why">
+        <h2>Kana are letters, not meanings.</h2>
+        <p>Each kana is only a sound: <span lang="ja">あ</span> is a, <span lang="ja">い</span> is i. Put the sounds together
+          and they spell a word — <span lang="ja">あい</span> is “ai”, which is the word for <i>love</i>. Nothing in
+          <span lang="ja">あ</span> or <span lang="ja">い</span> means love, any more than c, a and t mean cat.</p>
+        <p>So there's no puzzle inside a kana word. <b>Sound it out, then learn what the whole sound means.</b> Say it aloud,
+          and tie the sound to the meaning — some words come with a little hook for that. The characters that <i>do</i> carry
+          meaning are kanji (love is <span lang="ja">愛</span>); you'll meet those later, attached to words you already know.</p>
+      </div>` : `<p class="muted small">Sound each one out, kana by kana — tap any of them — then learn what the whole sound means.</p>`}
+      ${c.words.map(spellHtml).join("")}
+    </div>`;
+    foot.innerHTML = `<span></span><button class="btn" data-act="next" id="nextBtn">Read them <kbd>␣</kbd></button>`;
+    if (state.settings.autoplay) say(c.words[0].w);
     return;
   }
 
@@ -927,6 +1061,8 @@ function settle(c, ok, ms, credit = true) {
   S.combo = ok ? (S.combo || 0) + 1 : 0;
   if (ok) comboPill(S.combo);
   if (c.kind === "word" || c.kind === "sc" || !credit) day().n++;
+  /* a kana word has no item of its own, but Today's word task still needs the evidence */
+  if (c.kind === "word" && ok && credit) { const d = day(), l = d.ok.word || (d.ok.word = []); if (!l.includes(c.word.w)) l.push(c.word.w); }
   if (c.kind === "sc") sceneAnswered(c, ok);
   else grade(c.k, c.kind, ok, ms, c.mode);
   if (!ok && c.k) S.missed.add(c.k);
@@ -984,7 +1120,7 @@ function verdictDetail(c) {
   if (c.gk) return patVerdict(c);
   if (c.wk) return wordVerdict(WORD_BY[c.k]);
   if (c.kind === "word") {
-    return `<span lang="ja">${esc(c.word.w)}</span> <span class="rom-always">${esc(c.word.r)}</span> · ${esc(c.word.m)}${c.word.note ? `<div class="note">${esc(c.word.note)}</div>` : ""}`;
+    return `<span lang="ja">${esc(c.word.w)}</span> <span class="rom-always">${esc(c.word.r)}</span> · ${esc(c.word.m)}${c.word.note ? `<div class="note">${esc(c.word.note)}</div>` : ""}${c.word.hook ? `<div class="note">${esc(c.word.hook)}</div>` : ""}`;
   }
   if (c.kind === "x") return `<span lang="ja">${esc(c.word.w)}</span> <span class="rom-always">${esc(toRomaji(c.word.w))}</span> · ${esc(c.word.m)}`;
   const e = KANA_BY[c.k];
@@ -1075,6 +1211,9 @@ function finishSession() {
     if (acc >= 0.9 && S.first >= 5) petalN = 8;
   }
 
+  if (S.review) {
+    extra += `<div class="banner-done">${neko("happy", "mini")}<div><b>Review day done.</b> What you went over today will still be there next time. New lessons are back tomorrow.</div></div>`;
+  }
   if (S.kind !== "check" && S.kind !== "guide" && !S.tasksDoneAtStart && allTasksDone()) {
     petalN = Math.max(petalN, 30);
     extra += `<div class="banner-done">${neko("happy", "mini")}<div><b lang="ja">きょうは おわり！</b> Everything on today's list is done.</div></div>`;
@@ -1344,6 +1483,8 @@ function openSettings() {
     ${tog("timer", "Question timer", "A bar that drains over a few seconds. Answering before it empties counts as quick. Running out costs nothing.")}
     <label class="set-row"><span>New kana a day<small>Five is about one row. Rows are never split, so a day can run one over.</small></span>
       <select data-set="newPerDay">${[5, 8, 10, 15, 20].map(n => `<option ${s.newPerDay === n ? "selected" : ""}>${n}</option>`).join("")}</select></label>
+    <label class="set-row"><span>Review days<small>A day with no new lesson, for going back over the last few. Also, whatever the rhythm, on coming back after ${BREAK_DAYS} days or more away.</small></span>
+      <select data-set="reviewEvery">${[[3, "Every 4th day"], [2, "Every 3rd day"], [4, "Every 5th day"], [0, "Never"]].map(([n, t]) => `<option value="${n}" ${s.reviewEvery === n ? "selected" : ""}>${t}</option>`).join("")}</select></label>
     ${tog("writing", "Writing practice", "Trace each new kana, and write today's from memory. Draw with a mouse, finger or pen.")}
     ${tog("writeKanji", "Write kanji too", "Trace each new kanji, and write today's from memory. Off by default — reading them is the part that gets you by.")}
     ${tog("strokeOrder", "Check stroke order", "Off: any order is fine — the shape is what's marked (strokes still go the usual way round, which is what tells ソ from ン). On: each stroke has to come in its proper turn too.")}
@@ -1371,6 +1512,7 @@ function openSettings() {
       <button class="btn btn-ghost btn-sm danger" data-act="reset">Reset everything</button>
     </div>
     <p class="muted small">Version ${esc(APP_VERSION)} · ${esc(APP_DATE)}. If this doesn't match what was just published, you're looking at a cached copy.</p>`);
+  syncWarm();
 }
 
 /* Sync: one block in Settings, and the only place it shows. */
@@ -1379,12 +1521,13 @@ function syncBlockHtml() {
   const who = sync.user && (sync.user.email || sync.user.name);
   const note = st === "in" ? `Signed in${who ? ` as <b>${esc(who)}</b>` : ""}. Your progress follows you to any device you sign in on.`
     : st === "error" ? `<b>Sync is off:</b> ${esc(sync.msg)}`
-    : st === "loading" ? "Checking…"
+    : st === "loading" ? "Checking with Google… If a Google window opened, finish there and come back to this tab."
+    : sync.msg === "retry" ? "<b>Almost:</b> the phone blocked the Google window that time. Tap Sign in once more — it'll open now."
     : "Sign in with Google on each device — phone and laptop — and they share one record. Nothing learned on either is lost.";
   return `<h3>${icon("sync")} Your other devices</h3>
     <p class="small">${note}</p>
     ${st === "in" ? `<button class="btn btn-ghost btn-sm" data-act="sync-out">Sign out</button>`
-      : `<button class="btn btn-sm" data-act="sync-in" ${st === "loading" ? "disabled" : ""}>${st === "loading" ? "…" : "Sign in with Google"}</button>`}`;
+      : `<button class="btn btn-sm" data-act="sync-in" ${st === "loading" ? "disabled" : ""}>${st === "loading" ? "Signing in…" : "Sign in with Google"}</button>`}`;
 }
 onSyncChange = () => { const b = $("#syncBlock"); if (b) b.innerHTML = syncBlockHtml(); };
 /* a pull brought in another device's progress */
@@ -1397,7 +1540,7 @@ onRemoteChange = () => {
 function onSetting(el) {
   const key = el.dataset.set;
   let v = el.type === "checkbox" ? el.checked : el.value;
-  if (key === "newPerDay") v = +v;
+  if (key === "newPerDay" || key === "reviewEvery") v = +v;
   state.settings[key] = v;
   save();
   crumb(`setting ${key}=${v}`);

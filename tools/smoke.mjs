@@ -73,9 +73,9 @@ const CONTRACT = {
     'lessonsLearnedToday', 'learnedTodayCount', 'nextLessons', 'checkPassedToday', 'recordCheck', 'canRead', 'readableWords',
     'wordsByNewest', 'streak', 'practisedDays', 'recordSprint', 'exportState', 'parseBackup', 'freshState',
     'noteActivity', 'startActivity', 'addStudyTime', 'totalMs', 'totalAnswers', 'bestStreak', 'learnedCount', 'msOn',
-    'mergeState', 'useRemote', 'pushRemote', 'dropRemote', 'replaceRemote', 'onRemoteChange',
+    'reviewDay', 'recentLearned', 'mergeState', 'useRemote', 'pushRemote', 'dropRemote', 'replaceRemote', 'onRemoteChange',
     'QUICK_MS', 'QUICK_WORD_MS', 'HIRA_CHECK', 'PASSES_FOR_SOLID', 'isWordKey', 'wordsOpen', 'allKanaLearned'],
-  'js/sync.js': ['SYNC_CONFIG', 'SYNC_STORE', 'sync', 'syncInit', 'syncSignIn', 'syncSignOut', 'syncConfigured'],
+  'js/sync.js': ['SYNC_CONFIG', 'SYNC_STORE', 'sync', 'syncInit', 'syncSignIn', 'syncSignOut', 'syncConfigured', 'syncWarm'],
   'js/sound.js': ['say', 'sayKana', 'hasAudio', 'clipCount', 'unlockAudio', 'loadAudioBundle', 'soundBlocked'],
   'js/write.js': ['strokesFor', 'canWrite', 'markWriting', 'modelSvg', 'modelAnimMs', 'padHtml', 'bindPad', 'drawInk',
     'padUndo', 'padClear', 'pad', 'WRITE_TOL'],
@@ -189,8 +189,17 @@ section('the daily allowance');
   run('load()');
   /* walk every day of hiragana at the default of five */
   const days = [];
+  let reviews = 0;
   for (let d = 0; d < 60 && run('phase()') === 'hira'; d++) {
     run(`__.setShift(${d})`);
+    /* every fourth day is a review day: nothing new, and it's practised */
+    if (run('!!reviewDay()')) {
+      ok(run('nextLessons().length') === 0, `review day ${d} still offers a lesson`);
+      ok(run('recentLearned().length') > 0, `review day ${d} has nothing to go back over`);
+      run('day().g = 5');
+      reviews++;
+      continue;
+    }
     const ls = run('nextLessons().map(L => L.id + ":" + L.items.length)');
     ok(ls.length > 0, `day ${d} offers nothing to learn`);
     const n = ls.reduce((t, x) => t + +x.split(':')[1], 0);
@@ -198,7 +207,8 @@ section('the daily allowance');
     run('nextLessons().forEach(L => L.items.forEach(learn))');
     days.push(ls.length);
   }
-  ok(days.length >= 18 && days.length <= 24, `hiragana should take about three weeks at five a day (took ${days.length})`);
+  ok(days.length >= 18 && days.length <= 24, `hiragana should take about three weeks of lessons at five a day (took ${days.length})`);
+  ok(reviews >= 5 && reviews <= 8, `one review day after every three days of lessons (got ${reviews} in ${days.length})`);
   ok(run('nextLessons().length') === 0, 'once today\'s five are learned, nothing more is offered');
   const s2 = sandbox(); const run2 = code => vm.runInContext(code, s2);
   run2('load(); state.settings.newPerDay = 10');
@@ -209,6 +219,35 @@ section('the daily allowance');
   run(`localStorage.setItem("nihongo-quest", JSON.stringify({ app: "nihongo-quest", settings: { lessonsPerDay: 2 } }))`);
   run('load()');
   ok(run('state.settings.lessonsPerDay') === undefined && run('state.settings.newPerDay') === 5, 'lessonsPerDay should migrate to newPerDay');
+}
+
+section('review days');
+{
+  const s = sandbox();
+  const run = code => vm.runInContext(code, s);
+  run('load()');
+  const learnDay = n => { run(`__.setShift(${n})`); run('nextLessons().forEach(L => L.items.forEach(learn))'); };
+  ok(!run('reviewDay()'), 'a brand-new learner has no review day');
+  learnDay(0); learnDay(1); learnDay(2);
+  run('__.setShift(3)');
+  ok(run('reviewDay()?.why') === 'rhythm', 'three days of lessons → a review day');
+  ok(run('recentLearned().length') === 15, `a review day goes back over the last three days' fifteen kana (got ${run('recentLearned().length')})`);
+  ok(run('nextLessons().length') === 0, 'no new lesson on a review day');
+  run('LESSONS.find(L => !lessonLearned(L)).items.forEach(learn)');
+  ok(!run('reviewDay()'), 'learning ahead turns a review day back into a learning day');
+  const s2 = sandbox(); const run2 = code => vm.runInContext(code, s2);
+  run2('load()');
+  run2('__.setShift(0); nextLessons().forEach(L => L.items.forEach(learn))');
+  run2('__.setShift(1); day().g = 4');
+  run2('__.setShift(2); nextLessons().forEach(L => L.items.forEach(learn))');
+  run2('__.setShift(3)');
+  ok(!run2('reviewDay()'), 'a day of reviews restarts the count');
+  run2('__.setShift(5)');
+  ok(run2('reviewDay()?.why') === 'break', 'three days away → a review day');
+  run2('state.settings.reviewEvery = 0');
+  ok(!run2('reviewDay()'), 'review days can be switched off');
+  run2('state.settings.reviewEvery = 3; day().g = 6; __.setShift(6)');
+  ok(run2('nextLessons().length') > 0, 'after the welcome-back review day, lessons resume');
 }
 
 /* ---------- 4. the hiragana check ---------- */

@@ -362,7 +362,49 @@ function toRomaji(s) {
   return out;
 }
 
+/* Why a kana word is spelled the way it is: it isn't, beyond its sound.
+   あい is a + i, and that sound is the word for love; nothing in あ or い
+   means love. So each native word gets the two things that do help:
+
+   kj    how it's usually written, when that's a kanji — the part of Japanese
+         writing that carries meaning. Shown small, as a preview; kanji are
+         taught later, through words (README → Kanji).
+   hook  a sound-alike to tie the sound to the meaning, only where there's a
+         good one. A bad mnemonic is worse than none.
+
+   Loanwords need neither: the meaning is the English word, said in kana. */
+const KANA_WORD_EXTRA = {
+  あい: { kj: "愛", hook: "ai — “I” love you." }, いえ: { kj: "家" }, うえ: { kj: "上" },
+  あお: { kj: "青", hook: "ah-oh — “ow!”, and a blue bruise." }, いいえ: { hook: "ee-eh — said with a little shake of the head." },
+  え: { kj: "絵" }, かお: { kj: "顔", hook: "ka-o — a cow's face." }, あき: { kj: "秋", hook: "a-ki — achy knees when the autumn cold sets in." },
+  いけ: { kj: "池" }, ここ: { hook: "ko-ko — Coco, come here!" }, こえ: { kj: "声" }, き: { kj: "木", hook: "ki — a key hanging on a tree." },
+  あさ: { kj: "朝" }, かさ: { kj: "傘", hook: "ka-sa — casa: an umbrella is a little house in the rain." },
+  しお: { kj: "塩", hook: "shi-o — “She, oh!” — too much salt." }, せかい: { kj: "世界" }, おかし: { kj: "お菓子" },
+  て: { kj: "手" }, くち: { kj: "口" }, した: { kj: "下" }, つくえ: { kj: "机" }, そと: { kj: "外" }, ちかてつ: { kj: "地下鉄" },
+  いぬ: { kj: "犬", hook: "i-nu — “a new dog!”" }, ねこ: { kj: "猫", hook: "ne-ko — a cat curled round your neck." },
+  なつ: { kj: "夏" }, さかな: { kj: "魚" }, なに: { kj: "何", hook: "na-ni — the “nani?!” of every anime: what?!" },
+  おかね: { kj: "お金" }, はな: { kj: "花 · 鼻", hook: "ha-na — Hannah sniffs a flower with her nose." },
+  ひと: { kj: "人" }, ふね: { kj: "船" }, ほし: { kj: "星" }, ふたつ: { kj: "二つ" },
+  め: { kj: "目", hook: "me — point at your eye: “me”." }, みみ: { kj: "耳", hook: "mi-mi — shouting “me, me!” in someone's ear." },
+  うみ: { kj: "海", hook: "u-mi — “ooh, me!”, jumping into the sea." }, あめ: { kj: "雨", hook: "a-me — “ah, meh”: raining again." },
+  むし: { kj: "虫", hook: "mu-shi — squash it to mush." }, もも: { kj: "桃" }, みせ: { kj: "店" },
+  やま: { kj: "山", hook: "ya-ma — “yah, ma!”, shouted from a mountain top." }, ゆき: { kj: "雪", hook: "yu-ki — yucky slush after the snow." },
+  よる: { kj: "夜" }, やさい: { kj: "野菜" }, ゆめ: { kj: "夢", hook: "yu-me — you and me, in a dream." },
+  そら: { kj: "空", hook: "so-ra — soar up into the sky." }, くるま: { kj: "車" }, さくら: { kj: "桜" },
+  ひる: { kj: "昼" }, くすり: { kj: "薬" }, とり: { kj: "鳥" }, かわ: { kj: "川" }, わたし: { kj: "私" },
+  ほん: { kj: "本" }, せんせい: { kj: "先生" }, にほん: { kj: "日本" }, でんわ: { kj: "電話" },
+  ありがとう: { hook: "a-ri-ga-to — “alligator”, said quickly." }, たかい: { kj: "高い" }, やすい: { kj: "安い" },
+  たまご: { kj: "卵" }, ごはん: { kj: "ご飯" }, かぎ: { kj: "鍵" }, ぎんこう: { kj: "銀行" }, かぜ: { kj: "風 · 風邪" },
+  みず: { kj: "水" }, かぞく: { kj: "家族" }, ともだち: { kj: "友達" }, でぐち: { kj: "出口" }, いりぐち: { kj: "入口" },
+  でんき: { kj: "電気" }, だいがく: { kj: "大学" }, ぶた: { kj: "豚" }, えんぴつ: { kj: "鉛筆" }, さんぽ: { kj: "散歩" },
+  おちゃ: { kj: "お茶" }, きょう: { kj: "今日" }, しゃしん: { kj: "写真" }, いしゃ: { kj: "医者" }, でんしゃ: { kj: "電車" },
+  しょうゆ: { kj: "醤油" }, ひゃく: { kj: "百" }, りょこう: { kj: "旅行" }, びょういん: { kj: "病院" },
+  ぎゅうにゅう: { kj: "牛乳" }, じゅぎょう: { kj: "授業" }, きって: { kj: "切手" }, ざっし: { kj: "雑誌" },
+  がっこう: { kj: "学校" }, いっしょ: { kj: "一緒" }, おかあさん: { kj: "お母さん" }, おとうさん: { kj: "お父さん" },
+};
+
 KANA_WORDS.forEach(w => {
+  Object.assign(w, KANA_WORD_EXTRA[w.w] || {});
   w.units = kanaUnits(w.w);
   if (!w.r) w.r = toRomaji(w.w);
   w.set = /[゠-ヿ]/.test(w.w) ? "k" : "h";

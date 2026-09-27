@@ -6,7 +6,7 @@ holding a simple conversation. It starts from nothing and runs to JLPT N5,
 then on towards N4. Writing is there if you want it and never in the way if
 you don't.
 
-> **Status: all of N5 is built (0.12.0).** The kana stage, then 219 words
+> **Status: all of N5 is built (0.13.0).** The kana stage, then 219 words
 > in nine stages (phrases, numbers and money, me and you, food, getting
 > around, shopping, daily life, the て-form, and an N5 wrap-up), 40 grammar
 > patterns, 131 kanji (74 N5, 57 N4) taught through the words, verbs and
@@ -164,6 +164,20 @@ gets its own flow and doesn't go into the review queue:
   kana. A word shows up in *Words you can read* the moment every kana in it
   is learned — いえ (house) after the first row. Katakana words are mostly
   loanwords, so reading one is guessing the English, which is the fun part.
+- **Words are part of every kana lesson, not just Go deeper.** A lesson
+  ends with *Now you can read*: up to three words its kana have just made
+  readable, taken apart (い i + え e = いえ ie, house), each kana tappable,
+  then read. Words already sounded out in an earlier lesson come last
+  (`state.spelled`). Today's practice on a kana day adds 言葉 *Read the
+  words they spell*.
+- **Why あい is spelled あい: it isn't, beyond its sound.** Kana are letters.
+  Nothing in あ or い means love, any more than c, a and t mean cat. The
+  first *Now you can read* card says so, and so does the introduction's
+  hiragana card. Two things help instead (`KANA_WORD_EXTRA`): `kj`, the
+  kanji a native word is usually written in, shown small as the place its
+  meaning actually lives (あい → 愛), and `hook`, a sound-alike to tie sound
+  to meaning (ねこ: a cat curled round your neck), only where there's a
+  good one.
 
 ### The introduction
 
@@ -503,6 +517,24 @@ Still to come: patterns for stages 7 and on (adjectives, the て-form and
 more), and Sprint modes for conjugation and particles.
 
 ---
+
+## Review days
+
+A part-time learner forgets yesterday's row far more often than a full-time
+one, so new lessons pause now and then (`reviewDay()` in `js/srs.js`):
+
+- **After three days of new lessons in a row**, a day with none
+  (Settings → Review days: every 4th day by default, 3rd, 5th or never).
+- **After a break of three days or more**, whatever the rhythm.
+
+A review day's session is what's due, then everything learned on the last
+few learning days (`recentLearned()`): each once in its weaker skill, the
+shakiest ten again in the other, and, in the kana stage, six of the words
+those kana spell. Today's practice ticks against the same set. The hero says
+why there's no lesson, and offers *Learn something new anyway*, which makes
+the day a learning day again. Nothing is stored: it's worked out from the
+days already recorded, counting days studied, not calendar days, so it
+can't drift between devices.
 
 ## Today
 
@@ -962,6 +994,19 @@ Progress lives in `localStorage`, and optionally in your Google account
 project). **Settings → Your other devices → Sign in with Google**, once on
 each device. Each device then reads and writes one Firestore document,
 `progress-nihongo/<uid>`. Nobody who never signs in loads the SDK.
+
+- **Signing in on a phone.** The site (github.io) and the sign-in handler
+  (firebaseapp.com) are different domains. Phone browsers now partition
+  storage between those, which breaks `signInWithRedirect`. It returns to
+  the page with no user. So it's a popup, and the popup has to open
+  *inside* the tap: Settings starts loading the SDK as it opens
+  (`syncWarm`), and the button calls `signInWithPopup` synchronously. If the
+  tap still went stale (SDK not in yet), the block asks for one more tap
+  rather than redirecting. A redirect is kept only for browsers with no
+  popups at all. The page that comes back from one finishes it
+  (`nq-sign-in-pending`) and says plainly if the user got lost on the way.
+  "Checking…" gives up after 20 seconds and says why, instead of
+  leaving a greyed-out button.
 
 - **The merge** (`mergeState` in `js/srs.js`) loses nothing learned on
   either side. Counts that only grow take the larger. Lists of things done

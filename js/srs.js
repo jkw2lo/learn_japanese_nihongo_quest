@@ -25,6 +25,7 @@ const DEFAULT_SETTINGS = {
   autoplay: true,
   timer: true,
   newPerDay: 5,          /* new kana a day — about one row */
+  reviewEvery: 3,        /* a review day after this many days of new lessons; 0 = never */
   writing: true,         /* writing drills as reinforcement */
   strokeOrder: false,    /* also check stroke order and direction */
   writeKanji: false,     /* writing drills for kanji too — opt-in */
@@ -96,6 +97,7 @@ function normalise(s) {
   out.sprint = { best: {}, ...(s.sprint || {}) };
   out.sprint.recent = asList(out.sprint.recent);
   out.mistakes = s.mistakes && typeof s.mistakes === "object" ? s.mistakes : {};
+  out.spelled = asList(s.spelled);          /* kana words already sounded out in a lesson */
   out.menu = { orders: 0, days: {}, ...(s.menu || {}) };
   out.milestones = s.milestones && typeof s.milestones === "object" ? s.milestones : {};
   out.scenes = s.scenes && typeof s.scenes === "object" ? s.scenes : {};
@@ -314,6 +316,7 @@ const learnedTodayCount = () => (state.days[today()]?.learned || []).length;
 function nextLessons() {
   const p = phase();
   if (p === "check" || p === "done") return [];
+  if (reviewDay()) return [];
   const pool = p === "words" ? WORD_LESSONS.filter(L => !lessonLearned(L))
     : LESSONS.filter(L => (p === "hira" ? L.set === "h" : L.set === "k") && !lessonLearned(L));
   const left = state.settings.newPerDay - learnedTodayCount();
@@ -328,6 +331,49 @@ function nextLessons() {
   return out;
 }
 
+
+/* ---------- review days ----------
+
+   Someone learning in their spare time forgets yesterday's row by tomorrow
+   far more often than someone at it full time. So new lessons pause:
+
+   - after `reviewEvery` days of new lessons in a row (Settings, 3 by
+     default: three days new, one day back over them), and
+   - on coming back after a break of BREAK_DAYS or more, whatever the rhythm.
+
+   Worked out from the days already recorded, never stored, so it can't drift
+   out of step across devices. A day on which anything was learned is a
+   learning day — "Learn the next one anyway" turns a review day back into
+   one. A day practised with nothing new (a review day, the hiragana check)
+   restarts the count. Days not practised at all are skipped, so the rhythm
+   counts days you studied, not days on the calendar. */
+const BREAK_DAYS = 3;
+const practised = k => { const d = state.days[k]; return !!d && ((d.learned || []).length > 0 || (d.g ?? d.n ?? 0) > 0 || !!d.check); };
+const learningDay = k => (state.days[k]?.learned || []).length > 0;
+
+function reviewDay(t = today()) {
+  const every = state.settings.reviewEvery;
+  if (!every || learningDay(t)) return null;
+  const p = phase();
+  if (p === "check" || p === "done") return null;
+  const past = Object.keys(state.days).filter(k => k < t && practised(k)).sort();
+  if (!past.some(learningDay)) return null;
+  const gap = daysBetween(past[past.length - 1], t);
+  if (gap >= BREAK_DAYS) return { why: "break", gap };
+  let run = 0;
+  for (let i = past.length - 1; i >= 0 && learningDay(past[i]); i--) run++;
+  return run >= every ? { why: "rhythm", run } : null;
+}
+
+/* What a review day goes back over: everything learned on the last few
+   learning days — the run since the last review day, and at least three. */
+function recentLearned(t = today()) {
+  const days = Object.keys(state.days).filter(k => k < t && learningDay(k)).sort().reverse()
+    .slice(0, Math.max(3, state.settings.reviewEvery || 0));
+  const out = [];
+  days.forEach(k => state.days[k].learned.forEach(x => { if (isLearned(x) && !out.includes(x)) out.push(x); }));
+  return out;
+}
 
 /* The hiragana check passed today? */
 const checkPassedToday = () => !!state.days[today()]?.check?.passed;
@@ -482,6 +528,8 @@ function mergeState(a, b) {
   };
   out.created = earlierOf(a.created, b.created);
   out.kataOpen = earlierOf(a.kataOpen, b.kataOpen);
+  out.spelled = unionList(a.spelled, b.spelled);
+  out.seenSpell = !!(a.seenSpell || b.seenSpell);
   out.backupAt = laterOf(a.backupAt, b.backupAt);
   out.updated = bigger(a.updated, b.updated);
   return out;
