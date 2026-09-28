@@ -9,19 +9,136 @@
 const sceneOpen = new Set();                   /* items revealed, "id:i" */
 const sceneGot = id => new Set(asList(state.scenes[id]?.got));
 
-function sceneTileHtml(id, jp, en, on, extra = "") {
-  return `<button class="scene-tile ${on ? "on" : ""}" data-act="menu-pick" data-id="${id}">
-    <span class="st-jp" lang="ja">${esc(jp)}</span><span class="st-en">${esc(en)}</span>${extra}</button>`;
+/* ---------- places: what's open, and when the rest will be ----------
+
+   Every menu and scene is a place. A place opens when you can sound out
+   half its words — every kana in them learned; kanji come with furigana,
+   so kana is enough to sound them out. Words, not characters: five lessons
+   in, half the characters on a station sign are yours but not one whole
+   word is. A place that isn't open can still be looked round and listened
+   to — only its quiz waits. */
+const PLACE_OPEN = 0.5;
+const kanaOnly = s => s.replace(/[^ぁ-ゖァ-ヺー]/g, "");
+const soundable = (kana, known = isLearned) => kanaUnits(kanaOnly(kana)).every(u => typeof known === "function" ? known(u) : known.has(u));
+const kanaCourse = () => [...LESSONS.filter(L => L.set === "h"), ...LESSONS.filter(L => L.set === "k")];
+
+let placesCache = null;
+function places() {
+  if (placesCache) return placesCache;
+  const course = kanaCourse();
+  placesCache = [
+    ...MENUS.map(M => ({ id: M.id, M, jp: furiPlain(M.name).split(" ").pop(), en: M.en, words: menuItems(M).map(it => it.kana) })),
+    ...SCENES.map(sc => ({ id: sc.id, sc, jp: sc.jp, en: sc.en, words: sc.all.map(it => it.kana) })),
+  ];
+  /* the lesson that opens each one, if lessons go in order: the order they're shown in */
+  placesCache.forEach(p => {
+    const need = Math.ceil(p.words.length * PLACE_OPEN), known = new Set();
+    p.opensAt = course.findIndex(L => { L.items.forEach(k => known.add(k)); return p.words.filter(w => soundable(w, known)).length >= need; });
+    p.opensWith = course[p.opensAt]?.title || "";
+  });
+  placesCache.sort((a, b) => a.opensAt - b.opensAt);
+  return placesCache;
+}
+const placeBy = id => places().find(p => p.id === id);
+
+function placeProgress(p) {
+  const ok = p.words.filter(w => soundable(w)).length, n = p.words.length, need = Math.ceil(n * PLACE_OPEN);
+  return { ok, n, need, open: ok >= need, more: Math.max(0, need - ok) };
+}
+const placeOpen = id => placeProgress(placeBy(id)).open;
+const placeGot = p => p.sc ? sceneGot(p.id).size : 0;
+const placeNew = p => placeProgress(p).open && !asList(state.outSeen).includes(p.id);
+
+/* ---------- ink: what you know, dark; what you don't, grey ----------
+
+   Each kana is inked on its own, so a word fills in as its kana are
+   learned. A kanji you haven't learned stays grey — a softer grey when the
+   kana above it are all yours, since you can at least sound it out. */
+function inkKana(t) {
+  return t.split(/([ぁ-ゖァ-ヺー]+)/).map((run, i) => i % 2
+    ? kanaUnits(run).map(u => isLearned(u) ? esc(u) : `<span class="ink-no">${esc(u)}</span>`).join("")
+    : esc(run)).join("");
+}
+function inkHtml(s, mode = state.settings.furigana) {
+  return furiParse(s).map(x => {
+    if (x.t !== undefined) return inkKana(x.t);
+    const known = [...x.k].every(knowsKanji);
+    const bare = mode === "never" || (mode === "auto" && known);
+    const base = known ? esc(x.k) : `<span class="${soundable(x.r) ? "ink-sound" : "ink-no"}">${esc(x.k)}</span>`;
+    return bare ? base : `<ruby>${base}<rt>${inkKana(x.r)}</rt></ruby>`;
+  }).join("");
 }
 
-/* The strip of places at the top: two menus, then the scenes. */
+/* The key to the ink, under a place's name. */
+function inkKeyHtml(strings) {
+  const kanji = strings.some(w => /[{]/.test(w));
+  return `<p class="ink-key">Dark: characters you know · <span class="ink-no">grey</span>: not yet.${kanji
+    ? ` Kanji stay grey until you learn them — the kana above let you sound them out.` : ""}</p>`;
+}
+
+/* A place that isn't open yet: how far off it is, and that looking is fine. */
+function placeShutHtml(p) {
+  const pr = placeProgress(p);
+  return `<div class="place-shut">${icon("lock")}<div>
+    <b>Opens when you can sound out half its words</b> — ${pr.ok} of ${pr.n} so far, ${pr.more} more to go${
+      p.opensWith && !kanaCourse()[p.opensAt]?.items.every(isLearned) ? `, around the <span lang="ja">${esc(p.opensWith)}</span>` : ""}.
+    Look round and listen meanwhile; the quiz waits until it opens.</div></div>`;
+}
+
+/* ---------- the landing page ---------- */
+
+function renderOutHome() {
+  const ps = places().map(p => ({ p, ...placeProgress(p) }));
+  const open = ps.filter(x => x.open), next = ps.find(x => !x.open);
+  const nextLesson = next && kanaCourse()[next.p.opensAt];
+  const lead = !open.length
+    ? `Nothing's open yet — that's expected on day one. ${next ? `The first place, <b lang="ja">${esc(next.p.jp)}</b> ${esc(next.p.en.toLowerCase())}, opens around the <span lang="ja">${esc(next.p.opensWith)}</span>.` : ""}`
+    : next
+      ? `<b>Next to open: <span lang="ja">${esc(next.p.jp)}</span> ${esc(next.p.en)}</b> — ${next.more} more word${next.more === 1 ? "" : "s"} to sound out${nextLesson && !nextLesson.items.every(isLearned) ? `, which the <span lang="ja">${esc(next.p.opensWith)}</span> should bring` : ""}.`
+      : `Every place is open. What's left is the kanji — each one you learn loses its little kana, and you read the sign the way people there do.`;
+  const tile = x => {
+    const got = placeGot(x.p), isNew = placeNew(x.p);
+    return `<button class="place ${x.open ? "open" : "shut"}" data-act="menu-pick" data-id="${x.p.id}">
+      ${isNew ? `<span class="pl-new">new</span>` : x.open ? "" : `<span class="pl-lock">${icon("lock")}</span>`}
+      <span class="pl-jp" lang="ja">${esc(x.p.jp)}</span>
+      <span class="pl-en">${esc(x.p.en)}</span>
+      <span class="pl-bar"><i style="width:${Math.round(100 * x.ok / x.n)}%"></i><b style="left:${PLACE_OPEN * 100}%"></b></span>
+      <span class="pl-n">${x.ok} of ${x.n} words you can read</span>
+      <span class="pl-state">${x.open
+        ? (got ? `${got} recognised` : x.p.M ? "Open · take an order" : "Open · test yourself")
+        : `${x.more} more to open`}</span>
+    </button>`;
+  };
+  return `<div class="ob-head"><div class="eyebrow">街 · Out and about</div></div>
+    <section class="card out-intro">
+      <div class="out-intro-text">
+        <h1>Japanese in the wild.</h1>
+        <p class="lede">Sushi counters, station signs, menus, what shop staff say — the Japanese you'd meet on a trip.
+          Every kana you learn inks in a little more of it. It's here for recognising, at your own pace: nothing in it touches your reviews.</p>
+        <ol class="out-steps">
+          <li><b>Learn kana.</b> The characters you know turn dark everywhere here; the rest stay grey.</li>
+          <li><b>A place opens</b> when you can sound out half its words.</li>
+          <li><b>Look, listen, test yourself.</b> Tap anything to hear it and see what it means.</li>
+        </ol>
+      </div>
+      <div class="out-journey">
+        <div class="eyebrow">${open.length} of ${ps.length} places open</div>
+        <div class="oj-track">${ps.map(x => `<i class="${x.open ? "on" : x === next ? "next" : ""}" title="${esc(x.p.en)}"></i>`).join("")}</div>
+        <p class="small">${lead}</p>
+      </div>
+    </section>
+    <div class="places">${ps.map(tile).join("")}</div>`;
+}
+
+/* The strip of places above a place: back to all of them, then each one. */
 function scenePickerHtml() {
-  const menus = MENUS.map(m => sceneTileHtml(m.id, furiPlain(m.name).split(" ").pop(), m.en, menuId === m.id, menuOpen(m) ? "" : `<span class="st-lock">${icon("lock")}</span>`));
-  const scenes = SCENES.map(sc => {
-    const got = sceneGot(sc.id).size, n = sc.all.length;
-    return sceneTileHtml(sc.id, sc.jp, sc.en, menuId === sc.id, `<span class="st-n">${got ? `${got}/${n}` : `${n}`}</span>`);
+  const tiles = places().map(p => {
+    const pr = placeProgress(p);
+    return `<button class="scene-tile ${menuId === p.id ? "on" : ""} ${pr.open ? "" : "shut"}" data-act="menu-pick" data-id="${p.id}">
+      <span class="st-jp" lang="ja">${esc(p.jp)}</span><span class="st-en">${esc(p.en)}</span>${pr.open
+        ? `<span class="st-n">${pr.ok}/${pr.n}</span>` : `<span class="st-lock">${icon("lock")}</span>`}</button>`;
   });
-  return `<div class="scene-strip">${[...menus, ...scenes].join("")}</div>`;
+  return `<div class="scene-strip"><button class="scene-tile home" data-act="out-home">${icon("back")}<span class="st-en">All places</span></button>${tiles.join("")}</div>`;
 }
 
 function itemHtml(sc, it, cls = "") {
@@ -29,7 +146,7 @@ function itemHtml(sc, it, cls = "") {
   const open = sceneOpen.has(key);
   const known = sceneGot(sc.id).has(it.i);
   return `<button class="${cls} ${open ? "open" : ""} ${known ? "known" : ""}" data-act="scene-item" data-k="${esc(key)}">
-    <span class="si-jp" lang="ja">${wordHtml(it.w)}</span>
+    <span class="si-jp" lang="ja">${inkHtml(it.w)}</span>
     <span class="si-m">${open ? esc(it.m) : "tap to hear · see"}</span>
   </button>`;
 }
@@ -54,12 +171,12 @@ function renderScene(sc) {
     const r = receiptSums(sc);
     const term = (w, extra = "") => {
       const it = sc.all.find(x => x.w === w);
-      return `<button class="rc-term ${sceneOpen.has(`${sc.id}:${it.i}`) ? "open" : ""}" data-act="scene-item" data-k="${sc.id}:${it.i}" lang="ja">${wordHtml(w)}${extra}</button>`;
+      return `<button class="rc-term ${sceneOpen.has(`${sc.id}:${it.i}`) ? "open" : ""}" data-act="scene-item" data-k="${sc.id}:${it.i}" lang="ja">${inkHtml(w)}${extra}</button>`;
     };
     body = `<div class="receipt-wrap"><div class="paper-receipt" lang="ja">
       <div class="pr-store">${esc(sc.store)}</div>
       <div class="pr-meta">2026年9月25日 18:42　レジ 2</div>
-      ${sc.lines.map(([w, p]) => `<div class="pr-row"><span>${wordHtml(w)}</span><span>¥${p}</span></div>`).join("")}
+      ${sc.lines.map(([w, p]) => `<div class="pr-row"><span>${inkHtml(w)}</span><span>¥${p}</span></div>`).join("")}
       <div class="pr-rule"></div>
       <div class="pr-row">${term("{小計|しょうけい}")}<span>¥${r.sub}</span></div>
       <div class="pr-row">${term("{消費税|しょうひぜい}", "（8%）")}<span>¥${r.tax}</span></div>
@@ -68,22 +185,26 @@ function renderScene(sc) {
       <div class="pr-row">${term("お{預|あず}かり")}　${term("{現金|げんきん}")}<span>¥${r.paid.toLocaleString("en-US")}</span></div>
       <div class="pr-row big">${term("お{釣|つ}り")}<span>¥${r.change}</span></div>
       <div class="pr-row small">${term("{点数|てんすう}")}<span>${r.count}点</span></div>
-      <div class="pr-foot">ありがとうございました</div>
+      <div class="pr-foot">${inkKana("ありがとうございました")}</div>
     </div>
     <div class="rc-gloss">${sc.all.map(it => sceneOpen.has(`${sc.id}:${it.i}`) ? `<div><b lang="ja">${wordHtml(it.w)}</b> ${esc(it.m)}</div>` : "").join("") || `<p class="muted small">Tap a word on the receipt.</p>`}
       <div class="eyebrow">More you'll see</div>
       <div class="chips">${sc.all.filter(it => !/小計|消費税|合計|税込|預|現金|釣|点数/.test(it.w)).map(it => itemHtml(sc, it, "chip-item")).join("")}</div>
     </div></div>`;
   }
+  const open = placeOpen(sc.id);
   return `<section class="card scene">
     <div class="scene-head"><div>
       <div class="eyebrow">${esc(sc.jp)} · Out and about</div>
       <h1>${esc(sc.en)}</h1>
       <p class="lede">${esc(sc.intro)}</p>
+      ${inkKeyHtml(sc.all.map(it => it.w))}
     </div>
     <div class="scene-score">${ring(got / n, 56, 6)}<span>${got}<small>/${n}</small></span><small>recognised</small></div></div>
+    ${open ? "" : placeShutHtml(placeBy(sc.id))}
     ${body}
-    <div class="scene-actions"><button class="btn cta" data-act="scene-quiz" data-id="${sc.id}">Test yourself</button>
+    <div class="scene-actions">${open ? `<button class="btn cta" data-act="scene-quiz" data-id="${sc.id}">Test yourself</button>`
+      : `<button class="btn cta" disabled>${icon("lock")} Quiz: ${placeProgress(placeBy(sc.id)).more} more word${placeProgress(placeBy(sc.id)).more === 1 ? "" : "s"}</button>`}
       <button class="btn btn-ghost" data-act="scene-reveal" data-id="${sc.id}">Show every meaning</button></div>
   </section>`;
 }
@@ -111,6 +232,7 @@ function qSceneExtra(sc, [ask, right, ...wrong]) {
 
 function startSceneQuiz(id) {
   const sc = SCENE_BY[id];
+  if (!placeOpen(id)) return;
   const got = sceneGot(id);
   /* not yet recognised first, then the rest */
   const order = [...shuffle(sc.all.filter(it => !got.has(it.i))), ...shuffle(sc.all.filter(it => got.has(it.i)))].slice(0, 12);
@@ -124,19 +246,19 @@ function scenePrompt(c) {
   const sc = SCENE_BY[c.scene];
   const look = sc.look === "sign" || sc.look === "road" ? (c.item.i < sc.items.length ? "plate" : "voice") : sc.look === "chat" ? `bubble ${c.item.who}` : "voice";
   return `<div class="q-ask">What does this mean?</div>
-    <div class="q-scene plates-${sc.style || sc.look}"><div class="${look} static ${sc.look === "road" && furiPlain(c.item.w) === "止まれ" ? "tri" : ""}"><span class="si-jp" lang="ja">${wordHtml(c.item.w)}</span></div></div>`;
+    <div class="q-scene plates-${sc.style || sc.look}"><div class="${look} static ${sc.look === "road" && furiPlain(c.item.w) === "止まれ" ? "tri" : ""}"><span class="si-jp" lang="ja">${inkHtml(c.item.w)}</span></div></div>`;
 }
 
 function receiptMiniHtml(sc) {
   const r = receiptSums(sc);
   return `<div class="paper-receipt mini" lang="ja">
-    ${sc.lines.map(([w, p]) => `<div class="pr-row"><span>${wordHtml(w)}</span><span>¥${p}</span></div>`).join("")}
+    ${sc.lines.map(([w, p]) => `<div class="pr-row"><span>${inkHtml(w)}</span><span>¥${p}</span></div>`).join("")}
     <div class="pr-rule"></div>
-    <div class="pr-row"><span>${wordHtml("{小計|しょうけい}")}</span><span>¥${r.sub}</span></div>
-    <div class="pr-row"><span>${wordHtml("{消費税|しょうひぜい}")}</span><span>¥${r.tax}</span></div>
-    <div class="pr-row big"><span>${wordHtml("{合計|ごうけい}")}</span><span>¥${r.total}</span></div>
-    <div class="pr-row"><span>${wordHtml("お{預|あず}かり")}</span><span>¥1,000</span></div>
-    <div class="pr-row big"><span>${wordHtml("お{釣|つ}り")}</span><span>¥${r.change}</span></div>
+    <div class="pr-row"><span>${inkHtml("{小計|しょうけい}")}</span><span>¥${r.sub}</span></div>
+    <div class="pr-row"><span>${inkHtml("{消費税|しょうひぜい}")}</span><span>¥${r.tax}</span></div>
+    <div class="pr-row big"><span>${inkHtml("{合計|ごうけい}")}</span><span>¥${r.total}</span></div>
+    <div class="pr-row"><span>${inkHtml("お{預|あず}かり")}</span><span>¥1,000</span></div>
+    <div class="pr-row big"><span>${inkHtml("お{釣|つ}り")}</span><span>¥${r.change}</span></div>
   </div>`;
 }
 
@@ -149,6 +271,7 @@ function sceneAnswered(c, ok) {
 }
 
 Object.assign(ACTS, {
+  "out-home": () => { menuId = null; game = null; if (view !== "menu") go("menu"); else { renderMenu(); scrollTo(0, 0); } },
   "scene-item": el => tapSceneItem(el.dataset.k),
   "scene-quiz": el => startSceneQuiz(el.dataset.id),
   "scene-reveal": el => { SCENE_BY[el.dataset.id].all.forEach(it => sceneOpen.add(`${el.dataset.id}:${it.i}`)); renderMenu(); },

@@ -54,7 +54,7 @@ const CONTRACT = {
   'js/data/grammar.js': ['SENTENCE_SHAPE', 'PARTICLE_GUIDE', 'ENDINGS', 'GRAMMAR_SAY', 'SHAPE_SENTENCE'],
   'js/grammar-ui.js': ['renderGrammar'],
   'js/data/scenes.js': ['SCENES', 'SCENE_BY', 'receiptSums'],
-  'js/scenes-ui.js': ['scenePickerHtml', 'renderScene', 'tapSceneItem', 'qScene', 'startSceneQuiz', 'scenePrompt', 'sceneAnswered', 'sceneGot'],
+  'js/scenes-ui.js': ['places', 'placeProgress', 'placeOpen', 'inkHtml', 'renderOutHome', 'scenePickerHtml', 'renderScene', 'tapSceneItem', 'qScene', 'startSceneQuiz', 'scenePrompt', 'sceneAnswered', 'sceneGot'],
   'js/stats.js': ['MILESTONES', 'checkMilestones', 'medal', 'celebrate', 'milestoneCheckpoint', 'cheerLine', 'comboPill', 'statsTilesHtml', 'minutesChartHtml', 'learnedChartHtml', 'milestonesHtml', 'heroStatsHtml', 'n5Projection', 'weekAccuracy'],
   'js/book-ui.js': ['BOOK_PENS', 'BOOK_NIBS', 'BOOK_GRIDS', 'BOOK_CAP', 'renderBook', 'bookKey', 'bookAll', 'bookReplaceAll', 'pageSvg', 'inkG', 'strokePath'],
   'js/cards-ui.js': ['DECKS', 'deckKeys', 'orderKeys', 'cardFaces', 'startDeck', 'renderCards', 'flipCard', 'rateCard', 'cardsKey', 'stepCard', 'bindCardGestures'],
@@ -422,6 +422,28 @@ section('menu');
   const N = { 400: 'よんひゃく', 1100: 'せんひゃく', 1250: 'せんにひゃくごじゅう', 300: 'さんびゃく', 600: 'ろっぴゃく',
     800: 'はっぴゃく', 3000: 'さんぜん', 8000: 'はっせん', 2980: 'にせんきゅうひゃくはちじゅう', 10500: 'いちまんごひゃく', 15: 'じゅうご' };
   Object.entries(N).forEach(([n, want]) => ok(numberKana(+n) === want, `numberKana(${n}) = ${numberKana(+n)}, want ${want}`));
+}
+
+section('out and about');
+{
+  /* places open on words you can sound out, not characters (README → Out and about) */
+  const s = sandbox();
+  const run = code => vm.runInContext(code, s);
+  vm.runInContext(['js/data/menu.js', 'js/data/scenes.js'].map(read).join('\n') +
+    ';var ACTS = {}; var esc = t => String(t); var icon = () => ""; var knowsKanji = ch => isLearned("k:" + ch);\n' + read('js/scenes-ui.js'), s);
+  run('load()');
+  ok(run('places().every(p => !placeProgress(p).open)'), 'nothing is open on day one');
+  ok(run('places()[0].id') === 'sushi', 'the sushi counter is the first place to open');
+  ok(run('places().slice(0, 3).map(p => p.id).sort().join()') === 'festival,sento,sushi', 'the three hiragana places open first');
+  run('LESSONS.filter(L => L.set === "h").slice(0, 5).forEach(L => L.items.forEach(k => learn(k)))');
+  ok(run('placeOpen("sushi")'), 'five hiragana rows open the sushi counter');
+  ok(run('!placeOpen("station")'), 'five rows are half the station\'s characters but not half its words');
+  run('KANA.forEach(e => learn(e.k))');
+  ok(run('places().every(p => placeProgress(p).open)'), 'every kana opens every place');
+  ok(run('inkHtml("すし")') === 'すし', 'known kana are plain');
+  run('state.items = {}; learn("す")');
+  ok(run('inkHtml("すし")') === 'す<span class="ink-no">し</span>', 'an unknown kana is grey');
+  ok(/ink-no">出口/.test(run('inkHtml("{出口|でぐち}")')), 'an unknown kanji whose kana are unknown is grey');
 }
 
 section('patterns');

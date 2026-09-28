@@ -1,17 +1,18 @@
 /* Nihongo Quest — Read a Menu: the side quest.
 
    A menu you read as you learn: each kana you know is inked in, the rest
-   stay faint, and a dish you can read tells you what it is when you tap it.
+   stay grey, and a dish you can read tells you what it is when you tap it.
    The game on the side is ordering for a friend — they tell you what they
    want in English, you find it on the menu — and it ends with a receipt,
    the total in yen, and what you'd say to order. It's practice: nothing
    here touches the review schedule. */
 
-let menuId = "cafe";
+let menuId = null;        /* null: the landing page, with every place */
 let game = null;          /* { menu, targets, i, got, wrong } */
 const revealed = new Set();
 
-const menuOpen = M => M.tier === 1 ? kataOpen() : WORDS.filter(x => x.st === 5).every(x => isLearned(x.key));
+/* the same rule as every place: open once half of it can be sounded out */
+const menuOpen = M => placeOpen(M.id);
 const canReadItem = it => it.units.every(isLearned);
 const numbersKnown = () => WORDS.filter(x => x.st === 3).every(x => isLearned(x.key));
 const yen = n => "¥" + n.toLocaleString("en-US");
@@ -27,35 +28,29 @@ function noren(text, cls = "") {
   </svg>`;
 }
 
-/* A dish's name, each kana inked if you know it. Diner dishes have kanji,
-   and by then every kana is yours, so they're shown with furigana. */
-function inked(it) {
-  if (/[{]/.test(it.w)) return wordHtml(it.w);
-  return it.units.map(u => `<span class="${isLearned(u) ? "" : "faint"}">${esc(u)}</span>`).join("");
-}
+/* A dish's name, each kana inked if you know it (scenes-ui.js). */
+const inked = it => inkHtml(it.w);
 
 function menuCardHtml() {
-  const M = MENUS[0];
-  const open = menuOpen(M);
-  const items = menuItems(M);
-  const n = items.filter(canReadItem).length;
+  const ps = places().map(p => ({ p, ...placeProgress(p) }));
+  const open = ps.filter(x => x.open), next = ps.find(x => !x.open);
   const orders = state.menu.days[today()] || 0;
-  const recognised = SCENES.reduce((t, sc) => t + asList(state.scenes[sc.id]?.got).length, 0);
-  const total = SCENES.reduce((t, sc) => t + sc.all.length, 0);
   return `<section class="card menu-card">
     ${noren("さくら", "mini")}
     <div class="menu-card-text">
       <div class="eyebrow">街 · Out and about</div>
-      ${open
-        ? `A café menu to read and order from${menuOpen(MENUS[1]) ? " (and the diner)" : ""}, plus station signs, receipts, shop talk and more — <b>${recognised} of ${total}</b> recognised${orders ? ` · ${orders} order${orders > 1 ? "s" : ""} today` : ""}.`
-        : `Menus, station signs, receipts, shop talk and more — the Japanese you meet off the page.`}
+      Sushi counters, signs, menus and shop talk. <b>${open.length} of ${ps.length}</b> places open${
+        next ? ` · next: <span lang="ja">${esc(next.p.jp)}</span>, ${next.more} more word${next.more === 1 ? "" : "s"}` : ""}${orders ? ` · ${orders} order${orders > 1 ? "s" : ""} today` : ""}.
     </div>
-    <button class="btn btn-sm" data-act="nav" data-nav="menu">Go out</button>
+    <button class="btn btn-sm" data-act="out-home">Go out</button>
   </section>`;
 }
 
 function renderMenu() {
   const el = $("#v-menu");
+  if (!menuId || !placeBy(menuId)) { el.innerHTML = renderOutHome(); return; }
+  /* a visit to an open place clears its "new" */
+  if (placeOpen(menuId) && !asList(state.outSeen).includes(menuId)) { state.outSeen = [...asList(state.outSeen), menuId]; save(); }
   /* one of the out-and-about scenes, rather than a menu */
   if (typeof SCENE_BY !== "undefined" && SCENE_BY[menuId]) {
     el.innerHTML = `<div class="ob-head"><div class="eyebrow">街 · Out and about</div></div>${scenePickerHtml()}${renderScene(SCENE_BY[menuId])}`;
@@ -72,15 +67,14 @@ function renderMenu() {
     const cls = [ok ? "" : "dim", revealed.has(key) ? "open" : "", game?.got?.includes(key) ? "got" : "", game?.wrong === key ? "wrong" : ""].join(" ");
     return `<li><button class="mi ${cls}" data-act="mi" data-k="${esc(key)}">
       <span class="mi-name" lang="ja">${inked(it)}</span><span class="mi-dots"></span><span class="mi-price">${yen(it.price)}</span>
-      <span class="mi-m">${ok ? esc(it.m) : ""}</span>
+      <span class="mi-m">${ok || revealed.has(key) ? esc(it.m) : ""}</span>
     </button></li>`;
   };
 
 
   let side;
   if (!open) {
-    side = `<section class="card">${neko("sleepy", "mini")}
-      <p>${M.tier === 1 ? "The café opens with katakana. You can look now — the faint kana are the ones you don't know yet." : "The diner opens once the food words — stage 5 — are yours."}</p></section>`;
+    side = `<section class="card">${neko("sleepy", "mini")}${placeShutHtml(placeBy(M.id))}</section>`;
   } else if (game && game.done) {
     const got = game.targets;
     const total = got.reduce((t, it) => t + it.price, 0);
@@ -122,8 +116,9 @@ function renderMenu() {
     <div class="ob-head"><div class="eyebrow">街 · Out and about</div></div>
     ${scenePickerHtml()}
     <div class="chart-head">
-      <span class="muted">${open ? `${readable.length} of ${items.length} you can read · tap one to hear it` : ""}</span>
+      <span class="muted">${readable.length} of ${items.length} you can read · tap one to hear it</span>
     </div>
+    ${inkKeyHtml(items.map(it => it.w))}
     <div class="menu-layout">
       <section class="card menu-board ${open ? "" : "locked"}">
         ${noren(furiPlain(M.name).split(" ").pop(), M.tier === 2 ? "diner" : "")}
@@ -153,8 +148,8 @@ function itemByKey(key) {
 function tapItem(key) {
   const it = itemByKey(key);
   const M = MENUS.find(m => m.id === menuId);
-  if (!menuOpen(M)) { toast("Not open yet — this is a preview."); return; }
-  if (!canReadItem(it)) {
+  /* anything can be heard and looked up; the order game wants what you can read */
+  if (game && !game.done && !canReadItem(it)) {
     const miss = [...new Set(it.units.filter(u => !isLearned(u)))];
     toast(`You'll read this once you know ${miss.join(" ")}.`);
     return;
@@ -195,7 +190,7 @@ function tapItem(key) {
 function startMenuGame() {
   const M = MENUS.find(m => m.id === menuId);
   const pool = menuItems(M).filter(canReadItem);
-  if (pool.length < 4) return;
+  if (!menuOpen(M) || pool.length < 4) return;
   game = { menu: M.id, targets: sample(pool, 3), i: 0, got: [], misses: 0, msg: "", done: false };
   crumb("menu order start");
   renderMenu();
@@ -204,7 +199,7 @@ function startMenuGame() {
 /* Tier-2 dishes are recorded with the word stages. */
 Object.assign(ACTS, {
   mi: el => tapItem(el.dataset.k),
-  "menu-pick": el => { menuId = el.dataset.id; game = null; renderMenu(); },
+  "menu-pick": el => { menuId = el.dataset.id; game = null; renderMenu(); scrollTo(0, 0); },
   "menu-game": () => startMenuGame(),
   "menu-quit": () => { game = null; renderMenu(); },
 });

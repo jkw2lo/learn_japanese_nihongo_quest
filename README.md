@@ -574,13 +574,14 @@ with the glyphs you know inked in. It carries over well, because **Japanese
 menus are mostly katakana**. Built (`js/data/menu.js`, `js/menu-ui.js`):
 
 - **カフェ さくら**, a café, all katakana: 26 drinks, dishes and desserts.
-  It **opens with katakana**, and each item inks itself in kana by kana as
-  you learn them. Kana you don't know yet stay faint, so you can watch it
-  fill up. Tapping something you can read says it and shows what it is;
-  tapping something you can't says which kana you still need.
+  Each item inks itself in kana by kana as you learn them; kana you don't
+  know yet stay grey, so you can watch it fill up. Tapping anything says it
+  and shows what it is. It opens like every place (below): when half its
+  items can be sounded out, which, with ー in most of them, is at the end of
+  katakana.
 - **食堂 まるや**, a diner, is the real thing: 定食 set meals, bowls,
   noodles, sides and drinks, with kanji dish names and furigana. It opens
-  once the food words (stage 5) are learned.
+  by the same rule, late in hiragana.
 - **Ordering for a friend.** They say what they want in English, and you
   find it on the menu: three things, then the bill. A wrong tap tells you
   what you actually picked. The **receipt** shows each item, the total in
@@ -599,13 +600,50 @@ Still to do: the izakaya tier (本日のおすすめ).
 
 ### Out and about: the scenes
 
-The Menu section grew into **街 Out and about**: the two menus, then nine
+The Menu section grew into **街 Out and about**: the two menus and twelve
 scenes of the Japanese you meet off the page (`js/data/scenes.js`,
 `js/scenes-ui.js`). Recognition is the point. Stay at N5, but be able to
 read the sign and catch the announcement.
 
+**The landing page.** Out and about opens on a page saying what it's for,
+how it works (learn kana → a place opens → look, listen, test yourself),
+how many places are open with a track of them in order, and what opens
+next and roughly which lesson brings it. Then every place as a tile: how
+many of its words you can read, a bar with the halfway mark on it, and
+whether it's open, with a *new* badge until an opened place is visited
+(`state.outSeen`). A strip of places, with *All places* first, runs above
+each place.
+
+**When a place opens: half its words.** A place is open once you can
+**sound out** half its words, meaning every kana in them is learned. Kanji
+come with furigana, so kana is enough to sound them out. It counts words,
+not characters, on purpose: five lessons in, about half the characters on
+a station sign are yours, but not one whole word is. The places are shown
+in the order they open if lessons go in order (`opensAt`, worked out from
+the lesson list), so the page doubles as the road ahead. A place that isn't
+open can still be looked round, listened to and tapped; only its quiz (and
+the menus' ordering game) waits.
+
+**The ink.** Everywhere in Out and about, each kana you know is dark and
+each one you don't is grey (`inkHtml`), so a word fills in as you learn its
+kana. A kanji you haven't learned stays grey: a softer grey when the kana
+above it are all yours, since you can at least sound it out. A key under
+each place's title says so.
+
+**The first three are for the hiragana weeks.** Almost nothing on a real
+sign is readable in the first fortnight, so three places are made of words
+genuinely written in hiragana, and open during hiragana one after another:
+**すし** a sushi counter (the ~5th lesson), **ゆ** a public bath (~8th), and
+**屋台** festival stalls (~9th). Then shop signs, the receipt, and the rest
+at the end of the plain rows; the diner and road signs with the combined
+sounds; the café at the end of katakana. The smoke test checks that
+order.
+
 | Scene | Drawn as | What's in it |
 |---|---|---|
+| すし At the sushi counter | indigo curtain plates | すし, いか, たこ, うに, かに, ねた, おあいそ, まぐろ, わさび |
+| ゆ At the public bath | red curtain plates | ゆ, おとこ, おんな, おゆ / みず, あつい, ぬるい, おけ, ゆかた |
+| 屋台 Festival stalls | yellow banners, red lettering | おまつり, たこやき, やきとり, わたあめ, かきごおり, りんごあめ |
 | 駅 At the station | blue station plates, then announcements | 出口, 改札, 乗り換え, the exits, 各駅停車 / 快速 / 急行; まもなく…, 黄色い線…, 次は… |
 | 看板 Shop and door signs | wooden shop plates | 営業中 / 準備中, 押す / 引く, お手洗い, 禁煙, 割引, 半額, 売り切れ |
 | 道路 Road signs | road signs; 止まれ is the red triangle | 止まれ, 徐行, 一方通行, 通行止め, 横断歩道 |

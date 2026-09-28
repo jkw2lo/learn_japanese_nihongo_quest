@@ -1,8 +1,9 @@
 /* Nihongo Quest — out and about: the Japanese you meet off the page.
 
-   Station signs and announcements, shop and road signs, a receipt, what
-   shop staff say, how to ask for things and for the way, casual Japanese,
-   and compliments. Recognition is the point — being able to read the sign
+   Three places written mostly in hiragana, so they open early — a sushi
+   counter, a public bath, festival stalls — then station signs and
+   announcements, shop and road signs, a receipt, what shop staff say, how
+   to ask for things and for the way, casual Japanese, and compliments. Recognition is the point — being able to read the sign
    and catch the announcement — so each scene is something to look at and
    listen to, with a quiz at the end.
 
@@ -20,6 +21,37 @@
    (audio-scenes.js). */
 
 const SCENES = [
+  /* The early three: things really written in hiragana — a sushi curtain,
+     a bath's ゆ, a festival stall's hand-painted banner — so a learner a
+     week or two in has somewhere real to read. */
+  { id: "sushi", jp: "すし", en: "At the sushi counter", look: "sign", style: "sushi",
+    intro: "The curtain over the door says すし. Inside, the plates going round are labelled — often in hiragana.",
+    items: [
+      ["すし", "Sushi"], ["いか", "Squid"], ["たこ", "Octopus"], ["さけ", "Salmon"], ["うに", "Sea urchin"],
+      ["かに", "Crab"], ["ねた", "The topping (a sushi-counter word)"], ["おあいそ", "The bill, please (a sushi-counter word)"],
+      ["ほたて", "Scallop"], ["あかみ", "Lean tuna"], ["いくら", "Salmon roe"], ["とろ", "Fatty tuna"],
+      ["いなり", "Rice in fried tofu"], ["まぐろ", "Tuna"], ["たまご", "Sweet egg omelette"], ["わさび", "Wasabi"],
+    ] },
+
+  { id: "sento", jp: "ゆ", en: "At the public bath", look: "sign", style: "sento",
+    intro: "A curtain with ゆ — hot water — marks a bath. Men's and women's sides are marked too, and so are the taps.",
+    items: [
+      ["ゆ", "Hot water — the bath (on the curtain)"], ["おとこ", "Men"], ["おんな", "Women"],
+      ["おゆ", "Hot water (tap)"], ["みず", "Cold water (tap)"], ["あつい", "Hot!"], ["ぬるい", "Lukewarm"],
+      ["おふろ", "Bath"], ["おけ", "Wooden bath bucket"], ["ひのき", "Cypress — the wood of a good bath"],
+      ["ゆかた", "Light cotton robe"], ["てぬぐい", "Thin hand towel"], ["せっけん", "Soap"],
+      ["のれん", "The shop curtain itself"],
+    ] },
+
+  { id: "festival", jp: "屋台", en: "Festival stalls", look: "sign", style: "festival",
+    intro: "Summer festival food stalls. Their banners are hand-painted, and mostly in hiragana.",
+    items: [
+      ["おまつり", "Festival"], ["たこやき", "Octopus balls"], ["いかやき", "Grilled squid"], ["やきとり", "Chicken skewers"],
+      ["おこのみやき", "Savoury pancake"], ["やきそば", "Fried noodles"], ["わたあめ", "Candy floss"],
+      ["かきごおり", "Shaved ice"], ["りんごあめ", "Candy apple"], ["おでん", "Simmered hotpot"], ["だんご", "Rice dumplings"],
+      ["ひとつ", "One (of them)"], ["あまい", "Sweet"], ["からい", "Spicy"],
+    ] },
+
   { id: "station", jp: "駅", en: "At the station", look: "sign", style: "station",
     intro: "The signs you'll follow and the announcements you'll hear on every train trip.",
     items: [
