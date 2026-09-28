@@ -6,12 +6,18 @@
    - the sheet is built before the clock starts
    - a miss never touches the review schedule — grade(..., "speed") gives
      credit for a right answer and sends a wrong one to the mistake notebook
-   - kana are dealt from a shuffled deck, not drawn at random */
+   - kana are dealt from a shuffled deck, not drawn at random
+
+   Write is the handwriting sheet: see a sound, write its kana in the box,
+   next. The strokes are kept and marked by shape (write.js, the same marker
+   as the lessons, stroke order as set in Settings) only at hand-in — so it
+   stays a sheet you work through, not a drill that stops to correct you. */
 
 const SPRINT_MODES = {
   read:   { jp: "読む", en: "Read",   sk: "r", par: 1.5, what: "See a kana, pick its sound." },
   listen: { jp: "聞く", en: "Listen", sk: "p", par: 2.5, what: "Hear a sound, pick its kana." },
   type:   { jp: "打つ", en: "Type",   sk: "r", par: 2.5, what: "See a kana, type its romaji." },
+  write:  { jp: "書く", en: "Write",  sk: "w", par: 6,   what: "See a sound, write its kana. Marked by shape when you hand in." },
 };
 const SPRINT_COUNTS = [20, 40, 60, 100];
 const SPRINT_MINS = [1, 2, 3, 5];
@@ -39,14 +45,18 @@ function sprintLabel(key) {
   return `${m ? m.jp + " " + m.en : mode} · ${SPRINT_SETS[set] || set} · ${count} in ${mins} min`;
 }
 
-function sprintPool(set) {
-  return KANA.filter(e => !e.concept && set.includes(e.set) && isLearned(e.k)).map(e => e.k);
+/* Writing needs stroke data, so きゃ (two kana you already write) is left out. */
+function sprintPool(set, mode = sprintPick().mode) {
+  return KANA.filter(e => !e.concept && set.includes(e.set) && isLearned(e.k) && (mode !== "write" || canWrite(e.k))).map(e => e.k);
 }
 
 function renderSprint() {
   const el = $("#v-sprint");
   const p = sprintPick();
   if (p.mode === "listen" && !hasAudio()) p.mode = "read";
+  /* the stroke shapes load on first need; render() runs again when they arrive */
+  const loading = p.mode === "write" && !window.NQ_STROKES;
+  if (loading) loadStrokes();
   const pool = sprintPool(p.set);
   const seg = (field, opts, label = x => x, disabled = () => false) =>
     `<div class="seg">${opts.map(o => `<button class="${p[field] === o ? "on" : ""}" data-act="sp-pick" data-f="${field}" data-v="${o}" ${disabled(o) ? "disabled" : ""}>${label(o)}</button>`).join("")}</div>`;
@@ -67,7 +77,8 @@ function renderSprint() {
       <div class="pick"><span class="pick-l">Kana</span>${seg("set", Object.keys(SPRINT_SETS), s => `<span lang="ja">${SPRINT_SETS[s]}</span>`, s => sprintPool(s).length < 4)}</div>
       <div class="pick"><span class="pick-l">Questions</span>${seg("count", SPRINT_COUNTS, x => x, c => c > pool.length * SPRINT_MAX_LOOPS)}</div>
       <div class="pick"><span class="pick-l">Minutes</span>${seg("mins", SPRINT_MINS)}</div>
-      ${tooFew ? `<p class="warn">Learn a few more kana first — a sheet needs at least four to choose from.</p>`
+      ${loading ? `<p class="muted small">Loading the stroke shapes…</p>`
+        : tooFew ? `<p class="warn">Learn a few more kana first — a sheet needs at least four to choose from.</p>`
         : p.count > pool.length * SPRINT_MAX_LOOPS ? `<p class="warn">That's more questions than ${pool.length} kana can fill sensibly — pick fewer.</p>`
         : `<button class="btn btn-lg cta" data-act="sp-start">Start the sheet <kbd>↵</kbd></button>`}
       <p class="muted small">${best ? `Best on this sheet: <b>${best.right}/${best.total}</b> in ${(best.ms / 1000).toFixed(1)}s (${esc(best.at)}).` : "No run on this sheet yet."}</p>
@@ -150,6 +161,21 @@ function showSprintQ() {
   $$("#spStrip i").forEach((el, i) => { el.className = i < SP.i ? "done" : i === SP.i ? "now" : ""; });
   SP.tq = performance.now();
   const body = $("#spBody");
+  if (SP.mode === "write") {
+    const e = KANA_BY[q.k];
+    body.innerHTML = `<div class="q q-w sp-q">
+      <div class="q-ask">Write <b class="sp-w-r">${esc(e.r)}</b> in ${SET_NAME[e.set]}</div>
+      ${padHtml(q.k)}
+      <div class="pad-tools">
+        <button class="btn btn-ghost btn-sm" data-act="w-undo">Undo <kbd>Z</kbd></button>
+        <button class="btn btn-ghost btn-sm" data-act="w-clear">Clear</button>
+        <button class="btn btn-ghost btn-sm" data-act="sp-replay" aria-label="Hear it">${icon("speaker")} <kbd>R</kbd></button>
+        <button class="btn btn-sm" data-act="sp-write-next">Next <kbd>↵</kbd></button>
+      </div></div>`;
+    bindPad();
+    if (state.settings.autoplay) sayKana(q.k);
+    return;
+  }
   if (SP.mode === "type") {
     body.innerHTML = `<div class="q sp-q"><div class="glyph-l" lang="ja">${esc(q.k)}</div>
       <input class="sp-input" id="spInput" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" placeholder="romaji, then Enter">
@@ -169,7 +195,11 @@ function sprintAnswer(val) {
   const q = SP.qs[SP.i];
   const e = KANA_BY[q.k];
   let ok;
-  if (SP.mode === "type") {
+  if (SP.mode === "write") {
+    /* nothing drawn is a skip, marked wrong */
+    val = val.filter(st => st.length).map(st => st.map(p => [...p]));
+    ok = val.length > 0 && markWriting(q.k, val, state.settings.strokeOrder).ok;
+  } else if (SP.mode === "type") {
     const t = String(val).trim().toLowerCase().replace(/[^a-z']/g, "");
     ok = t === e.r || (ROMAJI_ALT[e.r] || []).includes(t);
     val = t;
@@ -209,6 +239,8 @@ function handIn(finished) {
     <div class="sp-review">${SP.qs.map((q, i) => {
       const a = SP.ans[i];
       const cls = a ? (a.ok ? "ok" : "miss") : "skip";
+      if (SP.mode === "write") return `<span class="${cls}" title="${a && !a.ok ? "what you wrote, under it" : ""}"><b lang="ja">${esc(q.k)}</b><small>${esc(KANA_BY[q.k].r)}</small>${
+        a && !a.ok && a.val.length ? inkThumb(a.val) : ""}</span>`;
       return `<span class="${cls}" title="${a && !a.ok ? "you: " + esc(SP.mode === "listen" ? a.val : a.val || "(blank)") : ""}"><b lang="ja">${esc(q.k)}</b><small>${esc(KANA_BY[q.k].r)}</small></span>`;
     }).join("")}</div>
   </div>`;
@@ -216,6 +248,10 @@ function handIn(finished) {
   $("#spFoot").innerHTML = `<button class="btn btn-ghost" data-act="sp-close">Done <kbd>Esc</kbd></button>
     <button class="btn" data-act="sp-again">Same sheet again <kbd>↵</kbd></button>`;
 }
+
+/* What you wrote, small, under a miss in the review. */
+const inkThumb = strokes => `<svg class="sp-ink" viewBox="0 0 1024 1024" aria-hidden="true">${strokes.map(st => st.length === 1
+  ? `<circle cx="${st[0][0]}" cy="${st[0][1]}" r="30"/>` : `<polyline points="${st.map(p => p.join(",")).join(" ")}"/>`).join("")}</svg>`;
 
 async function closeSprint() {
   if (!SP) return;
@@ -246,6 +282,12 @@ function sprintKey(e) {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); againSprint(); }
     return true;
   }
+  if (SP.mode === "write") {
+    if (e.key === "Enter") { e.preventDefault(); ACTS["sp-write-next"](); }
+    else if (e.key === "z" || e.key === "Z") padUndo();
+    else if (e.key === "r" || e.key === "R") sayKana(SP.qs[SP.i].k);
+    return true;
+  }
   if (SP.mode === "type") {
     if (e.key === "Enter" && e.target.id === "spInput") { e.preventDefault(); sprintAnswer(e.target.value); }
     return true;
@@ -273,6 +315,8 @@ Object.assign(ACTS, {
     const p = sprintPick();
     const f = el.dataset.f;
     p[f] = f === "count" || f === "mins" ? +el.dataset.v : el.dataset.v;
+    /* writing is slower: a sheet that can't be finished at par gets one that can */
+    if (f === "mode" && p.mode === "write" && p.count * SPRINT_MODES.write.par > p.mins * 60) { p.count = 20; p.mins = 3; }
     const pool = sprintPool(p.set);
     if (p.count > pool.length * SPRINT_MAX_LOOPS) p.count = SPRINT_COUNTS.filter(c => c <= pool.length * SPRINT_MAX_LOOPS).pop() || 20;
     state.sprint.pick = { ...p }; save();
@@ -281,6 +325,7 @@ Object.assign(ACTS, {
   "sp-start": () => startSprint(),
   "sp-opt": el => { const q = SP?.qs[SP.i]; if (q) sprintAnswer(q.opts[+el.dataset.i].val); },
   "sp-replay": () => { if (SP) sayKana(SP.qs[SP.i].k); },
+  "sp-write-next": () => { if (SP && !SP.done && SP.mode === "write" && pad) sprintAnswer(pad.strokes); },
   "sp-close": () => closeSprint(),
   "sp-again": () => againSprint(),
 });

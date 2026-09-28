@@ -968,6 +968,12 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 .sp-review .ok { background: var(--jade-wash); border-color: transparent; }
 .sp-review .miss { background: var(--amber-wash); border-color: var(--amber); }
 .sp-review .skip { opacity: .45; }
+.sp-q.q-w .q-ask { font-size: 1.1rem; }
+.sp-w-r { font: 600 1.6rem var(--f-display); color: var(--ai); margin: 0 .15em; }
+.sp-q .pad-tools { margin-top: .2rem; }
+.sp-ink { width: 2.2rem; height: 2.2rem; margin-top: 2px; }
+.sp-ink polyline { fill: none; stroke: var(--amber); stroke-width: 60; stroke-linecap: round; stroke-linejoin: round; }
+.sp-ink circle { fill: var(--amber); }
 
 /* ---------- sheets, ask, crash, toast ---------- */
 

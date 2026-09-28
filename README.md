@@ -787,14 +787,24 @@ dealt from a shuffled deck, not drawn at random.
 | **読む Read** | a kana | pick its romaji | 1.5 | kana `r` | ✓ |
 | **聞く Listen** | a sound | pick the kana | 2.5 | kana `p` | ✓ |
 | **打つ Type** | a kana | type its romaji (`si` for し is fine) | 2.5 | kana `r` | ✓ |
+| **書く Write** | a sound (ka, in hiragana) | write the kana in the box, by hand | 6 | kana `w` | ✓ |
 | **言葉 Words** | a word | pick the meaning | 2.4 | `r` | next |
-| **書く Type words** | a meaning | type it in kana | 4.5 | `c` | next |
+| **言葉を打つ Type words** | a meaning | type it in kana | 4.5 | `c` | next |
 | **活用 Conjugate** | 食べる + て-form | type 食べて | 4.0 | pattern | with conjugation |
 
 Each sheet can be hiragana, katakana or both, 20–100 questions, 1–5
 minutes. Only a **finished** sheet can set a best: finishing comes first,
 then accuracy, then time. A sheet that would loop through its kana more
 than six times is offered disabled.
+
+**Write** is the handwriting sheet. Each question gives the sound and the
+script; you write it in the box (Undo, Clear, hear it again) and go on with
+Next or Enter, and an empty box is a skip. Nothing is marked as you go: the
+strokes are kept and marked by shape at hand-in, with the lessons' own
+marker (`markWriting`, stroke order as set in Settings). The review shows
+each miss with a small copy of what you wrote under it. Only kana with
+stroke data are dealt (きゃ is two kana you already write), and choosing
+Write turns a sheet too fast to finish at par into 20 in 3 minutes.
 
 It keeps the boards (a best score per sheet: the mode, the count and the
 minutes), the speed grades from the ratio to par, and the mistake notebook
