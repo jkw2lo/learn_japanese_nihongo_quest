@@ -523,23 +523,23 @@ button.glyph-xl:hover:not(:disabled) { background: var(--sunken); }
 .spell-why h2 { text-align: center; margin: .3rem 0 .6rem; }
 .spell-why p { color: var(--ink-2); margin: 0 0 .6rem; font-size: .95rem; }
 .spell-why [lang="ja"] { color: var(--ink); font-size: 1.1em; }
-.spell-word { border: 1px solid var(--rule); border-radius: var(--r); background: var(--sheet); padding: 12px 14px; width: 100%; box-sizing: border-box;
-  max-width: 32rem; margin: 0 auto 10px; }
-.spell-parts { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px; }
-.spell-k { display: flex; flex-direction: column; align-items: center; min-width: 44px; padding: 4px 8px;
+.spell-grid { display: grid; width: 100%; box-sizing: border-box; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); gap: 10px; max-width: 40rem; margin: 0 auto; }
+.spell-word { border: 1px solid var(--rule); border-radius: var(--r); background: var(--sheet); padding: 10px 8px; min-width: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.spell-parts { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 2px; }
+.spell-k { display: flex; flex-direction: column; align-items: center; min-width: 30px; padding: 2px 4px;
   border-radius: 8px; background: var(--ai-wash); }
-.spell-k span { font: 500 1.6rem/1.2 var(--f-ja); }
-.spell-k small, .spell-whole small { color: var(--ai); font-weight: 600; font-size: .8rem; }
+.spell-k span { font: 500 1.15rem/1.2 var(--f-ja); }
+.spell-k small, .spell-whole small { color: var(--ai); font-weight: 600; font-size: .72rem; }
 .spell-k:hover { background: var(--sunken); }
-.spell-plus { color: var(--ink-3); font-size: .9rem; }
-.spell-eq { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 8px; color: var(--ink-3); }
-.spell-whole { display: inline-flex; flex-direction: column; align-items: center; padding: 2px 10px; border-radius: 8px; }
-.spell-whole span { font: 500 2rem/1.2 var(--f-ja); color: var(--ink); }
+.spell-plus { color: var(--ink-3); font-size: .75rem; }
+.spell-whole { display: inline-flex; flex-direction: column; align-items: center; padding: 2px 10px; margin-top: 4px; border-radius: 8px; }
+.spell-whole span { font: 500 1.9rem/1.15 var(--f-ja); color: var(--ink); }
 .spell-whole:hover { background: var(--sunken); }
-.spell-m { font: 600 1.15rem var(--f-display); color: var(--ink); }
-.spell-hook { margin-top: 8px; font-size: .9rem; color: var(--ink-2); }
-.spell-hook .ico { width: 14px; height: 14px; vertical-align: -2px; color: var(--amber); }
-.spell-kj { margin-top: 4px; font-size: .8rem; color: var(--ink-3); }
+.spell-m { font: 600 1.05rem/1.25 var(--f-display); color: var(--ink); text-align: center; }
+.spell-hook { margin-top: 4px; font-size: .8rem; line-height: 1.35; color: var(--ink-2); text-align: center; }
+.spell-hook .ico { width: 12px; height: 12px; vertical-align: -1px; color: var(--amber); }
+.spell-kj { margin-top: 2px; font-size: .74rem; color: var(--ink-3); text-align: center; }
 .spell-kj [lang="ja"] { font-size: 1.15em; color: var(--ink-2); }
 
 .q { text-align: center; }
@@ -666,18 +666,15 @@ rt { font-size: .45em; color: var(--c-hira); font-weight: 400; letter-spacing: 0
 .learned-list.words { font-size: 1.5rem; letter-spacing: 0; line-height: 1.9; }
 
 .lib-search { flex: 1 1 14rem; max-width: 22rem; width: auto; }
-ul.lib { list-style: none; margin: 0; padding: 0; columns: 2 18rem; column-gap: 1.5rem; }
-ul.lib li { break-inside: avoid; display: flex; align-items: stretch; border-top: 1px solid var(--rule-2); }
-ul.lib .lib-row { border-top: 0; flex: 1; min-width: 0; }
-.lib-row {
-  width: 100%; display: grid; grid-template-columns: auto 1fr auto; column-gap: .8rem; align-items: center;
-  text-align: left; padding: 7px 6px; border-radius: 6px; border-top: 1px solid var(--rule-2);
-}
-.lib-row:hover { background: var(--sunken); }
-.lib-jp { font-size: 1.2rem; line-height: 1.7; }
-.lib-rom { grid-column: 1; grid-row: 2; font-size: .76rem; color: var(--ink-3); }
-.lib-m { color: var(--ink-2); font-size: .88rem; text-align: right; grid-row: 1 / span 2; grid-column: 2; }
-.lib-st { grid-column: 3; grid-row: 1 / span 2; font-size: .7rem; color: var(--ink-3); border: 1px solid var(--rule); border-radius: 999px; padding: 0 6px; }
+/* the Words tab: Today's word tiles, larger, as many across as fit */
+ul.lib { list-style: none; margin: 0; padding: 0; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); grid-auto-flow: row dense; gap: 8px; }
+.lib .wtile.wide { grid-column: span 2; }
+.lib .wt-say { min-height: 6.4rem; padding: 14px 10px 10px; }
+.lib .wt-jp { font-size: 1.45rem; }
+.lib .wt-jp.long { font-size: 1.1rem; }
+.lib .wt-jp.xlong { font-size: 1.25rem; }
+.lib .wt-en { font-size: .82rem; color: var(--ink-2); }
+.lib .wt-say .rom { font-size: .74rem; }
 .not-yet .chips { margin-top: .3rem; }
 
 .forms { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; max-width: 26rem; margin: .2rem auto .8rem; }
@@ -783,6 +780,7 @@ ul.lib .lib-row { border-top: 0; flex: 1; min-width: 0; }
 .cd-stage { display: flex; flex-direction: column; align-items: center; gap: 14px; }
 .cd-count { color: var(--ink-3); font-size: .9rem; font-variant-numeric: tabular-nums; }
 .flashcard { width: min(30rem, 100%); aspect-ratio: 3 / 2; perspective: 1400px; display: block; cursor: pointer; touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; transition: transform .14s ease-out, opacity .14s; }
+.flashcard.dragging { transition: none; }
 .flashcard.out-left { transform: translateX(-60%) rotate(-8deg); opacity: 0; }
 .flashcard.out-right { transform: translateX(60%) rotate(8deg); opacity: 0; }
 .fc-inner { position: relative; width: 100%; height: 100%; transition: transform .45s cubic-bezier(.3,.7,.3,1); transform-style: preserve-3d; }
@@ -1360,11 +1358,11 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
   .prog .bar { height: 6px; }
 
   /* the rail's words: a taste, not the whole list — the Words tab has it */
-  .wgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-  .wtile:nth-child(n+13) { display: none; }
-  .wt-say { min-height: 5.2rem; }
-  .wt-jp { font-size: 1.15rem; }
-  .wt-en { font-size: .78rem; }
+  .deck .wgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .deck .wtile:nth-child(n+13) { display: none; }
+  .deck .wt-say { min-height: 5.2rem; }
+  .deck .wt-jp { font-size: 1.15rem; }
+  .deck .wt-en { font-size: .78rem; }
   .wt-more { width: 32px; height: 32px; }
   .more { width: 44px; }
   .more .ico { width: 20px; height: 20px; }
@@ -1395,10 +1393,8 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
   .chart-head .seg { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
   .chart-head .seg::-webkit-scrollbar { display: none; }
   .chart-head .seg button { flex: 1 0 auto; }
-  ul.lib { columns: 1; }
-  .lib-row { min-height: 56px; padding: 8px 6px; }
-  .lib-jp { font-size: 1.3rem; }
-  .lib-m { font-size: .95rem; }
+  ul.lib { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lib .wt-more { width: 36px; height: 36px; }
 
   /* ---------- sessions: read at the top, answer at the bottom ---------- */
 

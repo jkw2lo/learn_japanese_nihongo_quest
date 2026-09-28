@@ -172,26 +172,37 @@ function stepCard(dir, how = "") {
 function bindCardGestures() {
   const card = $("#flashcard");
   if (!card) return;
-  let x0 = 0, y0 = 0, pressT = null, held = false, down = false;
+  let x0 = 0, y0 = 0, dx = 0, dy = 0, pressT = null, held = false, down = false, touching = false;
+  const drag = (x, y) => {
+    dx = x - x0; dy = y - y0;
+    if (Math.abs(dx) > 12 || Math.abs(dy) > 12) clearTimeout(pressT);
+    if (Math.abs(dx) > 12) card.style.transform = `translateX(${dx * .6}px) rotate(${dx / 40}deg)`;
+  };
+  const swiped = () => Math.abs(dx) > SWIPE_PX && Math.abs(dx) > Math.abs(dy);
+  const release = () => { down = false; clearTimeout(pressT); card.classList.remove("dragging"); card.style.transform = ""; };
   card.addEventListener("pointerdown", e => {
-    down = true; held = false; x0 = e.clientX; y0 = e.clientY;
+    down = true; held = false; x0 = e.clientX; y0 = e.clientY; dx = dy = 0;
+    card.classList.add("dragging");
     clearTimeout(pressT);
     pressT = setTimeout(() => { held = true; flipCard(); }, LONG_MS);
   });
-  card.addEventListener("pointermove", e => {
+  card.addEventListener("pointermove", e => { if (down) drag(e.clientX, e.clientY); });
+  /* Phones (iOS Safari above all) don't reliably honour touch-action on a
+     card with a 3D flip in it: they take a sideways drag for a scroll and
+     cancel the pointer. So once a drag is plainly sideways, the page isn't
+     allowed to scroll — and the touch keeps the drag going regardless. */
+  card.addEventListener("touchstart", () => { touching = true; }, { passive: true });
+  card.addEventListener("touchmove", e => {
     if (!down) return;
-    const dx = e.clientX - x0;
-    if (Math.abs(dx) > 12 || Math.abs(e.clientY - y0) > 12) clearTimeout(pressT);
-    if (Math.abs(dx) > 12) card.style.transform = `translateX(${dx * .6}px) rotate(${dx / 40}deg)`;
-  });
-  const up = e => {
+    const t = e.touches[0];
+    drag(t.clientX, t.clientY);
+    if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) e.preventDefault();
+  }, { passive: false });
+  card.addEventListener("pointerup", () => {
     if (!down) return;
-    down = false;
-    clearTimeout(pressT);
-    card.style.transform = "";
-    const dx = e.clientX - x0, dy = e.clientY - y0;
+    release();
     if (held) return;
-    if (Math.abs(dx) > SWIPE_PX && Math.abs(dx) > Math.abs(dy)) { stepCard(dx < 0 ? 1 : -1, "swipe"); return; }
+    if (swiped()) { stepCard(dx < 0 ? 1 : -1, "swipe"); return; }
     if (Math.abs(dx) > 12 || Math.abs(dy) > 12) return;
     const now = Date.now();
     if (now - (bindCardGestures.lastTap || 0) < DOUBLE_MS) {
@@ -203,9 +214,22 @@ function bindCardGestures() {
     bindCardGestures.lastTap = now;
     clearTimeout(bindCardGestures.hearT);
     bindCardGestures.hearT = setTimeout(() => say(cardFaces(CD.keys[CD.i]).say), DOUBLE_MS);
+  });
+  /* A cancelled pointer can still turn out to be a swipe: with a finger,
+     the touch carries on and its end settles it; otherwise judge it now. */
+  card.addEventListener("pointercancel", () => {
+    if (!down || touching) return;
+    release();
+    if (!held && swiped()) stepCard(dx < 0 ? 1 : -1, "swipe");
+  });
+  const touchEnd = () => {
+    touching = false;
+    if (!down) return;                   /* pointerup already dealt with it */
+    release();
+    if (!held && swiped()) stepCard(dx < 0 ? 1 : -1, "swipe");
   };
-  card.addEventListener("pointerup", up);
-  card.addEventListener("pointercancel", () => { down = false; clearTimeout(pressT); card.style.transform = ""; });
+  card.addEventListener("touchend", touchEnd);
+  card.addEventListener("touchcancel", touchEnd);
   card.addEventListener("contextmenu", e => e.preventDefault());
 }
 

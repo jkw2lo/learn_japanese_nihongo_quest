@@ -165,9 +165,10 @@ gets its own flow and doesn't go into the review queue:
   is learned — いえ (house) after the first row. Katakana words are mostly
   loanwords, so reading one is guessing the English, which is the fun part.
 - **Words are part of every kana lesson, not just Go deeper.** A lesson
-  ends with *Now you can read*: up to three words its kana have just made
-  readable, taken apart (い i + え e = いえ ie, house), each kana tappable,
-  then read. Words already sounded out in an earlier lesson come last
+  ends with *Now you can read*: up to six words its kana have just made
+  readable (`SPELL_MAX`), as tiles side by side, each taken apart
+  (い i + え e = いえ ie, house), each kana tappable — then every one of
+  them read in a question, so none is left to find on the Words tab. Words already sounded out in an earlier lesson come last
   (`state.spelled`). Today's practice on a kana day adds 言葉 *Read the
   words they spell*.
 - **Why あい is spelled あい: it isn't, beyond its sound.** Kana are letters.
@@ -339,8 +340,11 @@ drops off the end the way Today's short list does.
 - **Coming up**: how many kana words are still out of reach, and which
   single kana would unlock the most of them.
 
-Tapping a word **just says it**. The › at the end of the row opens its
-card. Today's rail works the same way: it shows the newest, scrolling in
+Words are **tiles**, as many across as fit (two on a phone), not a line
+each, so the list stays short as it grows. A word of six or seven kana is
+set smaller; a phrase of eight or more (おはようございます) gets a
+double-width tile so it reads in one line. Tapping a word **just says it**.
+The › in its corner opens its card. Today's rail works the same way: it shows the newest, scrolling in
 place, with a link to the whole list.
 
 ### Reading never outruns you, now with furigana

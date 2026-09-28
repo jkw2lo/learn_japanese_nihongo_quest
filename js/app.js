@@ -589,17 +589,19 @@ function lessonCards(L) {
      kana by kana, then read. Chosen when the card comes up, so they're
      the words readable by then. */
   const reads = [() => spellCard(L)];
-  for (let i = 0; i < 3; i++) reads.push(() => { const w = S.spell?.[L.id]?.[i]; return w ? qWord(w) : null; });
+  for (let i = 0; i < SPELL_MAX; i++) reads.push(() => { const w = S.spell?.[L.id]?.[i]; return w ? qWord(w) : null; });
   return [...cards, ...shuffle(drill), ...reads];
 }
 
-/* Up to three words this lesson's kana have just made readable — ones not
-   sounded out in an earlier lesson first. */
+/* The words this lesson's kana have just made readable — ones not sounded
+   out in an earlier lesson first — up to SPELL_MAX, every one of them then
+   read in a question, so none is left to be picked up from the Words tab. */
+const SPELL_MAX = 6;
 function spellCard(L) {
   const fresh = readableWords().filter(w => w.units.some(u => L.items.includes(u)));
   const seen = new Set(asList(state.spelled));
   const words = [...fresh.filter(w => !seen.has(w.w)), ...fresh.filter(w => seen.has(w.w))]
-    .sort((a, b) => seen.has(a.w) - seen.has(b.w) || spellOrder(a) - spellOrder(b)).slice(0, 3);
+    .sort((a, b) => seen.has(a.w) - seen.has(b.w) || spellOrder(a) - spellOrder(b)).slice(0, SPELL_MAX);
   if (!words.length) return null;
   S.spell = { ...(S.spell || {}), [L.id]: words };
   return { t: "spell", L, words, first: !state.seenSpell };
@@ -609,15 +611,15 @@ function spellCard(L) {
    A one-kana word (え, picture) shows nothing about putting sounds together. */
 const spellOrder = w => w.units.length === 1 ? 99 : w.units.length;
 
-/* One word, taken apart: each kana with its sound, then the whole. */
+/* One word, taken apart: each kana with its sound, then the whole. A tile,
+   so a lesson's several words sit side by side rather than down a page. */
 function spellHtml(w) {
   const part = u => { const e = KANA_BY[u];
     return `<button class="spell-k" data-act="say" data-say="${esc(e?.say || u)}"><span lang="ja">${esc(u)}</span><small>${esc(e?.concept ? "pause" : e?.r || "")}</small></button>`; };
   return `<div class="spell-word">
     <div class="spell-parts">${w.units.map(part).join('<span class="spell-plus" aria-hidden="true">+</span>')}</div>
-    <div class="spell-eq"><span aria-hidden="true">=</span>
-      <button class="spell-whole" data-act="say" data-say="${esc(w.w)}" title="Hear it"><span lang="ja">${esc(w.w)}</span><small>${esc(w.r)}</small></button>
-      <span class="spell-m">${esc(w.m)}</span></div>
+    <button class="spell-whole" data-act="say" data-say="${esc(w.w)}" title="Hear it"><span lang="ja">${esc(w.w)}</span><small>${esc(w.r)}</small></button>
+    <div class="spell-m">${esc(w.m)}</div>
     ${w.hook ? `<div class="spell-hook">${icon("sparkle")} ${esc(w.hook)}</div>` : ""}
     ${w.kj ? `<div class="spell-kj">Usually written <span lang="ja">${esc(w.kj)}</span> in kanji</div>` : ""}
   </div>`;
@@ -845,7 +847,7 @@ function showCard() {
           and tie the sound to the meaning — some words come with a little hook for that. The characters that <i>do</i> carry
           meaning are kanji (love is <span lang="ja">愛</span>); you'll meet those later, attached to words you already know.</p>
       </div>` : `<p class="muted small">Sound each one out, kana by kana — tap any of them — then learn what the whole sound means.</p>`}
-      ${c.words.map(spellHtml).join("")}
+      <div class="spell-grid">${c.words.map(spellHtml).join("")}</div>
     </div>`;
     foot.innerHTML = `<span></span><button class="btn" data-act="next" id="nextBtn">Read them <kbd>␣</kbd></button>`;
     if (state.settings.autoplay) say(c.words[0].w);
@@ -1695,7 +1697,8 @@ const ACTS = {
   "kana-cell": el => openKana(el.dataset.k),
   "chart-set": el => { chartSet = el.dataset.set; renderKana(); },
   opt: el => answer(+el.dataset.i),
-  next: () => { if (S && (S.card?.t === "intro" || S.card?.t === "concept" || S.card?.t === "info" || S.card?.t === "wintro" || S.card?.t === "gintro" || S.card?.t === "kintro" || S.answered || S.finished)) next(); },
+  /* any card that isn't a question just reads, so Next always moves on from it */
+  next: () => { if (S && (S.card && S.card.t !== "q" || S.answered || S.finished)) next(); },
   "deeper-set": el => { deeperSet = el.dataset.set; renderToday(); },
   "w-check": () => checkWrite(),
   "w-undo": () => padUndo(),

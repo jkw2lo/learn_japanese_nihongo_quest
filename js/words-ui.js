@@ -238,26 +238,26 @@ function renderWords() {
   notYet.forEach(x => { const miss = [...new Set(x.units.filter(u => !isLearned(u)))]; if (miss.length === 1) need[miss[0]] = (need[miss[0]] || 0) + 1; });
   const topNeed = Object.entries(need).sort((a, b) => b[1] - a[1]).slice(0, 6);
 
-  /* Tapping a word just says it; the chevron opens its card. */
-  const row = e => `<li><button class="lib-row" data-act="say" data-say="${esc(e.src === "stage" ? e.x.say : e.w)}" title="Hear it">
-    <span class="lib-jp" lang="ja">${wordHtml(e.w)}</span>
-    ${state.settings.showRomaji ? `<span class="lib-rom">${esc(e.r)}</span>` : ""}
-    <span class="lib-m">${esc(e.m)}</span>
-    ${e.src === "stage" ? `<span class="lib-st" title="Stage ${e.st}">${e.st}</span>` : ""}
-  </button><button class="more" data-act="lib-open" data-src="${e.src}" data-w="${esc(e.src === "stage" ? e.x.key : e.w)}" aria-label="Details">${icon("chevron")}</button></li>`;
+  /* A tile a word, like Today's, only roomier: tapping it says it; the
+     corner › opens its card. A longer word is set smaller; a phrase of
+     eight kana or more gets a double-width tile, so it reads in one line. */
+  const lenClass = k => { const n = [...k].length; return n >= 8 ? "xlong" : n >= 6 ? "long" : ""; };
+  const tile = e => `<li class="wtile ${lenClass(e.kana) === "xlong" ? "wide" : ""}"><button class="wt-say" data-act="say" data-say="${esc(e.src === "stage" ? e.x.say : e.w)}" title="Hear it">
+    <span class="wt-jp ${lenClass(e.kana)}" lang="ja">${wordHtml(e.w)}</span>${romaji(e.r)}<span class="wt-en">${esc(e.m)}</span>
+  </button><button class="wt-more" data-act="lib-open" data-src="${e.src}" data-w="${esc(e.src === "stage" ? e.x.key : e.w)}" aria-label="Details">${icon("chevron")}</button></li>`;
 
   const groups = [];
   WORD_STAGES.forEach(S => {
     const es = shown.filter(e => e.src === "stage" && e.st === S.st);
     if (es.length) groups.push(`<section class="card"><div class="card-head"><h2><span lang="ja">${S.jp}</span> ${esc(S.en)}</h2>
-      <span class="count">stage ${S.st} · ${es.length}</span></div><ul class="lib">${es.map(row).join("")}</ul></section>`);
+      <span class="count">stage ${S.st} · ${es.length}</span></div><ul class="wgrid lib">${es.map(tile).join("")}</ul></section>`);
   });
   const kanaEs = shown.filter(e => e.src === "kana");
   if (kanaEs.length) {
     const when = e => e.x.units.map(u => item(u)?.at || "").sort().pop();
     kanaEs.sort((a, b) => when(b).localeCompare(when(a)));
     groups.push(`<section class="card"><div class="card-head"><h2>Spelled in kana</h2>
-      <span class="count">${kanaEs.length} · newest first</span></div><ul class="lib">${kanaEs.map(row).join("")}</ul></section>`);
+      <span class="count">${kanaEs.length} · newest first</span></div><ul class="wgrid lib">${kanaEs.map(tile).join("")}</ul></section>`);
   }
 
   el.innerHTML = `
