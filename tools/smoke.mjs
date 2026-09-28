@@ -54,7 +54,7 @@ const CONTRACT = {
   'js/data/grammar.js': ['SENTENCE_SHAPE', 'PARTICLE_GUIDE', 'ENDINGS', 'GRAMMAR_SAY', 'SHAPE_SENTENCE'],
   'js/grammar-ui.js': ['renderGrammar'],
   'js/data/scenes.js': ['SCENES', 'SCENE_BY', 'receiptSums'],
-  'js/scenes-ui.js': ['places', 'placeProgress', 'placeOpen', 'inkHtml', 'renderOutHome', 'scenePickerHtml', 'renderScene', 'tapSceneItem', 'qScene', 'startSceneQuiz', 'scenePrompt', 'sceneAnswered', 'sceneGot'],
+  'js/scenes-ui.js': ['places', 'placeProgress', 'placeOpen', 'placeLevels', 'outWord', 'inkHtml', 'renderOutHome', 'scenePickerHtml', 'renderScene', 'tapSceneItem', 'qScene', 'startSceneQuiz', 'scenePrompt', 'sceneAnswered', 'sceneGot'],
   'js/stats.js': ['MILESTONES', 'checkMilestones', 'medal', 'celebrate', 'milestoneCheckpoint', 'cheerLine', 'comboPill', 'statsTilesHtml', 'minutesChartHtml', 'learnedChartHtml', 'milestonesHtml', 'heroStatsHtml', 'n5Projection', 'weekAccuracy'],
   'js/book-ui.js': ['BOOK_PENS', 'BOOK_NIBS', 'BOOK_GRIDS', 'BOOK_CAP', 'renderBook', 'bookKey', 'bookAll', 'bookReplaceAll', 'pageSvg', 'inkG', 'strokePath'],
   'js/cards-ui.js': ['DECKS', 'deckKeys', 'orderKeys', 'cardFaces', 'startDeck', 'renderCards', 'flipCard', 'rateCard', 'cardsKey', 'stepCard', 'bindCardGestures'],
@@ -444,6 +444,22 @@ section('out and about');
   run('state.items = {}; learn("す")');
   ok(run('inkHtml("すし")') === 'す<span class="ink-no">し</span>', 'an unknown kana is grey');
   ok(/ink-no">出口/.test(run('inkHtml("{出口|でぐち}")')), 'an unknown kanji whose kana are unknown is grey');
+
+  /* levels */
+  run('KANA.forEach(e => learn(e.k))');
+  ok(run('placeLevels(placeBy("sushi")).list[0].done'), 'every kana: every sushi word can be sounded out');
+  ok(run('placeLevels(placeBy("sushi")).list[2].done'), 'a place in kana alone is read as written already');
+  ok(run('!placeLevels(placeBy("station")).list[2].done'), 'the station waits on its kanji');
+  run('state.scenes.sushi = { got: [...Array(13).keys()] }');
+  ok(run('placeLevels(placeBy("sushi")).stars') === 3, 'most of it recognised: three stars');
+
+  /* the word from the street is only shown: nothing learned, graded or counted */
+  run('state.outWord = null; state.items = {}; learn("あ"); learn("い")');
+  const learning = () => run('JSON.stringify([state.items, state.words, state.kanji, state.patterns, state.days, state.mistakes, state.streak, dueKeys(), nextLessons().map(L => L.id)])');
+  const before = learning();
+  const w = run('JSON.stringify(outWord().it)');
+  ok(before === learning(), 'the word of the day changes nothing about lessons, reviews, the day or the streak');
+  ok(run('JSON.stringify(outWord().it)') === w, 'the word stays the same all day');
 }
 
 section('patterns');

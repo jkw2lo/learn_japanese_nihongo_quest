@@ -99,6 +99,7 @@ function normalise(s) {
   out.mistakes = s.mistakes && typeof s.mistakes === "object" ? s.mistakes : {};
   out.spelled = asList(s.spelled);          /* kana words already sounded out in a lesson */
   out.outSeen = asList(s.outSeen);          /* out-and-about places visited since they opened */
+  out.outWord = s.outWord && typeof s.outWord === "object" ? s.outWord : null;   /* today's word from the street — shown only */
   out.menu = { orders: 0, days: {}, ...(s.menu || {}) };
   out.milestones = s.milestones && typeof s.milestones === "object" ? s.milestones : {};
   out.scenes = s.scenes && typeof s.scenes === "object" ? s.scenes : {};
@@ -531,6 +532,7 @@ function mergeState(a, b) {
   out.kataOpen = earlierOf(a.kataOpen, b.kataOpen);
   out.spelled = unionList(a.spelled, b.spelled);
   out.outSeen = unionList(a.outSeen, b.outSeen);
+  out.outWord = (a.outWord?.date || "") >= (b.outWord?.date || "") ? a.outWord : b.outWord;
   out.seenSpell = !!(a.seenSpell || b.seenSpell);
   out.backupAt = laterOf(a.backupAt, b.backupAt);
   out.updated = bigger(a.updated, b.updated);

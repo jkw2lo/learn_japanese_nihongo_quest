@@ -630,6 +630,27 @@ kana. A kanji you haven't learned stays grey: a softer grey when the kana
 above it are all yours, since you can at least sound it out. A key under
 each place's title says so.
 
+**Levels: the same place, deeper.** Opening a place is the start. Each
+has three levels, earned in any order (`placeLevels`), shown as three steps
+under its title and as three dots on its tile:
+1. **読 Sound it out**: every word, not just half.
+2. **分 Know what it says**: most of it (80%) recognised, in a scene's quiz
+   or, for a menu, by finding it in an order. Both are kept in
+   `state.scenes`.
+3. **字 Read it as written**: every kanji in it learned, so the furigana has
+   gone. A place in kana alone is read as written already. The station
+   has 47 kanji and the course teaches 13 of them, so this level is
+   deliberately a long way off: it's where N4 would take you.
+
+**A word from the street.** One word a day from the place nearest to
+opening (once all are open, the one with the fewest levels), preferring a
+word with a kana or kanji you don't know yet, shown on the landing page and
+on Today's Out and about card, inked like everything else. It is **only
+shown**: `outWord()` learns nothing, grades nothing and counts nothing, so
+lessons, reviews, the day's tally and the streak don't move (the smoke test
+compares them before and after). It's kept for the day in `state.outWord`,
+so a lesson that opens a place doesn't swap it mid-day.
+
 **The first three are for the hiragana weeks.** Almost nothing on a real
 sign is readable in the first fortnight, so three places are made of words
 genuinely written in hiragana, and open during hiragana one after another:

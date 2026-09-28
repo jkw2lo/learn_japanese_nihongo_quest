@@ -58,12 +58,9 @@ Build order. Each step should run end to end before the next one starts.
 9b. ~~Notebook~~ (0.12.0): the 練習帳 writing workspace (box → Add to
    page, dated pages, pens, nibs, guides, tracing with stroke order).
    Pages could sync too (they're in IndexedDB, not the record).
-9c. **Out and about, part two**: part one (0.14.0) gave it a landing page,
-   the half-its-words rule, grey ink for what you don't know, and three
-   hiragana places. Next: three levels a place (sound it out → know what it
-   means → read it without furigana, once its kanji are learned), and a
-   word a day from the place nearest to opening, outside the daily words
-   and reviews.
+9c. ~~Out and about~~ (0.14.0, 0.15.0): a landing page, the half-its-words
+   rule, grey ink, three hiragana places, three levels a place, and a word
+   a day from the street.
 10. **More recognition practice at N5**: more scenes (a train ticket, a
    bento label, a konbini's shelf tags, a clinic), a "spot the kanji you
    know" mode over the scenes, and scenes in Sprint.

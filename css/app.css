@@ -1095,6 +1095,35 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 .pl-new { position: absolute; top: 10px; right: 10px; font-size: .68rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
   color: #fff; background: var(--seal); padding: 2px 7px; border-radius: 999px; }
 
+/* a place's three levels, and its stars on the landing page */
+.levels { list-style: none; margin: .2rem 0 1rem; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.levels li { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 10px; }
+.levels li > span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.levels b { font-size: .84rem; }
+.levels small { font-size: .76rem; color: var(--ink-3); }
+.lv-jp { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+  font: 500 1.05rem var(--f-ja-serif); background: var(--sunken); color: var(--ink-3); }
+.levels li.done { border-color: color-mix(in srgb, var(--jade) 45%, var(--rule)); }
+.levels li.done .lv-jp { background: var(--jade); color: #fff; }
+.levels li.next { border-color: var(--amber); }
+.levels li.next .lv-jp { background: var(--amber-wash); color: var(--amber); }
+.pl-stars { display: inline-flex; gap: 3px; vertical-align: -1px; margin-right: 4px; }
+.pl-stars i { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--jade); }
+.pl-stars i.on { background: var(--jade); }
+
+/* a word a day from the street: shown, never taught */
+.out-word { margin-top: 12px; }
+.ow-row { display: flex; align-items: center; gap: 1.2rem; margin: .4rem 0 .5rem; }
+.ow-jp { font: 500 2.2rem/1.3 var(--f-ja); padding: 4px 14px; border-radius: 10px; border: 1px solid var(--rule); background: var(--sheet); }
+.ow-jp:hover { border-color: var(--ink-3); }
+.ow-jp rt { font-size: .4em; }
+.ow-rom { color: var(--ai); font-weight: 600; font-size: .9rem; }
+.ow-m { font: 600 1.15rem var(--f-display); }
+.out-word > .muted.tiny { margin: 0; }
+.ow-mini { display: block; margin-top: 6px; text-align: left; font-size: .82rem; color: var(--ink-2); }
+.ow-mini span { font-size: 1.05rem; color: var(--ink); margin: 0 4px; }
+.ow-mini:hover { color: var(--ink); }
+
 /* the early three's signs: a sushi curtain, a bath's, a festival banner */
 .plates-sushi .plate { background: #23304A; color: #F4EEDF; border-radius: 3px 3px 12px 12px; border-top: 6px solid #6B4A2B; }
 .plates-sento .plate { background: #8E2F2F; color: #FBEFE2; border-radius: 3px 3px 12px 12px; border-top: 6px solid #4A3322; }
@@ -1603,6 +1632,8 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 
   /* out and about */
   .out-intro { grid-template-columns: 1fr; gap: 1rem; }
+  .levels { grid-template-columns: 1fr; gap: 6px; }
+  .ow-jp { font-size: 1.8rem; }
   .out-journey { border-left: 0; padding-left: 0; border-top: 1px solid var(--rule); padding-top: 1rem; }
   .places { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .place { padding: 12px 12px 10px; }

@@ -41,6 +41,8 @@ function menuCardHtml() {
       <div class="eyebrow">街 · Out and about</div>
       Sushi counters, signs, menus and shop talk. <b>${open.length} of ${ps.length}</b> places open${
         next ? ` · next: <span lang="ja">${esc(next.p.jp)}</span>, ${next.more} more word${next.more === 1 ? "" : "s"}` : ""}${orders ? ` · ${orders} order${orders > 1 ? "s" : ""} today` : ""}.
+      ${(() => { const { it } = outWord(); return `<button class="ow-mini" data-act="say" data-say="${esc(it.kana)}" title="Hear it">今日の言葉
+        <span lang="ja">${inkHtml(it.w)}</span> ${esc(it.m)}</button>`; })()}
     </div>
     <button class="btn btn-sm" data-act="out-home">Go out</button>
   </section>`;
@@ -119,6 +121,7 @@ function renderMenu() {
       <span class="muted">${readable.length} of ${items.length} you can read · tap one to hear it</span>
     </div>
     ${inkKeyHtml(items.map(it => it.w))}
+    ${open ? levelsHtml(placeBy(M.id)) : ""}
     <div class="menu-layout">
       <section class="card menu-board ${open ? "" : "locked"}">
         ${noren(furiPlain(M.name).split(" ").pop(), M.tier === 2 ? "diner" : "")}
@@ -160,6 +163,9 @@ function tapItem(key) {
     const want = game.targets[game.i];
     if (it === want) {
       game.got.push(key);
+      /* found on the menu: recognised, for the place's second level */
+      const s = state.scenes[M.id] || (state.scenes[M.id] = { got: [] }), idx = menuItems(M).indexOf(it);
+      if (!s.got.includes(idx)) s.got.push(idx);
       game.i++;
       game.msg = "";
       game.wrong = null;

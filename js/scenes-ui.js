@@ -27,11 +27,13 @@ function places() {
   if (placesCache) return placesCache;
   const course = kanaCourse();
   placesCache = [
-    ...MENUS.map(M => ({ id: M.id, M, jp: furiPlain(M.name).split(" ").pop(), en: M.en, words: menuItems(M).map(it => it.kana) })),
-    ...SCENES.map(sc => ({ id: sc.id, sc, jp: sc.jp, en: sc.en, words: sc.all.map(it => it.kana) })),
+    ...MENUS.map(M => ({ id: M.id, M, jp: furiPlain(M.name).split(" ").pop(), en: M.en, items: menuItems(M) })),
+    ...SCENES.map(sc => ({ id: sc.id, sc, jp: sc.jp, en: sc.en, items: sc.all })),
   ];
   /* the lesson that opens each one, if lessons go in order: the order they're shown in */
   placesCache.forEach(p => {
+    p.words = p.items.map(it => it.kana);
+    p.kanji = [...new Set(p.items.flatMap(it => furiKanji(it.w)))];
     const need = Math.ceil(p.words.length * PLACE_OPEN), known = new Set();
     p.opensAt = course.findIndex(L => { L.items.forEach(k => known.add(k)); return p.words.filter(w => soundable(w, known)).length >= need; });
     p.opensWith = course[p.opensAt]?.title || "";
@@ -46,8 +48,81 @@ function placeProgress(p) {
   return { ok, n, need, open: ok >= need, more: Math.max(0, need - ok) };
 }
 const placeOpen = id => placeProgress(placeBy(id)).open;
-const placeGot = p => p.sc ? sceneGot(p.id).size : 0;
+/* What's been recognised: a scene's quiz, or a menu's ordering game — both
+   kept in state.scenes, by item index. */
+const placeGot = p => sceneGot(p.id).size;
 const placeNew = p => placeProgress(p).open && !asList(state.outSeen).includes(p.id);
+
+/* ---------- levels: the same place, deeper ----------
+
+   Opening a place is the start, not the end. Three levels, each its own
+   thing to work towards, earned in any order:
+     1 読 Sound it out — every word in it, not just half
+     2 分 Know what it says — most of it recognised (LEVEL_KNOW): a scene's
+          quiz, a menu's orders
+     3 字 Read it as written — every kanji in it learned, so the furigana
+          has gone. A place in kana alone is read as written already. */
+const LEVEL_KNOW = 0.8;
+function placeLevels(p) {
+  const pr = placeProgress(p);
+  const got = placeGot(p), need = Math.ceil(pr.n * LEVEL_KNOW);
+  const kj = p.kanji.filter(knowsKanji).length;
+  const L = [
+    { jp: "読", en: "Sound it out", done: pr.ok === pr.n, note: pr.ok === pr.n ? "every word" : `${pr.ok} of ${pr.n} words` },
+    { jp: "分", en: "Know what it says", done: got >= need, note: got >= need ? `${got} of ${pr.n} recognised` : `${got} of ${need} recognised` },
+    { jp: "字", en: "Read it as written", done: kj === p.kanji.length,
+      note: !p.kanji.length ? "all kana — nothing hidden" : `${kj} of ${p.kanji.length} kanji` },
+  ];
+  return { list: L, stars: L.filter(x => x.done).length, next: L.find(x => !x.done) || null };
+}
+
+const starsHtml = n => `<span class="pl-stars" aria-label="${n} of 3 levels">${[0, 1, 2].map(i => `<i class="${i < n ? "on" : ""}"></i>`).join("")}</span>`;
+
+function levelsHtml(p) {
+  const lv = placeLevels(p);
+  return `<ol class="levels">${lv.list.map((x, i) => `<li class="${x.done ? "done" : x === lv.next ? "next" : ""}">
+    <span class="lv-jp" lang="ja">${x.jp}</span><span><b>${i + 1} · ${x.en}</b><small>${x.note}</small></span></li>`).join("")}</ol>`;
+}
+
+/* ---------- a word a day from the street ----------
+
+   One word a day from the place nearest to opening (or, once they're all
+   open, the one furthest from its levels), for a look at what's coming.
+   It's only shown: nothing here learns, grades, counts towards the day or
+   touches lessons, reviews or the streak. Kept for the day (state.outWord)
+   so it doesn't change when a lesson opens a place. */
+function outWord() {
+  const t = today();
+  const w = state.outWord;
+  if (w && w.date === t && placeBy(w.id)?.items[w.i]) return { p: placeBy(w.id), it: placeBy(w.id).items[w.i] };
+  const ps = places();
+  const p = ps.find(x => !placeProgress(x).open)
+    || [...ps].sort((a, b) => placeLevels(a).stars - placeLevels(b).stars)[0];
+  /* a word with something new in it — a kana or kanji not yet known — if there is one */
+  const fresh = p.items.map((it, i) => i).filter(i => !soundable(p.items[i].kana) || furiKanji(p.items[i].w).some(k => !knowsKanji(k)));
+  const pool = fresh.length ? fresh : p.items.map((_, i) => i);
+  const seed = [...t].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+  const i = pool[seed % pool.length];
+  state.outWord = { date: t, id: p.id, i };
+  save();
+  return { p, it: p.items[i] };
+}
+
+function outWordHtml() {
+  const { p, it } = outWord();
+  return `<section class="card out-word">
+    <div class="eyebrow">今日の言葉 · A word from the street</div>
+    <div class="ow-row">
+      <button class="ow-jp" lang="ja" data-act="say" data-say="${esc(it.kana)}" title="Hear it">${inkHtml(it.w)}</button>
+      <div class="ow-text">
+        <div class="ow-rom">${esc(toRomaji(it.kana))}</div>
+        <div class="ow-m">${esc(it.m)}</div>
+        <div class="muted tiny">from <span lang="ja">${esc(p.jp)}</span> ${esc(p.en)}</div>
+      </div>
+    </div>
+    <p class="muted tiny">Just for looking. It isn't added to your lessons or reviews — grey is what you haven't learned yet.</p>
+  </section>`;
+}
 
 /* ---------- ink: what you know, dark; what you don't, grey ----------
 
@@ -97,7 +172,7 @@ function renderOutHome() {
       ? `<b>Next to open: <span lang="ja">${esc(next.p.jp)}</span> ${esc(next.p.en)}</b> — ${next.more} more word${next.more === 1 ? "" : "s"} to sound out${nextLesson && !nextLesson.items.every(isLearned) ? `, which the <span lang="ja">${esc(next.p.opensWith)}</span> should bring` : ""}.`
       : `Every place is open. What's left is the kanji — each one you learn loses its little kana, and you read the sign the way people there do.`;
   const tile = x => {
-    const got = placeGot(x.p), isNew = placeNew(x.p);
+    const isNew = placeNew(x.p);
     return `<button class="place ${x.open ? "open" : "shut"}" data-act="menu-pick" data-id="${x.p.id}">
       ${isNew ? `<span class="pl-new">new</span>` : x.open ? "" : `<span class="pl-lock">${icon("lock")}</span>`}
       <span class="pl-jp" lang="ja">${esc(x.p.jp)}</span>
@@ -105,7 +180,7 @@ function renderOutHome() {
       <span class="pl-bar"><i style="width:${Math.round(100 * x.ok / x.n)}%"></i><b style="left:${PLACE_OPEN * 100}%"></b></span>
       <span class="pl-n">${x.ok} of ${x.n} words you can read</span>
       <span class="pl-state">${x.open
-        ? (got ? `${got} recognised` : x.p.M ? "Open · take an order" : "Open · test yourself")
+        ? `${starsHtml(placeLevels(x.p).stars)} ${esc(placeLevels(x.p).next?.en || "Every level")}${placeLevels(x.p).next ? " next" : " done"}`
         : `${x.more} more to open`}</span>
     </button>`;
   };
@@ -119,6 +194,7 @@ function renderOutHome() {
           <li><b>Learn kana.</b> The characters you know turn dark everywhere here; the rest stay grey.</li>
           <li><b>A place opens</b> when you can sound out half its words.</li>
           <li><b>Look, listen, test yourself.</b> Tap anything to hear it and see what it means.</li>
+          <li><b>Then go deeper.</b> Each place has three levels: sound out every word, know what it says, read it with no kana above the kanji.</li>
         </ol>
       </div>
       <div class="out-journey">
@@ -127,6 +203,7 @@ function renderOutHome() {
         <p class="small">${lead}</p>
       </div>
     </section>
+    ${outWordHtml()}
     <div class="places">${ps.map(tile).join("")}</div>`;
 }
 
@@ -201,7 +278,7 @@ function renderScene(sc) {
       ${inkKeyHtml(sc.all.map(it => it.w))}
     </div>
     <div class="scene-score">${ring(got / n, 56, 6)}<span>${got}<small>/${n}</small></span><small>recognised</small></div></div>
-    ${open ? "" : placeShutHtml(placeBy(sc.id))}
+    ${open ? levelsHtml(placeBy(sc.id)) : placeShutHtml(placeBy(sc.id))}
     ${body}
     <div class="scene-actions">${open ? `<button class="btn cta" data-act="scene-quiz" data-id="${sc.id}">Test yourself</button>`
       : `<button class="btn cta" disabled>${icon("lock")} Quiz: ${placeProgress(placeBy(sc.id)).more} more word${placeProgress(placeBy(sc.id)).more === 1 ? "" : "s"}</button>`}
