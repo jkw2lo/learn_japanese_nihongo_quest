@@ -54,6 +54,8 @@ const CONTRACT = {
   'js/data/grammar.js': ['SENTENCE_SHAPE', 'PARTICLE_GUIDE', 'ENDINGS', 'GRAMMAR_SAY', 'SHAPE_SENTENCE'],
   'js/grammar-ui.js': ['renderGrammar'],
   'js/data/scenes.js': ['SCENES', 'SCENE_BY', 'receiptSums'],
+  'js/data/konbini.js': ['KONBINI', 'KONBINI_BY', 'KONBINI_AISLES', 'KONBINI_SHAPES', 'konbiniItems'],
+  'js/konbini-ui.js': ['renderKonbini', 'konbiniKey', 'kbReset', 'kbPack', 'kbType', 'kbNext', 'kbReadable', 'KB_SHAPES'],
   'js/scenes-ui.js': ['places', 'placeProgress', 'placeOpen', 'placeLevels', 'outWord', 'inkHtml', 'renderOutHome', 'scenePickerHtml', 'renderScene', 'tapSceneItem', 'qScene', 'startSceneQuiz', 'scenePrompt', 'sceneAnswered', 'sceneGot'],
   'js/stats.js': ['MILESTONES', 'checkMilestones', 'medal', 'celebrate', 'milestoneCheckpoint', 'cheerLine', 'comboPill', 'statsTilesHtml', 'minutesChartHtml', 'learnedChartHtml', 'milestonesHtml', 'heroStatsHtml', 'n5Projection', 'weekAccuracy'],
   'js/book-ui.js': ['BOOK_PENS', 'BOOK_NIBS', 'BOOK_GRIDS', 'BOOK_CAP', 'renderBook', 'bookKey', 'bookAll', 'bookReplaceAll', 'pageSvg', 'inkG', 'strokePath'],
@@ -268,7 +270,7 @@ section('sync');
     b.days['2026-09-20'] = { n: 12, ok: { r: ['う'], p: ['あ'] }, learned: ['う'], rev: ['あ'], check: { passed: true, best: .9, tries: 1 } };
     b.days['2026-09-21'] = { n: 4, ok: {}, learned: [], rev: [] };
     a.milestones = { 'kana-10': '2026-09-03' }; b.milestones = { 'kana-10': '2026-09-05', 'streak-3': '2026-09-21' };
-    a.scenes = { station: { got: [0, 2] } }; b.scenes = { station: { got: [2, 5] }, road: { got: [1] } };
+    a.scenes = { station: { got: [0, 2] }, konbini: { got: [1], copy: [1], back: [] } }; b.scenes = { station: { got: [2, 5] }, road: { got: [1] }, konbini: { got: [3], copy: [2] } };
     a.menu = { orders: 7, days: { '2026-09-20': 3 } }; b.menu = { orders: 4, days: { '2026-09-20': 1, '2026-09-21': 2 } };
     a.sprint.best.h = { right: 40, total: 46, ms: 90000, at: '2026-09-10' }; b.sprint.best.h = { right: 40, total: 46, ms: 80000, at: '2026-09-11' };
     a.kataOpen = '2026-09-15'; b.kataOpen = null; a.created = '2026-08-30'; b.created = '2026-09-01';
@@ -292,6 +294,8 @@ section('sync');
   ok(!!m.days['2026-09-21'], 'a day from one side is kept');
   ok(m.milestones['kana-10'] === '2026-09-03' && m.milestones['streak-3'], 'milestones: every one, on its earlier day');
   ok(JSON.stringify(m.scenes.station.got) === '[0,2,5]' && m.scenes.road, 'scenes recognised are joined');
+  ok(JSON.stringify(m.scenes.konbini) === '{"got":[1,3],"copy":[1,2],"back":[]}', 'the konbini\'s slogans and back labels read are joined too');
+  ok(!('copy' in m.scenes.station), 'a scene without them doesn\'t grow them');
   ok(m.menu.orders === 7 && m.menu.days['2026-09-21'] === 2, 'menu orders take the larger');
   ok(m.sprint.best.h.ms === 80000, 'the better sprint is kept');
   ok(m.kataOpen === '2026-09-15' && m.created === '2026-08-30', 'firsts are the earlier');
@@ -460,6 +464,55 @@ section('out and about');
   const w = run('JSON.stringify(outWord().it)');
   ok(before === learning(), 'the word of the day changes nothing about lessons, reviews, the day or the streak');
   ok(run('JSON.stringify(outWord().it)') === w, 'the word stays the same all day');
+}
+
+section('konbini');
+{
+  /* the convenience store (README → Out and about → コンビニ) */
+  const s = sandbox();
+  const run = code => vm.runInContext(code, s);
+  vm.runInContext(['js/data/menu.js', 'js/data/scenes.js', 'js/data/konbini.js'].map(read).join('\n') +
+    ';var ACTS = {}; var esc = t => String(t); var icon = () => ""; var knowsKanji = ch => isLearned("k:" + ch);\n' +
+    read('js/scenes-ui.js') + '\n' + read('js/konbini-ui.js'), s);
+  run('load()');
+  const P = run('KONBINI.map(p => ({ ...p }))');
+  const ids = P.map(p => p.id);
+  ok(new Set(ids).size === ids.length, 'konbini ids should be unique');
+  ok(run('places().some(p => p.id === "konbini")'), 'the konbini is a place');
+  ok(run('places().slice(0, 3).every(p => p.id !== "konbini")'), 'the konbini doesn\'t open before the hiragana places');
+  const aisles = run('KONBINI_AISLES.map(A => A.id)'), shapes = run('KONBINI_SHAPES'), drawn = run('Object.keys(KB_SHAPES)');
+  shapes.forEach(sh => ok(drawn.includes(sh), `the ${sh} shape has no drawing`));
+  aisles.forEach(a => ok(P.filter(p => p.aisle === a).length >= 4, `aisle ${a} needs at least four products for a quiz`));
+  P.forEach(p => {
+    ok(aisles.includes(p.aisle), `${p.id}: no aisle ${p.aisle}`);
+    ok(shapes.includes(p.shape), `${p.id}: no shape ${p.shape}`);
+    ok(Number.isInteger(p.shelf) && p.shelf >= 0 && p.shelf < run(`KONBINI_AISLES.find(A => A.id === "${p.aisle}").shelves`), `${p.id}: shelf ${p.shelf} isn't one of its aisle's shelves`);
+    ok(!p.lines || p.lines.join('') === p.name, `${p.id}: its lines don't join to its name`);
+    ok(p.say === p.kana, `${p.id}: say (${p.say}) should be the name's reading (${p.kana})`);
+    ok(p.tags.length === p.tagsEn.length, `${p.id}: every tag needs its English`);
+    ok(p.cq.length === 5 && new Set(p.cq.slice(1)).size === 4, `${p.id}: its slogan question needs four different answers`);
+    ok(p.back.length >= 4 && p.back.every(r => r.length === 4), `${p.id}: the back label needs four lines, each [term, value, English, what it tells you]`);
+    ok(Number.isInteger(p.price) && p.price >= 50 && p.price <= 600, `${p.id}: a price of ¥${p.price}?`);
+    ok(p.shape !== 'bottle' || (p.cap && p.liquid), `${p.id}: a bottle needs a cap and a liquid colour`);
+    /* the type: the name fits, and never sets smaller than its own slogan */
+    const t = run(`kbType(KONBINI_BY.${p.id}, KB_SHAPES.${p.shape})`);
+    ok(t.fs >= 5, `${p.id}: its name sets at ${t.fs.toFixed(1)}px — too small for its package`);
+    ok(t.copyFs <= t.fs * .5 + 1e-9, `${p.id}: its slogan sets larger than half its name`);
+  });
+  /* the reading questions need other names to choose from */
+  P.filter(p => /\{/.test(p.name)).forEach(p => ok(new Set(P.filter(x => x.aisle === p.aisle).map(x => x.kana)).size >= 4, `${p.id}: its aisle needs four different readings`));
+
+  /* each side quizzes once it can be sounded out, never before the name, in order */
+  ok(run('!kbReadable(KONBINI_BY.tuna, "name")'), 'nothing is readable on day one');
+  run('KANA.forEach(e => learn(e.k))');
+  ok(run('kbNext(KONBINI_BY.tuna)') === 'name', 'the name comes first');
+  run('state.scenes.konbini = { got: [KONBINI_BY.tuna.i], copy: [], back: [] }');
+  ok(run('kbNext(KONBINI_BY.tuna)') === 'copy', 'then the slogan');
+  run('state.scenes.konbini.copy = [KONBINI_BY.tuna.i]');
+  ok(run('kbNext(KONBINI_BY.tuna)') === 'back', 'then the back');
+  ok(run('placeLevels(placeBy("konbini")).list[1].note').startsWith('1 of'), 'names read count towards 分, as every place\'s do');
+  run('state.items = {}; ["さ","け"].forEach(k => learn(k))');
+  ok(run('kbReadable(KONBINI_BY.sake, "name") && !kbReadable(KONBINI_BY.tuna, "name")'), 'a name is readable when its kana are, kanji or not');
 }
 
 section('patterns');
@@ -645,7 +698,8 @@ section('furigana');
   vm.runInContext(read('js/data/kana.js') + read('js/furi.js') + `;globalThis.F = { furiParse, furiKana, furiPlain, furiKanji, furiProblems, furiHtml };
     ${read('js/data/words.js')};globalThis.WORDS = WORDS;
     ${read('js/data/patterns.js')};globalThis.PATTERNS = PATTERNS;
-    ${read('js/data/scenes.js')};globalThis.SCENES = SCENES; globalThis.receiptSums = receiptSums;`, f);
+    ${read('js/data/scenes.js')};globalThis.SCENES = SCENES; globalThis.receiptSums = receiptSums;
+    ${read('js/data/konbini.js')};globalThis.KONBINI = KONBINI; globalThis.KONBINI_AISLES = KONBINI_AISLES;`, f);
   const { furiKana, furiPlain, furiKanji, furiProblems, furiHtml } = f.F;
   ok(furiKana('{食|た}べ{物|もの}') === 'たべもの', 'furiKana should take the reading side');
   ok(furiPlain('{食|た}べ{物|もの}') === '食べ物', 'furiPlain should take the kanji side');
@@ -673,6 +727,9 @@ section('furigana');
   f.STAGES.forEach(S => strings.push(S.about));
   /* out and about: every sign, line and bubble */
   f.SCENES.forEach(sc => { sc.all.forEach(x => strings.push(x.w)); (sc.lines || []).forEach(([w]) => strings.push(w)); });
+  /* the konbini: every name, slogan, tag and line of every label */
+  f.KONBINI.forEach(p => [p.name, p.copy, ...(p.lines || []), ...p.tags, ...p.back.map(r => r[0]), ...p.back.map(r => r[1])].forEach(x => strings.push(x)));
+  f.KONBINI_AISLES.forEach(A => strings.push(A.jp));
   const ids = f.SCENES.map(sc => sc.id);
   ok(new Set(ids).size === ids.length, 'scene ids should be unique');
   f.SCENES.forEach(sc => ok(sc.all.length >= 6, `scene ${sc.id} needs at least six items for a quiz`));

@@ -72,12 +72,17 @@ const freshState = () => ({
   mistakes: {},       /* glyph -> count, from drills and sprints */
   kataOpen: null,     /* the day katakana unlocked; never relocks */
   milestones: {},     /* id -> the day it was reached */
-  scenes: {},         /* out and about: id -> { got: [item indices recognised] } */
+  scenes: {},         /* out and about: id -> { got: [item indices recognised] }; the
+                         konbini adds copy and back: slogans and back labels read */
   menu: { orders: 0, days: {} },   /* the side quest: orders taken, per day */
   backupAt: null,
 });
 
 let state = freshState();
+
+/* Lists a scene's record may carry besides got (the konbini's: slogans and
+   back labels read). Kept and merged like got; other scenes never have them. */
+const SCENE_LISTS = ["copy", "back"];
 
 function normalise(s) {
   const out = { ...freshState(), ...s };
@@ -103,7 +108,10 @@ function normalise(s) {
   out.menu = { orders: 0, days: {}, ...(s.menu || {}) };
   out.milestones = s.milestones && typeof s.milestones === "object" ? s.milestones : {};
   out.scenes = s.scenes && typeof s.scenes === "object" ? s.scenes : {};
-  for (const [id, x] of Object.entries(out.scenes)) out.scenes[id] = { got: asList(x && x.got) };
+  for (const [id, x] of Object.entries(out.scenes)) {
+    out.scenes[id] = { got: asList(x && x.got) };
+    SCENE_LISTS.forEach(k => { if (x && x[k]) out.scenes[id][k] = asList(x[k]); });
+  }
   return out;
 }
 
@@ -518,7 +526,11 @@ function mergeState(a, b) {
   out.days = mergeBy(a.days, b.days, mergeDay);
   out.mistakes = mergeBy(a.mistakes, b.mistakes, bigger);
   out.milestones = mergeBy(a.milestones, b.milestones, earlierOf);
-  out.scenes = mergeBy(a.scenes, b.scenes, (x, y) => ({ got: unionList(x.got, y.got).sort((i, j) => i - j) }));
+  out.scenes = mergeBy(a.scenes, b.scenes, (x, y) => {
+    const m = { got: unionList(x.got, y.got).sort((i, j) => i - j) };
+    SCENE_LISTS.forEach(k => { if (x[k] || y[k]) m[k] = unionList(x[k] || [], y[k] || []).sort((i, j) => i - j); });
+    return m;
+  });
   out.menu = { orders: bigger(a.menu.orders, b.menu.orders), days: mergeBy(a.menu.days, b.menu.days, bigger) };
   const betterRun = (x, y) => (y.right > x.right || (y.right === x.right && y.ms < x.ms) ? y : x);
   const seen = new Set();

@@ -685,6 +685,59 @@ order.
   learned, and everything is recorded (`js/audio-scenes.js`, loaded when
   a scene opens).
 
+### コンビニ, the convenience store
+
+A place you walk round rather than look at (`js/data/konbini.js`,
+`js/konbini-ui.js`; the mockup it came from is `design/konbini-mockup.html`).
+Thirty-six products along one wall: a cooler of cold drinks, a warmer of
+hot ones, the onigiri chiller, the sweets shelf, then the register. Pick
+anything up, turn it over, tap a word to hear it. The brands are made up;
+the words are the ones on real packets.
+
+- **The packages are drawn, the words are ink.** Each is an SVG (bottle,
+  can, carton, cup, onigiri, bag, pouch, box, pack, tub) with its print in
+  HTML on top, so a name fills in kana by kana like everything in Out and
+  about. One light, from the upper left, for all of them: each is shaded in
+  its own colour, stands in a soft contact shadow, and has a gloss over the
+  print. The name sets as large as fits the package's label, breaking where
+  the product's `lines` says (ブラック / コーヒー) rather than shrinking.
+- **Stocked like a real shop.** Each product has a `shelf`: in the cooler,
+  cans and cups up top, cartons in the middle, tall bottles below. Every
+  shelf in a row is the height of its tallest packet plus room above, the
+  doors share the rows, and the packets spread evenly, so the shelves line
+  up across the cabinet. The phone's long shelf walks each aisle in the
+  same order.
+- **Three sides, in order.** 名 the name, 表 the slogan on the front, 裏 the
+  label on the back. Each can be asked about once it can be sounded out,
+  and never before the name. The back questions are about *finding* the
+  line (which one says when to eat it by? 消費期限), since that's the skill
+  in a real shop.
+- **Modes.** 見る Browse: nothing is asked. 読む Read: putting a packet back
+  asks about the next side you haven't read. お使い Errand: a friend's list,
+  in Japanese, of three things you can already read; find them, and get a
+  receipt. Under three readable names, the errand says so and waits.
+- **Products open one by one.** A green dot under a packet means you can
+  sound out its name, so it can ask you about it, whether or not the store
+  as a whole is open yet. The store opens, as every place does, at half its
+  names (around the end of katakana: the drinks and sweets are loanwords).
+- **What's read** is `state.scenes.konbini`: `got` (names, which the 分
+  level counts, as for every place), `copy` and `back`. Sync joins all three.
+- **Desktop and phone are drawn separately.** A desktop walks along the
+  wall (the arrows, or ← →) with what's in your hands beside it. A phone
+  gets one long shelf, a product a screen, big enough to read the packet,
+  and what you pick up comes up as a sheet. Its styles live only in the
+  phone layer.
+- **Sound**: every name, slogan, tag and label term, in
+  `js/audio-konbini.js`, loaded when the store opens. It repeats clips other
+  bundles have, so nothing is silent for someone who hasn't reached them.
+- The smoke test checks every product: its lines join to its name, its
+  reading matches, its slogan question has four different answers, its back
+  label is whole, its name sets at a readable size and never smaller than
+  its slogan, and every string is good furigana.
+
+Still to come: the cat at the register (いらっしゃいませ, 温めますか, the
+total said aloud), the hot case (おでん, 肉まん), bento.
+
 ---
 
 ## Today on one screen
@@ -1133,6 +1186,10 @@ you like.
     js/menu-ui.js           Out and about: the menus and the ordering game
     js/data/scenes.js       out and about: station, signs, road, receipt, shop, chats
     js/scenes-ui.js         drawing the scenes, and their quizzes
+    js/data/konbini.js      the convenience store: 36 products, their packets front and back
+    js/konbini-ui.js        the convenience store: drawing the packages, the shelves, the modes
+    js/audio-konbini.js     generated clips for the convenience store
+    design/                 mockups, for looking at — not loaded by the app
     js/sync.js              optional sync: Google sign-in, one Firestore document
     js/audio-scenes.js      generated clips for the scenes
     js/audio-kana.js        generated clips — do not hand-edit

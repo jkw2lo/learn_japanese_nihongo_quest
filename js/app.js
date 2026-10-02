@@ -1749,6 +1749,7 @@ document.addEventListener("keydown", guard(e => {
   if (typeof sprintKey === "function" && sprintKey(e)) return;
   if (typeof cardsKey === "function" && cardsKey(e)) return;
   if (typeof bookKey === "function" && bookKey(e)) return;
+  if (typeof konbiniKey === "function" && !S && konbiniKey(e)) return;
   if (S && (S.card?.kind === "c" || S.card?.kind === "j") && !S.finished) {
     if (e.key === "Enter") { e.preventDefault(); S.answered ? ACTS.next() : checkType(); return; }
     if (e.key === " " && S.answered) { e.preventDefault(); ACTS.next(); return; }

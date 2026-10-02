@@ -1285,6 +1285,167 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 
 
 /* ============================================================
+   コンビニ, the convenience store (js/konbini-ui.js)
+
+   The store is lit the same in both themes: it's a picture of a shop,
+   and a shop's fluorescent light doesn't dim at night. Packages, tags
+   and labels are printed paper, so their ink is fixed dark.
+   ============================================================ */
+
+.kb-defs { position: absolute; width: 0; height: 0; }
+.kb-modes { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin: 0 0 12px; }
+.kb-dotkey i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #3D7A57; margin-right: 4px; vertical-align: 1px; }
+.kb-body { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
+@media (max-width: 1000px) and (min-width: 721px) { .kb-body { grid-template-columns: minmax(0, 1fr) 270px; } }
+
+/* the shop floor */
+.kb-store { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--rule-2); background: linear-gradient(#FBFAF5, #EFEDE6); color: #1E1D1A; }
+.kb-ceiling { height: 26px; background: linear-gradient(#E7E4DC, #FBFAF5); position: relative; }
+.kb-tube { position: absolute; top: 8px; height: 5px; width: 120px; border-radius: 3px; background: #FFFDF4;
+  box-shadow: 0 0 10px 3px rgba(255, 251, 225, .9), 0 6px 40px 14px rgba(255, 251, 225, .45); }
+.kb-aisles { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 12px 0; position: relative; z-index: 2; }
+.kb-chip { border: 1px solid #D6D0C2; background: #FBFAF6; color: #1E1D1A; border-radius: 999px; padding: 3px 11px; font-size: .82rem; }
+.kb-chip small { color: #858074; }
+.kb-walk { position: relative; }
+.kb-strip { display: flex; gap: 30px; align-items: flex-end; overflow-x: auto; scroll-snap-type: x proximity; scroll-behavior: smooth; padding: 14px 56px 0; scrollbar-width: none; }
+.kb-strip::-webkit-scrollbar { display: none; }
+.kb-sec { flex: 0 0 auto; scroll-snap-align: start; scroll-margin-left: 48px; display: flex; flex-direction: column; align-items: center; }
+.kb-sign { font: 600 .9rem var(--f-ja); padding: 4px 16px; border-radius: 6px; background: #2F4B7C; color: #fff; margin-bottom: 10px; white-space: nowrap; box-shadow: 0 2px 6px rgba(0, 0, 0, .15); }
+.kb-sign small { font: 500 .7rem var(--f-body); opacity: .8; margin-left: 6px; }
+.kb-sign .ink-no { opacity: .4; } .kb-sign rt { color: #fff; }
+.kb-floor { height: 28px; background: linear-gradient(rgba(0, 0, 0, .06), transparent 40%), repeating-linear-gradient(90deg, #E4E1D9 0 58px, #CFCBC2 58px 60px); }
+.kb-walkbtn { position: absolute; top: 50%; transform: translateY(-50%); z-index: 3; width: 38px; height: 38px; border-radius: 50%;
+  border: 1px solid #D6D0C2; background: #FBFAF6; color: #1E1D1A; box-shadow: var(--shadow); display: grid; place-items: center; }
+.kb-walkbtn .ico { width: 18px; height: 18px; }
+.kb-walkbtn.l { left: 8px; } .kb-walkbtn.r { right: 8px; }
+
+/* the cooler: a dark frame, a lit header, glass doors with the bright cold inside; the warmer is the same, warm */
+.kb-cooler { background: linear-gradient(90deg, #2E3339, #454C54 50%, #2E3339); border-radius: 8px 8px 0 0; padding: 0 9px; }
+.kb-cab-head { height: 22px; margin: 0 -9px 8px; border-radius: 8px 8px 0 0; background: linear-gradient(#F6F8FA, #DDE3E8); display: grid; place-items: center;
+  font: 700 .68rem var(--f-body); color: #2F4B7C; letter-spacing: .12em; box-shadow: 0 4px 10px rgba(240, 248, 255, .6); }
+.kb-doors { display: flex; gap: 9px; }
+.kb-door { position: relative; border: 3px solid #A9B1B8; border-bottom: 0; border-radius: 3px 3px 0 0; background: linear-gradient(#F7FAFC, #E6ECF0);
+  padding: 0 14px 0 6px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .7), inset 4px 0 14px rgba(255, 255, 255, .9); }
+.kb-door::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 4;
+  background: linear-gradient(112deg, transparent 0 14%, rgba(255, 255, 255, .16) 14% 20%, transparent 20% 64%, rgba(255, 255, 255, .1) 64% 67%, transparent 67%); }
+.kb-door::after { content: ""; position: absolute; right: 3px; top: 30%; height: 40%; width: 5px; border-radius: 3px; z-index: 5;
+  background: linear-gradient(90deg, #8F979E, #E3E7EA, #9AA2A9); box-shadow: 1px 1px 2px rgba(0, 0, 0, .3); }
+.kb-warmer { background: linear-gradient(90deg, #5A2F22, #7A4330 50%, #5A2F22); }
+.kb-warmer .kb-cab-head { background: linear-gradient(#FFF1E2, #F6D7B8); color: #B5452E; letter-spacing: .04em; white-space: nowrap; }
+.kb-warmer .kb-cab-head .ink-no { opacity: .4; }
+.kb-warmer .kb-door { background: linear-gradient(#FFF6EA, #F8E4CC); border-color: #C9A27F; box-shadow: inset 0 0 18px rgba(255, 190, 120, .45); }
+.kb-warmer .kb-shelf { background: linear-gradient(transparent calc(100% - 41px), #FFFFFF calc(100% - 41px), #E2CDB8 calc(100% - 36px), #F6B26B calc(100% - 36px), #E8954A calc(100% - 2px), rgba(0, 0, 0, .14) calc(100% - 2px)); }
+/* the open chiller for onigiri, and the sweets gondola */
+.kb-chiller { background: linear-gradient(#EEF1F2, #E2E6E8); border: 7px solid #CDD2D5; border-top-width: 0; border-bottom: 0; border-radius: 8px 8px 0 0; padding: 0 8px; }
+.kb-canopy { height: 16px; margin: 0 -15px 10px; border-radius: 8px 8px 0 0; background: linear-gradient(#CDD2D5, #BFC5C9); position: relative; }
+.kb-canopy::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: -3px; height: 3px; border-radius: 2px; background: #FFFDF2; box-shadow: 0 2px 16px 6px rgba(255, 251, 225, .75); }
+.kb-gondola { background: repeating-linear-gradient(90deg, #F1EFEA 0 10px, #E9E6DF 10px 11px); border: 6px solid #D9D5CC; border-bottom: 0; border-radius: 6px 6px 0 0; padding: 12px 8px 0; }
+
+/* a shelf: its products spread evenly and stand on the shelf top; the rail runs its whole width under them */
+.kb-shelf { display: flex; align-items: flex-end; justify-content: space-evenly; position: relative; margin: 0 auto;
+  background: linear-gradient(transparent calc(100% - 41px), #FFFFFF calc(100% - 41px), #D3D8DB calc(100% - 36px), #F7D96A calc(100% - 36px), #E9C445 calc(100% - 2px), rgba(0, 0, 0, .14) calc(100% - 2px)); }
+.kb-col { display: flex; flex-direction: column; align-items: center; width: 62px; position: relative; z-index: 1; }
+.kb-col.wide { width: 86px; }
+.kb-col .kb-prod { margin-bottom: 5px; }
+.kb-rail { height: 36px; display: flex; justify-content: center; align-items: center; }
+.kb-tag { width: 58px; height: 29px; background: #fff; border-radius: 2px; padding: 1px 3px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+  font-family: var(--f-ja); color: #222; line-height: 1.1; overflow: hidden; box-shadow: 0 1px 1px rgba(0, 0, 0, .15); }
+.kb-tag.two { height: 34px; }
+.kb-col.wide .kb-tag { width: 80px; }
+.kb-tag .n { font-weight: 700; text-align: center; white-space: nowrap; }
+.kb-tag .n rt { font-size: .45em; }
+.kb-tag .pr { font-size: 9.5px; font-weight: 700; display: flex; gap: 3px; align-items: baseline; }
+.kb-tag .pr small { font-size: 6.5px; font-weight: 500; color: #666; }
+.kb-ok { color: #3D7A57; font-size: 7px; font-weight: 700; }
+
+/* products */
+.kb-prod { position: relative; border: 0; background: none; padding: 0; display: flex; flex-direction: column; align-items: center; transition: transform .15s; cursor: pointer; }
+.kb-prod:hover, .kb-prod:focus-visible { transform: translateY(-5px); outline: none; }
+.kb-prod:focus-visible .kb-pk { outline: 2px solid var(--ai); outline-offset: 3px; border-radius: 4px; }
+.kb-prod:hover .kb-ground { opacity: .45; }
+.kb-prod.gone { visibility: hidden; }
+.kb-prod.readable::after { content: ""; position: absolute; left: 50%; bottom: -11px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: #3D7A57; box-shadow: 0 0 0 1.5px #fff; z-index: 3; }
+.kb-prod.wrong { animation: kb-shake .35s; }
+@keyframes kb-shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+/* a package: the drawing, the print on it (HTML, so it takes the ink), the gloss over both */
+.kb-pk { position: relative; flex: 0 0 auto; color: #1E1D1A; }
+.kb-pk > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.kb-pk > .kb-gl { pointer-events: none; z-index: 2; }
+.kb-lbl { position: absolute; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-family: var(--f-ja); }
+.kb-lc { background: #FFFEF8; border-radius: 1.5px; padding: 2px 2.5px; max-width: 100%; max-height: 100%; flex-shrink: 0; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; box-shadow: 0 0 0 .4px rgba(0, 0, 0, .12); }
+.kb-nm { font-weight: 900; line-height: 1.08; letter-spacing: -.01em; }
+.kb-nm.r { line-height: 1.5; }
+.kb-nm > span { display: block; white-space: nowrap; }
+.kb-pk.vert .kb-nm { writing-mode: vertical-rl; letter-spacing: .06em; }
+.kb-nm rt { font-size: .5em; line-height: 1; letter-spacing: 0; }
+.kb-copy { font-weight: 500; white-space: nowrap; margin-top: .15em; }
+.kb-copy rt { font-size: .5em; }
+.kb-tg { background: #C2402F; color: #fff; border-radius: 1.5px; padding: 0 .3em; white-space: nowrap; margin-top: .25em; font-weight: 700; }
+.kb-tg .ink-no { opacity: .5; }
+.kb-brand { font: 700 3.8px var(--f-body); letter-spacing: .14em; opacity: .7; line-height: 1; margin-bottom: .2em; }
+.kb-copy, .kb-tg, .kb-brand { display: none; }
+.kb-big .kb-copy, .kb-big .kb-tg, .kb-big .kb-brand, .kb-zoom .kb-copy, .kb-zoom .kb-tg, .kb-zoom .kb-brand { display: block; }
+/* a label that grows (the onigiri's sticker, the pudding's lid band) takes its slogan under the name in the hand */
+.kb-pk.grow .kb-lbl { justify-content: flex-start; }
+.kb-big .kb-pk.grow .kb-lc, .kb-zoom .kb-pk.grow .kb-lc { max-height: none; }
+.kb-pk.onigiri .kb-lc { min-width: 100%; border-top: 2.5px solid var(--c); }
+
+/* the register */
+.kb-register { width: 240px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.kb-clerk { width: 88px; height: auto; margin-bottom: -8px; }
+.kb-counter { width: 100%; height: 60px; background: linear-gradient(#D3BE95, #BBA578); border-radius: 6px 6px 0 0; position: relative; margin-bottom: 8px; }
+.kb-counter::before { content: ""; position: absolute; left: 16px; top: -28px; width: 56px; height: 30px; background: linear-gradient(#6A7077, #4C5157); border-radius: 5px 5px 0 0; }
+.kb-register .tiny { color: #858074; margin: 0 8px 10px; }
+
+/* in your hands */
+.kb-hands { border: 1px solid var(--rule-2); border-radius: 12px; background: var(--sheet); padding: 14px; display: flex; flex-direction: column; gap: 12px; min-height: 30rem; position: sticky; top: 76px; }
+.kb-hands h3 { margin: 0; font: 600 1.05rem var(--f-display); }
+.kb-hhead { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.kb-grab { display: none; }
+.kb-empty { color: var(--ink-3); font-size: .88rem; text-align: center; margin: auto 0; padding: 12px; }
+.kb-hold { display: flex; justify-content: center; align-items: center; height: 270px; background: radial-gradient(ellipse at 50% 45%, var(--sunken), transparent 70%); border-radius: 10px; }
+.kb-big { transform: scale(2.1); }
+.kb-big.s-onigiri, .kb-big.s-can, .kb-big.s-cup, .kb-big.s-box { transform: scale(2.6); }
+.kb-big.s-pouch, .kb-big.s-tub { transform: scale(3.1); }
+.kb-big.s-pack { transform: scale(3.6); }
+.kb-back { width: 230px; background: #FFFEFA; color: #1E1D1A; border-radius: 6px; padding: 10px; font: .78rem/1.35 var(--f-ja); box-shadow: var(--shadow-lift); }
+.kb-back .bh { font-size: .66rem; font-weight: 700; margin-bottom: 4px; }
+.kb-back table { border-collapse: collapse; width: 100%; }
+.kb-back td { border: 1px solid #9C978C; padding: 3px 5px; vertical-align: top; font-size: .72rem; }
+.kb-back td:first-child { white-space: nowrap; font-weight: 500; background: rgba(0, 0, 0, .04); }
+.kb-back rt { color: #777; }
+.kb-sides { display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; }
+.kb-terms { display: flex; flex-direction: column; gap: 6px; }
+.kb-term { text-align: left; border: 1px solid var(--rule-2); background: var(--paper); border-radius: 9px; padding: 7px 10px; display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; cursor: pointer; }
+.kb-term .jp { font-size: 1.05rem; }
+.kb-term .en { grid-column: 1 / -1; font-size: .8rem; color: var(--ink-2); display: none; }
+.kb-term.open .en { display: block; }
+.kb-term .side { font-size: .66rem; color: var(--ink-3); text-transform: uppercase; letter-spacing: .06em; }
+.kb-note { font-size: .82rem; color: var(--ink-2); background: var(--amber-wash); border-radius: 8px; padding: 8px 10px; margin: 0; }
+.kb-note.good { background: var(--jade-wash); }
+.kb-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.kb-row .btn { flex: 1; }
+.kb-stamps { display: flex; gap: 5px; }
+.kb-st { font: 600 .76rem var(--f-ja-serif); border: 1.5px solid var(--rule); color: var(--ink-3); border-radius: 50%; width: 27px; height: 27px; display: grid; place-items: center; }
+.kb-st.done { border-color: var(--seal); color: var(--seal); transform: rotate(-8deg); }
+.kb-q { text-align: center; display: flex; flex-direction: column; gap: 10px; }
+.kb-q .q-ask { margin: 0; }
+.kb-q .q-ask .jp { font-size: 1.3rem; color: var(--ink); }
+.kb-opts { grid-template-columns: 1fr 1fr; gap: 8px; }
+.kb-opts .opt { font-size: .92rem; min-height: 56px; padding: 10px 8px; }
+.kb-q .verdict { min-height: 0; margin: 0; font-size: .95rem; }
+.kb-list { border: 1px solid var(--rule); border-radius: 10px; padding: 10px 12px; background: repeating-linear-gradient(var(--sheet) 0 29px, var(--rule-2) 29px 30px); }
+.kb-list ul { list-style: none; margin: 4px 0 0; padding: 0; }
+.kb-list li { font-size: 1.15rem; height: 30px; display: flex; align-items: center; gap: 8px; }
+.kb-list li.got { text-decoration: line-through; text-decoration-color: var(--jade); }
+.kb-list li.got::before { content: "✓"; color: var(--jade); font-size: .9rem; }
+.kb-receipt { padding-bottom: 22px; }
+.kb-ps, .kb-hint { display: none; }
+
+
+/* ============================================================
    PHONE LAYER
 
    Everything from this marker to the end of the file is inside
@@ -1675,4 +1836,38 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
   .bk-chars { grid-template-columns: repeat(auto-fill, minmax(2.9rem, 1fr)); max-height: 13rem; }
   .bk-char { font-size: 1.35rem; }
   .bk-page-tools .btn { flex: 1 1 auto; min-height: 44px; }
+
+  /* コンビニ: the phone's own store — one long shelf, a product a screen,
+     and what's in your hands comes up as a sheet over it */
+  .kb-body { grid-template-columns: 1fr; }
+  .kb-modes .seg { width: 100%; flex-wrap: nowrap; }
+  .kb-modes .seg button { flex: 1; padding: 8px 6px; font-size: .86rem; white-space: nowrap; min-height: 44px; }
+  .kb-dotkey { display: none; }
+  .kb-aisles { padding: 10px 12px 0; }
+  .kb-chip { font-size: .9rem; padding: 6px 12px; min-height: 36px; }
+  .kb-ps { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding-top: 10px; scrollbar-width: none;
+    background: linear-gradient(transparent calc(100% - 66px), #FFFFFF calc(100% - 66px), #D3D8DB calc(100% - 60px), #F7D96A calc(100% - 60px), #E9C445 100%); }
+  .kb-ps::-webkit-scrollbar { display: none; }
+  .kb-ps-sign { flex: 0 0 84px; scroll-snap-align: start; display: flex; align-items: center; justify-content: center; padding-bottom: 70px; }
+  .kb-ps-sign .kb-sign { writing-mode: vertical-rl; padding: 12px 7px; font-size: 1.1rem; letter-spacing: .1em; }
+  .kb-slot { flex: 0 0 62%; scroll-snap-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 340px; }
+  .kb-slot.end { flex-basis: 20%; }
+  .kb-slot .kb-prod { height: 272px; justify-content: flex-end; margin-bottom: 8px; }
+  .kb-slot .kb-prod:hover { transform: none; }
+  .kb-slot .kb-prod.readable::after { bottom: -14px; }
+  .kb-zoom { transform-origin: bottom center; }
+  .kb-ptag { height: 52px; width: 88%; margin-bottom: 5px; background: #fff; color: #222; border-radius: 3px; display: flex; flex-direction: column; justify-content: center;
+    padding: 2px 10px; font-family: var(--f-ja); box-shadow: 0 1px 2px rgba(0, 0, 0, .15); }
+  .kb-ptag .n { font-size: 1rem; font-weight: 700; line-height: 1.15; white-space: nowrap; overflow: hidden; }
+  .kb-ptag .pr { font-size: .85rem; font-weight: 700; display: flex; justify-content: space-between; align-items: baseline; }
+  .kb-ptag .pr small { font-size: .62rem; font-weight: 500; color: #666; }
+  .kb-ptag .kb-ok { font-size: .8rem; }
+  .kb-hint { display: block; text-align: center; margin: 8px 0; }
+  .kb-hands { display: none; position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 48; max-height: 86vh; overflow-y: auto;
+    border-radius: 22px 22px 0 0; padding: 12px 16px calc(16px + env(safe-area-inset-bottom)); box-shadow: 0 -10px 40px rgba(0, 0, 0, .25); min-height: 0; }
+  .kb-hands.up { display: flex; }
+  .kb-grab { display: block; width: 40px; height: 4px; border-radius: 2px; background: var(--rule); margin: 0 auto; }
+  .kb-hold { height: 290px; }
+  .kb-row .btn, .kb-main { min-height: 52px; }
+  .kb-opts .opt { min-height: 64px; font-size: 1rem; }
 }

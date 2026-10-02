@@ -53,6 +53,11 @@ function renderMenu() {
   if (!menuId || !placeBy(menuId)) { el.innerHTML = renderOutHome(); return; }
   /* a visit to an open place clears its "new" */
   if (placeOpen(menuId) && !asList(state.outSeen).includes(menuId)) { state.outSeen = [...asList(state.outSeen), menuId]; save(); }
+  /* the convenience store, which you walk round (js/konbini-ui.js) */
+  if (menuId === "konbini" && typeof renderKonbini === "function") {
+    el.innerHTML = `<div class="ob-head"><div class="eyebrow">街 · Out and about</div></div>${scenePickerHtml()}${renderKonbini()}`;
+    return;
+  }
   /* one of the out-and-about scenes, rather than a menu */
   if (typeof SCENE_BY !== "undefined" && SCENE_BY[menuId]) {
     el.innerHTML = `<div class="ob-head"><div class="eyebrow">街 · Out and about</div></div>${scenePickerHtml()}${renderScene(SCENE_BY[menuId])}`;
@@ -205,7 +210,7 @@ function startMenuGame() {
 /* Tier-2 dishes are recorded with the word stages. */
 Object.assign(ACTS, {
   mi: el => tapItem(el.dataset.k),
-  "menu-pick": el => { menuId = el.dataset.id; game = null; renderMenu(); scrollTo(0, 0); },
+  "menu-pick": el => { menuId = el.dataset.id; game = null; if (typeof kbReset === "function") kbReset(); renderMenu(); scrollTo(0, 0); },
   "menu-game": () => startMenuGame(),
   "menu-quit": () => { game = null; renderMenu(); },
 });

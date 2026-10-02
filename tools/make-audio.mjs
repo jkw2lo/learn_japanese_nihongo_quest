@@ -4,6 +4,7 @@
      js/audio-s<N>.js     one per word stage — loaded as the learner reaches it
      js/audio-grammar.js  the Grammar tab's sentences — loaded when it opens
      js/audio-scenes.js   out and about: signs, announcements, shop talk
+     js/audio-konbini.js  the convenience store: every name, slogan, tag and label
    Both add to window.NQ_AUDIO rather than replace it, so they load in any order.
 
    Why bundle at all: see js/sound.js. Why record words whole, from kana:
@@ -31,16 +32,19 @@ const BITRATE = '24000';     /* speech is clear at 24k; 32k was a quarter bigger
 const MIN_SECONDS = 0.06;
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const { KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS, GRAMMAR_SAY, SCENES } = new Function(
-  ['js/data/kana.js', 'js/furi.js', 'js/conj.js', 'js/data/words.js', 'js/data/patterns.js', 'js/data/menu.js', 'js/data/grammar.js', 'js/data/scenes.js'].map(f => readFileSync(join(root, f), 'utf8')).join('\n') +
-  '\nreturn {KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS, GRAMMAR_SAY, SCENES};')();
+const { KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS, GRAMMAR_SAY, SCENES, KONBINI } = new Function(
+  ['js/data/kana.js', 'js/furi.js', 'js/conj.js', 'js/data/words.js', 'js/data/patterns.js', 'js/data/menu.js', 'js/data/grammar.js', 'js/data/scenes.js', 'js/data/konbini.js'].map(f => readFileSync(join(root, f), 'utf8')).join('\n') +
+  '\nreturn {KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS, GRAMMAR_SAY, SCENES, KONBINI};')();
 
 /* The text actually handed to `say` for a clip key, for any key the voice
    misreads on its own. A lone は or へ could be taken as the particles "wa"
    and "e". Checked by ear with Kyoko (2026-09-25): は says ha, へ says he,
    を says o — all fine, so nothing is needed yet. If a voice change breaks
    one, add a spelling that forces the sound, e.g. "は": "ハ". */
-const SPEAK_AS = {};
+const SPEAK_AS = {
+  /* the konbini's 人気No.1: "No." alone could come out as "no" */
+  "にんきNo.1": "にんきナンバーワン",
+};
 
 /* Spoken by the introduction in js/guide.js (which needs the page to load). */
 const GUIDE_SAY = ["わたしはコーヒーをのみます"];
@@ -89,6 +93,11 @@ function stageBundles() {
   out['js/audio-grammar.js'] = GRAMMAR_SAY.map(s => furiKana(s)).filter(t => !seen.has(t));
   out['js/audio-grammar.js'].forEach(t => seen.add(t));
   out['js/audio-scenes.js'] = [...new Set(SCENES.flatMap(sc => [...sc.all.map(x => x.kana), ...(sc.lines || []).map(([w]) => furiKana(w))]))].filter(t => !seen.has(t));
+  /* The store loads only its own bundle (and the kana one, which is always
+     there), so it repeats what the stage and scene bundles have rather than
+     leave a name silent for someone who hasn't reached that stage. */
+  const kana = new Set(speakableKana());
+  out['js/audio-konbini.js'] = [...new Set(KONBINI.flatMap(p => [p.name, p.copy, ...p.tags, ...p.back.map(r => r[0])].map(furiKana)))].filter(t => !kana.has(t));
   return out;
 }
 

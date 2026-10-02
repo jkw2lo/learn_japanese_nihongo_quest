@@ -29,6 +29,8 @@ function places() {
   placesCache = [
     ...MENUS.map(M => ({ id: M.id, M, jp: furiPlain(M.name).split(" ").pop(), en: M.en, items: menuItems(M) })),
     ...SCENES.map(sc => ({ id: sc.id, sc, jp: sc.jp, en: sc.en, items: sc.all })),
+    /* the convenience store: its words are its products' names (js/konbini-ui.js) */
+    ...(typeof KONBINI !== "undefined" ? [{ id: "konbini", jp: "コンビニ", en: "Convenience store", items: konbiniItems() }] : []),
   ];
   /* the lesson that opens each one, if lessons go in order: the order they're shown in */
   placesCache.forEach(p => {
