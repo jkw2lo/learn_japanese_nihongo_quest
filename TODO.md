@@ -61,6 +61,20 @@ Build order. Each step should run end to end before the next one starts.
 9c. ~~Out and about~~ (0.14.0, 0.15.0): a landing page, the half-its-words
    rule, grey ink, three hiragana places, three levels a place, and a word
    a day from the street.
+9d. **コンビニ, the convenience store**: a place in Out and about you walk
+   round, picking packages up to read. Mockup: `design/konbini-mockup.html`.
+   - Products are data (`js/data/konbini.js`), packages drawn in SVG with the
+     words in HTML on top, so they take the ink. Name sized to its package,
+     breaking where `lines` says.
+   - Each product quizzes in order: 名 name → 表 front slogan → 裏 back
+     label, each once it can be sounded out. The place keeps 読 / 分 / 字.
+   - Modes: 見る Browse, 読む Read (putting it back asks), お使い Errand (a list
+     in Japanese, only of products you can read; three or it waits).
+   - Desktop: a cooler and a chiller you walk along. Phone: its own layout,
+     one long shelf, a product a screen, the pack in a bottom sheet. Phone
+     rules only in the PHONE LAYER block.
+   - Build: data + smoke checks + shelves + Browse; then Read; then Errand;
+     then audio. Later: sweets, the hot case, the cat at the register.
 10. **More recognition practice at N5**: more scenes (a train ticket, a
    bento label, a konbini's shelf tags, a clinic), a "spot the kanji you
    know" mode over the scenes, and scenes in Sprint.

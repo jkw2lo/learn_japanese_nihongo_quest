@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Konbini Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Serif+JP:wght@500;700&display=swap">
+<style>
+/* Nihongo Quest's tokens, copied from css/app.css */
+:root {
+  --paper:#F3F0E8; --sheet:#FBFAF6; --sunken:#E8E4D9; --ink:#1E1D1A; --ink-2:#4E4B44; --ink-3:#858074;
+  --rule:#D6D0C2; --rule-2:#E6E1D5; --seal:#C2402F;
+  --ai:#2F4B7C; --jade:#3D7A57; --jade-wash:rgba(61,122,87,.13); --amber:#A86A12; --amber-wash:rgba(168,106,18,.13);
+  --shadow:0 1px 2px rgba(30,29,26,.06),0 6px 18px rgba(30,29,26,.05);
+  --shadow-lift:0 2px 4px rgba(30,29,26,.08),0 14px 34px rgba(30,29,26,.12);
+  --f-display:"Newsreader",Georgia,serif; --f-body:"IBM Plex Sans",system-ui,sans-serif;
+  --f-ja:"Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif; --f-ja-serif:"Hiragino Mincho ProN","Noto Serif JP",serif;
+  --r:12px;
+  /* the store: lit the same in both themes, only the room around it dims */
+  --wall:#FBFAF5; --wall-2:#EFEDE6; --floor:#E4E1D9; --dim:0;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper:#151513; --sheet:#1F1E1B; --sunken:#0F0F0D; --ink:#ECE8DF; --ink-2:#B4AEA2; --ink-3:#7F796E;
+  --rule:#37342E; --rule-2:#2A2824; --seal:#E26A56; --ai:#8CA7DA; --jade:#6CC195; --jade-wash:rgba(108,193,149,.14);
+  --amber:#E0A646; --amber-wash:rgba(224,166,70,.14);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.3); --shadow-lift:0 2px 4px rgba(0,0,0,.45),0 14px 34px rgba(0,0,0,.45);
+  --wall:#2B2A27; --wall-2:#232220; --floor:#1C1B19; --dim:.08; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --paper:#151513; --sheet:#1F1E1B; --sunken:#0F0F0D; --ink:#ECE8DF; --ink-2:#B4AEA2; --ink-3:#7F796E;
+  --rule:#37342E; --rule-2:#2A2824; --seal:#E26A56; --ai:#8CA7DA; --jade:#6CC195; --jade-wash:rgba(108,193,149,.14);
+  --amber:#E0A646; --amber-wash:rgba(224,166,70,.14);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.3); --shadow-lift:0 2px 4px rgba(0,0,0,.45),0 14px 34px rgba(0,0,0,.45);
+  --wall:#2B2A27; --wall-2:#232220; --floor:#1C1B19; --dim:.08; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font:15px/1.5 var(--f-body); }
+button { font:inherit; color:inherit; cursor:pointer; }
+[lang="ja"] { font-family: var(--f-ja); }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 16px; }
+
+/* ---------- mockup controls (not part of the design) ---------- */
+.mock { border:1.5px dashed var(--rule); border-radius:var(--r); padding:10px 14px; margin-bottom:16px;
+  display:flex; flex-wrap:wrap; gap:10px 22px; align-items:center; font-size:13px; color:var(--ink-2); }
+.mock b { color:var(--ink); font-weight:600; }
+.seg { display:inline-flex; flex-wrap:wrap; background:var(--sunken); border-radius:999px; padding:3px; gap:2px; }
+.seg button { border:0; background:none; padding:5px 12px; border-radius:999px; font-size:13px; color:var(--ink-2); }
+.seg button.on { background:var(--sheet); color:var(--ink); box-shadow:var(--shadow); font-weight:500; }
+
+/* ---------- app chrome, abbreviated ---------- */
+.topbar { display:flex; align-items:center; gap:14px; padding:8px 4px 14px; font-size:13px; color:var(--ink-2); flex-wrap:wrap; }
+.brand { display:flex; align-items:center; gap:8px; font-family:var(--f-display); font-weight:600; font-size:16px; color:var(--ink); }
+.seal { width:24px; height:24px; border-radius:6px; background:var(--seal); color:#fff; display:grid; place-items:center; font:700 13px var(--f-ja-serif); }
+.crumb { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); margin:0 0 4px; }
+.card { background:var(--sheet); border:1px solid var(--rule-2); border-radius:var(--r); box-shadow:var(--shadow); }
+.head { padding:18px 20px 14px; display:grid; grid-template-columns:1fr auto; gap:8px 20px; align-items:start; }
+.head h1 { font:600 26px/1.15 var(--f-display); margin:0; }
+.head h1 .jp { font:500 22px var(--f-ja); margin-right:10px; }
+.head p { margin:4px 0 0; color:var(--ink-2); max-width:46rem; }
+.levels { display:flex; gap:6px; }
+.lv { border:1px solid var(--rule); border-radius:10px; padding:5px 10px; font-size:12px; color:var(--ink-3); text-align:center; min-width:74px; }
+.lv b { display:block; font:600 17px var(--f-ja-serif); color:var(--ink-3); }
+.lv.done { border-color:var(--jade); color:var(--jade); background:var(--jade-wash); }
+.lv.done b { color:var(--jade); }
+.key { grid-column:1/-1; font-size:12px; color:var(--ink-3); display:flex; gap:16px; flex-wrap:wrap; align-items:center; }
+.modes { grid-column:1/-1; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.modes .hint { font-size:12.5px; color:var(--ink-3); }
+
+/* ---------- ink ---------- */
+.ink-no { color: color-mix(in srgb, var(--ink-3) 55%, transparent); }
+.ink-sound { color: var(--ink-3); }
+/* printed things (packages, tags, receipts) are always light paper, so their grey is fixed */
+.printed .ink-no { color:#C2BDB1; } .printed .ink-sound { color:#948F83; }
+ruby rt { font-size:.5em; letter-spacing:0; line-height:1; }
+
+/* ---------- the shop floor (desktop) ---------- */
+.body { display:grid; grid-template-columns: minmax(0,1fr) 340px; gap:16px; padding:0 16px 16px; }
+.floorwrap { position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--rule-2);
+  background:linear-gradient(var(--wall), var(--wall-2)); }
+.ceiling { height:28px; background:linear-gradient(#E7E4DC, var(--wall)); position:relative; }
+.tube { position:absolute; top:8px; height:5px; width:130px; border-radius:3px; background:#FFFDF4;
+  box-shadow:0 0 10px 3px rgba(255,251,225,.9), 0 6px 40px 14px rgba(255,251,225,.45); }
+.aisles { display:flex; gap:8px; padding:6px 12px 0; position:relative; z-index:2; flex-wrap:wrap; }
+.aisle-tab { border:1px solid var(--rule); background:var(--sheet); border-radius:999px; padding:4px 12px; font-size:13px; }
+.aisle-tab small { color:var(--ink-3); }
+.aisle-tab:disabled { opacity:.5; cursor:default; }
+.walk { position:relative; }
+.strip { display:flex; gap:28px; overflow-x:auto; scroll-snap-type:x mandatory; scroll-behavior:smooth; padding:14px 22px 0; scrollbar-width:none; align-items:flex-end; }
+.strip::-webkit-scrollbar { display:none; }
+.section { flex:0 0 auto; scroll-snap-align:start; display:flex; flex-direction:column; align-items:center; }
+.sign { font:600 14px var(--f-ja); padding:4px 16px; border-radius:6px; background:#2F4B7C; color:#fff; margin-bottom:10px; white-space:nowrap; box-shadow:0 2px 6px rgba(0,0,0,.15); }
+.sign small { font:500 11px var(--f-body); opacity:.8; margin-left:6px; }
+.sign .ink-no { color:rgba(255,255,255,.45); } .sign .ink-sound { color:rgba(255,255,255,.7); }
+.floor { height:30px; background:linear-gradient(rgba(0,0,0,.06), transparent 40%), repeating-linear-gradient(90deg, var(--floor) 0 58px, color-mix(in srgb,var(--floor) 88%, #000) 58px 60px); }
+.walkbtn { position:absolute; top:50%; transform:translateY(-50%); z-index:3; width:38px; height:38px; border-radius:50%;
+  border:1px solid var(--rule); background:var(--sheet); box-shadow:var(--shadow); font-size:18px; }
+.walkbtn.l { left:8px; } .walkbtn.r { right:8px; }
+
+/* the drinks cooler: a dark frame, a lit header, glass doors with the cold, bright inside */
+.cooler { background:linear-gradient(90deg,#2E3339,#454C54 50%,#2E3339); border-radius:8px 8px 0 0; padding:0 9px; }
+.cooler-head { height:22px; margin:0 -9px 8px; border-radius:8px 8px 0 0; background:linear-gradient(#F6F8FA,#DDE3E8); display:grid; place-items:center;
+  font:700 11px var(--f-ja); color:#2F4B7C; letter-spacing:.1em; box-shadow:0 4px 10px rgba(240,248,255,.6); }
+.doors { display:grid; grid-template-columns:repeat(2, auto); gap:9px; }
+.door { position:relative; border:3px solid #A9B1B8; border-bottom:0; border-radius:3px 3px 0 0;
+  background:linear-gradient(#F7FAFC, #E6ECF0); padding:6px 14px 0 6px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.7), inset 4px 0 14px rgba(255,255,255,.9); }
+.door::before { content:""; position:absolute; inset:0; pointer-events:none; z-index:4;
+  background:linear-gradient(112deg, transparent 0 14%, rgba(255,255,255,.16) 14% 20%, transparent 20% 64%, rgba(255,255,255,.1) 64% 67%, transparent 67%); }
+.door::after { content:""; position:absolute; right:3px; top:30%; top:26%; height:40%; width:5px; border-radius:3px; z-index:5;
+  background:linear-gradient(90deg,#8F979E,#E3E7EA,#9AA2A9); box-shadow:1px 1px 2px rgba(0,0,0,.3); }
+/* the open chiller for onigiri: a canopy light, white shelves */
+.chiller { background:linear-gradient(#EEF1F2,#E2E6E8); border:7px solid #CDD2D5; border-bottom:0; border-top-width:0; border-radius:8px 8px 0 0; padding:0 8px; }
+.canopy { height:16px; margin:0 -15px 10px; border-radius:8px 8px 0 0; background:linear-gradient(#CDD2D5,#BFC5C9); position:relative; }
+.canopy::after { content:""; position:absolute; left:14px; right:14px; bottom:-3px; height:3px; border-radius:2px; background:#FFFDF2; box-shadow:0 2px 16px 6px rgba(255,251,225,.75); }
+
+/* a shelf: each product stands on the shelf top, its tag clips onto the rail under it */
+.shelf { display:flex; align-items:flex-end; gap:6px; padding:0 2px; position:relative; }
+.shelf::after { content:""; position:absolute; left:-6px; right:-6px; bottom:36px; height:5px; background:linear-gradient(#FFFFFF,#D3D8DB); z-index:0; }
+.col { display:flex; flex-direction:column; align-items:center; width:62px; position:relative; z-index:1; }
+.col.wide { width:86px; }
+.col .prod { margin-bottom:5px; }
+.rail { width:calc(100% + 6px); height:36px; background:linear-gradient(#F7D96A,#E9C445); margin:0 -3px; display:flex; justify-content:center; align-items:center; box-shadow:inset 0 -2px 0 rgba(0,0,0,.12); }
+.shelf .col:first-child .rail { margin-left:-8px; width:calc(100% + 11px); }
+.shelf .col:last-child .rail { margin-right:-8px; width:calc(100% + 11px); }
+.tag { width:58px; height:29px; background:#fff; border-radius:2px; padding:1px 3px; display:flex; flex-direction:column; justify-content:center; align-items:center;
+  font-family:var(--f-ja); color:#222; line-height:1.1; overflow:hidden; box-shadow:0 1px 1px rgba(0,0,0,.15); }
+.col.wide .tag { width:80px; }
+.tag .n { font-weight:700; text-align:center; white-space:nowrap; }
+.tag .pr { font-size:9.5px; font-weight:700; display:flex; gap:3px; align-items:baseline; }
+.tag .pr small { font-size:6.5px; font-weight:500; color:#666; }
+.tag .ok { color:#3D7A57; font-size:7px; }
+
+/* products */
+.prod { position:relative; border:0; background:none; padding:0; display:flex; flex-direction:column; align-items:center; transition:transform .15s; }
+.prod:hover, .prod:focus-visible { transform:translateY(-5px); outline:none; }
+.prod:hover .pk .ground, .prod:focus-visible .pk .ground { opacity:.45; }
+.prod.gone { visibility:hidden; }
+.prod.readable::after { content:""; position:absolute; left:50%; bottom:-11px; width:6px; height:6px; margin-left:-3px; border-radius:50%; background:#3D7A57; box-shadow:0 0 0 1.5px #fff; z-index:3; }
+.prod.wrong { animation: shake .35s; }
+@keyframes shake { 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+
+/* packages: the drawing (svg.art), the printed words (.lbl, HTML so they take the ink),
+   then the gloss over both (svg.gloss) so the print sits on a curved, lit surface.
+   All sizes are in the shelf's pixels; the hand view and the phone shelf scale the whole thing. */
+.pk { position:relative; color:#1E1D1A; flex:0 0 auto; }
+.pk > svg { position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+.pk > svg.gloss { pointer-events:none; z-index:2; }
+.pk .lbl { position:absolute; z-index:1; text-align:center; font-family:var(--f-ja); display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.pk .lc { background:#FFFEF8; border-radius:1.5px; padding:2px 2.5px; max-width:100%; max-height:100%; display:flex; flex-direction:column; align-items:center; flex-shrink:0; overflow:hidden; box-shadow:0 0 0 .4px rgba(0,0,0,.12); }
+.pk.onigiri .lc { min-width:100%; border-top:2.5px solid var(--c); }
+.pk.onigiri .lbl { justify-content:flex-start; }
+.big .pk.onigiri .lc, .ps .pk.onigiri .lc { max-height:none; }
+.pk .nm { font-weight:900; line-height:1.08; letter-spacing:-.01em; }
+.pk .nm.r { line-height:1.5; }
+.pk .nm .ln { display:block; white-space:nowrap; }
+.pk.vert .nm { writing-mode:vertical-rl; letter-spacing:.06em; }
+.pk.vert .nm .ln { display:block; }
+.pk .copy { font-weight:500; white-space:nowrap; margin-top:.15em; }
+.pk .tg { background:#C2402F; color:#fff; border-radius:1.5px; padding:0 .3em; white-space:nowrap; margin-top:.25em; font-weight:700; }
+.pk .tg .ink-no { color:rgba(255,255,255,.5); } .pk .tg .ink-sound { color:rgba(255,255,255,.75); }
+.pk .brandm { font-family:var(--f-body); font-weight:700; letter-spacing:.14em; opacity:.7; line-height:1; margin-bottom:.2em; }
+.pk .copy, .pk .tg, .pk .brandm { display:none; }
+.big .pk .copy, .big .pk .tg, .big .pk .brandm, .ps .pk .copy, .ps .pk .tg, .ps .pk .brandm { display:block; }
+
+/* sweets: not in the first slice */
+.later { opacity:.45; filter:grayscale(.6); pointer-events:none; }
+.later-note { font-size:12px; color:var(--ink-3); margin:6px 0 0; }
+
+/* the register */
+.register { width:250px; display:flex; flex-direction:column; align-items:center; }
+.counter { width:100%; height:62px; background:linear-gradient(#D3BE95,#BBA578); border-radius:6px 6px 0 0; position:relative; }
+.counter::before { content:""; position:absolute; left:16px; top:-30px; width:58px; height:32px; background:linear-gradient(#6A7077,#4C5157); border-radius:5px 5px 0 0; }
+.neko-clerk { width:96px; height:84px; margin-bottom:-6px; }
+.reg-note { font-size:12px; color:var(--ink-3); text-align:center; margin:6px 10px 0; }
+
+/* ---------- in your hands ---------- */
+.hands { border:1px solid var(--rule-2); border-radius:10px; background:var(--sheet); padding:14px; display:flex; flex-direction:column; gap:12px; min-height:520px; }
+.hands h3 { margin:0; font:600 17px var(--f-display); }
+.empty { color:var(--ink-3); font-size:13.5px; margin:auto 0; text-align:center; padding:20px; }
+.hold { display:flex; justify-content:center; align-items:center; height:270px; background:radial-gradient(ellipse at 50% 45%, var(--sunken), transparent 70%); border-radius:10px; }
+.big { transform:scale(2.1); }
+.big.s-onigiri, .big.s-can, .big.s-cup { transform:scale(2.6); }
+.backside { width:230px; background:#FFFEFA; color:#1E1D1A; border-radius:6px; padding:10px; font:12px/1.35 var(--f-ja); box-shadow:var(--shadow-lift); }
+.backside .bh { font-size:10px; font-weight:700; margin-bottom:4px; }
+.backside table { border-collapse:collapse; width:100%; }
+.backside td { border:1px solid #9C978C; padding:3px 5px; vertical-align:top; font-size:11px; }
+.backside td:first-child { white-space:nowrap; font-weight:500; background:rgba(0,0,0,.04); }
+.sides { display:flex; justify-content:center; }
+.terms { display:flex; flex-direction:column; gap:6px; }
+.term { text-align:left; border:1px solid var(--rule-2); background:var(--paper); border-radius:9px; padding:7px 10px; display:grid; grid-template-columns:1fr auto; gap:2px 10px; align-items:center; }
+.term .jp { font-size:17px; }
+.term .en { grid-column:1/-1; font-size:12.5px; color:var(--ink-2); display:none; }
+.term.open .en { display:block; }
+.term .side { font-size:10.5px; color:var(--ink-3); text-transform:uppercase; letter-spacing:.06em; }
+.note { font-size:12.5px; color:var(--ink-2); background:var(--amber-wash); border-radius:8px; padding:8px 10px; }
+.note.good { background:var(--jade-wash); }
+.btn { border:1px solid var(--rule); background:var(--sheet); border-radius:10px; padding:9px 14px; font-weight:500; }
+.btn.main { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+.row { display:flex; gap:8px; flex-wrap:wrap; }
+.row .btn { flex:1; }
+.hear { border:1px solid var(--rule); background:var(--sheet); border-radius:999px; padding:4px 10px; font-size:12.5px; }
+.q { display:flex; flex-direction:column; gap:10px; }
+.q .ask { font-size:14.5px; }
+.q .ask .jp { font-size:20px; }
+.answers { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.ans { border:1.5px solid var(--rule); background:var(--sheet); border-radius:10px; padding:10px 8px; min-height:52px; font-size:14px; }
+.ans.right { border-color:var(--jade); background:var(--jade-wash); }
+.ans.miss { border-color:var(--amber); background:var(--amber-wash); }
+.verdict { font-size:13px; min-height:20px; }
+.verdict.right { color:var(--jade); } .verdict.miss { color:var(--amber); }
+.stamps { display:flex; gap:6px; }
+.st { font:600 12px var(--f-ja-serif); border:1.5px solid var(--rule); color:var(--ink-3); border-radius:50%; width:28px; height:28px; display:grid; place-items:center; }
+.st.done { border-color:var(--seal); color:var(--seal); transform:rotate(-8deg); }
+.errand { border:1px solid var(--rule); border-radius:10px; padding:10px 12px; background:repeating-linear-gradient(var(--sheet) 0 27px, var(--rule-2) 27px 28px); }
+.errand h4 { margin:0 0 4px; font:600 14px var(--f-display); }
+.errand li { font-size:18px; list-style:none; display:flex; gap:8px; align-items:center; height:28px; }
+.errand ul { margin:0; padding:0; }
+.errand li.got { text-decoration:line-through; text-decoration-color:var(--jade); }
+.errand li.got::before { content:"✓"; color:var(--jade); font-size:14px; }
+.receipt { font:13px/1.6 var(--f-ja); background:#fff; color:#222; border-radius:4px; padding:10px 14px; box-shadow:var(--shadow); }
+.receipt .r { display:flex; justify-content:space-between; }
+.receipt .tot { font-weight:700; border-top:1px dashed #999; margin-top:4px; padding-top:4px; }
+
+/* ---------- the phone: its own layout, its own shelf ---------- */
+.stage { display:flex; justify-content:center; }
+.app-card { width:100%; }
+.stage.phone .app-card { width:390px; border-radius:36px; border:10px solid #111; height:820px; overflow-y:auto; position:relative; scrollbar-width:none; }
+.phone .head { grid-template-columns:1fr; padding:14px 14px 10px; }
+.phone .head h1 { font-size:22px; }
+.phone .head > div > p, .phone .key { display:none; }
+.phone .lv { min-width:0; flex:1; padding:3px 6px; font-size:11px; } .phone .lv b { font-size:15px; } .phone .lv small, .phone .lv br { display:none; }
+.phone .body { grid-template-columns:1fr; padding:0 10px 16px; }
+.phone .hands { position:sticky; bottom:0; z-index:20; margin:0 -10px; border-radius:20px 20px 0 0; min-height:0; max-height:640px; overflow-y:auto;
+  box-shadow:0 -10px 40px rgba(0,0,0,.25); display:none; }
+.phone .hands.up { display:flex; }
+.phone .hands .row .btn { min-height:52px; }
+.phone .ans { min-height:64px; }
+.phone .hold { height:300px; }
+.grab { display:none; }
+.phone .grab { display:block; width:40px; height:4px; border-radius:2px; background:var(--rule); margin:0 auto; }
+.phone-cta { display:none; }
+.phone .phone-cta { display:flex; position:sticky; bottom:12px; margin:0 12px; z-index:15; gap:10px; }
+.phone-cta .btn { flex:1; height:56px; border-radius:16px; }
+/* one long shelf, one product at a time, big enough to read the pack */
+.ps { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; padding:10px 0 0; scrollbar-width:none; position:relative;
+  background:linear-gradient(transparent calc(100% - 66px), #FFFFFF calc(100% - 66px), #D3D8DB calc(100% - 60px), #F7D96A calc(100% - 60px), #E9C445 100%); }
+.ps::-webkit-scrollbar { display:none; }
+.ps .aisle-start { flex:0 0 96px; scroll-snap-align:start; display:flex; align-items:center; justify-content:center; padding-bottom:70px; }
+.ps .aisle-start .sign { writing-mode:vertical-rl; padding:12px 7px; font-size:18px; letter-spacing:.1em; }
+.ps .aisle-start .sign small { display:none; }
+.slot { flex:0 0 56%; scroll-snap-align:center; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:340px; }
+.slot .prod { height:270px; justify-content:flex-end; margin-bottom:8px; }
+.slot .prod.readable::after { bottom:-14px; }
+.slot .zoom { transform-origin:bottom center; }
+.ptag { height:50px; width:88%; margin-bottom:5px; background:#fff; color:#222; border-radius:3px; display:flex; flex-direction:column; justify-content:center; padding:2px 8px; font-family:var(--f-ja); box-shadow:0 1px 2px rgba(0,0,0,.15); }
+.ptag .n { font-size:15px; font-weight:700; line-height:1.15; white-space:nowrap; overflow:hidden; }
+.ptag .pr { font-size:13px; font-weight:700; display:flex; justify-content:space-between; align-items:baseline; }
+.ptag .pr small { font-size:9.5px; font-weight:500; color:#666; }
+.ptag .ok { color:#3D7A57; }
+.swipe-hint { font-size:12px; color:var(--ink-3); text-align:center; margin:8px 0; }
+
+.foot { font-size:12.5px; color:var(--ink-3); margin:18px 4px; }
+</style>
+
+<body>
+<!-- shared paint, used by every package -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <!-- one light, from the upper left and in front: a lit band left of centre, falling off to the right -->
+  <linearGradient id="gloss" x1="0" x2="1">
+    <stop offset="0" stop-color="#000" stop-opacity=".16"/><stop offset=".14" stop-color="#fff" stop-opacity=".28"/>
+    <stop offset=".22" stop-color="#fff" stop-opacity=".06"/><stop offset=".62" stop-color="#000" stop-opacity="0"/>
+    <stop offset="1" stop-color="#000" stop-opacity=".26"/></linearGradient>
+  <!-- flat faces (the carton) catch the light evenly, a little darker to the right and at the foot -->
+  <linearGradient id="flat" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#fff" stop-opacity=".12"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".14"/></linearGradient>
+  <linearGradient id="metal" x1="0" x2="1">
+    <stop offset="0" stop-color="#868D93"/><stop offset=".22" stop-color="#EEF1F3"/><stop offset=".55" stop-color="#BCC2C7"/><stop offset="1" stop-color="#737A80"/></linearGradient>
+  <linearGradient id="film" x1="0" y1="0" x2=".8" y2="1">
+    <stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".35" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#7C8A96" stop-opacity=".16"/></linearGradient>
+  <!-- where a package stands on the shelf -->
+  <radialGradient id="ground"><stop offset="0" stop-color="#1A222A" stop-opacity=".42"/><stop offset=".6" stop-color="#1A222A" stop-opacity=".14"/><stop offset="1" stop-color="#1A222A" stop-opacity="0"/></radialGradient>
+</defs></svg>
+
+<div class="wrap">
+  <div class="mock" role="group" aria-label="Mockup controls">
+    <span><b>Mockup controls</b> (not part of the design)</span>
+    <span>Pretend I've learned: <span class="seg" id="presets"></span></span>
+    <span>View as: <span class="seg" id="views"><button data-view="desk" class="on">Desktop</button><button data-view="phone">Phone</button></span></span>
+    <span>Theme: <span class="seg" id="themes"><button data-theme="auto" class="on">Auto</button><button data-theme="light">Light</button><button data-theme="dark">Dark</button></span></span>
+  </div>
+  <div class="topbar">
+    <span class="brand"><span class="seal" lang="ja">日</span>Nihongo Quest</span>
+    <span>今日 Today · かな Kana · 言葉 Words · 文法 Grammar · … · <b style="color:var(--ink)">街 Out and about</b></span>
+  </div>
+  <div class="stage" id="stage"><div class="app-card card" id="app"></div></div>
+  <p class="foot">Mockup only: fictional brands, 14 products, speech from your browser's voice rather than the app's recordings.
+  Every word printed on a package uses the app's ink: dark for kana you know, grey for kana you don't, furigana until a kanji is learned.
+  A green dot under a product means you can sound out its name, so it can quiz you.</p>
+</div>
+
+<script>
+/* ---------------- what the learner knows (the mockup's stand-in for state) ---------------- */
+const kata = s => [...s].map(c => { const n = c.charCodeAt(0); return n >= 0x3041 && n <= 0x3096 ? String.fromCharCode(n + 0x60) : c; }).join("");
+const ROWS = { a:"あいうえお", k:"かきくけこ", s:"さしすせそ", t:"たちつてと", n:"なにぬねの", h:"はひふへほ", m:"まみむめも",
+  y:"やゆよ", r:"らりるれろ", w:"わをん", v:"がぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ", c:"ゃゅょっぁぃぅぇぉ" };
+const ALL_H = Object.values(ROWS).join("");
+const N5_KANJI = "大一度英語待二三四五六七八九十百千万円高安今何時半分日明毎午前後私名人本生学先会社員友家族好食飲水茶飯肉魚野菜朝昼文注計店行来帰乗歩駅車電下地切口出入右左近遠買見小新古悪赤白黒青有服土産起働勉強読書聞話休週夜仕事校開使作教手住知持立写真少画映音楽天気雨暑寒元年旅";
+const PRESETS = [
+  { id:"d10", label:"Day 10", kana: ROWS.a+ROWS.k+ROWS.s+ROWS.t+ROWS.n, kanji:"" },
+  { id:"hira", label:"Hiragana done", kana: ALL_H, kanji:"" },
+  { id:"kata", label:"Katakana done", kana: ALL_H + kata(ALL_H) + "ーヴ", kanji:"" },
+  { id:"n5", label:"End of N5", kana: ALL_H + kata(ALL_H) + "ーヴ", kanji: N5_KANJI },
+];
+let known = { kana:new Set(), kanji:new Set() };
+const isKana = c => /[ぁ-ゖァ-ヺー]/.test(c);
+
+/* ---------------- furigana markup, as js/furi.js: {漢字|かんじ} ---------------- */
+const parse = s => { const out = []; const re = /\{([^|}]+)\|([^}]+)\}/g; let i = 0, m;
+  while ((m = re.exec(s))) { if (m.index > i) out.push({ t: s.slice(i, m.index) }); out.push({ k: m[1], r: m[2] }); i = re.lastIndex; }
+  if (i < s.length) out.push({ t: s.slice(i) }); return out; };
+const plain = s => parse(s).map(x => x.t ?? x.k).join("");
+const reading = s => parse(s).map(x => x.t ?? x.r).join("");
+const soundable = s => [...reading(s)].every(c => !isKana(c) || known.kana.has(c));
+const kanjiKnown = k => [...k].every(c => known.kanji.has(c));
+const inkKana = t => [...t].map(c => isKana(c) && !known.kana.has(c) ? `<span class="ink-no">${c}</span>` : c).join("");
+function ink(s) {
+  return parse(s).map(x => {
+    if (x.t != null) return inkKana(x.t);
+    if (kanjiKnown(x.k)) return x.k;
+    const cls = [...x.r].every(c => !isKana(c) || known.kana.has(c)) ? "ink-sound" : "ink-no";
+    return `<ruby><span class="${cls}">${x.k}</span><rt>${inkKana(x.r)}</rt></ruby>`;
+  }).join("");
+}
+// how wide a string sets, in ems: full-width characters are 1, ASCII about half
+const ems = s => [...plain(s)].reduce((a, c) => a + (c.charCodeAt(0) < 0x2000 ? .56 : 1), 0);
+
+/* ---------------- the shelves (fictional brands) ----------------
+   name     the product's name, furigana markup
+   lines    where the name breaks on the package (joined, they must equal name)
+   say      its reading, for the voice and the "how is it read" question
+   copy     the slogan on the front; tags: the small red flashes
+   back     the label on the back: [term, value, English, "what this line tells you"]
+   cq       the question about the slogan: [ask, right, wrong, wrong, wrong] */
+const DRINK_BACK = (kind, ingr, amount, kcal) => [
+  ["{名称|めいしょう}", kind, "Product type", "what kind of product it is"],
+  ["{原材料名|げんざいりょうめい}", ingr, "Ingredients", "what's in it"],
+  ["{内容量|ないようりょう}", amount, "Contents (amount)", "how much is inside"],
+  ["{賞味期限|しょうみきげん}", "27.03.15", "Best before (year.month.day)", "when it's best before"],
+  ["エネルギー", kcal, "Energy (calories)", "how many calories it has"],
+];
+const RICE_BACK = (ingr, kcal) => [
+  ["{名称|めいしょう}", "おにぎり", "Product type", "what kind of product it is"],
+  ["{原材料名|げんざいりょうめい}", ingr, "Ingredients", "what's in it"],
+  ["{消費期限|しょうひきげん}", "26.10.03 {午前|ごぜん}5{時|じ}", "Use by (date and hour)", "when you must eat it by"],
+  ["エネルギー", kcal, "Energy (calories)", "how many calories it has"],
+];
+const P = [
+  // drinks: the cooler, two doors, two shelves each
+  { id:"ocha", a:"drink", door:0, sh:0, shape:"bottle", vert:true, c:"#3E7B3A", cap:"#2B5A26", liquid:"#B5C46F", brand:"SAKURA",
+    name:"お{茶|ちゃ}", say:"おちゃ", en:"Green tea", copy:"すっきり", copyEn:"Clean, refreshing taste", tags:["{無糖|むとう}"], tagsEn:["Unsweetened"],
+    price:140, back: DRINK_BACK("{緑茶|りょくちゃ}", "{緑茶|りょくちゃ}、ビタミンC", "500ml", "0kcal"),
+    cq:["The bottle says すっきり. What does it tell you?", "It tastes clean and refreshing", "It's very sweet", "It's hot", "It's on sale"] },
+  { id:"mizu", a:"drink", door:0, sh:0, shape:"bottle", vert:true, c:"#2F7FB5", cap:"#EAF0F4", liquid:"#DCEEF7", brand:"ALPS",
+    name:"おいしい{水|みず}", lines:["おいしい", "{水|みず}"], say:"おいしいみず", en:"Tasty water", copy:"{天然水|てんねんすい}", copyEn:"Natural spring water", tags:[], tagsEn:[],
+    price:110, back: DRINK_BACK("ナチュラルミネラルウォーター", "{水|みず}（{鉱水|こうすい}）", "550ml", "0kcal"),
+    cq:["What kind of water does it say it is?", "Natural spring water", "Sparkling water", "Hot water", "Tap water"] },
+  { id:"tea", a:"drink", door:0, sh:1, shape:"bottle", c:"#A9402B", cap:"#E3A034", liquid:"#D6B086", brand:"HOT",
+    name:"ミルクティー", lines:["ミルク", "ティー"], say:"ミルクティー", en:"Milk tea", copy:"あまさひかえめ", copyEn:"Not too sweet", tags:["あたたかい"], tagsEn:["Hot (from the warmer)"],
+    price:150, back: DRINK_BACK("{紅茶|こうちゃ}{飲料|いんりょう}", "{牛乳|ぎゅうにゅう}、{砂糖|さとう}、{紅茶|こうちゃ}", "345ml", "120kcal"),
+    cq:["The red tag says あたたかい. What does that mean?", "It's hot, from the warmer", "It's cold", "It's new", "It's sugar-free"] },
+  { id:"milk", a:"drink", door:0, sh:1, shape:"carton", c:"#3D6EA8", brand:"FARM",
+    name:"{牛乳|ぎゅうにゅう}", say:"ぎゅうにゅう", en:"Milk", copy:"まいにち、カルシウム", copyEn:"Calcium, every day", tags:[], tagsEn:[],
+    price:168, back: DRINK_BACK("{牛乳|ぎゅうにゅう}", "{生乳|せいにゅう}100%", "500ml", "335kcal"),
+    cq:["What's the slogan selling?", "Calcium, every day", "Morning coffee", "Low fat", "A free gift"] },
+  { id:"cola", a:"drink", door:1, sh:0, shape:"can", c:"#B3271F", brand:"FIZZ",
+    name:"コーラ", say:"コーラ", en:"Cola", copy:"ゼロカロリー", copyEn:"Zero calories", tags:[], tagsEn:[],
+    price:160, back: DRINK_BACK("{炭酸飲料|たんさんいんりょう}", "{炭酸|たんさん}、カラメル{色素|しきそ}、{香料|こうりょう}", "350ml", "0kcal"),
+    cq:["What does ゼロカロリー promise?", "Zero calories", "Extra caffeine", "Lemon flavour", "A large size"] },
+  { id:"coffee", a:"drink", door:1, sh:0, shape:"can", c:"#2A2420", brand:"BLACK",
+    name:"ブラックコーヒー", lines:["ブラック", "コーヒー"], say:"ブラックコーヒー", en:"Black coffee", copy:"{無糖|むとう}", copyEn:"Unsweetened", tags:[], tagsEn:[],
+    price:130, back: DRINK_BACK("コーヒー", "コーヒー", "185g", "0kcal"),
+    cq:["The can says 無糖. What does that mean?", "No sugar", "No caffeine", "Low fat", "Not hot"] },
+  { id:"latte", a:"drink", door:1, sh:1, shape:"cup", c:"#9C6A43", brand:"CAFE",
+    name:"カフェラテ", lines:["カフェ", "ラテ"], say:"カフェラテ", en:"Caffè latte", copy:"ミルクたっぷり", copyEn:"Lots of milk", tags:["{新発売|しんはつばい}"], tagsEn:["New"],
+    price:198, back: DRINK_BACK("{乳飲料|にゅういんりょう}", "{牛乳|ぎゅうにゅう}、コーヒー、{砂糖|さとう}", "240ml", "130kcal"),
+    cq:["What does ミルクたっぷり tell you?", "There's plenty of milk", "It's milk-free", "It's a small cup", "It's iced"] },
+  { id:"oj", a:"drink", door:1, sh:1, shape:"carton", c:"#E5862F", brand:"SUN",
+    name:"オレンジジュース", lines:["オレンジ", "ジュース"], say:"オレンジジュース", en:"Orange juice", copy:"{果汁|かじゅう}100%", copyEn:"100% fruit juice", tags:[], tagsEn:[],
+    price:150, back: DRINK_BACK("オレンジジュース", "オレンジ", "200ml", "90kcal"),
+    cq:["What does 果汁100% mean?", "100% fruit juice", "100 yen", "100 ml", "100 calories"] },
+
+  // onigiri: the open chiller, two shelves
+  { id:"tuna", a:"rice", sh:0, shape:"onigiri", c:"#E2B33C",
+    name:"ツナマヨ", say:"ツナマヨ", en:"Tuna mayo", copy:"まろやか", copyEn:"Mild and creamy", tags:[], tagsEn:[],
+    price:150, back: RICE_BACK("ごはん、ツナ、マヨネーズ、のり", "230kcal"),
+    cq:["How does it say it tastes?", "Mild and creamy", "Spicy", "Sour", "Salty"] },
+  { id:"sake", a:"rice", sh:0, shape:"onigiri", c:"#E07A4F",
+    name:"{鮭|さけ}", say:"さけ", en:"Salmon", copy:"{人気|にんき}No.1", copyEn:"Most popular", tags:[], tagsEn:[],
+    price:160, back: RICE_BACK("ごはん、{鮭|さけ}、のり、{塩|しお}", "180kcal"),
+    cq:["What does 人気No.1 say?", "It's the most popular", "It's the first one made", "It's the biggest", "It's the last one left"] },
+  { id:"ume", a:"rice", sh:0, shape:"onigiri", c:"#B83A55",
+    name:"{梅|うめ}", say:"うめ", en:"Pickled plum", copy:"すっぱい", copyEn:"Sour!", tags:[], tagsEn:[],
+    price:130, back: RICE_BACK("ごはん、{梅|うめ}、のり", "170kcal"),
+    cq:["What does すっぱい warn you about?", "It's sour", "It's spicy", "It's sweet", "It's hot"] },
+  { id:"kombu", a:"rice", sh:1, shape:"onigiri", c:"#4E7A45",
+    name:"こんぶ", say:"こんぶ", en:"Kelp", copy:"あまから", copyEn:"Sweet and savoury", tags:[], tagsEn:[],
+    price:130, back: RICE_BACK("ごはん、こんぶ、のり、しょうゆ", "170kcal"),
+    cq:["What does あまから mean?", "Sweet and savoury", "Very spicy", "Plain, no filling", "Extra large"] },
+  { id:"mentai", a:"rice", sh:1, shape:"onigiri", c:"#C8332B",
+    name:"{明太子|めんたいこ}", say:"めんたいこ", en:"Spicy cod roe (mentaiko)", copy:"ピリッと{辛|から}い", copyEn:"With a spicy kick", tags:[], tagsEn:[],
+    price:170, back: RICE_BACK("ごはん、{明太子|めんたいこ}、のり", "175kcal"),
+    cq:["What does ピリッと辛い tell you?", "It has a spicy kick", "It's mild", "It's sour", "It's sweet"] },
+  { id:"niku", a:"rice", sh:1, shape:"onigiri", c:"#8A5A34",
+    name:"{肉|にく}みそ", say:"にくみそ", en:"Meat miso", copy:"ごはんがすすむ", copyEn:"Makes you want more rice", tags:[], tagsEn:[],
+    price:160, back: RICE_BACK("ごはん、{豚肉|ぶたにく}、みそ、のり", "210kcal"),
+    cq:["What does ごはんがすすむ mean?", "It makes you want more rice", "It has no rice", "It's for breakfast", "It's a big portion"] },
+];
+const SWEETS = [ { shape:"bag", c:"#E2AE2E", name:"ポテト", lines:["ポテト"] }, { shape:"bag", c:"#6E4126", name:"チョコ" }, { shape:"cup", c:"#E8C462", name:"プリン" } ];
+
+/* ---------------- drawing the packages ---------------- */
+// colour arithmetic: shading stays in the package's own hue, a touch cooler in shadow
+const rgb = c => { const n = parseInt(c.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; };
+function tone(c, dl, ds = 0) {
+  let [r, g, b] = rgb(c).map(v => v / 255); const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+  let h = 0, s = 0, l = (mx + mn) / 2;
+  if (mx !== mn) { const d = mx - mn; s = l > .5 ? d / (2 - mx - mn) : d / (mx + mn);
+    h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60; }
+  if (dl < 0) h = h + (h > 40 && h < 220 ? 6 : -6) * Math.min(1, -dl * 4);   // shadows lean cool
+  return `hsl(${h.toFixed(0)} ${Math.min(100, Math.max(0, (s + ds) * 100)).toFixed(0)}% ${Math.min(97, Math.max(3, (l + dl) * 100)).toFixed(0)}%)`;
+}
+let UID = 0;
+const bodyGrad = (id, c) => `<linearGradient id="${id}" x1="0" x2="1">
+  <stop offset="0" stop-color="${tone(c, -.14, .04)}"/><stop offset=".14" stop-color="${tone(c, .08)}"/><stop offset=".34" stop-color="${c}"/>
+  <stop offset=".78" stop-color="${tone(c, -.07, .03)}"/><stop offset="1" stop-color="${tone(c, -.2, .05)}"/></linearGradient>`;
+
+/* each shape: its size, where the printed panel goes [x, y, w, h], the biggest the name may set,
+   and three layers: under (the drawing), the gloss over the print, and its outline for the gloss */
+const SHAPES = {
+  bottle: { w:46, h:118, panel:[9, 44, 28, 56], max:12,
+    path:"M16.5 14 H29.5 C30 21 41 25 41 35 V108 Q41 116 33 116 H13 Q5 116 5 108 V35 C5 25 16 21 16.5 14Z",
+    under: (p, g, sh) => `<defs>${bodyGrad(g, p.c)}${bodyGrad(g + "c", p.cap)}${bodyGrad(g + "l", p.liquid)}
+        <clipPath id="${g}k"><path d="${sh.path}"/></clipPath></defs>
+      <rect x="15" y="0" width="16" height="11" rx="2" fill="url(#${g}c)"/>
+      <path d="M17 1.5v8M19.5 1.5v8M22 1.5v8M24.5 1.5v8M27 1.5v8M29.5 1.5v8" stroke="${tone(p.cap, -.2)}" stroke-width=".6" opacity=".7"/>
+      <rect x="14" y="10.5" width="18" height="3.5" rx="1" fill="${tone(p.cap, -.08)}"/>
+      <g clip-path="url(#${g}k)">
+        <rect x="0" y="0" width="46" height="118" fill="url(#${g}l)"/>
+        <rect x="0" y="0" width="46" height="25" fill="#fff" opacity=".55"/>
+        <path d="M5 25 H41" stroke="#fff" stroke-width=".8" opacity=".8"/>
+        <rect x="0" y="38" width="46" height="68" fill="url(#${g})"/>
+        <path d="M0 38.6 H46 M0 105.4 H46" stroke="${tone(p.c, -.22)}" stroke-width="1.2"/>
+        <path d="M0 109 H46 M0 112 H46" stroke="#000" stroke-width=".5" opacity=".12"/>
+      </g>
+      <path d="${sh.path}" fill="none" stroke="${tone(p.liquid, -.3)}" stroke-width=".5" opacity=".5"/>`,
+    gloss: (p, sh) => `<path d="${sh.path}" fill="url(#gloss)"/><rect x="9.5" y="18" width="2.4" height="92" rx="1.2" fill="#fff" opacity=".45"/>` },
+  can: { w:44, h:80, panel:[7, 16, 30, 50], max:9.5,
+    path:"M4 9 Q4 5.5 8 5.5 H36 Q40 5.5 40 9 V71 Q40 74.5 36 74.5 H8 Q4 74.5 4 71Z",
+    under: (p, g, sh) => `<defs>${bodyGrad(g, p.c)}</defs>
+      <path d="${sh.path}" fill="url(#${g})"/>
+      <path d="M4 12 H40 M4 68 H40" stroke="${tone(p.c, .25)}" stroke-width=".9" opacity=".8"/>
+      <path d="M5.5 5.5 Q8 1 12 1 H32 Q36 1 38.5 5.5Z" fill="url(#metal)"/>
+      <path d="M5.5 74.5 Q8 79 12 79 H32 Q36 79 38.5 74.5Z" fill="url(#metal)"/>
+      <path d="M4.5 5.6 H39.5 M4.5 74.4 H39.5" stroke="#5E656B" stroke-width=".7" opacity=".6"/>`,
+    gloss: (p, sh) => `<path d="${sh.path}" fill="url(#gloss)"/><rect x="8.5" y="8" width="2.2" height="64" rx="1.1" fill="#fff" opacity=".42"/>` },
+  carton: { w:44, h:98, panel:[5, 31, 34, 58], max:9.5,
+    path:"M0 22 H44 V97 Q44 98 43 98 H1 Q0 98 0 97Z",
+    under: (p, g, sh) => `<defs>${bodyGrad(g, p.c)}</defs>
+      <rect x="7" y="0" width="30" height="5" rx=".8" fill="${tone(p.c, -.06)}"/>
+      <path d="M7 4.6 H37" stroke="${tone(p.c, -.2)}" stroke-width=".6"/>
+      <path d="M4 5 H40 L44 22 H0Z" fill="${tone(p.c, .1)}"/>
+      <path d="M4 5 H40 L44 22 H0Z" fill="url(#flat)"/>
+      <path d="M22 5 V22" stroke="${tone(p.c, -.1)}" stroke-width=".5" opacity=".7"/>
+      <path d="${sh.path}" fill="url(#${g})"/>
+      <path d="M0 22.3 H44" stroke="${tone(p.c, -.25)}" stroke-width=".8"/>
+      <rect x="0" y="92" width="44" height="6" fill="${tone(p.c, -.1)}" opacity=".6"/>`,
+    gloss: (p, sh) => `<path d="${sh.path}" fill="url(#flat)"/><rect x="1" y="23" width="1.4" height="74" fill="#fff" opacity=".4"/>` },
+  cup: { w:52, h:80, panel:[11, 22, 29, 44], max:9.5,
+    path:"M3 10 H49 L43.5 78 Q43.3 79.5 41.8 79.5 H10.2 Q8.7 79.5 8.5 78Z",
+    under: (p, g, sh) => `<defs>${bodyGrad(g, p.c)}</defs>
+      <path d="${sh.path}" fill="url(#${g})"/>
+      <path d="M4.2 17 H47.8 M7.6 70 H44.4" stroke="${tone(p.c, .22)}" stroke-width=".8"/>
+      <rect x="45.5" y="13" width="3" height="56" rx="1.5" fill="#F4F2EC" opacity=".85" transform="rotate(5 47 40)"/>
+      <path d="M45.5 14 l1 -2" stroke="#BDB7AA" stroke-width="1.6" stroke-linecap="round"/>`,
+    gloss: (p, sh) => `<path d="${sh.path}" fill="url(#gloss)"/>
+      <ellipse cx="26" cy="9.5" rx="24" ry="4.2" fill="#F5F3EE" stroke="#C3BDB0" stroke-width=".7"/>
+      <ellipse cx="26" cy="9" rx="19" ry="2.6" fill="none" stroke="#DCD7CC" stroke-width=".6"/>
+      <path d="M45 8 Q49 4 52 4.5" stroke="#C3BDB0" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+      <rect x="9" y="17" width="2.2" height="56" rx="1.1" fill="#fff" opacity=".38" transform="rotate(-4.6 10 45)"/>` },
+  onigiri: { w:82, h:72, panel:[23, 28, 36, 19], max:9, grow:true,
+    path:"M41 3 Q45 3 47.5 7.5 L79 61 Q82 69 73 69 H9 Q0 69 3 61 L34.5 7.5 Q37 3 41 3Z",
+    under: (p, g, sh) => `<defs><clipPath id="${g}k"><path d="${sh.path}"/></clipPath></defs>
+      <path d="${sh.path}" fill="#FBF9F2"/>
+      <g clip-path="url(#${g}k)">
+        <path d="M17 70 L26 47 H56 L65 70Z" fill="#1C2A21"/><path d="M26 47 H56" stroke="#33473A" stroke-width="1"/>
+        <path d="M30 50 L27 66 M36 50 L35 66 M46 50 L47 66 M52 50 L55 66" stroke="#2C3D32" stroke-width=".6"/>
+        <path d="M0 40 H82" stroke="#E9E3D5" stroke-width="14" opacity=".35"/>
+      </g>
+      <path d="${sh.path}" fill="none" stroke="#CEC6B5" stroke-width=".8"/>`,
+    gloss: (p, sh) => `<path d="${sh.path}" fill="url(#film)"/>
+      <path d="M41 3.6 V29.5 M41 46.5 V69" stroke="#C2402F" stroke-width="2.2"/>
+      <circle cx="41" cy="14" r="4.3" fill="#C2402F"/><text x="41" y="16.3" font-size="6.2" font-weight="700" fill="#fff" text-anchor="middle" font-family="sans-serif">1</text>
+      <text x="8" y="66" font-size="5" fill="#C2402F" font-weight="700" font-family="sans-serif">2</text>
+      <text x="70.5" y="66" font-size="5" fill="#C2402F" font-weight="700" font-family="sans-serif">3</text>
+      <path d="M13 57 L35.5 13" stroke="#fff" stroke-width="2.2" opacity=".6" stroke-linecap="round"/>
+      ` },
+  bag: { w:64, h:84, panel:[9, 24, 46, 36], max:12,
+    path:"M2 4 L6 1 L10 4 L14 1 L18 4 L22 1 L26 4 L30 1 L34 4 L38 1 L42 4 L46 1 L50 4 L54 1 L58 4 L62 1 V83 L58 80 L54 83 L50 80 L46 83 L42 80 L38 83 L34 80 L30 83 L26 80 L22 83 L18 80 L14 83 L10 80 L6 83 L2 80Z",
+    under: (p, g, sh) => `<defs>${bodyGrad(g, p.c)}</defs><path d="${sh.path}" fill="url(#${g})"/>
+      <path d="M2 10 H62 M2 74 H62" stroke="${tone(p.c, .2)}" stroke-width=".8"/>`,
+    gloss: (p, sh) => `<path d="${sh.path}" fill="url(#gloss)"/>` },
+};
+
+/* the type on a package: the name sets as large as fits its panel, line by line,
+   then the slogan and the tags under it, all centred. The same sizes on the shelf and in the hand. */
+function typeSizes(p, sh) {
+  const [, , w, h] = sh.panel, lines = p.lines || [p.name], hasR = /\{/.test(p.name);
+  const longest = Math.max(...lines.map(ems)), lh = hasR ? 1.5 : 1.08;
+  let fs;
+  if (p.vert) fs = Math.min(sh.max, (w - 5) / (lines.length * (hasR ? 1.6 : 1.1)), (h - 14) / longest);
+  else fs = Math.min(sh.max, (w - 6) / longest);
+  const copyFs = p.copy ? Math.min(fs * .5, (w - 6) / ems(p.copy)) : 0;
+  const tagFs = Math.min(fs * .42, ...(p.tags || []).map(t => (w - 8) / ems(t)));
+  // a sticker that grows (the onigiri's) sizes its name alone; the slogan is added under it in the hand
+  const extras = sh.grow ? 0 : (p.brand ? 5.5 : 0) + (copyFs ? copyFs * 1.5 : 0) + (p.tags || []).length * (tagFs * 1.7);
+  if (!p.vert) fs = Math.min(fs, (h - extras - 5) / (lines.length * lh));
+  return { fs, copyFs, tagFs: Math.max(3.6, tagFs), lines };
+}
+function pkHtml(p) {
+  const sh = SHAPES[p.shape], g = "g" + (++UID), [x, y, w, h] = sh.panel, t = typeSizes(p, sh);
+  const hasR = /\{/.test(p.name);
+  return `<div class="pk printed ${p.shape} ${p.vert ? "vert" : ""}" style="width:${sh.w}px;height:${sh.h}px;--c:${p.c}">
+    <svg class="art" viewBox="0 0 ${sh.w} ${sh.h}" aria-hidden="true">
+      <ellipse class="ground" cx="${sh.w / 2}" cy="${sh.h - .5}" rx="${sh.w * .52}" ry="3.2" fill="url(#ground)"/>
+      ${sh.under(p, g, sh)}</svg>
+    <div class="lbl" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px"><div class="lc">
+      ${p.brand ? `<span class="brandm" style="font-size:3.8px">${p.brand}</span>` : ""}
+      <span class="nm ${hasR ? "r" : ""}" lang="ja" style="font-size:${t.fs.toFixed(2)}px">${t.lines.map(l => `<span class="ln">${ink(l)}</span>`).join("")}</span>
+      ${p.copy ? `<span class="copy" lang="ja" style="font-size:${t.copyFs.toFixed(2)}px">${ink(p.copy)}</span>` : ""}
+      ${(p.tags || []).map(tg => `<span class="tg" lang="ja" style="font-size:${t.tagFs.toFixed(2)}px">${ink(tg)}</span>`).join("")}
+    </div></div>
+    <svg class="gloss" viewBox="0 0 ${sh.w} ${sh.h}" aria-hidden="true">${sh.gloss(p, sh)}</svg></div>`;
+}
+
+/* ---------------- state ---------------- */
+const S = { preset:"kata", view:"desk", mode:"browse", held:null, side:"front", openTerms:new Set(), quiz:null, got:{}, errand:null, flash:null };
+const got = id => (S.got[id] ||= { name:false, copy:false, back:false });
+const byId = id => P.find(p => p.id === id);
+const shuffle = a => a.map(x => [Math.random(), x]).sort((x, y) => x[0] - y[0]).map(x => x[1]);
+function setPreset(id) { S.preset = id; const p = PRESETS.find(x => x.id === id); known = { kana: new Set(p.kana), kanji: new Set(p.kanji) }; }
+
+function levels() {
+  const sound = P.filter(p => soundable(p.name)).length, recog = P.filter(p => got(p.id).name).length;
+  const kanjiAll = P.every(p => parse(p.name).every(x => x.t != null || kanjiKnown(x.k)));
+  return [
+    { jp:"読", en:"Sound it out", done: sound === P.length, sub:`${sound}/${P.length}` },
+    { jp:"分", en:"Know what it says", done: recog >= Math.ceil(P.length * .8), sub:`${recog}/${P.length}` },
+    { jp:"字", en:"Read as written", done: kanjiAll, sub: kanjiAll ? "done" : "kanji" },
+  ];
+}
+const sideReadable = (p, side) => side === "name" ? soundable(p.name)
+  : side === "copy" ? soundable(p.copy) && soundable(p.name)
+  : soundable(p.name) && p.back.every(r => soundable(r[0]));
+const nextSide = p => ["name", "copy", "back"].find(s => !got(p.id)[s] && sideReadable(p, s));
+const ticks = p => "✓".repeat(["name", "copy", "back"].filter(s => got(p.id)[s]).length);
+
+/* ---------------- the desktop store ---------------- */
+function prodBtn(p, inner) {
+  const cls = [S.held === p.id ? "gone" : "", soundable(p.name) ? "readable" : "", S.flash === p.id ? "wrong" : ""].join(" ");
+  return `<button class="prod ${cls}" data-act="pick" data-id="${p.id}" aria-label="${p.en}">${inner || pkHtml(p)}</button>`;
+}
+// a shelf tag: the name on its own line (or two, broken where the package breaks it), the price under it
+function tagHtml(p, width) {
+  const one = ems(p.name) * 9.5 <= width - 6;
+  const fs = one ? 9.5 : Math.min(9, (width - 6) / Math.max(...(p.lines || [p.name]).map(ems)));
+  const name = one ? ink(p.name) : (p.lines || [p.name]).map(ink).join("<br>");
+  return `<span class="tag printed" lang="ja" style="${one ? "" : "height:34px"}"><span class="n" style="font-size:${fs.toFixed(1)}px">${name}</span>
+    <span class="pr">¥${p.price}<small>${ink("{税込|ぜいこみ}")}</small><span class="ok">${ticks(p)}</span></span></span>`;
+}
+function shelf(items) {
+  return `<div class="shelf">${items.map(p => { const wide = SHAPES[p.shape].w > 60;
+    return `<div class="col ${wide ? "wide" : ""}">${prodBtn(p)}<div class="rail">${tagHtml(p, wide ? 80 : 58)}</div></div>`; }).join("")}</div>`;
+}
+const neko = `<svg class="neko-clerk" viewBox="0 0 100 86" aria-hidden="true">
+  <path d="M18 40 L22 10 L40 26 Q50 23 60 26 L78 10 L82 40 Q86 78 50 80 Q14 78 18 40Z" fill="#FBFAF6" stroke="#1E1D1A" stroke-width="2.4"/>
+  <path d="M36 46 q4 -5 8 0 M56 46 q4 -5 8 0" fill="none" stroke="#1E1D1A" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M46 56 q4 4 8 0" fill="none" stroke="#1E1D1A" stroke-width="2" stroke-linecap="round"/>
+  <ellipse cx="32" cy="55" rx="5" ry="3" fill="#F2A6A0" opacity=".7"/><ellipse cx="68" cy="55" rx="5" ry="3" fill="#F2A6A0" opacity=".7"/>
+  <rect x="30" y="66" width="40" height="14" rx="3" fill="#2F4B7C"/></svg>`;
+
+function storeHtml() {
+  const drinks = P.filter(p => p.a === "drink"), rice = P.filter(p => p.a === "rice");
+  const door = d => [0, 1].map(s => shelf(drinks.filter(p => p.door === d && p.sh === s))).join("");
+  return `<div class="floorwrap">
+    <div class="ceiling">${[6, 40, 74].map(x => `<span class="tube" style="left:${x}%"></span>`).join("")}</div>
+    <div class="aisles">
+      <button class="aisle-tab" data-act="jump" data-to="sec-drink" lang="ja">${ink("{飲|の}み{物|もの}")} <small>Drinks</small></button>
+      <button class="aisle-tab" data-act="jump" data-to="sec-rice" lang="ja">${ink("おにぎり")} <small>Rice balls</small></button>
+      <button class="aisle-tab" disabled lang="ja">お菓子 <small>Sweets · later</small></button>
+      <button class="aisle-tab" data-act="jump" data-to="sec-reg" lang="ja">${ink("レジ")} <small>Register</small></button>
+    </div>
+    <div class="walk">
+      <button class="walkbtn l" data-act="walk" data-d="-1" aria-label="Walk left">‹</button>
+      <button class="walkbtn r" data-act="walk" data-d="1" aria-label="Walk right">›</button>
+      <div class="strip" id="strip">
+        <div class="section" id="sec-drink"><div class="sign" lang="ja">${ink("{飲|の}み{物|もの}")}<small>Drinks</small></div>
+          <div class="cooler"><div class="cooler-head">COLD DRINKS</div><div class="doors"><div class="door">${door(0)}</div><div class="door">${door(1)}</div></div></div></div>
+        <div class="section" id="sec-rice"><div class="sign" lang="ja">${ink("おにぎり")}<small>Rice balls</small></div>
+          <div class="chiller"><div class="canopy"></div>${shelf(rice.filter(p => p.sh === 0))}${shelf(rice.filter(p => p.sh === 1))}</div></div>
+        <div class="section later"><div class="sign" lang="ja">お菓子<small>Sweets</small></div>
+          <div class="chiller"><div class="canopy"></div><div class="shelf">${SWEETS.map(x => `<div class="col ${SHAPES[x.shape].w > 60 ? "wide" : ""}">${pkHtml({ ...x, copy:"", tags:[] })}<div class="rail"></div></div>`).join("")}</div></div>
+          <p class="later-note">Not in the first slice</p></div>
+        <div class="section" id="sec-reg"><div class="sign" lang="ja">${ink("レジ")}<small>Register</small></div>
+          <div class="register">${neko}<div class="counter"></div>
+          <p class="reg-note">The cat at the register comes later: <span lang="ja">${ink("いらっしゃいませ")}</span>, <span lang="ja">${ink("{温|あたた}めますか")}</span>, <span lang="ja">${ink("{袋|ふくろ}はご{利用|りよう}ですか")}</span>.</p></div></div>
+      </div>
+    </div>
+    <div class="floor"></div>
+  </div>`;
+}
+
+/* ---------------- the phone store: one long shelf ---------------- */
+// how far a package is enlarged on the phone shelf, so each fills about the same space
+const PHONE_ZOOM = { bottle:1.9, can:2.5, carton:2.15, cup:2.5, onigiri:2.3, bag:2.4 };
+function storePhoneHtml() {
+  const aisle = (id, jp, items) => `<div class="aisle-start" id="${id}"><div class="sign" lang="ja">${ink(jp)}</div></div>` +
+    items.map(p => `<div class="slot">${prodBtn(p, `<div class="zoom" style="transform:scale(${PHONE_ZOOM[p.shape]})">${pkHtml(p)}</div>`)}
+      <div class="ptag printed"><span class="n" lang="ja">${ink(p.name)}</span>
+        <span class="pr"><span>¥${p.price} <small lang="ja">${ink("{税込|ぜいこみ}")}</small></span><span class="ok">${ticks(p)}</span></span></div></div>`).join("");
+  return `<div class="floorwrap">
+    <div class="ceiling">${[8, 58].map(x => `<span class="tube" style="left:${x}%"></span>`).join("")}</div>
+    <div class="aisles">
+      <button class="aisle-tab" data-act="jump" data-to="sec-drink" lang="ja">${ink("{飲|の}み{物|もの}")}</button>
+      <button class="aisle-tab" data-act="jump" data-to="sec-rice" lang="ja">${ink("おにぎり")}</button>
+      <button class="aisle-tab" disabled lang="ja">お菓子</button>
+    </div>
+    <div class="ps" id="strip">${aisle("sec-drink", "{飲|の}み{物|もの}", P.filter(p => p.a === "drink"))}${aisle("sec-rice", "おにぎり", P.filter(p => p.a === "rice"))}<div class="slot" style="flex-basis:22%"></div></div>
+    <p class="swipe-hint">Swipe along the shelf · tap to pick up</p>
+  </div>`;
+}
+
+/* ---------------- in your hands ---------------- */
+function termsHtml(p) {
+  const list = [["name", p.name, p.en, "Name"], ["copy", p.copy, p.copyEn, "Front"], ...p.tags.map((t, i) => ["tag" + i, t, p.tagsEn[i], "Tag"])];
+  const back = p.back.map((r, i) => ["back" + i, r[0], `${r[2]}: ${plain(r[1])}`, "Back"]);
+  return (S.side === "front" ? list : back).map(([k, w, en, side]) =>
+    `<button class="term ${S.openTerms.has(p.id + k) ? "open" : ""}" data-act="term" data-k="${p.id + k}" data-say="${reading(w)}">
+      <span class="jp" lang="ja">${ink(w)}</span><span class="side">${side}</span><span class="en">${en}</span></button>`).join("");
+}
+function quizFor(p, side) {
+  if (side === "name") {
+    const others = shuffle(P.filter(x => x.id !== p.id && x.a === p.a)).slice(0, 3);
+    return Math.random() < .5 || !/\{/.test(p.name)
+      ? { side, ask:`What is <span class="jp" lang="ja">${ink(p.name)}</span>?`, right:p.en, opts:shuffle([p.en, ...others.map(o => o.en)]) }
+      : { side, ask:`How is <span class="jp" lang="ja">${plain(p.name)}</span> read?`, right:p.say, opts:shuffle([p.say, ...others.map(o => o.say)]), ja:true };
+  }
+  if (side === "copy") { const [ask, right, ...wrong] = p.cq; return { side, ask, right, opts:shuffle([right, ...wrong.slice(0, 3)]) }; }
+  const row = p.back[Math.floor(Math.random() * p.back.length)];
+  const wrong = shuffle(p.back.filter(r => r !== row)).slice(0, 3);
+  return { side, ask:`Turn it over. Which line tells you <b>${row[3]}</b>?`, right:row[0], opts:shuffle([row, ...wrong].map(r => r[0])), ja:true, rowVal: row[1] };
+}
+function handsHtml() {
+  if (!S.held && S.mode === "errand") return errandHtml();
+  if (!S.held) return `<div class="grab"></div><h3>In your hands</h3>
+    <div class="empty">${S.mode === "read"
+      ? "Pick something up. In <b>Read</b>, putting it back asks you one question about it, and each package goes deeper: its name, then what the front says, then the back."
+      : "Walk along the shelves and pick anything up to look at it, flip it over, and tap a word to hear it and see what it means."}</div>`;
+  const p = byId(S.held), g = got(p.id), q = S.quiz;
+  const total = [...reading(p.name)].filter(isKana), have = total.filter(c => known.kana.has(c)).length;
+  const stamps = [["name", "名"], ["copy", "表"], ["back", "裏"]].map(([s, j]) => `<span class="st ${g[s] ? "done" : ""}" lang="ja" title="${s}">${j}</span>`).join("");
+  const front = `<div class="big s-${p.shape}">${pkHtml(p)}</div>`;
+  const backside = `<div class="backside printed" lang="ja"><div class="bh">${ink("{原材料|げんざいりょう}・{成分|せいぶん}")}</div><table>${p.back.map(r => `<tr><td>${ink(r[0])}</td><td>${ink(r[1])}</td></tr>`).join("")}
+      <tr><td>${ink("{価格|かかく}（{税込|ぜいこみ}）")}</td><td>¥${p.price}</td></tr></table></div>`;
+  let foot;
+  if (q) foot = `<div class="q"><div class="ask">${q.ask}</div>
+      <div class="verdict ${q.picked ? (q.ok ? "right" : "miss") : ""}">${q.picked ? (q.ok ? "Yes! " : `It's ${q.ja ? `<span lang="ja">${ink(q.right)}</span>` : q.right}. `) + (q.rowVal ? `<span lang="ja">${ink(q.rowVal)}</span>` : "") : ""}</div>
+      <div class="answers">${q.opts.map(o => `<button class="ans ${q.picked ? (o === q.right ? "right" : o === q.picked ? "miss" : "") : ""}" data-act="ans" data-v="${o}" ${q.ja ? 'lang="ja"' : ""} ${q.picked ? "disabled" : ""}>${q.ja ? ink(o) : o}</button>`).join("")}</div>
+      ${q.picked ? `<button class="btn main" data-act="putback-done">Put it back</button>` : ""}</div>`;
+  else {
+    const side = nextSide(p);
+    const msg = S.mode === "errand" ? `<div class="note">On your list? <b>Put it in the basket</b> if it is.</div>`
+      : S.mode === "browse" ? "" : !soundable(p.name)
+      ? `<div class="note">Just looking: you can sound out ${have} of ${total.length} kana in its name. Its questions wait until you can read it all.</div>`
+      : side ? `<div class="note good">You can read this. Putting it back asks about <b>${{ name:"its name", copy:"what the front says", back:"the label on the back" }[side]}</b>.</div>`
+      : `<div class="note good">You've read everything you can on this one${g.back ? "" : ". The back opens once you can sound out its labels"}.</div>`;
+    foot = `${msg}<div class="row">${S.mode === "errand" ? `<button class="btn main" data-act="basket">Put in basket</button><button class="btn" data-act="putback">Put it back</button>`
+        : `<button class="btn main" data-act="putback">Put it back</button>`}</div>`;
+  }
+  return `<div class="grab"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3>In your hands</h3><div class="stamps">${stamps}</div></div>
+    <div class="hold">${S.side === "back" ? backside : front}</div>
+    <div class="sides"><span class="seg">
+      <button data-act="side" data-s="front" class="${S.side === "front" ? "on" : ""}" lang="ja">表 Front</button>
+      <button data-act="side" data-s="back" class="${S.side === "back" ? "on" : ""}" lang="ja">裏 Back</button></span>
+      &nbsp;<button class="hear" data-act="say" data-say="${p.say}">🔈 Hear it</button></div>
+    ${q ? "" : `<div class="terms">${termsHtml(p)}</div>`}
+    ${foot}`;
+}
+function errandHtml() {
+  const e = S.errand;
+  if (e.shut != null) return `<div class="grab"></div><h3>お使い Errand</h3>
+    <div class="empty">Errands only ask for things you can read. You can read ${e.shut} product name${e.shut === 1 ? "" : "s"} here so far; lists start at three. Keep going with kana and come back.</div>`;
+  if (e.done) {
+    const items = e.list.map(byId), sum = items.reduce((a, p) => a + p.price, 0);
+    return `<div class="grab"></div><h3>At the register</h3>
+      <div class="receipt printed" lang="ja"><div style="text-align:center;font-weight:700">コンビニ さくら</div>
+        ${items.map(p => `<div class="r"><span>${ink(p.name)}</span><span>¥${p.price}</span></div>`).join("")}
+        <div class="r tot"><span>${ink("{合計|ごうけい}")}（${ink("{税込|ぜいこみ}")}）</span><span>¥${sum}</span></div></div>
+      <div class="note good">All three found. Later, the cat at the register says the total, asks <span lang="ja">${ink("{温|あたた}めますか")}</span> about the onigiri, and you answer.</div>
+      <button class="btn main" data-act="errand">Another list</button>`;
+  }
+  return `<div class="grab"></div><h3>お使い Errand</h3>
+    <div class="errand"><h4>Your friend's list</h4><ul>${e.list.map(id => `<li class="${e.got.includes(id) ? "got" : ""}" lang="ja">${ink(byId(id).name)}</li>`).join("")}</ul></div>
+    <div class="empty" style="margin:0">Find each one on the shelves. The list is in Japanese, so reading it is the game.</div>
+    ${e.msg ? `<div class="note">${e.msg}</div>` : ""}`;
+}
+
+function render() {
+  const strip = document.getElementById("strip"), keep = strip ? strip.scrollLeft : 0;
+  const lv = levels(), phone = S.view === "phone";
+  document.getElementById("app").innerHTML = `
+    <div class="head">
+      <div><p class="crumb">街 · Out and about · コンビニ</p>
+        <h1><span class="jp" lang="ja">${ink("コンビニ")}</span>The convenience store</h1>
+        <p>Walk the shelves at コンビニ さくら. Pick anything up, turn it over, tap a word to hear it. Every package fills in as you learn its kana.</p></div>
+      <div class="levels">${lv.map(l => `<div class="lv ${l.done ? "done" : ""}"><b lang="ja">${l.jp}</b>${l.en}<br><small>${l.sub}</small></div>`).join("")}</div>
+      <div class="modes"><span class="seg">
+        <button data-act="mode" data-m="browse" class="${S.mode === "browse" ? "on" : ""}">見る Browse</button>
+        <button data-act="mode" data-m="read" class="${S.mode === "read" ? "on" : ""}">読む Read</button>
+        <button data-act="mode" data-m="errand" class="${S.mode === "errand" ? "on" : ""}">お使い Errand</button></span>
+        <span class="hint">${{ browse:"Just look. Nothing is tested.", read:"Putting something back asks you about it.", errand:"Find what's on the list." }[S.mode]}</span></div>
+      <div class="key"><span>Dark: kana you know · <span class="ink-no">grey</span>: not yet</span><span>Kanji show furigana until learned</span>
+        <span><span style="color:var(--jade)">●</span> under a product: you can read its name</span></div>
+    </div>
+    <div class="body">${phone ? storePhoneHtml() : storeHtml()}<aside class="hands ${S.held || (S.mode === "errand" && phone && S.errandOpen) ? "up" : ""}">${handsHtml()}</aside></div>
+    <div class="phone-cta">${S.mode === "errand" && !S.held ? `<button class="btn main" data-act="showlist">${S.errandOpen ? "Hide" : "Show"} the list</button>` : ""}</div>`;
+  const s2 = document.getElementById("strip"); s2.style.scrollBehavior = "auto"; s2.scrollLeft = keep; s2.style.scrollBehavior = "";
+}
+
+/* ---------------- actions ---------------- */
+function say(t) { try { const u = new SpeechSynthesisUtterance(t); u.lang = "ja-JP"; u.rate = .9; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch {} }
+function newErrand() {
+  const pool = shuffle(P.filter(p => soundable(p.name)));
+  S.errand = pool.length < 3 ? { list:[], got:[], msg:"", done:false, shut:pool.length } : { list: pool.slice(0, 3).map(p => p.id), got:[], msg:"", done:false };
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act],[data-view],[data-theme],[data-preset]"); if (!b) return;
+  if (b.dataset.preset) { setPreset(b.dataset.preset); if (S.mode === "errand" && S.errand && !S.errand.got.length) newErrand(); return drawControls(), render(); }
+  if (b.dataset.view) { S.view = b.dataset.view; document.getElementById("stage").classList.toggle("phone", S.view === "phone"); return drawControls(), render(); }
+  if (b.dataset.theme) { const t = b.dataset.theme; t === "auto" ? delete document.documentElement.dataset.theme : document.documentElement.dataset.theme = t; S.theme = t; return drawControls(); }
+  const a = b.dataset.act, p = S.held && byId(S.held);
+  if (a === "pick") { if (S.held && S.quiz && !S.quiz.picked) return; S.held = b.dataset.id; S.side = "front"; S.quiz = null; S.flash = null; say(byId(S.held).say); }
+  else if (a === "side") S.side = b.dataset.s;
+  else if (a === "say") say(b.dataset.say);
+  else if (a === "term") { const k = b.dataset.k; S.openTerms.has(k) ? S.openTerms.delete(k) : S.openTerms.add(k); say(b.dataset.say); }
+  else if (a === "putback") { const side = S.mode === "read" && nextSide(p); if (side) { S.quiz = quizFor(p, side); if (side === "back") S.side = "back"; } else { S.held = null; S.quiz = null; } }
+  else if (a === "ans") { const q = S.quiz; q.picked = b.dataset.v; q.ok = q.picked === q.right; if (q.ok) got(p.id)[q.side] = true; }
+  else if (a === "putback-done") { S.held = null; S.quiz = null; }
+  else if (a === "mode") { S.mode = b.dataset.m; S.held = null; S.quiz = null; S.errandOpen = false; if (S.mode === "errand") newErrand(); }
+  else if (a === "basket") {
+    const e = S.errand;
+    if (e.list.includes(p.id) && !e.got.includes(p.id)) { e.got.push(p.id); e.msg = ""; S.held = null; if (e.got.length === e.list.length) e.done = true; }
+    else { e.msg = `That's <span lang="ja">${ink(p.name)}</span> (${p.en}). It isn't on the list.`; S.flash = p.id; S.held = null; }
+  }
+  else if (a === "errand") newErrand();
+  else if (a === "showlist") S.errandOpen = !S.errandOpen;
+  else if (a === "jump") { document.getElementById(b.dataset.to)?.scrollIntoView({ behavior:"smooth", inline:"start", block:"nearest" }); return; }
+  else if (a === "walk") { const s = document.getElementById("strip"); s.scrollBy({ left: b.dataset.d * s.clientWidth * .6, behavior:"smooth" }); return; }
+  render();
+});
+document.addEventListener("keydown", e => {
+  if ((e.key !== "ArrowLeft" && e.key !== "ArrowRight") || S.view === "phone") return;
+  document.getElementById("strip")?.scrollBy({ left: (e.key === "ArrowLeft" ? -1 : 1) * 260, behavior:"smooth" });
+});
+function drawControls() {
+  document.getElementById("presets").innerHTML = PRESETS.map(p => `<button data-preset="${p.id}" class="${S.preset === p.id ? "on" : ""}">${p.label}</button>`).join("");
+  document.querySelectorAll("#views button").forEach(b => b.classList.toggle("on", b.dataset.view === S.view));
+  document.querySelectorAll("#themes button").forEach(b => b.classList.toggle("on", b.dataset.theme === (S.theme || "auto")));
+}
+// the data checks the real smoke test will make
+for (const p of P) {
+  if (p.lines && p.lines.join("") !== p.name) console.error("lines don't match the name:", p.id);
+  if (reading(p.name) !== p.say) console.error("say doesn't match the name's reading:", p.id);
+  if (p.tags.length !== p.tagsEn.length) console.error("a tag has no English:", p.id);
+}
+setPreset(S.preset); drawControls(); render();
+</script>
+</body>
+</html>
