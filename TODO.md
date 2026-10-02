@@ -83,6 +83,8 @@ Build order. Each step should run end to end before the next one starts.
 9j. ~~Round the loop~~ (0.22.0): a loop line with stops on the way, the
    gates checking your ticket, overshooting and coming back; announcements
    that wait to be read; a carriage, ads and stairs redrawn.
+9k. ~~Stairs and stalls~~ (0.23.0): stairs projected from a real camera;
+   a word on every stall's flag; banners that say their names.
 10. **More recognition practice at N5**: more scenes (a train ticket, a
    bento label, a konbini's shelf tags, a clinic), a "spot the kanji you
    know" mode over the scenes, and scenes in Sprint.

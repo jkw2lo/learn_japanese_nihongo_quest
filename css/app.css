@@ -1563,16 +1563,21 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 .fs-roof.stripes.thin { height: 22px; }
 .fs-roof.tent { height: 44px; background: linear-gradient(var(--c), color-mix(in srgb, var(--c) 80%, #000)); clip-path: polygon(14% 0, 86% 0, 100% 100%, 0 100%); }
 .fs-roof.tiles { height: 30px; width: 112%; background: repeating-linear-gradient(90deg, #3A3C42 0 12px, #2A2C31 12px 14px); border-radius: 4px 4px 0 0; box-shadow: 0 4px 0 #1A1210; }
-.fs-valance { width: 104%; margin-top: -1px; padding: 4px 6px 6px; background: #FFF8EA; border-bottom: 3px solid var(--c); text-align: center; position: relative; z-index: 2;
-  -webkit-mask: radial-gradient(circle 7px at 50% 100%, #0000 98%, #000) 50% 100% / 14px 100% repeat-x; mask: radial-gradient(circle 7px at 50% 100%, #0000 98%, #000) 50% 100% / 14px 100% repeat-x; }
-.fs-valance.solid { background: var(--c); -webkit-mask: none; mask: none; border-bottom: 0; box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .18); }
+.fs-valance { width: 104%; margin-top: -1px; padding: 4px 6px 6px; background: #FFF8EA; border-bottom: 3px solid var(--c); text-align: center; position: relative; z-index: 2; }
+/* the scalloped edge hangs below (a mask would clip the meaning that shows under the name) */
+.fs-valance::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 7px; background: radial-gradient(circle 7px at 50% 0, var(--c) 98%, #0000) 50% 0 / 14px 100% repeat-x; }
+.fs-valance:has(.kb-gloss), .fs-board:has(.kb-gloss), .fs-noren:has(.kb-gloss) { z-index: 30; }
+.fs-valance.solid { background: var(--c); border-bottom: 0; box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .18); } .fs-valance.solid::after { display: none; }
 .fs-name { font: 900 1.55rem/1.1 var(--f-ja); letter-spacing: .06em; color: var(--c); white-space: nowrap; }
 .fs-valance.solid .fs-name { color: #fff; text-shadow: 0 1px 0 rgba(0, 0, 0, .25); }
 .fs-name .ink-no { opacity: .35; }
 .fs-board { width: 112%; padding: 8px 6px; margin-bottom: -2px; background: linear-gradient(135deg, #FFF3C4, #FFE08A); border: 4px solid var(--c); border-radius: 6px;
   box-shadow: 0 3px 8px rgba(0, 0, 0, .4), inset 0 0 0 3px #fff; text-align: center; position: relative; z-index: 3; }
 .fs-board .fs-name { font-size: 1.75rem; text-shadow: 2px 2px 0 #fff; }
-.fs-noren { display: flex; gap: 2px; width: 92%; margin-top: 4px; position: relative; z-index: 3; }
+.fs-noren { display: flex; gap: 2px; width: 92%; margin-top: 4px; position: relative; z-index: 3; padding: 0; border: 0; background: none; cursor: pointer; }
+.fs-name.kb-nameplate { color: var(--c); font: 900 1.55rem/1.1 var(--f-ja); letter-spacing: .06em; cursor: pointer; }
+.fs-board .fs-name.kb-nameplate { font-size: 1.75rem; }
+.fs-valance.solid .fs-name.kb-nameplate { color: #fff; }
 .fs-noren b { flex: 1; height: 50px; display: flex; justify-content: center; padding-top: 5px; background: #2A3A5C; color: #F4EEDF; font: 700 1.35rem var(--f-ja-serif); border-radius: 0 0 3px 3px; }
 .fs-noren b .ink-no { opacity: .35; }
 .fs-body { position: relative; width: 96%; height: var(--h); display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
@@ -1585,8 +1590,6 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 .fs-bulb { position: absolute; top: 30px; width: 9px; height: 12px; margin-left: -4px; border-radius: 50%; background: #FFF6D8; box-shadow: 0 0 14px 6px rgba(255, 230, 160, .55); }
 .fs-bulb::before { content: ""; position: absolute; left: 4px; top: -18px; width: 1px; height: 18px; background: #1A1210; }
 .fs-cook { position: absolute; left: 50%; bottom: calc(42% + 50px); transform: translateX(-50%); z-index: 0; }
-.fs-cook.cat { width: 74px; height: 74px; } .fs-cook.cat .ws-cat { width: 74px; height: 74px; }
-.fs-apron { position: absolute; left: 18px; bottom: -6px; width: 38px; height: 16px; background: #fff; border-radius: 4px 4px 0 0; }
 .fs-cook.person i { display: block; width: 46px; height: 62px; border-radius: 23px 23px 6px 6px; background: rgba(20, 16, 30, .45); }
 .fs-counter { position: relative; z-index: 2; width: 100%; height: 0; }
 .fs-counter::after { content: ""; position: absolute; left: -6px; right: -6px; top: 0; height: 12px; background: linear-gradient(#B98D5A, #8C6239); border-radius: 2px; box-shadow: 0 3px 4px rgba(0, 0, 0, .35); }
@@ -1988,10 +1991,10 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 .sv-ent-sign .sn-term { color: #fff; font: 700 .8rem var(--f-ja); }
 .sv-ent-sign .sv-ent-name { font: 800 1.25rem var(--f-ja); letter-spacing: .1em; }
 .sv-ent-sign .ink-no { opacity: .6; } .sv-ent-sign rt { color: #fff; }
-.sv-canopy { position: relative; width: 300px; height: 92px; border: 6px solid #6B7178; border-bottom: 0; background: linear-gradient(160deg, rgba(255, 255, 255, .55), rgba(180, 205, 220, .35)); display: flex; justify-content: center; align-items: flex-start; }
-.sv-canopy > i { position: absolute; top: 0; bottom: 0; width: 4px; background: #6B7178; } .sv-canopy > i:first-child { left: 33%; } .sv-canopy > i:nth-child(2) { left: 66%; }
-.sv-canopy .on-canopy { margin-top: 8px; z-index: 2; }
-.sv-down { position: relative; display: block; width: 300px; height: 170px; border: 0; padding: 0; cursor: pointer; background: #2A2E33; border-left: 6px solid #6B7178; border-right: 6px solid #6B7178; }
+.sv-canopy { position: relative; width: 320px; height: 22px; background: linear-gradient(#8E959B, #6B7178); box-shadow: 0 4px 6px rgba(0, 0, 0, .25); display: flex; justify-content: center; align-items: flex-start; z-index: 2; }
+.sv-canopy > i { display: none; }
+.sv-canopy .on-canopy { position: absolute; top: 14px; z-index: 2; }
+.sv-down { position: relative; display: block; width: 300px; height: 250px; border: 0; padding: 0; cursor: pointer; background: #2A2E33; border-left: 6px solid #6B7178; border-right: 6px solid #6B7178; }
 .sv-stairs-svg { display: block; width: 100%; height: 100%; }
 .sv-down:hover .sv-stairs-svg, .sv-up:hover .sv-stairs-svg { filter: brightness(1.08); }
 .sv-bikes { position: absolute; right: 4%; bottom: 102px; display: flex; gap: 4px; }

@@ -103,43 +103,136 @@ function snNav() {
 const snNavHtml = () => { const n = snNav(); return ["l", "r"].map(s => n[s] ? `<button class="sn-nav ${s}" data-act="sn-nav" data-stage="${n[s][1]}" data-view="${n[s][2]}" data-dir="${s}" aria-label="${esc(n[s][0])}" title="${esc(n[s][0])}">
   <span class="sn-nav-ico">${icon(s === "l" ? "back" : "chevron")}</span></button>` : "").join(""); };
 
-/* Stairs, in perspective: each step a little further off than the last
-   (its depth z grows by a step at a time, and it's drawn at 1/z), so the
-   steps crowd together and narrow towards the far end, the walls close in
-   along their edges, and the rails follow the walls. Down from the street
-   you see the treads, darkening as they go; up to the platforms you see the
-   risers, each with its yellow edge, rising to the light. */
+/* Stairs, as a camera sees them. Everything is placed in metres (x across,
+   y up, z straight ahead, the eye 1.6 m up and a little left of centre, as
+   if you're keeping left) and projected, so the treads, the tiled walls,
+   the ceiling and its lights, and the rails all close in on one vanishing
+   point.
+   Down from the street: you stand at the top, by the yellow warning blocks,
+   and see the treads drop away, darker as they go, to a lit landing.
+   Up to the platforms: you stand at the foot and see the risers climb, each
+   with its edge, to the light of the platform. Rails on both walls at two
+   heights, and one down the middle, as at a Japanese station. */
 function stairsSvg(dir) {
-  const W = 300, H = dir === "down" ? 200 : 300, n = 13, gap = .14, minW = dir === "down" ? .42 : .34;
-  const s = i => 1 / (1 + i * gap), sN = s(n);
-  const yAt = i => { const t = (1 - s(i)) / (1 - sN); return dir === "down" ? t * H : H - t * H; };
-  const half = i => (W / 2) * (minW + (1 - minW) * (s(i) - sN) / (1 - sN));
-  const L = i => W / 2 - half(i), R = i => W / 2 + half(i);
-  let steps = "";
-  for (let i = 0; i < n; i++) {
-    const y0 = yAt(i), y1 = yAt(i + 1), k = i / n;
-    if (dir === "down") {
-      const c = Math.round(212 - k * 150);
-      steps += `<path d="M${L(i)} ${y0} H${R(i)} L${R(i + 1)} ${y1} H${L(i + 1)}Z" fill="rgb(${c},${c + 3},${c + 6})"/>
-        <path d="M${L(i)} ${y0} H${R(i)}" stroke="#E9C445" stroke-width="${(2.6 * s(i)).toFixed(2)}"/>
-        <path d="M${L(i + 1)} ${y1} H${R(i + 1)}" stroke="rgba(0,0,0,.25)" stroke-width="${(1.4 * s(i)).toFixed(2)}"/>`;
+  const up = dir === "up";
+  const V = up
+    ? { W: 260, tall: 290 / 260, fov: 94, mid: .45, pitch: 0, hw: 1.3, z0: 1.9, n: 24, top: 2.7, head: 2.7, land: 2.4 }
+    : { W: 300, tall: 1, fov: 75, mid: .42, pitch: .5, hw: 1.2, z0: 1.0, n: 15, top: 2.4, head: 2.5, land: 2.6 };
+  const EYE = 1.6, EX = -.35, RUN = .3, RISE = up ? .17 : -.17;
+  /* the camera: level going up; tipped to look down the stairs going down */
+  const cs = Math.cos(V.pitch), sn = Math.sin(V.pitch);
+  const cam = (y, z) => { const d = y - EYE; return [d * cs + z * sn, z * cs - d * sn]; };
+  const f = V.W / 2 / Math.tan(V.fov * Math.PI / 360), H = V.W * V.tall, cx = V.W / 2, cy = H * V.mid;
+  const zEnd = V.z0 + V.n * RUN, yEnd = V.n * RISE, zBack = zEnd + V.land;
+  /* the line of the steps, and the ceiling over it */
+  const line = z => z <= V.z0 ? 0 : z >= zEnd ? yEnd : (z - V.z0) / RUN * RISE;
+  const ceil = z => up ? Math.max(V.top, line(z) + V.head) : Math.min(V.top, line(z) + V.head);
+  const zc = V.z0 + (V.top - V.head) / RISE * RUN;
+  /* projecting */
+  const P = (x, y, z) => { const [a, b] = cam(y, z); return [cx + f * (x - EX) / b, cy - f * a / b]; };
+  const pt = ([x, y, z]) => P(x, y, z).map(n => n.toFixed(1)).join(",");
+  const poly = (pts, fill, more = "") => `<polygon points="${pts.map(pt).join(" ")}" fill="${fill}"${more}/>`;
+  const seg = (a, b, stroke, w) => { const [x1, y1] = P(...a), [x2, y2] = P(...b); return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${stroke}" stroke-width="${w}"/>`; };
+  /* light: darker as it goes down into the ground, brighter as it climbs to the platform */
+  const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const FOG = rgb(up ? "#FFFFFF" : "#2B3035"), K = up ? .5 : .62;
+  const tint = (c, z) => { const t = Math.min(1, Math.max(0, (z - V.z0 + .5) / (zEnd - V.z0 + .5))) * K; return `rgb(${rgb(c).map((v, i) => Math.round(v + (FOG[i] - v) * t)).join(",")})`; };
+  /* depths to cut the walls and ceiling at: every quarter metre, and every corner */
+  /* the nearest anything is drawn: never behind the eye, whatever the tilt */
+  const zn = Math.max(.3, (.3 + (Math.max(V.top, yEnd + V.head) - EYE) * Math.max(0, sn)) / cs, (.3 - EYE * Math.max(0, -sn)) / cs);
+  const zs = [...new Set([...Array(Math.ceil((zBack - zn) / .25)).keys()].map(k => zn + k * .25).concat([V.z0, zc, zEnd, zBack]).filter(z => z >= zn && z <= zBack).map(z => +z.toFixed(3)))].sort((a, b) => a - b);
+  /* the floor and the lower walls can come right to your feet */
+  const zl = .12, zsLow = [...[...Array(Math.ceil((zn - zl) / .25)).keys()].map(k => +(zl + k * .25).toFixed(3)), ...zs];
+  const C = up
+    ? { back: "#FFFFFF", landing: "#E4E4DE", ceil: "#DCE0E1", wall: "#E8E4DA", dado: "#AEB6B9", skirt: "#7B8388", tread: "#DADAD4", riser: "#B3B8B7", floor: "#C9CBC6" }
+    : { back: "#F4E6C6", landing: "#D8CDB6", ceil: "#E2E4E2", wall: "#E8E4DA", dado: "#AFB6B8", skirt: "#7B8388", tread: "#D2D0C8", riser: "#A9ADAC", floor: "#C9C6BE" };
+  let out = "";
+
+  /* the far end: the platform's light up there, a lit landing and a sign down there */
+  out += poly([[-V.hw, yEnd, zBack], [V.hw, yEnd, zBack], [V.hw, ceil(zBack), zBack], [-V.hw, ceil(zBack), zBack]], C.back);
+  if (up) out += poly([[-.55, yEnd + 2.25, zBack - .2], [.55, yEnd + 2.25, zBack - .2], [.55, yEnd + 2.5, zBack - .2], [-.55, yEnd + 2.5, zBack - .2]], "#FFFFFF", ` stroke="#9AA1A7" stroke-width=".6"`)
+    + poly([[-.55, yEnd + 2.25, zBack - .2], [.55, yEnd + 2.25, zBack - .2], [.55, yEnd + 2.3, zBack - .2], [-.55, yEnd + 2.3, zBack - .2]], "#3E9A4A");
+  else out += poly([[-.7, yEnd + 1.65, zBack - .01], [.7, yEnd + 1.65, zBack - .01], [.7, yEnd + 2.0, zBack - .01], [-.7, yEnd + 2.0, zBack - .01]], "#1F3B66")
+    + poly([[-.45, yEnd + 1.78, zBack - .02], [.3, yEnd + 1.78, zBack - .02], [.3, yEnd + 1.86, zBack - .02], [-.45, yEnd + 1.86, zBack - .02]], "#FFFFFF")
+    + poly([[-V.hw, yEnd, zEnd], [V.hw, yEnd, zEnd], [V.hw, yEnd, zBack], [-V.hw, yEnd, zBack]], C.landing)
+    + poly([[-V.hw + .1, yEnd, zEnd + .3], [V.hw - .1, yEnd, zEnd + .3], [V.hw - .1, yEnd, zEnd + .6], [-V.hw + .1, yEnd, zEnd + .6]], "#D9B43C");
+
+  /* the ceiling, a slice at a time, with its lights */
+  for (let k = 0; k < zs.length - 1; k++) {
+    const a = zs[k], b = zs[k + 1];
+    out += poly([[-V.hw, ceil(a), a], [V.hw, ceil(a), a], [V.hw, ceil(b), b], [-V.hw, ceil(b), b]], tint(C.ceil, a), ` stroke="${tint(C.ceil, a)}" stroke-width=".5"`);
+  }
+  for (let z = V.z0 + .5; z < zBack - .3; z += 1.4) {
+    const b = z + .2;
+    out += poly([[-.75, ceil(z) - .01, z - .12], [.75, ceil(z) - .01, z - .12], [.75, ceil(b) - .01, b + .12], [-.75, ceil(b) - .01, b + .12]], "#FFFFFF", ` opacity=".35"`)
+      + poly([[-.5, ceil(z) - .02, z], [.5, ceil(z) - .02, z], [.5, ceil(b) - .02, b], [-.5, ceil(b) - .02, b]], "#FFFFFF");
+  }
+
+  /* the walls: tiles above, a darker band below with a skirting along the steps */
+  const clips = [];
+  for (const s of [-1, 1]) {
+    const x = s * V.hw, id = `sv-${dir}-w${s < 0 ? "l" : "r"}`;
+    clips.push(`<clipPath id="${id}"><polygon points="${[...zsLow.map(z => [x, line(z) - .4, z]), ...zs.slice().reverse().map(z => [x, ceil(z), z]), [x, 1.05, zl]].map(pt).join(" ")}"/></clipPath>`);
+    for (let k = 0; k < zsLow.length - 1; k++) {
+      const a = zsLow[k], b = zsLow[k + 1], q = (y1, y2) => [[x, y1(a), a], [x, y1(b), b], [x, y2(b), b], [x, y2(a), a]];
+      if (a >= zn) out += poly(q(z => line(z) + 1.05, ceil), tint(s < 0 ? C.wall : "#DEDAD0", a), ` stroke="${tint(s < 0 ? C.wall : "#DEDAD0", a)}" stroke-width=".5"`);
+      out += poly(q(z => line(z) + .12, z => line(z) + 1.05), tint(C.dado, a), ` stroke="${tint(C.dado, a)}" stroke-width=".5"`)
+        + poly(q(z => line(z) - .4, z => line(z) + .12), tint(C.skirt, a), ` stroke="${tint(C.skirt, a)}" stroke-width=".5"`);
+    }
+    let g = "";
+    for (let y = Math.min(0, yEnd) - .5; y < Math.max(V.top, yEnd + V.head) + .5; y += .2) g += seg([x, y, Math.max(zl, (.3 + (y - EYE) * sn) / cs)], [x, y, zBack], "rgba(0,0,0,.09)", ".5");
+    for (let z = zn; z < zBack; z += .3) g += seg([x, -6, z], [x, 9, z], "rgba(0,0,0,.07)", ".5");
+    out += `<g clip-path="url(#${id})">${g}</g>`;
+  }
+
+  /* the steps, the furthest first so the nearer ones cover them */
+  for (let i = V.n - 1; i >= 0; i--) {
+    const a = V.z0 + i * RUN, b = a + RUN, y = (i + 1) * RISE, w = V.hw;
+    if (up) {
+      if (y < EYE) out += poly([[-w, y, a], [w, y, a], [w, y, b], [-w, y, b]], tint(C.tread, a));
+      out += poly([[-w, y - RISE, a], [w, y - RISE, a], [w, y, a], [-w, y, a]], tint(C.riser, a))
+        + poly([[-w, y - .035, a], [w, y - .035, a], [w, y, a], [-w, y, a]], tint("#4A5055", a))
+        + (y < EYE ? poly([[-w, y, a], [w, y, a], [w, y, a + .04], [-w, y, a + .04]], tint("#D9B43C", a)) : "");
     } else {
-      const c = Math.round(186 + k * 40), m = y0 + (y1 - y0) * .78;
-      steps += `<path d="M${L(i)} ${y0} H${R(i)} L${R(i + 1)} ${y1} H${L(i + 1)}Z" fill="rgb(${c},${c + 4},${c + 7})"/>
-        <path d="M${(L(i) + (L(i + 1) - L(i)) * .78).toFixed(1)} ${m} H${(R(i) + (R(i + 1) - R(i)) * .78).toFixed(1)} L${R(i + 1)} ${y1} H${L(i + 1)}Z" fill="rgb(${c - 26},${c - 22},${c - 18})"/>
-        <path d="M${L(i + 1)} ${y1} H${R(i + 1)}" stroke="#E9C445" stroke-width="${(2.6 * s(i)).toFixed(2)}"/>`;
+      out += poly([[-w, y, a], [w, y, a], [w, y, b], [-w, y, b]], tint(C.tread, a))
+        + poly([[-w, y, b - .05], [w, y, b - .05], [w, y, b], [-w, y, b]], tint("#4A5055", a))
+        + poly([[-w, y, b - .015], [w, y, b - .015], [w, y, b], [-w, y, b]], tint("#D9B43C", a));
     }
   }
-  const edge = f => Array.from({ length: n + 1 }, (_, i) => `${f(i).toFixed(1)} ${yAt(i).toFixed(1)}`).join(" L");
-  const wallL = `<path d="M0 ${yAt(0)} L${edge(L)} L0 ${yAt(n)}Z" fill="${dir === "down" ? "#6E767D" : "#B9C0C5"}"/>`;
-  const wallR = `<path d="M${W} ${yAt(0)} L${edge(R)} L${W} ${yAt(n)}Z" fill="${dir === "down" ? "#5E656B" : "#A8AFB5"}"/>`;
-  const tiles = Array.from({ length: 6 }, (_, j) => { const y = yAt(Math.round(j * n / 6)); return `<path d="M0 ${y} L${L(Math.round(j * n / 6))} ${y} M${W} ${y} L${R(Math.round(j * n / 6))} ${y}" stroke="rgba(0,0,0,.08)" stroke-width="1"/>`; }).join("");
-  const rail = f => `<path d="M${edge(i => f(i))}" fill="none" stroke="#7D858C" stroke-width="4" stroke-linecap="round" transform="translate(0 ${dir === "down" ? -14 : -34})"/>
-    <path d="M${edge(i => f(i))}" fill="none" stroke="#E9ECEE" stroke-width="1.2" stroke-linecap="round" transform="translate(0 ${dir === "down" ? -15 : -35})"/>`;
-  const light = dir === "down"
-    ? `<defs><linearGradient id="svdn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0A0C10" stop-opacity="0"/><stop offset=".75" stop-color="#0A0C10" stop-opacity=".45"/><stop offset="1" stop-color="#FFE9A8" stop-opacity=".55"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#svdn)"/>`
-    : `<defs><linearGradient id="svup" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#000" stop-opacity=".12"/><stop offset=".7" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity=".9"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#svup)"/>`;
-  return `<svg class="sv-stairs-svg ${dir}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${steps}${wallL}${wallR}${tiles}${light}${rail(L)}${rail(R)}</svg>`;
+
+  /* where you stand: the floor, and the yellow warning blocks before the first step */
+  const t0 = up ? V.z0 - .6 : V.z0 - .35, t1 = up ? V.z0 - .3 : V.z0 - .05;
+  out += poly([[-V.hw, 0, zl], [V.hw, 0, zl], [V.hw, 0, V.z0], [-V.hw, 0, V.z0]], C.floor)
+    + poly([[-V.hw + .08, 0, t0], [V.hw - .08, 0, t0], [V.hw - .08, 0, t1], [-V.hw + .08, 0, t1]], "#E8BE2E");
+  if (!up) out += poly([[-V.hw, 0, V.z0 - .05], [V.hw, 0, V.z0 - .05], [V.hw, 0, V.z0], [-V.hw, 0, V.z0]], "#4A5055");
+  for (let z = t0 + .05; z < t1 - .02; z += .075)
+    for (let x = -V.hw + .14; x < V.hw - .1; x += .075)
+      { const [ex, ey] = P(x, 0, z), r = f * .012 / cam(0, z)[1]; out += `<ellipse cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" rx="${r.toFixed(2)}" ry="${(r * .55).toFixed(2)}" fill="#C99E1E"/>`; }
+
+  /* the rails: a tube on each wall at two heights, and one down the middle on its posts */
+  const base = z => z <= V.z0 ? 0 : up ? Math.min(yEnd, line(z) + RISE) : line(z);
+  const rz = [Math.max(zn, V.z0 - 1.2), V.z0 - .2, V.z0 + .1, zEnd - (up ? .2 : -.1), zEnd + .4];
+  const tube = (x, h, r, from = rz) => {
+    const p = from.map(z => [x, base(z) + h, z]);
+    return poly([...p.map(([x, y, z]) => [x, y + r, z]), ...p.slice().reverse().map(([x, y, z]) => [x, y - r, z])], "#9EA6AC")
+      + `<polyline points="${p.map(([x, y, z]) => pt([x, y + r * .45, z])).join(" ")}" fill="none" stroke="#F4F6F7" stroke-width=".9" opacity=".9"/>`;
+  };
+  for (const s of [-1, 1]) {
+    const x = s * (V.hw - .08);
+    for (let z = V.z0 + .2; z < zEnd; z += 1.1) out += seg([x, base(z) + .82, z], [s * V.hw, base(z) + .82, z], "#7D858C", Math.max(.6, f * .02 / z).toFixed(2));
+    out += tube(x, .85, .025) + tube(x, .65, .02);
+  }
+  for (let z = V.z0 + .15; z < zEnd; z += 1.5)
+    out += poly([[-.022, base(z), z], [.022, base(z), z], [.022, base(z) + .85, z], [-.022, base(z) + .85, z]], "#8E969C");
+  out += tube(0, .85, .025, [V.z0 + .15, V.z0 + .3, zEnd - .1]);
+
+  /* the light at the far end, spilling */
+  const [gx, gy] = P(0, (yEnd + ceil(zBack)) / 2, zBack);
+  const glow = `<radialGradient id="sv-${dir}-glow" cx="${(gx / V.W).toFixed(3)}" cy="${(gy / H).toFixed(3)}" r="${up ? .5 : .32}"><stop offset="0" stop-color="${up ? "#FFFFFF" : "#FFE6A8"}" stop-opacity="${up ? .85 : .45}"/><stop offset="1" stop-color="${up ? "#FFFFFF" : "#FFE6A8"}" stop-opacity="0"/></radialGradient>`;
+  const shade = up ? "" : `<linearGradient id="sv-down-shade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".18"/><stop offset=".45" stop-color="#000" stop-opacity="0"/></linearGradient>`;
+  out += `<rect width="${V.W}" height="${H.toFixed(1)}" fill="url(#sv-${dir}-glow)"/>` + (up ? "" : `<rect width="${V.W}" height="${H.toFixed(1)}" fill="url(#sv-down-shade)"/>`);
+
+  return `<svg class="sv-stairs-svg ${dir}" viewBox="0 0 ${V.W} ${H.toFixed(1)}" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><defs>${clips.join("")}${glow}${shade}</defs>${out}</svg>`;
 }
 
 /* the route map: the loop, where you are, the fare to each */

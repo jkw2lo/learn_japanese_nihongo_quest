@@ -80,12 +80,15 @@ const SCENES = [
       ["おこのみやき", "Savoury pancake"], ["やきそば", "Fried noodles"], ["わたあめ", "Candy floss"],
       ["かきごおり", "Shaved ice"], ["りんごあめ", "Candy apple"], ["おでん", "Simmered hotpot"], ["だんご", "Rice dumplings"],
       ["ひとつ", "One (of them)"], ["あまい", "Sweet"], ["からい", "Spicy"],
+      ["あつい", "Hot"], ["つめたい", "Cold"], ["おおきい", "Big"], ["あかい", "Red"],
+      ["まるい", "Round"], ["やすい", "Cheap"], ["おいしい", "Delicious"], ["あたたかい", "Warm"],
     ],
     /* A street of stalls, each under its hand-painted banner: the dish, its
-       price for one (ひとつ), and a flag where it's sweet or spicy. The
-       lanterns overhead spell おまつり. */
-    walk: { things: [["たこやき", 500], ["やきそば", 500, "からい"], ["いかやき", 600], ["やきとり", 300], ["おこのみやき", 600],
-                     ["おでん", 400], ["わたあめ", 500, "あまい"], ["りんごあめ", 400, "あまい"], ["かきごおり", 400], ["だんご", 300]] } },
+       price for one (ひとつ), and a flag with a word for it, a different one
+       at every stall. The lanterns overhead spell おまつり. */
+    walk: { things: [["たこやき", 500, "あつい"], ["やきそば", 500, "おいしい"], ["いかやき", 600, "おおきい"], ["やきとり", 300, "からい"],
+                     ["おこのみやき", 600, "まるい"], ["おでん", 400, "あたたかい"], ["わたあめ", 500, "あまい"], ["りんごあめ", 400, "あかい"],
+                     ["かきごおり", 400, "つめたい"], ["だんご", 200, "やすい"]] } },
 
   { id: "station", jp: "駅", en: "At the station", look: "sign", style: "station",
     intro: "The signs you'll follow and the announcements you'll hear on every train trip.",

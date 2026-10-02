@@ -919,6 +919,31 @@ the konbini's does, and the smoke test checks both.
 - 終点です is gone from the platform announcements (a loop has no last
   stop); 駆け込み乗車はおやめください takes its place.
 
+### 0.23.0: real stairs, and stalls with a word each
+
+- **The stairs are drawn as a camera sees them** (`stairsSvg`). Every
+  point is placed in metres and projected from an eye 1.6 m up and a little
+  left of centre (keeping left), so the treads, the tiled walls with their
+  darker lower band, the ceiling and its lights, and the rails all meet at
+  one vanishing point. Going down, the camera tips to look down the flight:
+  you stand by the yellow warning blocks (点字ブロック) and the treads drop
+  away, each nosing dark with a yellow edge, darker as they go, to a lit
+  landing with a sign. Going up, you stand at the foot and the risers
+  climb to the platform's light. Rails on both walls at two heights, and
+  one down the middle on its posts, as at a Japanese station.
+- **The street entrance** is now a roof with the 入口 sign hanging under
+  it and a tall opening onto the stairs, instead of a glass box on top.
+- **A different word on every stall's flag**: あつい (たこやき), おいしい
+  (やきそば), おおきい (いかやき), からい (やきとり), まるい (おこのみやき),
+  あたたかい (おでん), あまい (わたあめ), あかい (りんごあめ), つめたい
+  (かきごおり), やすい (だんご, now ¥200). The eight new adjectives are in
+  the word list, the quiz and the audio.
+- **A stall's banner says its name** when tapped, like a shop's name, and
+  shows what it is for a moment; the cart's noren does too. The awning's
+  scalloped edge now hangs below it (a mask was clipping the meaning).
+- **No cat at the takoyaki**: someone in the light behind the counter, as
+  at the other stalls.
+
 ---
 
 ## Today on one screen

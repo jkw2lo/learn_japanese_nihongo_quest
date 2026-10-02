@@ -294,7 +294,7 @@ const festSc = () => SCENE_BY.festival;
    painted signboard), its colour, how tall, what it cooks on, and whether
    there's someone behind the counter. */
 const FEST_STALLS = {
-  たこやき: { type: "awning", c: "#C8323A", h: 250, rig: "griddle", cook: "cat" },
+  たこやき: { type: "awning", c: "#C8323A", h: 250, rig: "griddle", cook: "back" },
   やきそば: { type: "tent", c: "#2F5F9E", h: 236, rig: "teppan", cook: "back" },
   いかやき: { type: "cart", c: "#6B4226", h: 214, rig: "grill" },
   やきとり: { type: "board", c: "#D9822B", h: 262, rig: "grill", cook: "back" },
@@ -332,15 +332,17 @@ const RIGS = {
 /* Lanterns on a string: over the street, along a stall's roof. */
 const lanternString = (n, cls = "") => `<div class="ws-lstring ${cls}">${[...Array(n)].map((_, i) => `<i style="--d:${(i % 3) * .4}s"></i>`).join("")}</div>`;
 const festLanterns = () => kbSign(festSc(), "おまつり", "ws-lanterns", [...furiKana("おまつり")].map(c => `<span class="ws-lantern">${inkKana(c)}</span>`).join(""));
-/* Someone behind the counter: the cat at the takoyaki, otherwise a shape in the light. */
-const festCook = k => k === "cat" ? `<div class="fs-cook cat">${neko("gambaru", "ws-cat")}<i class="fs-apron"></i></div>` : k ? `<div class="fs-cook person"><i></i></div>` : "";
+/* Someone behind the counter: a shape in the light. */
+const festCook = k => k ? `<div class="fs-cook person"><i></i></div>` : "";
 function festStall(t) {
   const sc = festSc(), S = FEST_STALLS[t.name] || { type: "awning", c: "#C8323A", h: 240, rig: "grill" };
-  const name = `<span class="fs-name" lang="ja">${inkHtml(t.name)}</span>`;
+  /* the banner says its name when tapped, like a shop's, and shows what it is for a moment */
+  const name = kbNameplate(t.name, t.en, "fs-name");
+  const noren = `<button class="kb-signword fs-noren" data-act="kb-gloss" data-say="${esc(t.kana)}" data-en="${esc(t.en)}" lang="ja">${[...t.kana].map(c => `<b>${inkKana(c)}</b>`).join("")}</button>`;
   const head = {
     awning: `<div class="fs-roof stripes"></div><div class="fs-valance">${name}</div>`,
     tent: `<div class="fs-roof tent"></div><div class="fs-valance solid">${name}</div>`,
-    cart: `<div class="fs-roof tiles"></div><div class="fs-noren">${[...t.kana].map(c => `<b>${inkKana(c)}</b>`).join("")}</div>`,
+    cart: `<div class="fs-roof tiles"></div>${noren}`,
     board: `<div class="fs-board">${name}</div><div class="fs-roof stripes thin"></div>`,
   }[S.type];
   return `<div class="fs-stall t-${S.type}" style="--c:${S.c};--h:${S.h}px">
