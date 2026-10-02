@@ -884,6 +884,41 @@ skip any clip a word stage already had, so ねた (in stage 8's) was silent
 for anyone who hadn't got there. It now carries everything it needs, as
 the konbini's does, and the smoke test checks both.
 
+### 0.22.0: round the loop
+
+- **The line is a loop**: さくら → 新宿 → 上野 → 品川 → 渋谷 → さくら
+  (`walk.loop`), tracks 3 and 4 one way round, 1 and 2 the other
+  (`stepFrom`, `hopsTo`, `bestDir`, `fareTo`). A ticket to 上野 stops at
+  新宿 first, and at every stop you choose: **Stay on** or **Get off**.
+- **The gates check your ticket.** Out through them at the wrong station
+  and they beep and shut, and you're told where your ticket goes. Ride past
+  your stop and either stay on round the loop or get off and take a train
+  back the other way. Out at the right station, the ticket goes in and you
+  get a celebration (とうちゃく). A train the long way round is allowed, with
+  a warning first.
+- **An announcement stays until you've read it.** Each one pops up in a
+  box (the Japanese, tappable, with its English) with Again and OK, and the
+  train waits: the tunnel, the straps, the platform sliding in all pause
+  until OK. A phase that has finished holds its end, so nothing jumps back
+  when a pop redraws.
+- **A carriage that looks like one.** One outside sits behind the whole
+  wall, so the windows and the open door show the same tunnel or the same
+  platform, with its name plate and people. The seat has a moquette back,
+  cushions, a base with heater grilles, the priority seats in orange with
+  their sign, and a glass partition. Straps sway and the car rocks on the
+  move. Every ad is a poster with a picture (`AD_ART`), and tapping one shows
+  its meaning over it without changing its size.
+- **Stairs, again**, drawn with true perspective: treads going down from
+  the street, risers with yellow nosing going up to the platforms.
+- **The route map is a ring**, with the fare to each station and 現在地.
+- **On a phone, the platform flows**: train, platform edge, the 女性専用車
+  sign, the announcements, then the way down and the ticket, with nothing
+  on top of anything.
+- **What the ✓ means** is now in the key under a walk: one tick for each
+  side of a thing you've read in 読む Read mode.
+- 終点です is gone from the platform announcements (a loop has no last
+  stop); 駆け込み乗車はおやめください takes its place.
+
 ---
 
 ## Today on one screen

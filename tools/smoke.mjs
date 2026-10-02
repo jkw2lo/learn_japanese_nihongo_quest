@@ -59,7 +59,7 @@ const CONTRACT = {
   'js/konbini-ui.js': ['renderKonbini', 'konbiniKey', 'kbPack', 'kbType', 'kbReadable', 'KB_SHAPES', 'KB_DEFS'],
   'js/stalls-ui.js': ['stallThings', 'sushiPack', 'festPack', 'SUSHI', 'FEST', 'SUSHI_PLATES', 'stallFoot'],
   'js/street-ui.js': ['streetThings', 'signPack', 'SIGN_LOOK', 'STREET'],
-  'js/station-ui.js': ['stationThings', 'snPack', 'SN_LOOK', 'SN_SEE', 'SN_VIEWS', 'trip', 'snGo', 'routes'],
+  'js/station-ui.js': ['stationThings', 'snPack', 'SN_LOOK', 'SN_SEE', 'SN_VIEWS', 'trip', 'snGo', 'trains', 'stepFrom', 'hopsTo', 'bestDir', 'fareTo', 'stairsSvg', 'rideLeg'],
   'js/menu-ui.js': ['renderMenu', 'renderMenuPage'],
   'js/scenes-ui.js': ['places', 'placeProgress', 'placeOpen', 'placeLevels', 'outWord', 'inkHtml', 'renderOutHome', 'scenePickerHtml', 'renderScene', 'tapSceneItem', 'qScene', 'startSceneQuiz', 'scenePrompt', 'sceneAnswered', 'sceneGot'],
   'js/stats.js': ['MILESTONES', 'checkMilestones', 'medal', 'celebrate', 'milestoneCheckpoint', 'cheerLine', 'comboPill', 'statsTilesHtml', 'minutesChartHtml', 'learnedChartHtml', 'milestonesHtml', 'heroStatsHtml', 'n5Projection', 'weekAccuracy'],
@@ -545,17 +545,20 @@ section('konbini');
   const stn = run('stationThings().map(t => furiPlain(t.name))'), placed = run('Object.values(SN_SEE).flat()');
   ok(stn.length === run('SCENE_BY.station.items.length'), 'every station sign is a thing to look at');
   stn.forEach(w => { ok(placed.includes(w), `the station doesn't put up ${w} anywhere`); ok(run(`!!SN_LOOK["${w}"]`), `the station sign ${w} has no look`); });
-  /* the trip: every destination has a train, a fare, and a platform one side or the other */
+  /* the trip: a loop of stations, a train a platform going one way round or the other, fares by stops */
   run('WALKS.station.enter()');
-  const D = run('SCENE_BY.station.walk.dests');
-  ok(new Set(D.map(d => d.track)).size === D.length, 'one train a platform');
-  D.forEach(d => { ok(stn.includes(d.kind.replace(/\{([^|]+)\|[^}]+\}/g, '$1')), `the train to ${d.to} is a kind the station has a sign for`); ok(d.fare > 0 && d.fare % 10 === 0, `the fare to ${d.to}`); });
+  const TR = run('SCENE_BY.station.walk.tracks'), LP = run('SCENE_BY.station.walk.loop.map(d => d.to)');
+  ok(new Set(TR.map(t => t.track)).size === TR.length, 'one train a platform');
+  TR.forEach(t => { ok(stn.includes(t.kind.replace(/\{([^|]+)\|[^}]+\}/g, '$1')), `platform ${t.track}'s train is a kind the station has a sign for`); ok(t.dir === 1 || t.dir === -1, `platform ${t.track} goes one way round or the other`); });
+  ok(TR.filter(t => t.track > 2).every(t => t.dir === 1) && TR.filter(t => t.track <= 2).every(t => t.dir === -1), 'platforms 3・4 go one way, 1・2 the other');
+  ok(run(`stepFrom("${LP[0]}", 1)`) === LP[1] && run(`stepFrom("${LP[0]}", -1)`) === LP[LP.length - 1], 'the loop goes round both ways');
+  LP.forEach(a => LP.filter(b => b !== a).forEach(b => {
+    ok(run(`hopsTo("${a}", "${b}", 1) + hopsTo("${a}", "${b}", -1)`) === LP.length, `${a} to ${b}: the two ways round add up to the loop`);
+    ok(run(`fareTo("${a}", "${b}")`) > 0, `a fare from ${a} to ${b}`);
+  }));
   ok(run('trip.stage') === 'out', 'the trip starts outside');
-  /* every view has its list of what can be seen; away from home, the trains still go to four other places */
   ok(run('Object.values(SN_VIEWS).flat().every(v => SN_SEE[v])'), 'every view of the station says which signs it shows');
-  run('trip.at = SCENE_BY.station.walk.dests[0].to');
-  ok(run('routes().map(d => d.to).includes(SCENE_BY.station.walk.home.to) && !routes().some(d => d.to === trip.at)'), 'away from さくら, a train goes back there, and none to where you are');
-  run('trip.at = null');
+  ok(/<svg/.test(run('stairsSvg("down")')) && /<svg/.test(run('stairsSvg("up")')), 'both flights of stairs draw');
   ok(run('WALKS.signs.stays && WALKS.station.stays && !WALKS.konbini.stays'), 'signs stay where they are; packets are picked up');
   /* the sushi visit starts at the door, and its talk is all there */
   run('WALKS.sushi.enter()');
@@ -781,7 +784,7 @@ section('furigana');
   /* out and about: every sign, line and bubble */
   f.SCENES.forEach(sc => { sc.all.forEach(x => strings.push(x.w)); (sc.lines || []).forEach(([w]) => strings.push(w));
     const t = sc.walk && sc.walk.talk; if (t) [t.party, ...t.parties, t.seat, ...t.seats, t.go, ...t.more].forEach(([w]) => strings.push(w));
-    ((sc.walk && sc.walk.terms) || []).forEach(([w]) => strings.push(w)); ((sc.walk && sc.walk.dests) || []).forEach(d => strings.push(d.to, d.kind));
+    ((sc.walk && sc.walk.terms) || []).forEach(([w]) => strings.push(w)); ((sc.walk && sc.walk.loop) || []).forEach(d => strings.push(d.to)); ((sc.walk && sc.walk.tracks) || []).forEach(d => strings.push(d.kind));
     ((sc.walk && sc.walk.ann) || []).forEach(([w]) => strings.push(w)); ((sc.walk && sc.walk.onboard) || []).forEach(([w]) => strings.push(w));
     ((sc.walk && sc.walk.ads) || []).forEach(a => strings.push(a.head, a.sub)); });
   /* the konbini: every name, slogan, tag and line of every label */

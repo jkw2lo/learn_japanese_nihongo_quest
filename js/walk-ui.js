@@ -252,7 +252,7 @@ function renderWalk(id) {
       <button data-act="kb-mode" data-m="read" class="${kb.mode === "read" && !kb.words ? "on" : ""}"><span lang="ja">読む</span> Read</button>
       <button data-act="kb-mode" data-m="errand" class="${kb.mode === "errand" && !kb.words ? "on" : ""}"><span lang="ja">お使い</span> Errand</button></div>`}
       <button class="btn btn-ghost btn-sm kb-wordsbtn ${kb.words ? "on" : ""}" data-act="kb-words"><span lang="ja">一覧</span> ${kb.words ? "Back to the place" : "Word list"}</button>
-      ${gate || kb.words ? "" : `<span class="muted small">${(w.words.hints || KB_HINT)[kb.mode]}</span><span class="muted tiny kb-dotkey"><i></i> ${esc(w.words.dot)}</span>`}</div>
+      ${gate || kb.words ? "" : `<span class="muted small">${(w.words.hints || KB_HINT)[kb.mode]}</span><span class="muted tiny kb-dotkey"><i></i> ${esc(w.words.dot)}<b class="kb-ok">✓</b> = read in 読む Read mode</span>`}</div>
     ${body}
     ${w.foot ? w.foot() : ""}
     ${phone && !gate && !kb.words && kb.mode === "errand" && !kb.held ? `<button class="btn cta" data-act="kb-list">${kb.list ? "Back to it" : "Show the list"}</button>` : ""}

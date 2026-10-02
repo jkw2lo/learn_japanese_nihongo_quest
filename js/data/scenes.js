@@ -102,7 +102,7 @@ const SCENES = [
       ["{次|つぎ}は、{新宿|しんじゅく}です。", "The next stop is Shinjuku."],
       ["ドアが{閉|し}まります。ご{注意|ちゅうい}ください。", "The doors are closing. Please be careful."],
       ["お{忘|わす}れ{物|もの}のないよう、ご{注意|ちゅうい}ください。", "Please make sure you have all your belongings."],
-      ["{終点|しゅうてん}です。", "This is the last stop."],
+      ["{駆|か}け{込|こ}み{乗車|じょうしゃ}はおやめください。", "Please don't rush onto the train."],
     ],
     /* A trip through さくら駅 (js/station-ui.js): where you can buy a ticket
        to, what it costs, and the train that takes you, from which platform.
@@ -111,12 +111,19 @@ const SCENES = [
        reference, but not the scene's words. */
     walk: {
       home: { to: "さくら", en: "Sakura" },
-      dests: [
-        { to: "{渋谷|しぶや}", en: "Shibuya", fare: 170, kind: "{各駅停車|かくえきていしゃ}", time: "10:27", track: 2 },
-        { to: "{品川|しながわ}", en: "Shinagawa", fare: 250, kind: "{急行|きゅうこう}", time: "10:38", track: 1 },
-        { to: "{新宿|しんじゅく}", en: "Shinjuku", fare: 210, kind: "{各駅停車|かくえきていしゃ}", time: "10:24", track: 4 },
-        { to: "{上野|うえの}", en: "Ueno", fare: 320, kind: "{快速|かいそく}", time: "10:31", track: 3 },
+      /* the line is a loop: this is the way round from platforms 3・4;
+         platforms 1・2 go the other way. Every train stops everywhere. */
+      loop: [
+        { to: "さくら", en: "Sakura" }, { to: "{新宿|しんじゅく}", en: "Shinjuku" }, { to: "{上野|うえの}", en: "Ueno" },
+        { to: "{品川|しながわ}", en: "Shinagawa" }, { to: "{渋谷|しぶや}", en: "Shibuya" },
       ],
+      /* the four platforms: the train at each, and which way round it goes (1: as above; -1: the other way) */
+      tracks: [
+        { track: 1, kind: "{急行|きゅうこう}", time: "10:38", dir: -1 }, { track: 2, kind: "{各駅停車|かくえきていしゃ}", time: "10:27", dir: -1 },
+        { track: 3, kind: "{快速|かいそく}", time: "10:31", dir: 1 }, { track: 4, kind: "{各駅停車|かくえきていしゃ}", time: "10:24", dir: 1 },
+      ],
+      /* the fare, by how many stops away it is the short way round */
+      fares: { 1: 170, 2: 220 },
       terms: [
         ["きっぷ", "Ticket"], ["{大人|おとな}", "Adult"], ["{子供|こども}", "Child"], ["{運賃|うんちん}", "Fare"],
         ["お{金|かね}を{入|い}れてください", "Please put in your money"], ["きっぷとおつりをお{取|と}りください", "Please take your ticket and change"],
