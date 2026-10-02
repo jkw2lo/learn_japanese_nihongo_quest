@@ -74,6 +74,10 @@ Build order. Each step should run end to end before the next one starts.
 9g. ~~Richer walks~~ (0.19.0): the sushi visit (door → hostess → counter
    or table, with a menu), stalls of their own, shopfronts with names, the
    station walked, a word list for every place.
+9h. ~~The trip, the stalls, the shops~~ (0.20.0): the station as a trip
+   (machine, ticket, timetable, gates, stairs, the right train); yatai built
+   like yatai; shopfronts at their own heights with names you can hear;
+   meanings that fade; readings asked in romaji with near misses.
 10. **More recognition practice at N5**: more scenes (a train ticket, a
    bento label, a konbini's shelf tags, a clinic), a "spot the kanji you
    know" mode over the scenes, and scenes in Sprint.

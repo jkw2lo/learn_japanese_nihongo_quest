@@ -1,19 +1,31 @@
-/* Nihongo Quest — 駅, the station, as somewhere you walk through (the
-   engine: js/walk-ui.js; the words: js/data/scenes.js → station).
+/* Nihongo Quest — 駅, the station, as a trip (the engine: js/walk-ui.js;
+   the words: js/data/scenes.js → station; the trip's data: station.walk).
 
-   In at the entrance (入口, and the 東口 it is), across the concourse past
-   the ticket machines (切符売り場) to the gates (改札), along the corridor
-   under the yellow exit signs (出口: 西口, 北口, 南口) and the orange one for
-   changing lines (乗り換え), and out onto platform three (三番線), with its
-   departures board (各駅停車, 快速, 急行), the pink sign for the women-only
-   carriage (女性専用車), and the speakers overhead with the announcements.
+   You start in the street, at the stairs down into the subway (入口, and
+   the 東口 they are). Down the stairs is the lobby, three walls you turn
+   between with the buttons at the sides: the ticket machines (切符売り場),
+   the departures board with the exit signs pointing where they go (西口 to
+   the left, 北口 ahead, 南口 to the right), and the gates (改札). A machine
+   opens its screen: pick where you're going, adult or child, put your money
+   in, take your ticket and change. The ticket sits at the bottom right.
 
-   Signs stay where they are: tap one to look closer, as on the street of
-   shops. The announcements are heard, not read off a sign, so they're
-   speakers: tap to hear one and see what it says. Every sign and
-   announcement is one of the scene's own words. */
+   The gates only open with a ticket. Behind them, two flights of stairs,
+   each under the sign that says which platforms and which way (方面); the
+   orange sign is for changing lines (乗り換え), and the speakers here have
+   their own announcements. Up the stairs, a platform: a train each side,
+   each saying on its side what it is and where it goes. Get on the right one
+   and you can go: take a seat, the doors close, the city goes by, and you
+   get off somewhere with the same layout and a different name — your
+   ticket used up. Get on the wrong one and it says so, and no more.
+
+   Every sign is one of the scene's words, and stays where it is: tap one to
+   look closer. Every other piece of Japanese here — the names, the machine,
+   the board, the ticket, the announcements — can be tapped to hear it and
+   see for a moment what it is. */
 
 const stationSc = () => SCENE_BY.station;
+const tripData = () => stationSc().walk;
+const trip = { at: null, stage: "out", view: 0, slide: "", modal: null, step: "dest", dest: null, who: "adult", paid: 0, ticket: null, ride: null, msg: null };
 function stationThings() {
   const sc = stationSc();
   if (sc._things) return sc._things;
@@ -22,14 +34,28 @@ function stationThings() {
   return sc._things;
 }
 
-/* How each sign looks, by its plain text. */
+/* ---------- where you are, and where you can go from here ---------- */
+
+const homeSt = () => tripData().home;
+const hereSt = () => trip.at || homeSt().to;
+const stEn = to => to === homeSt().to ? homeSt().en : (tripData().dests.find(d => d.to === to) || {}).en || "";
+/* From here: the four trains, one a platform. Away from さくら, the train
+   that would have gone to where you now are goes back to さくら instead. */
+const routes = () => tripData().dests.map(d => d.to === hereSt() ? { ...d, to: homeSt().to, en: homeSt().en } : d);
+const destBy = to => routes().find(d => d.to === to);
+const fareFor = (d, who) => who === "child" ? Math.ceil(d.fare / 2 / 10) * 10 : d.fare;
+const pairOf = n => n <= 2 ? "p12" : "p34";
+
+/* ---------- words on things ---------- */
+
 const SN_LOOK = {
-  "出口": { k: "exit" }, "入口": { k: "enter" }, "改札": { k: "navy" }, "乗り換え": { k: "orange", after: `<span class="sn-lines"><i style="background:#3E9A4A"></i><i style="background:#E2554B"></i><i style="background:#2F6FC4"></i></span>` },
+  "出口": { k: "exit" }, "入口": { k: "enter" }, "改札": { k: "navy" },
+  "乗り換え": { k: "orange", after: `<span class="sn-lines"><i style="background:#3E9A4A"></i><i style="background:#E2554B"></i><i style="background:#2F6FC4"></i></span><span class="sn-arrow">→</span>` },
   "切符売り場": { k: "navy", before: `<svg viewBox="0 0 30 20" class="sn-picto" aria-hidden="true"><rect x="2" y="3" width="26" height="14" rx="2" fill="#fff"/><path d="M8 3 V17" stroke="#1F3B66" stroke-dasharray="2 2"/></svg>` },
-  "東口": { k: "exit", after: `<span class="sn-arrow">→</span>` }, "西口": { k: "exit", before: `<span class="sn-arrow">←</span>` },
+  "東口": { k: "exit" }, "西口": { k: "exit", before: `<span class="sn-arrow">←</span>` },
   "北口": { k: "exit", before: `<span class="sn-arrow">↑</span>` }, "南口": { k: "exit", after: `<span class="sn-arrow">→</span>` },
   "三番線": { k: "platform", before: `<b class="sn-num">3</b>` },
-  "各駅停車": { k: "train green", after: `<span class="sn-dest">10:24</span>` }, "快速": { k: "train orange", after: `<span class="sn-dest">10:31</span>` }, "急行": { k: "train red", after: `<span class="sn-dest">10:38</span>` },
+  "各駅停車": { k: "type green" }, "快速": { k: "type orange" }, "急行": { k: "type red" },
   "女性専用車": { k: "pink", before: `<svg viewBox="0 0 20 34" class="sn-picto" aria-hidden="true"><circle cx="10" cy="5" r="4" fill="#fff"/><path d="M10 10 L3 24 H17Z" fill="#fff"/><rect x="6" y="23" width="3" height="10" rx="1" fill="#fff"/><rect x="11" y="23" width="3" height="10" rx="1" fill="#fff"/></svg>` },
 };
 function snPack(t) {
@@ -38,65 +64,191 @@ function snPack(t) {
 }
 const snBy = word => stationThings().find(t => furiPlain(t.name) === word);
 const snAt = (word, cls = "") => { const t = snBy(word); return `<div class="st-at sn-at ${cls}">${kbProd(t, snPack(t))}${kbTicksHtml(t)}</div>`; };
+/* a term from the trip's list, or a name: tap to hear it, and see for a moment what it is */
+const snTerm = (markup, cls = "") => { const T = tripData().terms.find(x => x[0] === markup); return kbNameplate(markup, T ? T[1] : "", "sn-term " + cls); };
+const snStation = (to, cls = "") => kbNameplate(to, stEn(to), "sn-term " + cls);
+const snEki = (to, cls = "") => kbNameplate(to + "{駅|えき}", `${stEn(to)} Station`, "sn-term " + cls);
+const PLAT_TERM = { 1: "{一番線|いちばんせん}", 2: "{二番線|にばんせん}", 4: "{四番線|よんばんせん}" };
+const snPlatName = n => n === 3 ? snAt("三番線") : `<div class="sn-sign printed platform"><b class="sn-num">${n}</b>${snTerm(PLAT_TERM[n])}</div>`;
+const snSpeaker = (markup, en) => `<button class="sn-ann kb-signword" data-act="kb-gloss" data-say="${esc(furiKana(markup))}" data-en="${esc(en)}"><span class="sn-cone">${icon("speaker")}</span><span class="sn-ann-jp" lang="ja">${inkHtml(markup)}</span></button>`;
 
-/* The announcements: speakers you tap. */
-function snSpeakers() {
-  const sc = stationSc();
-  return `<div class="sn-speakers"><div class="sn-speaker-head">${icon("speaker")} Announcements</div>${sc.all.slice(sc.items.length).map(it =>
-    kbSign(sc, it.w, "sn-ann", `<span class="sn-cone">${icon("speaker")}</span><span class="sn-ann-jp">${inkHtml(it.w)}</span>`)).join("")}</div>`;
-}
+/* ---------- the views ---------- */
 
-const STATION = {
-  entrance: () => `<div class="sn-sec sn-entrance">
-    <div class="sn-roof"><span class="sn-stname" lang="ja">${inkHtml("さくら{駅|えき}")}</span><i class="sn-clock"></i></div>
-    <div class="sn-facade">
-      <div class="sn-sidewall">${snAt("東口", "hang-top")}</div>
-      <div class="sn-doors">${snAt("入口", "over")}<div class="sn-glassdoors"><i></i><i></i><i></i></div></div>
-    </div></div>`,
-  concourse: () => `<div class="sn-sec sn-concourse">
-    <div class="sn-ceiling">${snAt("切符売り場", "hang")}${snAt("改札", "hang")}</div>
-    <div class="sn-floor-row">
-      <div class="sn-farechart"><i></i><i></i><i></i><i></i></div>
-      <div class="sn-machines">${[0, 1, 2].map(() => `<div class="sn-machine"><i></i><b></b></div>`).join("")}</div>
-      <div class="sn-gates">${[0, 1, 2, 3].map(k => `<div class="sn-gate"><i class="${k === 1 ? "no" : "go"}"></i></div>`).join("")}</div>
-    </div></div>`,
-  corridor: () => `<div class="sn-sec sn-corridor">
-    <div class="sn-ceiling">${snAt("出口", "hang")}${snAt("乗り換え", "hang")}</div>
-    <div class="sn-exitboard">${snAt("西口")}${snAt("北口")}${snAt("南口")}</div>
-    <div class="sn-stairs"><i></i><i></i><i></i><i></i><i></i></div></div>`,
-  platform: () => `<div class="sn-sec sn-platform">
-    <div class="sn-ceiling">${snAt("女性専用車", "hang")}</div>
-    <div class="sn-plat-row">
-      <div class="sn-pillar">${snAt("三番線")}</div>
-      <div class="sn-board"><div class="sn-board-head" lang="ja">${inkHtml("{発車|はっしゃ}")}</div>${snAt("各駅停車", "row")}${snAt("快速", "row")}${snAt("急行", "row")}</div>
-      ${snSpeakers()}
-    </div>
-    <div class="sn-train"><i></i><i></i><i></i></div>
-    <div class="sn-edge"><b class="sn-pinkmark"></b></div></div>`,
+/* Each stage is a row of views you turn between with the side buttons. */
+const SN_VIEWS = { out: ["street"], lobby: ["tix", "board", "gates"], paid: ["c12", "c34"], p12: ["t1", "t2"], p34: ["t3", "t4"], ride: ["ride"] };
+const snView = () => SN_VIEWS[trip.stage][trip.view];
+/* the signs you can see from each view, so an errand only asks for those */
+const SN_SEE = {
+  street: ["入口", "東口"], tix: ["切符売り場"], board: ["出口", "西口", "北口", "南口", "各駅停車", "快速", "急行", "三番線"], gates: ["改札"],
+  c12: ["出口"], c34: ["乗り換え", "出口"], t1: ["急行"], t2: ["各駅停車", "女性専用車"], t3: ["三番線", "快速", "女性専用車"], t4: ["各駅停車"], ride: [],
 };
-const SN_ORDER = ["entrance", "concourse", "corridor", "platform"];
-function stationDesk() {
-  stationThings();
-  return `<div class="kb-store sn-station">
-    <div class="kb-walk">
-      <button class="kb-walkbtn l" data-act="kb-walk" data-d="-1" aria-label="Walk left">${icon("back")}</button>
-      <button class="kb-walkbtn r" data-act="kb-walk" data-d="1" aria-label="Walk right">${icon("chevron")}</button>
-      <div class="kb-strip sn-strip" id="kbStrip">${SN_ORDER.map(k => `<div class="kb-sec">${STATION[k]()}</div>`).join("")}</div>
+/* the buttons at the sides: [label, stage, view] */
+function snNav() {
+  return {
+    tix: { l: ["Up to the street", "out", 0], r: ["The departures board", "lobby", 1] },
+    board: { l: ["Ticket machines", "lobby", 0], r: ["The gates", "lobby", 2] },
+    gates: { l: ["The departures board", "lobby", 1] },
+    c12: { l: ["Back through the gates", "lobby", 2], r: ["Stairs to 3・4", "paid", 1] },
+    c34: { l: ["Stairs to 1・2", "paid", 0] },
+    t1: { r: ["Platform 2", "p12", 1] }, t2: { l: ["Platform 1", "p12", 0] },
+    t3: { r: ["Platform 4", "p34", 1] }, t4: { l: ["Platform 3", "p34", 0] },
+  }[snView()] || {};
+}
+const snNavHtml = () => { const n = snNav(); return ["l", "r"].map(s => n[s] ? `<button class="sn-nav ${s}" data-act="sn-nav" data-stage="${n[s][1]}" data-view="${n[s][2]}" data-dir="${s}">
+  <span class="sn-nav-ico">${icon(s === "l" ? "back" : "chevron")}</span><span class="sn-nav-label">${esc(n[s][0])}</span></button>` : "").join(""); };
+
+/* the street: the stairs down into the subway */
+const snStreet = () => `<div class="sv sv-street">
+  <div class="sv-skyline">${[[70, 150, "#C9CED6"], [110, 220, "#B9C2CC"], [90, 180, "#D2D6DC"], [130, 260, "#AEB8C3"], [80, 170, "#C6CCD3"]].map(([w, h, c]) => `<i style="width:${w}px;height:${h}px;background:${c}"></i>`).join("")}</div>
+  <div class="sv-tree"><i></i><b></b></div>
+  <div class="sv-pole">${snAt("東口", "pole")}<div class="sv-map">${snTerm("{周辺|しゅうへん}{地図|ちず}")}<i></i></div></div>
+  <div class="sv-entrance">
+    <div class="sv-ent-sign"><span class="sv-logo">M</span>${snTerm("{地下鉄|ちかてつ}")}${snEki(hereSt(), "sv-ent-name")}</div>
+    <div class="sv-canopy"><i></i><i></i>${snAt("入口", "on-canopy")}</div>
+    <button class="sv-down" data-act="sn-nav" data-stage="lobby" data-view="0" data-dir="d" aria-label="Go down the stairs"><span class="sv-steps"></span><span class="sv-rail l"></span><span class="sv-rail r"></span></button>
+  </div>
+  <div class="sv-bikes">${STREET_ART.bike}${STREET_ART.bike}</div>
+  <div class="sv-pavement"></div>
+  <p class="sn-hint">Tap the stairs to go down.</p></div>`;
+
+/* the lobby: three walls */
+const snTix = () => `<div class="sv sv-lobby sv-tix">
+  <div class="sn-ceiling-lights"><i></i><i></i><i></i></div>
+  <div class="sv-wallsign">${snAt("切符売り場", "hang")}</div>
+  <div class="sv-machines">${[0, 1, 2, 3].map(k => `<button class="sv-machine ${k === 3 ? "ic" : ""}" data-act="sn-machine" aria-label="A ticket machine"><i class="sv-scr"><b></b><b></b><b></b></i><i class="sv-slots"></i><i class="sv-tray"></i></button>`).join("")}</div>
+  <p class="sn-hint dark">Tap a machine to buy a ticket.</p></div>`;
+function snBoardView() {
+  const rows = [...routes()].sort((a, b) => a.time.localeCompare(b.time));
+  return `<div class="sv sv-lobby sv-board">
+    <div class="sn-ceiling-lights"><i></i><i></i><i></i></div>
+    <div class="sv-exits">
+      <div class="sv-exit l">${snAt("西口", "hang")}</div>
+      <div class="sv-exit c">${snAt("出口", "hang")}${snAt("北口")}</div>
+      <div class="sv-exit r">${snAt("南口", "hang")}</div>
     </div>
-  </div>`;
+    <div class="sv-dboard">
+      <div class="sv-db-title">${snTerm("{発車|はっしゃ}")}<span class="sv-db-clock">10:20</span></div>
+      <div class="sv-db-head">${snTerm("{時刻|じこく}")}${snTerm("{種別|しゅべつ}")}${snTerm("{行先|ゆきさき}")}${snTerm("{番線|ばんせん}")}</div>
+      ${rows.map(d => { const k = snBy(furiPlain(d.kind)); return `<div class="sv-db-row"><b>${d.time}</b><span>${kbProd(k, snPack(k))}</span><span class="sv-db-to">${snStation(d.to)}</span><span class="sv-db-n">${d.track === 3 ? snAt("三番線", "tiny") : snTerm(PLAT_TERM[d.track])}</span></div>`; }).join("")}
+    </div></div>`;
 }
-function stationPhone() {
-  stationThings();
-  return `<div class="kb-store sn-station">
-    <div class="kb-ps sn-ps" id="kbStrip">${SN_ORDER.map(k => `<div class="kb-slot st-slot sn-slot">${STATION[k]()}</div>`).join("")}<div class="kb-slot end"></div></div>
-    <p class="muted tiny kb-hint">Swipe through the station · tap a sign to look closer</p>
-  </div>`;
+const snGates = () => `<div class="sv sv-lobby sv-gates">
+  <div class="sn-ceiling-lights"><i></i><i></i><i></i></div>
+  <div class="sv-wallsign">${snAt("改札", "hang")}</div>
+  <div class="sv-gaterow"><div class="sv-office"><i></i></div>
+    <button class="sv-gatebank" data-act="sn-gate" aria-label="Go through the gates">${[0, 1, 2, 3, 4].map(k => `<span class="sv-gate"><i class="sv-ic"></i><b class="${k === 2 ? "no" : "go"}"></b><u></u></span>`).join("")}</button></div>
+  <p class="sn-hint dark">${trip.ticket ? "Tap the gates to go through." : "You'll need a ticket for the gates."}</p></div>`;
+
+/* the paid side: two flights of stairs, each under its sign */
+function snStairs(pair) {
+  const ds = routes().filter(d => pairOf(d.track) === pair).sort((a, b) => a.track - b.track);
+  return `<div class="sv sv-paid">
+    <div class="sn-ceiling-lights"><i></i><i></i><i></i></div>
+    <div class="sv-paid-signs">
+      <div class="sv-backexit">${snAt("出口", "hang")}<span class="sn-arrow dark">←</span></div>
+      <div class="sv-dirsign"><span class="sv-dir-pl">${snTerm(pair === "p12" ? "{一|いち}・{二番線|にばんせん}" : "{三|さん}・{四番線|よんばんせん}")}</span>
+        <span class="sv-dir-to">${ds.map(d => snStation(d.to)).join("<i>・</i>")}${snTerm("{方面|ほうめん}")}</span><span class="sn-arrow">↑</span></div>
+      <div class="sv-transfer">${pair === "p34" ? snAt("乗り換え", "hang") : ""}</div>
+    </div>
+    <div class="sv-stairhall">
+      <button class="sv-up" data-act="sn-nav" data-stage="${pair}" data-view="0" data-dir="u" aria-label="Up the stairs to the platforms"><span class="sv-flight"></span><span class="sv-hand l"></span><span class="sv-hand r"></span></button>
+      <div class="sn-speakers"><div class="sn-speaker-head">${icon("speaker")} Announcements</div>${tripData().ann.map(([w, en]) => snSpeaker(w, en)).join("")}</div>
+    </div>
+    <p class="sn-hint dark">Tap the stairs to go up to the platforms.</p></div>`;
 }
+
+/* a platform, one track a view */
+function snTrack(n) {
+  const d = routes().find(x => x.track === n), k = snBy(furiPlain(d.kind)), sc = stationSc();
+  const others = routes().filter(x => pairOf(x.track) === pairOf(n)).sort((a, b) => a.track - b.track);
+  const voice = sc.all.slice(sc.items.length).filter((_, i) => i !== 0 || n === 3);
+  const women = SN_SEE["t" + n].includes("女性専用車");
+  return `<div class="sv sv-plat">
+    <div class="sv-canopy-in"><i></i><i></i><i></i></div>
+    <div class="sv-ekimei"><span>← ${snStation(others[0].to)}</span>${kbNameplate(hereSt(), stEn(hereSt()), "sv-ek-name")}<span>${snStation(others[1].to)} →</span></div>
+    <div class="sv-platrow">
+      <div class="sv-platsign">${snPlatName(n)}</div>
+      <div class="sv-train">
+        <div class="sv-led">${kbProd(k, snPack(k))}<span class="sv-led-to">${snStation(d.to)}</span></div>
+        <div class="sv-car"><i class="sv-win"></i>
+          <button class="sv-tdoor" data-act="sn-ride" data-track="${n}" aria-label="Get on"><i></i><i></i></button>
+          <i class="sv-win"></i>
+          <button class="sv-tdoor" data-act="sn-ride" data-track="${n}" aria-label="Get on"><i></i><i></i></button><i class="sv-win"></i>
+          ${women ? `<div class="sv-women">${snAt("女性専用車", "hang")}</div>` : ""}</div>
+      </div>
+    </div>
+    <div class="sv-edge"><i class="${women ? "pink" : ""}"></i></div>
+    <div class="sn-speakers sv-anns"><div class="sn-speaker-head">${icon("speaker")} Announcements</div>${voice.map(it => kbSign(sc, it.w, "sn-ann", `<span class="sn-cone">${icon("speaker")}</span><span class="sn-ann-jp">${inkHtml(it.w)}</span>`)).join("")}</div>
+    <button class="btn btn-ghost btn-sm sv-downbtn" data-act="sn-nav" data-stage="paid" data-view="${pairOf(n) === "p12" ? 0 : 1}" data-dir="d">↓ Back down the stairs</button></div>`;
+}
+
+/* the ride: a seat, the doors closing, the city going by, and there */
+function snRide() {
+  const r = trip.ride;
+  return `<div class="sv sv-ride ${r.phase}">
+    <div class="sv-ride-led">${kbNameplate("{次|つぎ}は、" + r.to + "です。", `Next: ${stEn(r.to)}`, "sv-next")}</div>
+    <div class="sv-ride-wins">${[0, 1, 2].map(() => `<i class="sv-rwin"><b class="sv-city"></b></i>`).join("")}</div>
+    <div class="sv-straps">${[0, 1, 2, 3, 4, 5, 6].map(i => `<i style="--i:${i}"></i>`).join("")}</div>
+    <div class="sv-rdoor"><i></i><i></i></div>
+    <div class="sv-seats"><i></i></div>
+    ${r.phase === "board" ? `<button class="btn kb-main sv-ride-btn" data-act="sn-sit">Take a seat</button>`
+      : r.phase === "there" ? `<button class="btn kb-main sv-ride-btn" data-act="sn-off">Get off at <span lang="ja">${inkHtml(r.to)}</span></button>` : ""}</div>`;
+}
+
+/* ---------- the windows: the machine, the ticket, a note ---------- */
+
+function snMachine() {
+  const step = trip.step, d = trip.dest && destBy(trip.dest), fare = d ? fareFor(d, trip.who) : 0;
+  let screen;
+  if (step === "dest") screen = `<div class="sn-scr-head">${snTerm("きっぷ")}${snTerm("{運賃|うんちん}")}</div>
+    <div class="sn-routemap"><span class="sn-here">${snStation(hereSt())}</span>${routes().map(x => `<button class="sn-fare" data-act="sn-dest" data-to="${esc(x.to)}"><span lang="ja">${inkHtml(x.to)}</span><b>¥${x.fare}</b></button>`).join("")}</div>
+    <p class="sn-scr-note">Where are you going? Tap a station.</p>`;
+  else if (step === "who") screen = `<div class="sn-scr-head">${snStation(d.to)}<b>¥${d.fare}</b></div>
+    <div class="sn-who">${snTerm("{大人|おとな}")}<button class="sn-big" data-act="sn-who" data-who="adult">¥${d.fare}</button>${snTerm("{子供|こども}")}<button class="sn-big" data-act="sn-who" data-who="child">¥${fareFor(d, "child")}</button></div>
+    <p class="sn-scr-note">One ticket: adult or child?</p>`;
+  else if (step === "pay") screen = `<div class="sn-scr-head">${snTerm("お{金|かね}を{入|い}れてください")}</div>
+    <div class="sn-paybox"><span>${snTerm(trip.who === "child" ? "{子供|こども}" : "{大人|おとな}")}</span><b>¥${fare}</b><span>In: <b>¥${trip.paid}</b></span></div>
+    <div class="sn-coins">${[10, 50, 100, 500, 1000].map(v => `<button class="sn-coin ${v === 1000 ? "bill" : ""}" data-act="sn-pay" data-v="${v}">¥${v}</button>`).join("")}</div>`;
+  else screen = `<div class="sn-scr-head">${snTerm("きっぷとおつりをお{取|と}りください")}</div>
+    <div class="sn-paybox"><span>Change</span><b>¥${trip.paid - fare}</b></div>
+    <button class="btn kb-main" data-act="sn-take">Take your ticket</button>`;
+  return `<div class="sn-tm"><div class="sn-tm-top">${snEki(hereSt())}</div><div class="sn-screen">${screen}</div>
+    <div class="sn-tm-foot">${step !== "done" ? `<button class="sn-cancel" data-act="sn-cancel" data-say="${esc(furiKana("{取消|とりけし}"))}"><span lang="ja">${inkHtml("{取消|とりけし}")}</span> <small>Cancel</small></button>` : ""}<span class="sn-slot-ticket"></span><span class="sn-slot-coin"></span></div></div>`;
+}
+function snTicketWin() {
+  const t = trip.ticket;
+  return `<div class="sn-ticket big printed">
+    <div class="sn-tk-head">${snTerm("{乗車券|じょうしゃけん}")}<small>No. 0042</small></div>
+    <div class="sn-tk-route">${snStation(t.from)} <span>→</span> ${snStation(t.to)}</div>
+    <div class="sn-tk-row">${snTerm(t.who === "child" ? "{子供|こども}" : "{大人|おとな}")}<b>¥${t.fare}</b></div>
+    <div class="sn-tk-foot">${snTerm("{発売|はつばい}{当日|とうじつ}{限|かぎ}り{有効|ゆうこう}")}<small>2026.10.2</small></div></div>`;
+}
+function snWin() {
+  if (!trip.modal) return "";
+  const body = trip.modal === "machine" ? snMachine() : trip.modal === "ticket" ? snTicketWin() : trip.msg;
+  return `<div class="sn-modal"><div class="sn-modal-box ${trip.modal}">${body}
+    ${trip.modal === "found" ? "" : `<button class="btn btn-ghost btn-sm sn-close" data-act="sn-close">${trip.modal === "machine" ? "Step away" : "Close"}</button>`}</div></div>`;
+}
+const snTicketChip = () => trip.ticket && trip.stage !== "out" && trip.stage !== "ride"
+  ? `<button class="sn-ticket chip printed" data-act="sn-ticket" aria-label="Your ticket"><b lang="ja">${inkHtml("きっぷ")}</b><span lang="ja">${inkHtml(trip.ticket.from)} → ${inkHtml(trip.ticket.to)}</span></button>` : "";
+
+/* ---------- drawn ---------- */
+
+function snScene() {
+  const v = snView();
+  return v === "street" ? snStreet() : v === "tix" ? snTix() : v === "board" ? snBoardView() : v === "gates" ? snGates()
+    : v === "c12" ? snStairs("p12") : v === "c34" ? snStairs("p34") : v === "ride" ? snRide() : snTrack(+v.slice(1));
+}
+const stationView = () => `<div class="kb-store sn-station at-${trip.stage} v-${snView()}">
+  <div class="sn-stage ${trip.slide}">${snScene()}</div>
+  ${snNavHtml()}${snTicketChip()}${snWin()}</div>`;
 
 WALKS.station = {
   id: "station", eyebrow: "駅", title: "At the station", bundle: "scenes", stays: true,
-  lede: "In through the entrance, past the ticket machines and the gates, under the exit signs, and out onto platform three. Tap a sign to look closer, and a speaker to hear the announcement.",
+  lede: "Down the stairs, buy a ticket, through the gates, up to the platform, and onto the right train. Read the signs on the way: tap one to look closer.",
+  enter() { Object.assign(trip, { at: null, stage: "out", view: 0, slide: "", modal: null, step: "dest", dest: null, who: "adult", paid: 0, ticket: null, ride: null, msg: null }); },
   get things() { return stationThings(); }, get by() { stationThings(); return stationSc()._by; },
+  visible: t => (SN_SEE[snView()] || []).includes(furiPlain(t.name)),
   sides: ["name"], stamps: [["name", "読", "what it says"]],
   readable: (t, side) => side === "name" && soundable(t.kana),
   peers() { return this.things; },
@@ -104,15 +256,79 @@ WALKS.station = {
   terms: t => [[t.name, t.en, "Sign"]],
   back: () => null,
   pack: snPack, big: () => "s-sign",
-  desk: stationDesk, phone: stationPhone,
+  desk: stationView, phone: stationView,
   receipt: () => "",
   foot: () => stallFoot("station"),
   words: {
     hands: "Up close", put: "Done looking",
-    hints: { browse: "Just look. Nothing is tested.", read: "Looking at a sign asks you what it means.", errand: "Find the signs on the list." },
+    hints: { browse: "Just look. Nothing is tested.", read: "Looking at a sign asks you what it means.", errand: "Find the signs on the list, from where you are." },
     read: "Tap a sign to look closer. When you're done looking, you'll be asked what it means.",
-    browse: "Walk through the station and tap any sign to look closer, hear it, and see what it means. The speakers are the announcements.",
+    browse: "Go down, buy a ticket, and find your train. Tap any sign on the way to look closer; tap any other Japanese to hear it.",
     dot: "under a sign: you can read it", basket: "That's the one", list: "Find the signs that say",
-    find: "Find each one in the station.", foundTitle: "Found them all", later: "", score: "recognised",
+    find: "Find each one from where you're standing.", foundTitle: "Found them all", later: "", score: "recognised",
   },
 };
+
+/* ---------- going about it ---------- */
+
+function snGo(stage, view, dir) {
+  trip.slide = { l: "from-l", r: "from-r", u: "rise", d: "sink" }[dir] || "";
+  trip.stage = stage; trip.view = view; trip.modal = null;
+  kbReset();
+  if (kb.mode === "errand" && (!kb.errand || !(kb.errand.got || []).length)) kbNewErrand(WALKS.station);
+  kbDraw();
+  trip.slide = "";
+  if (stage === "p34" && view === 0 && dir === "u") say(stationSc().all[stationSc().items.length].kana);   /* まもなく、三番線に… */
+}
+const snNote = (html, kind = "msg") => { trip.modal = kind; trip.msg = html; kbDraw(); };
+
+Object.assign(ACTS, {
+  "sn-nav": el => { snGo(el.dataset.stage, +el.dataset.view, el.dataset.dir); noteActivity(); },
+  "sn-machine": () => { trip.modal = "machine"; trip.step = "dest"; trip.dest = null; trip.paid = 0; noteActivity(); kbDraw(); },
+  "sn-dest": el => { trip.dest = el.dataset.to; trip.step = "who"; say(furiKana(trip.dest)); kbDraw(); },
+  "sn-who": el => { trip.who = el.dataset.who; trip.step = "pay"; trip.paid = 0; say(furiKana("お{金|かね}を{入|い}れてください")); kbDraw(); },
+  "sn-pay": el => {
+    trip.paid += +el.dataset.v;
+    if (trip.paid >= fareFor(destBy(trip.dest), trip.who)) { trip.step = "done"; say(furiKana("きっぷとおつりをお{取|と}りください")); }
+    kbDraw();
+  },
+  "sn-take": () => {
+    const d = destBy(trip.dest);
+    trip.ticket = { from: hereSt(), to: d.to, who: trip.who, fare: fareFor(d, trip.who) };
+    trip.modal = null; trip.step = "dest"; noteActivity(); kbDraw();
+  },
+  "sn-cancel": el => { say(el.dataset.say); trip.modal = null; trip.step = "dest"; trip.paid = 0; kbDraw(); },
+  "sn-ticket": () => { trip.modal = "ticket"; kbDraw(); },
+  "sn-close": () => { trip.modal = null; kbDraw(); },
+  "sn-gate": () => {
+    if (!trip.ticket) return snNote(`<p class="sn-msg">The gate beeps and its little doors stay shut. You need a ticket first: the machines are under <b lang="ja">${inkHtml("{切符売|きっぷう}り{場|ば}")}</b>.</p>`);
+    snGo("paid", 0, "r"); noteActivity();
+  },
+  "sn-ride": el => {
+    const d = routes().find(x => x.track === +el.dataset.track);
+    if (!trip.ticket) return snNote(`<p class="sn-msg">No ticket? Then you can't have come through the gates. Go back down and buy one.</p>`);
+    if (d.to === trip.ticket.to) {
+      snNote(`<div class="sn-found"><div class="sn-found-art">${hanamaru("sn-maru")}${neko("cheer", "sn-found-cat")}${stamp("せいかい")}</div>
+        <h3>You found your train!</h3>
+        <p>This <span lang="ja">${inkHtml(d.kind)}</span> goes to ${snStation(d.to)}, and so does your ticket.</p>
+        <div class="kb-row"><button class="btn kb-main" data-act="sn-depart">Go to <span lang="ja">${inkHtml(d.to)}</span></button><button class="btn btn-ghost" data-act="sn-close">Not yet</button></div></div>`, "found");
+      petals($(".sn-modal-box"));
+    } else snNote(`<p class="sn-msg">This train goes to ${snStation(d.to)}. Your ticket says ${snStation(trip.ticket.to)}. Not this one.</p>`);
+    noteActivity();
+  },
+  "sn-depart": () => {
+    trip.ride = { to: trip.ticket.to, phase: "board", track: routes().find(x => x.to === trip.ticket.to).track };
+    trip.modal = null; snGo("ride", 0, "r");
+  },
+  "sn-sit": () => {
+    trip.ride.phase = "closing"; kbDraw();
+    say(furiKana("ドアが{閉|し}まります。ご{注意|ちゅうい}ください。"));
+    setTimeout(() => { if (trip.stage !== "ride") return; trip.ride.phase = "moving"; kbDraw(); say(furiKana("{次|つぎ}は、" + trip.ride.to + "です。")); }, 1600);
+    setTimeout(() => { if (trip.stage !== "ride") return; trip.ride.phase = "there"; kbDraw(); }, 6200);
+  },
+  "sn-off": () => {
+    const r = trip.ride;
+    trip.at = r.to; trip.ticket = null; trip.ride = null;
+    snGo(pairOf(r.track), r.track % 2 ? 0 : 1, "r");
+  },
+});

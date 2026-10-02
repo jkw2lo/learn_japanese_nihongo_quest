@@ -40,7 +40,7 @@ const PICTO = {
 /* How each sign looks: its kind (the style) and anything drawn with it. */
 const SIGN_LOOK = {
   "営業中": { k: "hang open" }, "準備中": { k: "hang shut" },
-  "押す": { k: "plate" }, "引く": { k: "plate" },
+  "押す": { k: "doorplate" }, "引く": { k: "doorplate" },  /* small, at hand height */
   "営業時間": { k: "board", after: `<span class="st-hours">11:00 – 20:00</span>` }, "定休日": { k: "board small" },
   "自動ドア": { k: "band" },
   "割引": { k: "pop red", before: `<b class="st-big">20%</b>` }, "半額": { k: "dot" }, "無料": { k: "pop bubble", before: `<b class="st-wifi">Wi-Fi</b>` },
@@ -54,7 +54,7 @@ const SIGN_LOOK = {
   "立入禁止": { k: "tape" },
 };
 function signPack(t) {
-  const L = SIGN_LOOK[furiPlain(t.name)] || { k: "plate" };
+  const L = SIGN_LOOK[furiPlain(t.name)] || { k: "doorplate" };
   return `<div class="st-sign printed ${L.k}">${L.before || ""}<span class="st-w" lang="ja">${inkHtml(t.name)}</span>${L.after || ""}</div>`;
 }
 
@@ -65,71 +65,85 @@ const stAt = (word, cls = "") => { const t = stBy(word); return `<div class="st-
 /* Each shopfront: an upper floor, a fascia with the shop's (made-up) name,
    the ground floor, and what's out on the pavement. The names are inked like
    everything else, but they're names, not words to learn. */
-const shopName = (markup, cls = "") => `<div class="st-name ${cls}" lang="ja">${inkHtml(markup)}</div>`;
-const upper = (cls, inner = "") => `<div class="st-upper ${cls}"><i class="st-win"></i><i class="st-win"></i>${inner}</div>`;
+const shopName = (markup, en, cls = "") => `<div class="st-name ${cls}">${kbNameplate(markup, en)}</div>`;
+/* A floor above the shop: its windows (curtained, some lit), maybe a
+   balcony rail or an air-conditioner box. */
+const floor = (cls, n = 2, extra = "") => `<div class="st-floor ${cls}">${[...Array(n)].map((_, i) => `<i class="st-win ${i % 2 ? "lit" : ""}"><b></b></i>`).join("")}${extra}</div>`;
 const STREET_ART = {
   cup: `<svg viewBox="0 0 40 30" class="st-decal" aria-hidden="true"><path d="M6 10 H28 V20 Q28 27 17 27 Q6 27 6 20Z" fill="#F6EEDC"/><path d="M28 13 Q35 13 34 18 Q33 22 28 21" stroke="#F6EEDC" stroke-width="2.4" fill="none"/><path d="M12 7 q2 -3 0 -6 M18 7 q2 -3 0 -6" stroke="#F6EEDC" stroke-width="1.6" fill="none"/></svg>`,
   cross: `<svg viewBox="0 0 30 30" class="st-logo" aria-hidden="true"><circle cx="15" cy="15" r="14" fill="#fff"/><path d="M12 6 H18 V12 H24 V18 H18 V24 H12 V18 H6 V12 H12Z" fill="#E2554B"/></svg>`,
   tanuki: `<svg viewBox="0 0 40 56" class="st-tanuki" aria-hidden="true"><ellipse cx="20" cy="40" rx="15" ry="15" fill="#8C6239"/><ellipse cx="20" cy="43" rx="9" ry="10" fill="#E8D2AE"/><circle cx="20" cy="17" r="12" fill="#8C6239"/><path d="M9 9 l3 -6 l4 5 M31 9 l-3 -6 l-4 5" fill="#6B4226"/><ellipse cx="15" cy="17" rx="4" ry="3" fill="#3A2416"/><ellipse cx="25" cy="17" rx="4" ry="3" fill="#3A2416"/><circle cx="15" cy="16.5" r="1" fill="#fff"/><circle cx="25" cy="16.5" r="1" fill="#fff"/><ellipse cx="20" cy="22" rx="3" ry="2" fill="#3A2416"/><path d="M3 30 q-3 8 4 10" stroke="#5A3A20" stroke-width="3" fill="none"/></svg>`,
   bike: `<svg viewBox="0 0 90 54" class="st-bike" aria-hidden="true"><circle cx="18" cy="38" r="14" fill="none" stroke="#3E4247" stroke-width="3"/><circle cx="72" cy="38" r="14" fill="none" stroke="#3E4247" stroke-width="3"/><path d="M18 38 L36 18 H62 L72 38 M36 18 L46 38 L62 18 M32 12 H42 M62 18 L58 8 H68" stroke="#B5352B" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="58" y="20" width="20" height="10" rx="2" fill="none" stroke="#3E4247" stroke-width="2"/></svg>`,
   plant: `<svg viewBox="0 0 40 60" class="st-plant" aria-hidden="true"><path d="M20 34 q-14 -10 -10 -26 q6 8 10 26 q2 -22 12 -30 q2 16 -12 30 q10 -10 18 -6 q-6 10 -18 6" fill="#5E8C4F"/><path d="M8 34 H32 L28 58 H12Z" fill="#B5694A"/><path d="M8 34 H32 V38 H8Z" fill="#9C5638"/></svg>`,
+  vend: `<div class="st-vend"><div class="st-vend-cans">${["#C8323A", "#2F6FC4", "#3E9A4A", "#F2B33C", "#7A4A2A", "#E8E3D8", "#C8323A", "#2F6FC4"].map(c => `<i style="background:${c}"></i>`).join("")}</div><b></b></div>`,
+  menu: `<div class="st-menuboard">${["#E9C46A", "#D9822B", "#C8323A", "#E9C46A"].map(c => `<i style="--c:${c}"></i>`).join("")}</div>`,
+  ticket: `<div class="st-ticketmachine"><i></i><b></b></div>`,
+  table: `<i class="st-table"></i>`,
 };
 const STREET = {
-  cafe: () => `<div class="st-shop st-cafe">
-    ${upper("brick", `<i class="st-flowers"></i>`)}
-    <div class="st-fascia green">${shopName("{喫茶|きっさ} こもれび", "gold")}</div>
+  /* a two-storey brick corner café: a green awning, a big window onto the tables, a wide glass door */
+  cafe: () => `<div class="st-shop st-cafe" style="--bh:440px">
+    ${floor("brick", 2, `<i class="st-rail"></i>`)}
+    <div class="st-fascia green">${shopName("{喫茶|きっさ} こもれび", "Kissa Komorebi — a café (komorebi: sunlight through leaves)", "gold")}</div>
     <div class="st-front">
-      <div class="st-window lace">${STREET_ART.cup}<span class="st-glass-text">COFFEE · CAKE</span></div>
-      <div class="st-door wood">${stAt("営業中", "on-door")}${stAt("押す", "on-handle")}</div>
-      <div class="st-wallside">${stAt("定休日")}</div>
-      <div class="st-easel">${stAt("営業時間")}<i></i></div>
+      <div class="st-canvas"></div>
+      <div class="st-window lace">${STREET_ART.table}${STREET_ART.table}${STREET_ART.cup}<span class="st-glass-text">COFFEE · CAKE</span></div>
+      <div class="st-door double">${stAt("営業中", "on-door")}<i class="st-pane"></i><i class="st-pane"></i>${stAt("押す", "on-handle")}</div>
+      <div class="st-wallside">${stAt("定休日")}<i class="st-lamp"></i></div>
     </div>
-    <div class="st-curb">${STREET_ART.plant}</div></div>`,
-  ramen: () => `<div class="st-shop st-ramen">
-    ${upper("wood")}
-    <div class="st-fascia wood">${shopName("らーめん たぬき")}</div>
+    <div class="st-curb wide">${STREET_ART.plant}<div class="st-easel">${stAt("営業時間")}<i></i></div></div></div>`,
+  /* a low wooden ramen shop under a tiled roof: noren, lantern, ticket machine, photo menu */
+  ramen: () => `<div class="st-shop st-ramen" style="--bh:330px">
+    <div class="st-tileroof"></div>
+    <div class="st-fascia wood">${shopName("らーめん たぬき", "Rāmen Tanuki — a ramen shop (a tanuki is a raccoon dog)")}</div>
     <div class="st-front">
+      ${STREET_ART.menu}
       <div class="st-door slide"><div class="st-noren red"><span lang="ja">${inkHtml("らーめん")}</span></div>${stAt("準備中", "on-door low")}${stAt("引く", "on-handle")}</div>
-      <div class="st-lantern"><span lang="ja">${inkHtml("らーめん")}</span></div>
-      ${STREET_ART.tanuki}
-    </div></div>`,
-  drug: () => `<div class="st-shop st-drug">
-    <div class="st-upper panel">${STREET_ART.cross}<span lang="ja">${inkHtml("くすり")}</span>${STREET_ART.cross}</div>
-    <div class="st-fascia led">${shopName("ドラッグ はなまる")}<span class="st-sub">DRUG · COSMETICS · FOOD</span></div>
+      <div class="st-sidecol"><div class="st-lantern"><span lang="ja">${inkHtml("らーめん")}</span></div>${STREET_ART.ticket}</div>
+    </div>
+    <div class="st-curb">${STREET_ART.tanuki}</div></div>`,
+  /* a three-storey drugstore: a sign sticking out, packed shelves, sale wagons out front */
+  drug: () => `<div class="st-shop st-drug" style="--bh:560px">
+    <div class="st-sode" lang="ja">${[...furiKana("くすり")].map(c => `<b>${inkKana(c)}</b>`).join("")}</div>
+    ${floor("panel", 3, `<i class="st-ac"></i>`)}${floor("panel", 3, `<i class="st-ac left"></i>`)}
+    <div class="st-fascia led">${STREET_ART.cross}${shopName("ドラッグ はなまる", "Drug Hanamaru — a drugstore (hanamaru: a teacher's flower mark)")}</div>
     <div class="st-front glass">
       <div class="st-shopwin">
-        <div class="st-stock">${[...Array(4)].map(() => `<div class="st-row">${["#E2554B", "#F2B33C", "#5FA7D8", "#7FB15A", "#F2F2F2", "#C46FB0", "#F2B33C", "#5FA7D8"].map(c => `<i style="background:${c}"></i>`).join("")}</div>`).join("")}</div>
+        <div class="st-stock">${[...Array(4)].map(() => `<div class="st-row">${["#E2554B", "#F2B33C", "#5FA7D8", "#7FB15A", "#F2F2F2", "#C46FB0", "#F2B33C", "#5FA7D8", "#E2554B", "#7FB15A"].map(c => `<i style="background:${c}"></i>`).join("")}</div>`).join("")}</div>
         <div class="st-pop-top">${stAt("割引", "pop-hang")}</div>
         <div class="st-till">${stAt("お会計", "hang-top")}<i></i></div>
       </div>
       <div class="st-door auto">${stAt("自動ドア", "on-glass")}${stAt("無料", "on-glass-low")}</div>
     </div>
     <div class="st-curb wide">
+      <i class="st-nobori"><b>SALE</b></i>
       <div class="st-wagon">${stAt("半額", "on-wagon")}<i></i><i></i><i></i></div>
       <div class="st-tp"><i></i><i></i><i></i></div>
       <div class="st-standshelf">${stAt("売り切れ", "on-shelf")}<i></i></div>
       <div class="st-baskets"></div>
     </div></div>`,
-  shut: () => `<div class="st-shop st-shut">
-    ${upper("old", `<i class="st-ac"></i>`)}
-    <div class="st-fascia old">${shopName("{山田|やまだ}{書店|しょてん}")}</div>
-    <div class="st-front"><div class="st-shutter">${stAt("本日休業", "taped")}</div></div>
-    <div class="st-curb">${STREET_ART.bike}</div></div>`,
-  hall: () => `<div class="st-shop st-bldg">
-    <div class="st-upper tile"><i class="st-win wide"></i><i class="st-win wide"></i></div>
-    <div class="st-fascia plate">${shopName("さくらビル")}</div>
+  /* an old two-storey bookshop, shutter down for the day; a vending machine beside it */
+  shut: () => `<div class="st-shop st-shut" style="--bh:400px">
+    ${floor("old", 2, `<i class="st-ac"></i><i class="st-rail wood"></i>`)}
+    <div class="st-fascia old">${shopName("{山田|やまだ}{書店|しょてん}", "Yamada Shoten — Yamada's bookshop")}</div>
+    <div class="st-front"><div class="st-shutter">${stAt("本日休業", "taped")}</div>${STREET_ART.vend}</div>
+    <div class="st-curb left">${STREET_ART.bike}</div></div>`,
+  /* a four-storey office block: glass all the way up, the lobby through the doors */
+  hall: () => `<div class="st-shop st-bldg" style="--bh:620px">
+    ${floor("glass", 4)}${floor("glass", 4)}${floor("glass", 4)}
+    <div class="st-fascia plate">${shopName("さくらビル", "Sakura Building — an office building")}</div>
     <div class="st-front lobby">
       <div class="st-lobby-ceiling">${stAt("お手洗い", "hang-top")}</div>
       <div class="st-wcdoor">${stAt("男", "on-wc")}</div><div class="st-wcdoor">${stAt("女", "on-wc")}</div>
       <div class="st-wallbits">${stAt("禁煙")}${stAt("撮影禁止")}</div>
     </div></div>`,
-  exit: () => `<div class="st-shop st-bldg st-back">
-    <div class="st-upper tile"><i class="st-win wide"></i></div>
-    <div class="st-fascia plate dim"></div>
-    <div class="st-front lobby">
-      <div class="st-booth">${stAt("喫煙所", "on-booth")}<i></i></div>
+  /* down the side of it: the smoking area outside, the emergency exit, the stairs down taped off */
+  exit: () => `<div class="st-shop st-alley" style="--bh:360px">
+    ${floor("tile", 1)}
+    <div class="st-front alley">
+      <div class="st-booth">${stAt("喫煙所", "on-booth")}<i></i><b></b></div>
       <div class="st-exit">${stAt("非常口", "over-door")}<div class="st-door metal"></div></div>
-      <div class="st-stairs"><i></i><i></i><i></i><i></i>${stAt("立入禁止", "on-rope")}</div>
+      <div class="st-stairs down"><i></i><i></i><i></i><i></i>${stAt("立入禁止", "on-rope")}</div>
     </div></div>`,
 };
 function streetDesk() {
@@ -138,7 +152,7 @@ function streetDesk() {
     <div class="kb-walk">
       <button class="kb-walkbtn l" data-act="kb-walk" data-d="-1" aria-label="Walk left">${icon("back")}</button>
       <button class="kb-walkbtn r" data-act="kb-walk" data-d="1" aria-label="Walk right">${icon("chevron")}</button>
-      <div class="kb-strip st-strip" id="kbStrip">${signsSc().walk.shops.map(([shop]) => `<div class="kb-sec">${STREET[shop]()}</div>`).join("")}</div>
+      <div class="kb-strip st-strip" id="kbStrip">${signsSc().walk.shops.map(([shop], i) => `<div class="kb-sec">${i ? `<i class="st-pole"></i>` : ""}${STREET[shop]()}</div>`).join("")}</div>
     </div>
     <div class="st-pavement"></div>
   </div>`;

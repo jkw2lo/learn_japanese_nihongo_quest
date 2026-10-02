@@ -103,7 +103,39 @@ const SCENES = [
       ["ドアが{閉|し}まります。ご{注意|ちゅうい}ください。", "The doors are closing. Please be careful."],
       ["お{忘|わす}れ{物|もの}のないよう、ご{注意|ちゅうい}ください。", "Please make sure you have all your belongings."],
       ["{終点|しゅうてん}です。", "This is the last stop."],
-    ] },
+    ],
+    /* A trip through さくら駅 (js/station-ui.js): where you can buy a ticket
+       to, what it costs, and the train that takes you, from which platform.
+       Platforms 1・2 go one way, 3・4 the other. The words in terms are on
+       the machine, the board and the ticket: inked and spoken, for
+       reference, but not the scene's words. */
+    walk: {
+      home: { to: "さくら", en: "Sakura" },
+      dests: [
+        { to: "{渋谷|しぶや}", en: "Shibuya", fare: 170, kind: "{各駅停車|かくえきていしゃ}", time: "10:27", track: 2 },
+        { to: "{品川|しながわ}", en: "Shinagawa", fare: 250, kind: "{急行|きゅうこう}", time: "10:38", track: 1 },
+        { to: "{新宿|しんじゅく}", en: "Shinjuku", fare: 210, kind: "{各駅停車|かくえきていしゃ}", time: "10:24", track: 4 },
+        { to: "{上野|うえの}", en: "Ueno", fare: 320, kind: "{快速|かいそく}", time: "10:31", track: 3 },
+      ],
+      terms: [
+        ["きっぷ", "Ticket"], ["{大人|おとな}", "Adult"], ["{子供|こども}", "Child"], ["{運賃|うんちん}", "Fare"],
+        ["お{金|かね}を{入|い}れてください", "Please put in your money"], ["きっぷとおつりをお{取|と}りください", "Please take your ticket and change"],
+        ["{取消|とりけし}", "Cancel"], ["{発車|はっしゃ}", "Departures"], ["{時刻|じこく}", "Time"], ["{種別|しゅべつ}", "Type of train"],
+        ["{行先|ゆきさき}", "Destination"], ["{番線|ばんせん}", "Platform (number)"], ["{方面|ほうめん}", "Direction (towards)"],
+        ["{乗車券|じょうしゃけん}", "Ticket (for the ride)"], ["{発売|はつばい}{当日|とうじつ}{限|かぎ}り{有効|ゆうこう}", "Valid on the day of issue only"],
+        ["{次|つぎ}は", "Next (stop)"], ["さくら{駅|えき}", "Sakura Station"],
+        ["{一|いち}・{二番線|にばんせん}", "Platforms 1 and 2"], ["{三|さん}・{四番線|よんばんせん}", "Platforms 3 and 4"],
+        ["{一番線|いちばんせん}", "Platform 1"], ["{二番線|にばんせん}", "Platform 2"], ["{四番線|よんばんせん}", "Platform 4"],
+        ["{周辺|しゅうへん}{地図|ちず}", "Map of the area"], ["{地下鉄|ちかてつ}", "Subway"],
+      ],
+      /* what the speakers say on the way to the platforms */
+      ann: [
+        ["{電車|でんしゃ}がまいります。", "A train is coming in."],
+        ["{駆|か}け{込|こ}み{乗車|じょうしゃ}はおやめください。", "Please don't rush onto the train."],
+        ["{足元|あしもと}にご{注意|ちゅうい}ください。", "Please watch your step."],
+        ["{階段|かいだん}では{立|た}ち{止|ど}まらないでください。", "Please don't stop on the stairs."],
+      ],
+    } },
 
   { id: "signs", jp: "看板", en: "Shop and door signs", look: "sign", style: "shop",
     intro: "Is it open? Push or pull? Where's the toilet? What's half price?",

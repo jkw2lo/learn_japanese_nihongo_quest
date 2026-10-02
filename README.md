@@ -817,6 +817,51 @@ aren't picked up, so the panel is "up close", and Read asks what a sign
   romaji, its meaning, a button to hear it, and a tick once recognised.
   Walked places have it beside the modes; the others under the scene.
 
+### 0.20.0: a trip through the station, stalls and shops like the real thing
+
+- **The station is a trip**, one place to stand at a time, the buttons at
+  the sides to turn (no scrolling). In the street, the stairs down into the
+  subway under the 地下鉄 さくら駅 sign, 入口 on the canopy, 東口 and the
+  area map on a pole. Down the stairs, the lobby's three walls: the ticket
+  machines (tap one for its screen: a station, adult or child, coins in,
+  ticket and change out); the departures board, every word on it tappable,
+  with the exit signs pointing the way they go (西口 left, 北口 ahead, 南口
+  right); the gates, which only open with a ticket. The ticket waits at the
+  bottom right, above the right-hand button, and opens to its front. Behind
+  the gates, two flights of stairs, each under the sign that says which
+  platforms and which way (方面), with their own announcements; the stairs
+  and the sign are separate taps. Each platform is two views, a train each:
+  its type and where it goes on its side, the station's name board, the
+  announcements below. The right train gets a celebration (a hanamaru, the
+  cat cheering, せいかい, petals) and **Go to …**: take a seat, the doors
+  close, the city goes by, and you get off at a station laid out the same
+  under its own name, your ticket used up, with a train back to さくら among
+  the four. The wrong train says only where it goes. Signs stay where they
+  are; errands ask only for signs you can see from where you're standing.
+  Everything else in Japanese (names, the machine, the board, the ticket,
+  announcements) says itself and shows for a moment what it is
+  (`station.walk.terms`, `ann`, and every station's name and next-stop line).
+- **Stalls built like stalls.** A roof on poles with the name big along the
+  valance (or on a signboard over the taller ones), lanterns and bare bulbs
+  hanging under the eaves, someone behind the counter, the counter at
+  waist height with the griddle or grill or pot standing on it beside a
+  bigger display of the food, cloth or boards or wheels below. Ten stalls
+  of four kinds and different heights.
+- **Shopfronts like shops**, at their own heights along one pavement under
+  the wires: a two-storey brick café with a green awning, a wide glass
+  double door and a small brass 押す plate; a low wooden ramen shop under a
+  tiled roof with its noren, lantern, photo menu and ticket machine; a
+  three-storey drugstore with its くすり sign sticking out, packed shelves,
+  a sale wagon and a SALE banner; an old bookshop with a vending machine
+  beside it; a four-storey glass office block with its lobby; the alley
+  down its side. **Every shop's name can be tapped**: it's spoken, and what
+  it is shows for a moment.
+- **A sign's meaning shows for a moment** when you tap it, then goes.
+- **"How is it read?" is in romaji, a syllable at a time**, and the wrong
+  answers are a syllable or two off (de-gu-chi against de-ru-ki, de-zu-chi,
+  do-ge-chi), so it can't be got by elimination. Syllables keep っ with what
+  follows and ー with what it lengthens (`kbSyllables`, `kbNearMisses`).
+
 The rest of the places stay as they are: conversations are for listening
 to, not walking round.
 

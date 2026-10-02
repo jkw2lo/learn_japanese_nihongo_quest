@@ -46,7 +46,9 @@
                                        doesn't take it away, it's only "up close"
      gate()                            before you're in: the door, being seated (the sushi
                                        counter). HTML in place of the walk, or nothing once in
-     enter()                           called on arriving: start the visit at the door */
+     enter()                           called on arriving: start the visit at the door
+     visible(t)                        can it be seen from where you are? (the station) —
+                                       an errand only asks for what is */
 
 const WALKS = {};
 const KB_PHONE = "(max-width: 720px)";
@@ -69,13 +71,61 @@ function kbMark(t, side, w = W()) {
   save();
 }
 
-/* A name question: what it is, or (for a name with kanji) how it's read. */
+/* A name question: what it is, or (for a name with kanji, since the sign
+   shows the kanji) how it's read — in romaji, a syllable at a time, with
+   the wrong answers a syllable or two off, so it can't be got by elimination. */
 function kbNameQuiz(t, peers, what = "What is") {
   const others = shuffle(peers.filter(x => x.id !== t.id && x.en !== t.en)).slice(0, 3);
-  return Math.random() < .5 || !/\{/.test(t.name)
-    ? { side: "name", ask: `${what} <span class="jp" lang="ja">${inkHtml(t.name)}</span>${what === "What is" ? "" : " mean"}?`, opts: shuffle([t, ...others]).map(x => ({ label: esc(x.en), right: x === t })) }
-    : { side: "name", ask: `How is <span class="jp" lang="ja">${esc(furiPlain(t.name))}</span> read?`, ja: true,
-        opts: shuffle([t, ...others]).map(x => ({ label: esc(x.kana), right: x === t })) };
+  if (Math.random() < .5 || !/\{/.test(t.name))
+    return { side: "name", ask: `${what} <span class="jp" lang="ja">${inkHtml(t.name)}</span>${what === "What is" ? "" : " mean"}?`, opts: shuffle([t, ...others]).map(x => ({ label: esc(x.en), right: x === t })) };
+  const right = kbSyllables(t.kana), wrong = kbNearMisses(right, 3);
+  return { side: "name", ask: `How is <span class="jp" lang="ja">${esc(furiPlain(t.name))}</span> read?`, rom: true,
+    opts: shuffle([right, ...wrong]).map(s => ({ label: esc(kbHyphen(s)), right: s === right })) };
+}
+
+/* A word's syllables, as kana: っ goes with what follows it (きっぷ: ki-ppu),
+   ー with what it lengthens. */
+function kbSyllables(kana) {
+  const out = [];
+  kanaUnits(kana).forEach(u => {
+    if (out.length && /^[ーｰ]$/.test(u)) out[out.length - 1] += u;
+    else if (out.length && /[っッ]$/.test(out[out.length - 1])) out[out.length - 1] += u;
+    else out.push(u);
+  });
+  return out;
+}
+const kbHyphen = sylls => sylls.map(s => toRomaji(s)).join("-");
+/* The kana chart, to find a syllable's neighbours: the same row (another
+   vowel) or the same column (another consonant), and a combined sound's
+   other combinations (じょ: じゃ, じゅ, ぞ). */
+const KB_GOJUON = ["あいうえお", "かきくけこ", "さしすせそ", "たちつてと", "なにぬねの", "はひふへほ", "まみむめも", "や゛ゆ゛よ", "らりるれろ", "わ゛゛゛を",
+  "がぎぐげご", "ざじずぜぞ", "だぢづでど", "ばびぶべぼ", "ぱぴぷぺぽ"].map(r => [...r]);
+function kbNeighbour(u) {
+  const kata = /[ァ-ヺ]/.test(u), h = toHira(u), base = h[0], tail = h.slice(1);
+  if (/^[ゃゅょ]$/.test(tail[0] || "")) {
+    const opts = [...["ゃ", "ゅ", "ょ"].filter(y => y !== tail[0]).map(y => base + y + tail.slice(1))];
+    const back = toKata;
+    return opts.map(o => kata ? back(o) : o);
+  }
+  const out = [];
+  KB_GOJUON.forEach((row, r) => { const c = row.indexOf(base); if (c < 0) return;
+    row.forEach((x, cc) => { if (cc !== c && x !== "゛") out.push(x + tail); });
+    KB_GOJUON.forEach((row2, r2) => { if (r2 !== r && row2[c] && row2[c] !== "゛" && Math.abs(r2 - r) <= 2) out.push(row2[c] + tail); });
+  });
+  return out.map(o => kata ? toKata(o) : o);
+}
+function kbNearMisses(right, n) {
+  const key = s => s.join(""), seen = new Set([key(right)]), out = [];
+  for (let tries = 0; out.length < n && tries < 80; tries++) {
+    const s = [...right], changes = right.length > 2 && Math.random() < .35 ? 2 : 1;
+    for (let c = 0; c < changes; c++) {
+      const i = Math.floor(Math.random() * s.length), m = s[i].match(/^([っッ]?)(.*?)([ーｰ]?)$/);
+      const near = kbNeighbour(m[2]);
+      if (near.length) s[i] = m[1] + near[Math.floor(Math.random() * near.length)] + m[3];
+    }
+    if (!seen.has(key(s))) { seen.add(key(s)); out.push(s); }
+  }
+  return out;
 }
 
 /* ---------- shared pieces of a place ---------- */
@@ -90,10 +140,20 @@ const kbTicksHtml = (t, w = W()) => kbTicks(t, w) ? `<span class="kb-ok" title="
 /* A word on a sign, a lantern or a slip of paper: tap to hear it and see what
    it means. It's one of the scene's words, so the scene's quiz covers it. */
 function kbSign(sc, word, cls = "", inner) {
-  const it = sc.all.find(x => x.w === word), key = `${sc.id}:${it.i}`;
-  const open = sceneOpen.has(key);
-  return `<button class="kb-signword ${cls} ${open ? "open" : ""} ${sceneGot(sc.id).has(it.i) ? "known" : ""}" data-act="kb-sign" data-k="${esc(key)}" lang="ja">${inner || inkHtml(it.w)}${
-    open ? `<span class="kb-gloss" lang="en">${esc(it.m)}</span>` : ""}</button>`;
+  const it = sc.all.find(x => x.w === word);
+  return `<button class="kb-signword ${cls} ${sceneGot(sc.id).has(it.i) ? "known" : ""}" data-act="kb-gloss" data-say="${esc(it.kana)}" data-en="${esc(it.m)}" lang="ja">${inner || inkHtml(it.w)}</button>`;
+}
+/* A name on a shop or a station: tap to hear it, and what it is shows for a
+   moment. Not a word to learn, so nothing is kept. */
+const kbNameplate = (markup, en, cls = "") => `<button class="kb-signword kb-nameplate ${cls}" data-act="kb-gloss" data-say="${esc(furiKana(markup))}" data-en="${esc(en)}" lang="ja">${inkHtml(markup)}</button>`;
+/* What a sign means, for a moment: shown under it, gone again after a few seconds. */
+function kbFlashGloss(el, text) {
+  el.querySelector(".kb-gloss")?.remove();
+  clearTimeout(el._gloss);
+  const g = document.createElement("span");
+  g.className = "kb-gloss"; g.lang = "en"; g.textContent = text;
+  el.appendChild(g);
+  el._gloss = setTimeout(() => g.remove(), 2800);
 }
 
 /* ---------- in your hands ---------- */
@@ -117,7 +177,7 @@ function kbHands(w) {
   if (q) {
     const right = q.opts.find(o => o.right);
     foot = `<div class="kb-q"><div class="q-ask">${q.ask}</div>
-      <div class="opts kb-opts">${q.opts.map((o, i) => `<button class="opt ${q.picked == null ? "" : o.right ? "right" : i === q.picked ? "wrong" : ""}" data-act="kb-ans" data-i="${i}" ${q.ja ? 'lang="ja"' : ""} ${q.picked == null ? "" : "disabled"}>${o.label}</button>`).join("")}</div>
+      <div class="opts kb-opts">${q.opts.map((o, i) => `<button class="opt ${q.rom ? "rom" : ""} ${q.picked == null ? "" : o.right ? "right" : i === q.picked ? "wrong" : ""}" data-act="kb-ans" data-i="${i}" ${q.ja ? 'lang="ja"' : ""} ${q.picked == null ? "" : "disabled"}>${o.label}</button>`).join("")}</div>
       ${q.picked == null ? "" : `<div class="verdict ${q.opts[q.picked].right ? "ok" : ""}">${q.opts[q.picked].right ? "Yes!" : `It's <span ${q.ja ? 'lang="ja"' : ""}>${right.label}</span>.`}${q.value ? ` <span lang="ja">${inkHtml(q.value)}</span>` : ""}</div>
         <button class="btn kb-main" data-act="kb-done">${esc(words.put || "Put it back")}</button>`}</div>`;
   } else {
@@ -144,7 +204,7 @@ function kbHands(w) {
 /* ---------- お使い: the errand ---------- */
 
 function kbNewErrand(w = W()) {
-  const pool = shuffle(w.things.filter(t => w.readable(t, "name")));
+  const pool = shuffle(w.things.filter(t => w.readable(t, "name") && (!w.visible || w.visible(t))));
   kb.errand = pool.length < 3 ? { at: w.id, shut: pool.length } : { at: w.id, list: pool.slice(0, 3).map(t => t.id), got: [], msg: "" };
 }
 function kbErrandHtml(w) {
@@ -235,13 +295,7 @@ Object.assign(ACTS, {
   },
   "kb-side": el => { kb.side = el.dataset.s; kbDraw(); },
   "kb-term": el => { const k = el.dataset.k; kb.open.has(k) ? kb.open.delete(k) : kb.open.add(k); say(el.dataset.say); noteActivity(); kbDraw(); },
-  "kb-sign": el => {
-    const [id, i] = el.dataset.k.split(":");
-    say(SCENE_BY[id].all[+i].kana);
-    sceneOpen.has(el.dataset.k) ? sceneOpen.delete(el.dataset.k) : sceneOpen.add(el.dataset.k);
-    noteActivity();
-    kbDraw();
-  },
+  "kb-gloss": el => { say(el.dataset.say); kbFlashGloss(el, el.dataset.en); noteActivity(); },
   "kb-put": () => {
     const w = W(), t = w.by[kb.held], side = kb.mode === "read" && kbNext(t, w);
     if (side) { kb.quiz = w.quiz(t, side); kb.side = side === "back" ? "back" : "front"; }
@@ -252,6 +306,7 @@ Object.assign(ACTS, {
     const q = kb.quiz;
     if (!q || q.picked != null) return;
     q.picked = +el.dataset.i;
+    if (q.rom) say(W().by[kb.held].kana);
     if (q.opts[q.picked].right) kbMark(W().by[kb.held], q.side);
     noteActivity();
     kbDraw();

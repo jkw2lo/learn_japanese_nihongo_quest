@@ -289,71 +289,76 @@ function sushiPhone() {
 /* ---------- the festival ---------- */
 
 const festSc = () => SCENE_BY.festival;
-/* Each stall its own: the kind of stall, its colour, and what it cooks on. */
+/* Each stall its own, the way a festival street has them: what it's built
+   as (a striped awning, a plain tent, a wooden cart, a tall stall under a
+   painted signboard), its colour, how tall, what it cooks on, and whether
+   there's someone behind the counter. */
 const FEST_STALLS = {
-  たこやき: { type: "awning", c: "#C8323A", rig: "griddle", cook: true },
-  やきそば: { type: "tent", c: "#2F5F9E", rig: "teppan" },
-  いかやき: { type: "cart", c: "#6B4226", rig: "grill" },
-  やきとり: { type: "booth", c: "#D9822B", rig: "grill" },
-  おこのみやき: { type: "tent", c: "#3E8A5A", rig: "teppan" },
-  おでん: { type: "cart", c: "#5B3A21", rig: "pot" },
-  わたあめ: { type: "booth", c: "#D46AA0", rig: "floss" },
-  りんごあめ: { type: "awning", c: "#B5352B", rig: "apples" },
-  かきごおり: { type: "booth", c: "#2F8FC4", rig: "ice" },
-  だんご: { type: "awning", c: "#3E8A5A", rig: "grill" },
+  たこやき: { type: "awning", c: "#C8323A", h: 250, rig: "griddle", cook: "cat" },
+  やきそば: { type: "tent", c: "#2F5F9E", h: 236, rig: "teppan", cook: "back" },
+  いかやき: { type: "cart", c: "#6B4226", h: 214, rig: "grill" },
+  やきとり: { type: "board", c: "#D9822B", h: 262, rig: "grill", cook: "back" },
+  おこのみやき: { type: "tent", c: "#3E8A5A", h: 244, rig: "teppan" },
+  おでん: { type: "cart", c: "#5B3A21", h: 220, rig: "pot", cook: "back" },
+  わたあめ: { type: "board", c: "#D46AA0", h: 270, rig: "floss" },
+  りんごあめ: { type: "awning", c: "#B5352B", h: 240, rig: "apples" },
+  かきごおり: { type: "tent", c: "#2F8FC4", h: 232, rig: "ice", cook: "back" },
+  だんご: { type: "awning", c: "#3E8A5A", h: 226, rig: "grill" },
 };
-/* What's behind the counter, 140 × 60. */
+/* What it cooks on, standing on the counter (it's drawn to sit on y = 60). */
 const steam = (x, y) => `<path class="ws-steam" d="M${x} ${y} q-5 -8 0 -15 q5 -7 0 -15" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
 const RIGS = {
-  griddle: `<rect x="14" y="30" width="112" height="22" rx="3" fill="#2A2A2E"/><rect x="18" y="26" width="104" height="8" rx="2" fill="#3A3A40"/>
-    ${[0, 1, 2, 3, 4, 5, 6].map(i => `<circle cx="${28 + i * 14}" cy="31" r="5.2" fill="#B8742F"/><circle cx="${26.5 + i * 14}" cy="29.5" r="1.4" fill="#fff" opacity=".3"/>`).join("")}
-    <rect x="22" y="52" width="6" height="8" fill="#555"/><rect x="112" y="52" width="6" height="8" fill="#555"/>${steam(40, 22)}${steam(90, 22)}`,
-  teppan: `<rect x="8" y="34" width="124" height="14" rx="2" fill="#9AA1A7"/><rect x="8" y="46" width="124" height="6" fill="#6E767D"/>
-    ${[22, 34, 46, 58, 70].map(x => `<path d="M${x} 34 q5 -5 10 0 t10 0 t10 0" stroke="#C98A3E" stroke-width="2" fill="none"/>`).join("")}
-    <rect x="96" y="22" width="4" height="16" fill="#8C6239" transform="rotate(20 98 30)"/><rect x="104" y="30" width="16" height="4" fill="#C9CED2" transform="rotate(20 112 32)"/>
-    <rect x="112" y="20" width="4" height="16" fill="#8C6239" transform="rotate(-15 114 28)"/>${steam(30, 28)}${steam(60, 26)}${steam(84, 28)}`,
-  grill: `<rect x="12" y="34" width="116" height="18" rx="2" fill="#3A3A40"/><rect x="16" y="36" width="108" height="8" fill="#E8692C"/>
-    ${[0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => `<circle cx="${22 + i * 12}" cy="40" r="2.5" fill="#FFB347" opacity=".9"/>`).join("")}
-    ${[0, 1, 2, 3, 4, 5].map(i => `<path d="M${18 + i * 18} 34 L${30 + i * 18} 30" stroke="#C9A877" stroke-width="1.8"/><rect x="${20 + i * 18}" y="27" width="8" height="5" rx="1.5" fill="#8E4B1E" transform="rotate(-18 ${24 + i * 18} 30)"/>`).join("")}
-    <path class="ws-smoke" d="M40 26 q-8 -10 2 -18 q10 -6 2 -16" stroke="#D9D4E6" stroke-width="5" opacity=".35" fill="none" stroke-linecap="round"/>
-    <path class="ws-smoke" d="M96 26 q-8 -10 2 -18 q10 -6 2 -16" stroke="#D9D4E6" stroke-width="5" opacity=".3" fill="none" stroke-linecap="round"/>`,
-  pot: `<rect x="22" y="26" width="96" height="28" rx="3" fill="#B9BEC3"/><rect x="26" y="28" width="88" height="10" fill="#D9A55A"/>
-    <path d="M55 28 V38 M85 28 V38" stroke="#9AA1A7" stroke-width="2"/>
-    <ellipse cx="40" cy="31" rx="7" ry="3.5" fill="#F2E6C4"/><ellipse cx="70" cy="31" rx="5" ry="4" fill="#E9CFA0"/><path d="M92 34 L100 27 L106 34Z" fill="#8E8B86"/>${steam(46, 24)}${steam(76, 22)}${steam(100, 24)}`,
-  floss: `<ellipse cx="70" cy="40" rx="34" ry="10" fill="#C9CED2"/><ellipse cx="70" cy="37" rx="28" ry="7" fill="#F2F4F5"/>
-    <circle cx="62" cy="30" r="9" fill="#F7B7D2"/><circle cx="74" cy="27" r="10" fill="#F7B7D2"/><circle cx="84" cy="32" r="7" fill="#FCD9E7"/>
-    <rect x="66" y="44" width="8" height="12" fill="#9AA1A7"/>`,
-  ice: `<rect x="20" y="14" width="40" height="40" rx="3" fill="#2F8FC4"/><circle cx="40" cy="22" r="8" fill="none" stroke="#E4E8EB" stroke-width="3"/><path d="M48 22 H58" stroke="#E4E8EB" stroke-width="3"/>
-    <rect x="30" y="34" width="20" height="10" fill="#E4F2FA"/>
-    ${[["#D7263D", 78], ["#3E9A4A", 92], ["#2F6FC4", 106], ["#E9B43B", 120]].map(([c, x]) => `<rect x="${x - 5}" y="26" width="10" height="26" rx="2" fill="${c}"/><rect x="${x - 2}" y="20" width="4" height="7" fill="#F2F2F2"/>`).join("")}`,
-  apples: `<rect x="14" y="40" width="112" height="14" rx="2" fill="#F2F4F5" stroke="#D2D7DB"/>
-    ${[0, 1, 2, 3, 4, 5, 6].map(i => `<path d="M${24 + i * 15} 40 V30" stroke="#E9DCC4" stroke-width="1.6"/><circle cx="${24 + i * 15}" cy="25" r="6.5" fill="#C8102E"/><circle cx="${22 + i * 15}" cy="22.5" r="1.8" fill="#fff" opacity=".7"/>`).join("")}`,
+  griddle: `<rect x="10" y="34" width="120" height="16" rx="3" fill="#2A2A2E"/><rect x="14" y="30" width="112" height="8" rx="2" fill="#3A3A40"/><rect x="18" y="50" width="8" height="10" fill="#555"/><rect x="114" y="50" width="8" height="10" fill="#555"/>
+    ${[0, 1, 2, 3, 4, 5, 6].map(i => `<circle cx="${26 + i * 15}" cy="34" r="5.6" fill="#B8742F"/><circle cx="${24.5 + i * 15}" cy="32.5" r="1.4" fill="#fff" opacity=".3"/>`).join("")}${steam(42, 24)}${steam(94, 24)}`,
+  teppan: `<rect x="6" y="40" width="128" height="10" rx="2" fill="#9AA1A7"/><rect x="6" y="50" width="128" height="10" fill="#4E555B"/>
+    ${[18, 32, 46, 60, 74].map(x => `<path d="M${x} 40 q5 -5 10 0 t10 0 t10 0" stroke="#C98A3E" stroke-width="2.2" fill="none"/>`).join("")}
+    <rect x="96" y="24" width="4" height="18" fill="#8C6239" transform="rotate(20 98 33)"/><rect x="102" y="34" width="18" height="4" fill="#C9CED2" transform="rotate(20 111 36)"/>${steam(30, 34)}${steam(62, 32)}`,
+  grill: `<rect x="8" y="42" width="124" height="18" rx="2" fill="#3A3A40"/><rect x="12" y="42" width="116" height="6" fill="#E8692C"/>
+    ${[0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => `<circle cx="${18 + i * 13}" cy="45" r="2.4" fill="#FFB347"/>`).join("")}
+    ${[0, 1, 2, 3, 4, 5].map(i => `<path d="M${14 + i * 19} 42 L${28 + i * 19} 38" stroke="#C9A877" stroke-width="1.8"/><rect x="${16 + i * 19}" y="35" width="9" height="5" rx="1.5" fill="#8E4B1E" transform="rotate(-14 ${20 + i * 19} 38)"/>`).join("")}
+    <path class="ws-smoke" d="M40 32 q-8 -10 2 -18 q10 -6 2 -14" stroke="#E4DFEE" stroke-width="5" opacity=".35" fill="none" stroke-linecap="round"/>
+    <path class="ws-smoke" d="M98 32 q-8 -10 2 -18 q10 -6 2 -14" stroke="#E4DFEE" stroke-width="5" opacity=".3" fill="none" stroke-linecap="round"/>`,
+  pot: `<rect x="20" y="30" width="100" height="30" rx="3" fill="#B9BEC3"/><rect x="24" y="32" width="92" height="10" fill="#D9A55A"/>
+    <path d="M54 32 V42 M86 32 V42" stroke="#9AA1A7" stroke-width="2"/>
+    <ellipse cx="38" cy="35" rx="7" ry="3.5" fill="#F2E6C4"/><ellipse cx="70" cy="35" rx="5" ry="4" fill="#E9CFA0"/><path d="M92 38 L100 31 L106 38Z" fill="#8E8B86"/>${steam(46, 28)}${steam(78, 26)}${steam(102, 28)}`,
+  floss: `<rect x="56" y="44" width="28" height="16" fill="#9AA1A7"/><ellipse cx="70" cy="44" rx="40" ry="10" fill="#C9CED2"/><ellipse cx="70" cy="41" rx="33" ry="7" fill="#F2F4F5"/>
+    <circle cx="62" cy="34" r="9" fill="#F7B7D2"/><circle cx="74" cy="31" r="10" fill="#F7B7D2"/><circle cx="84" cy="36" r="7" fill="#FCD9E7"/>`,
+  ice: `<rect x="14" y="16" width="44" height="44" rx="3" fill="#2F8FC4"/><circle cx="36" cy="24" r="8" fill="none" stroke="#E4E8EB" stroke-width="3"/><path d="M44 24 H56" stroke="#E4E8EB" stroke-width="3"/>
+    <rect x="24" y="40" width="24" height="10" fill="#E4F2FA"/>
+    ${[["#D7263D", 76], ["#3E9A4A", 92], ["#2F6FC4", 108], ["#E9B43B", 124]].map(([c, x]) => `<rect x="${x - 6}" y="32" width="12" height="28" rx="2" fill="${c}"/><rect x="${x - 2}" y="25" width="4" height="8" fill="#F2F2F2"/>`).join("")}`,
+  apples: `<rect x="10" y="46" width="120" height="14" rx="2" fill="#F2F4F5" stroke="#D2D7DB"/>
+    ${[0, 1, 2, 3, 4, 5, 6].map(i => `<path d="M${22 + i * 16} 46 V36" stroke="#E9DCC4" stroke-width="1.6"/><circle cx="${22 + i * 16}" cy="30" r="7" fill="#C8102E"/><circle cx="${20 + i * 16}" cy="27.5" r="2" fill="#fff" opacity=".7"/>`).join("")}`,
 };
-const festLanterns = () => kbSign(festSc(), "おまつり", "ws-lanterns", [...furiKana("おまつり")].map(c => `<span class="ws-lantern">${inkKana(c)}</span>`).join(""));
-/* A string of lanterns, for over a stall and over the street. */
+/* Lanterns on a string: over the street, along a stall's roof. */
 const lanternString = (n, cls = "") => `<div class="ws-lstring ${cls}">${[...Array(n)].map((_, i) => `<i style="--d:${(i % 3) * .4}s"></i>`).join("")}</div>`;
+const festLanterns = () => kbSign(festSc(), "おまつり", "ws-lanterns", [...furiKana("おまつり")].map(c => `<span class="ws-lantern">${inkKana(c)}</span>`).join(""));
+/* Someone behind the counter: the cat at the takoyaki, otherwise a shape in the light. */
+const festCook = k => k === "cat" ? `<div class="fs-cook cat">${neko("gambaru", "ws-cat")}<i class="fs-apron"></i></div>` : k ? `<div class="fs-cook person"><i></i></div>` : "";
 function festStall(t) {
-  const sc = festSc(), S = FEST_STALLS[t.name] || { type: "awning", c: "#C8323A", rig: "grill" }, n = [...t.kana].length;
-  const banner = `<div class="ws-banner printed" lang="ja" style="font-size:${Math.min(24, 118 / n).toFixed(1)}px">${inkHtml(t.name)}</div>`;
-  const top = {
-    awning: `<div class="ws-awning"></div>${banner}`,
-    tent: `<div class="ws-tent"></div>${banner}`,
-    cart: `<div class="ws-cartroof"></div><div class="ws-cartnoren" lang="ja">${[...t.kana].map(c => `<b>${inkKana(c)}</b>`).join("")}</div>`,
-    booth: `<div class="ws-signboard" lang="ja"><span style="font-size:${Math.min(26, 124 / n).toFixed(1)}px">${inkHtml(t.name)}</span></div>`,
+  const sc = festSc(), S = FEST_STALLS[t.name] || { type: "awning", c: "#C8323A", h: 240, rig: "grill" };
+  const name = `<span class="fs-name" lang="ja">${inkHtml(t.name)}</span>`;
+  const head = {
+    awning: `<div class="fs-roof stripes"></div><div class="fs-valance">${name}</div>`,
+    tent: `<div class="fs-roof tent"></div><div class="fs-valance solid">${name}</div>`,
+    cart: `<div class="fs-roof tiles"></div><div class="fs-noren">${[...t.kana].map(c => `<b>${inkKana(c)}</b>`).join("")}</div>`,
+    board: `<div class="fs-board">${name}</div><div class="fs-roof stripes thin"></div>`,
   }[S.type];
-  return `<div class="ws-stall t-${S.type}" style="--awn:${S.c}">
-    ${top}
-    <div class="ws-booth">
-      ${lanternString(5, "under")}
-      <svg class="ws-rig" viewBox="0 0 140 60" aria-hidden="true">${RIGS[S.rig]}</svg>
-      ${S.cook ? `<div class="ws-cook">${neko("gambaru", "ws-cat")}</div>` : ""}
-      ${S.rig === "floss" ? `<div class="ws-bags">${["#F28AB2", "#7EC8E3", "#F7D046", "#9BD38A"].map(c => `<i style="background:${c}"></i>`).join("")}</div>` : ""}
+  return `<div class="fs-stall t-${S.type}" style="--c:${S.c};--h:${S.h}px">
+    ${head}
+    <div class="fs-body">
+      ${lanternString(S.type === "cart" ? 4 : 5, "eaves")}
+      <i class="fs-bulb" style="left:30%"></i><i class="fs-bulb" style="left:70%"></i>
+      ${festCook(S.cook)}
       ${t.flag ? kbSign(sc, t.flag, "ws-flag") : ""}
-      <div class="ws-counter"></div>
-      ${kbProd(t, festPack(t, true))}
-      <div class="ws-price printed">${kbSign(sc, "ひとつ", "ws-hitotsu")}<b>¥${t.price}</b>${kbTicksHtml(t)}</div>
+      <div class="fs-counter">
+        <svg class="fs-rig" viewBox="0 0 140 60" aria-hidden="true">${RIGS[S.rig]}</svg>
+        ${kbProd(t, festPack(t, true))}
+      </div>
+      <div class="fs-front">
+        <div class="ws-price printed">${kbSign(sc, "ひとつ", "ws-hitotsu")}<b>¥${t.price}</b>${kbTicksHtml(t)}</div>
+        ${S.type === "cart" ? `<div class="fs-wheels"><i></i><i></i></div>` : ""}
+      </div>
     </div>
-    ${S.type === "cart" ? `<div class="ws-wheels"><i></i><i></i></div>` : S.type === "tent" ? `<div class="ws-kohaku"></div>` : ""}
   </div>`;
 }
 function festDesk() {
@@ -365,7 +370,7 @@ function festDesk() {
       <button class="kb-walkbtn l" data-act="kb-walk" data-d="-1" aria-label="Walk left">${icon("back")}</button>
       <button class="kb-walkbtn r" data-act="kb-walk" data-d="1" aria-label="Walk right">${icon("chevron")}</button>
       <div class="kb-strip ws-street" id="kbStrip">
-        <div class="kb-sec ws-gate"><div class="ws-torii"><i></i><i></i></div>${festLanterns()}</div>
+        <div class="kb-sec ws-gate"><div class="ws-torii"><i></i><i></i><div class="ws-torii-lanterns">${festLanterns()}</div></div></div>
         ${things.map(t => `<div class="kb-sec">${festStall(t)}</div>`).join("")}
       </div>
     </div>

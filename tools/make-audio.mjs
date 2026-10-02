@@ -97,7 +97,15 @@ function stageBundles() {
      leave a word silent for someone who hasn't reached that stage — ねた
      was, until 0.18.0, because stage 8 had it. */
   const kana = new Set(speakableKana());
-  const talk = sc => { const t = sc.walk?.talk; return t ? [t.party, ...t.parties, t.seat, ...t.seats, t.go, ...t.more].map(([w]) => furiKana(w)) : []; };
+  const talk = sc => {
+    const t = sc.walk?.talk, out = t ? [t.party, ...t.parties, t.seat, ...t.seats, t.go, ...t.more].map(([w]) => furiKana(w)) : [];
+    (sc.walk?.terms || []).forEach(([w]) => out.push(furiKana(w)));
+    (sc.walk?.dests || []).forEach(d => out.push(furiKana(d.to)));
+    (sc.walk?.ann || []).forEach(([w]) => out.push(furiKana(w)));
+    /* every station, by name and as the next stop */
+    if (sc.walk?.home) [sc.walk.home, ...sc.walk.dests].forEach(d => out.push(furiKana(d.to + "{駅|えき}"), furiKana("{次|つぎ}は、" + d.to + "です。")));
+    return out;
+  };
   out['js/audio-scenes.js'] = [...new Set(SCENES.flatMap(sc => [...sc.all.map(x => x.kana), ...(sc.lines || []).map(([w]) => furiKana(w)), ...talk(sc)]))].filter(t => !kana.has(t));
   out['js/audio-konbini.js'] = [...new Set(KONBINI.flatMap(p => [p.name, p.copy, ...p.tags, ...p.back.map(r => r[0])].map(furiKana)))].filter(t => !kana.has(t));
   return out;

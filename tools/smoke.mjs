@@ -59,7 +59,7 @@ const CONTRACT = {
   'js/konbini-ui.js': ['renderKonbini', 'konbiniKey', 'kbPack', 'kbType', 'kbReadable', 'KB_SHAPES', 'KB_DEFS'],
   'js/stalls-ui.js': ['stallThings', 'sushiPack', 'festPack', 'SUSHI', 'FEST', 'SUSHI_PLATES', 'stallFoot'],
   'js/street-ui.js': ['streetThings', 'signPack', 'SIGN_LOOK', 'STREET'],
-  'js/station-ui.js': ['stationThings', 'snPack', 'SN_LOOK', 'STATION', 'SN_ORDER'],
+  'js/station-ui.js': ['stationThings', 'snPack', 'SN_LOOK', 'SN_SEE', 'SN_VIEWS', 'trip', 'snGo', 'routes'],
   'js/menu-ui.js': ['renderMenu', 'renderMenuPage'],
   'js/scenes-ui.js': ['places', 'placeProgress', 'placeOpen', 'placeLevels', 'outWord', 'inkHtml', 'renderOutHome', 'scenePickerHtml', 'renderScene', 'tapSceneItem', 'qScene', 'startSceneQuiz', 'scenePrompt', 'sceneAnswered', 'sceneGot'],
   'js/stats.js': ['MILESTONES', 'checkMilestones', 'medal', 'celebrate', 'milestoneCheckpoint', 'cheerLine', 'comboPill', 'statsTilesHtml', 'minutesChartHtml', 'learnedChartHtml', 'milestonesHtml', 'heroStatsHtml', 'n5Projection', 'weekAccuracy'],
@@ -541,10 +541,21 @@ section('konbini');
     ok(run(`!!SIGN_LOOK["${t.name}"]`), `the sign ${t.name} has no look`);
     ok(run(`STREET["${t.shop}"].toString().includes('"${t.name}"')`), `the ${t.shop} shop doesn't put up ${t.name}`);
   });
-  /* the station: every sign word put up somewhere, with a look; signs stay put */
-  const stn = run('stationThings().map(t => furiPlain(t.name))'), placed = run('SN_ORDER.map(k => STATION[k].toString()).join(" ")');
+  /* the station: every sign word somewhere on the trip, with a look */
+  const stn = run('stationThings().map(t => furiPlain(t.name))'), placed = run('Object.values(SN_SEE).flat()');
   ok(stn.length === run('SCENE_BY.station.items.length'), 'every station sign is a thing to look at');
-  stn.forEach(w => { ok(placed.includes(`"${w}"`), `the station doesn't put up ${w}`); ok(run(`!!SN_LOOK["${w}"]`), `the station sign ${w} has no look`); });
+  stn.forEach(w => { ok(placed.includes(w), `the station doesn't put up ${w} anywhere`); ok(run(`!!SN_LOOK["${w}"]`), `the station sign ${w} has no look`); });
+  /* the trip: every destination has a train, a fare, and a platform one side or the other */
+  run('WALKS.station.enter()');
+  const D = run('SCENE_BY.station.walk.dests');
+  ok(new Set(D.map(d => d.track)).size === D.length, 'one train a platform');
+  D.forEach(d => { ok(stn.includes(d.kind.replace(/\{([^|]+)\|[^}]+\}/g, '$1')), `the train to ${d.to} is a kind the station has a sign for`); ok(d.fare > 0 && d.fare % 10 === 0, `the fare to ${d.to}`); });
+  ok(run('trip.stage') === 'out', 'the trip starts outside');
+  /* every view has its list of what can be seen; away from home, the trains still go to four other places */
+  ok(run('Object.values(SN_VIEWS).flat().every(v => SN_SEE[v])'), 'every view of the station says which signs it shows');
+  run('trip.at = SCENE_BY.station.walk.dests[0].to');
+  ok(run('routes().map(d => d.to).includes(SCENE_BY.station.walk.home.to) && !routes().some(d => d.to === trip.at)'), 'away from さくら, a train goes back there, and none to where you are');
+  run('trip.at = null');
   ok(run('WALKS.signs.stays && WALKS.station.stays && !WALKS.konbini.stays'), 'signs stay where they are; packets are picked up');
   /* the sushi visit starts at the door, and its talk is all there */
   run('WALKS.sushi.enter()');
@@ -769,7 +780,9 @@ section('furigana');
   f.STAGES.forEach(S => strings.push(S.about));
   /* out and about: every sign, line and bubble */
   f.SCENES.forEach(sc => { sc.all.forEach(x => strings.push(x.w)); (sc.lines || []).forEach(([w]) => strings.push(w));
-    const t = sc.walk && sc.walk.talk; if (t) [t.party, ...t.parties, t.seat, ...t.seats, t.go, ...t.more].forEach(([w]) => strings.push(w)); });
+    const t = sc.walk && sc.walk.talk; if (t) [t.party, ...t.parties, t.seat, ...t.seats, t.go, ...t.more].forEach(([w]) => strings.push(w));
+    ((sc.walk && sc.walk.terms) || []).forEach(([w]) => strings.push(w)); ((sc.walk && sc.walk.dests) || []).forEach(d => strings.push(d.to, d.kind));
+    ((sc.walk && sc.walk.ann) || []).forEach(([w]) => strings.push(w)); });
   /* the konbini: every name, slogan, tag and line of every label */
   f.KONBINI.forEach(p => [p.name, p.copy, ...(p.lines || []), ...p.tags, ...p.back.map(r => r[0]), ...p.back.map(r => r[1])].forEach(x => strings.push(x)));
   f.KONBINI_AISLES.forEach(A => strings.push(A.jp));
