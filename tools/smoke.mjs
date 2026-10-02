@@ -782,7 +782,8 @@ section('furigana');
   f.SCENES.forEach(sc => { sc.all.forEach(x => strings.push(x.w)); (sc.lines || []).forEach(([w]) => strings.push(w));
     const t = sc.walk && sc.walk.talk; if (t) [t.party, ...t.parties, t.seat, ...t.seats, t.go, ...t.more].forEach(([w]) => strings.push(w));
     ((sc.walk && sc.walk.terms) || []).forEach(([w]) => strings.push(w)); ((sc.walk && sc.walk.dests) || []).forEach(d => strings.push(d.to, d.kind));
-    ((sc.walk && sc.walk.ann) || []).forEach(([w]) => strings.push(w)); });
+    ((sc.walk && sc.walk.ann) || []).forEach(([w]) => strings.push(w)); ((sc.walk && sc.walk.onboard) || []).forEach(([w]) => strings.push(w));
+    ((sc.walk && sc.walk.ads) || []).forEach(a => strings.push(a.head, a.sub)); });
   /* the konbini: every name, slogan, tag and line of every label */
   f.KONBINI.forEach(p => [p.name, p.copy, ...(p.lines || []), ...p.tags, ...p.back.map(r => r[0]), ...p.back.map(r => r[1])].forEach(x => strings.push(x)));
   f.KONBINI_AISLES.forEach(A => strings.push(A.jp));

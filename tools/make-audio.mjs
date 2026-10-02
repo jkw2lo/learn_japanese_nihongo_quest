@@ -102,8 +102,10 @@ function stageBundles() {
     (sc.walk?.terms || []).forEach(([w]) => out.push(furiKana(w)));
     (sc.walk?.dests || []).forEach(d => out.push(furiKana(d.to)));
     (sc.walk?.ann || []).forEach(([w]) => out.push(furiKana(w)));
+    (sc.walk?.onboard || []).forEach(([w]) => out.push(furiKana(w)));
+    (sc.walk?.ads || []).forEach(a => out.push(furiKana(a.head), furiKana(a.sub)));
     /* every station, by name and as the next stop */
-    if (sc.walk?.home) [sc.walk.home, ...sc.walk.dests].forEach(d => out.push(furiKana(d.to + "{駅|えき}"), furiKana("{次|つぎ}は、" + d.to + "です。")));
+    if (sc.walk?.home) [sc.walk.home, ...sc.walk.dests].forEach(d => out.push(furiKana(d.to + "{駅|えき}"), furiKana("{次|つぎ}は、" + d.to + "です。"), furiKana("まもなく、" + d.to + "です。")));
     return out;
   };
   out['js/audio-scenes.js'] = [...new Set(SCENES.flatMap(sc => [...sc.all.map(x => x.kana), ...(sc.lines || []).map(([w]) => furiKana(w)), ...talk(sc)]))].filter(t => !kana.has(t));

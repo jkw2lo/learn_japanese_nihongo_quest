@@ -94,18 +94,53 @@ function snNav() {
     t3: { r: ["Platform 4", "p34", 1] }, t4: { l: ["Platform 3", "p34", 0] },
   }[snView()] || {};
 }
-const snNavHtml = () => { const n = snNav(); return ["l", "r"].map(s => n[s] ? `<button class="sn-nav ${s}" data-act="sn-nav" data-stage="${n[s][1]}" data-view="${n[s][2]}" data-dir="${s}">
-  <span class="sn-nav-ico">${icon(s === "l" ? "back" : "chevron")}</span><span class="sn-nav-label">${esc(n[s][0])}</span></button>` : "").join(""); };
+const snNavHtml = () => { const n = snNav(); return ["l", "r"].map(s => n[s] ? `<button class="sn-nav ${s}" data-act="sn-nav" data-stage="${n[s][1]}" data-view="${n[s][2]}" data-dir="${s}" aria-label="${esc(n[s][0])}" title="${esc(n[s][0])}">
+  <span class="sn-nav-ico">${icon(s === "l" ? "back" : "chevron")}</span></button>` : "").join(""); };
+
+/* Stairs, drawn in perspective. Down (from the street): treads seen from
+   above, getting smaller and darker as they go, the walls closing in, the
+   rails following them down, light from the landing below. Up (to the
+   platforms): the risers facing you, each with its yellow edge, narrowing
+   to the light at the top. */
+function stairsSvg(dir) {
+  const W = 300, H = dir === "down" ? 190 : 300, n = dir === "down" ? 11 : 14;
+  const top = dir === "down" ? [0, 300] : [96, 204], bot = dir === "down" ? [70, 230] : [0, 300];
+  const lerp = (a, b, t) => a + (b - a) * t;
+  let steps = "";
+  for (let i = 0; i < n; i++) {
+    /* t from the near end (0) to the far end (1); far steps are thinner (perspective) */
+    const t0 = i / n, t1 = (i + 1) / n, ease = t => dir === "down" ? 1 - Math.pow(1 - t, 1.6) : Math.pow(t, 1.35);
+    const near = dir === "down" ? top : bot, far = dir === "down" ? bot : top;
+    const y0 = dir === "down" ? ease(t0) * H : H - ease(t0) * H, y1 = dir === "down" ? ease(t1) * H : H - ease(t1) * H;
+    const l0 = lerp(near[0], far[0], t0), r0 = lerp(near[1], far[1], t0), l1 = lerp(near[0], far[0], t1), r1 = lerp(near[1], far[1], t1);
+    const shade = dir === "down" ? Math.round(205 - t0 * 150) : Math.round(214 - (1 - t0) * 40);
+    const tread = `rgb(${shade},${shade + 4},${shade + 8})`, riser = `rgb(${shade - 38},${shade - 34},${shade - 30})`;
+    const mid = lerp(y0, y1, dir === "down" ? .62 : .3);
+    steps += dir === "down"
+      ? `<path d="M${l0} ${y0} H${r0} L${lerp(r0, r1, .62)} ${mid} H${lerp(l0, l1, .62)}Z" fill="${tread}"/><path d="M${lerp(l0, l1, .62)} ${mid} H${lerp(r0, r1, .62)} L${r1} ${y1} H${l1}Z" fill="${riser}"/><path d="M${l0} ${y0} H${r0}" stroke="#E9C445" stroke-width="${2.4 - t0 * 1.6}"/>`
+      : `<path d="M${l0} ${y0} H${r0} L${lerp(r0, r1, .3)} ${mid} H${lerp(l0, l1, .3)}Z" fill="${riser}"/><path d="M${lerp(l0, l1, .3)} ${mid} H${lerp(r0, r1, .3)} L${r1} ${y1} H${l1}Z" fill="${tread}"/><path d="M${lerp(l0, l1, .3)} ${mid} H${lerp(r0, r1, .3)}" stroke="#E9C445" stroke-width="${1 + t0 * 1.6}"/>`;
+  }
+  const far = dir === "down" ? bot : top, near = dir === "down" ? top : bot, yFar = dir === "down" ? H : 0, yNear = dir === "down" ? 0 : H;
+  const glow = dir === "down"
+    ? `<rect x="${bot[0]}" y="${H - 8}" width="${bot[1] - bot[0]}" height="8" fill="#FFF3C4" opacity=".7"/><defs><linearGradient id="sv-dn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".8" stop-color="#0A0C10" stop-opacity=".55"/><stop offset="1" stop-color="#FFE9A8" stop-opacity=".35"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#sv-dn)"/>`
+    : `<rect x="${top[0]}" y="0" width="${top[1] - top[0]}" height="10" fill="#FFFFFF"/><defs><linearGradient id="sv-up" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity=".45"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#sv-up)"/>`;
+  const rails = `<path d="M${near[0] + 8} ${yNear} L${far[0] + 6} ${yFar}" stroke="#8E959B" stroke-width="5" stroke-linecap="round"/><path d="M${near[1] - 8} ${yNear} L${far[1] - 6} ${yFar}" stroke="#8E959B" stroke-width="5" stroke-linecap="round"/>
+    <path d="M${near[0] + 8} ${yNear} L${far[0] + 6} ${yFar}" stroke="#E9ECEE" stroke-width="1.5" stroke-linecap="round"/><path d="M${near[1] - 8} ${yNear} L${far[1] - 6} ${yFar}" stroke="#E9ECEE" stroke-width="1.5" stroke-linecap="round"/>`;
+  const sidewalls = dir === "down"
+    ? `<path d="M0 0 L${bot[0]} ${H} H0Z" fill="#6E767D"/><path d="M${W} 0 L${bot[1]} ${H} H${W}Z" fill="#5E656B"/>`
+    : `<path d="M0 ${H} L${top[0]} 0 H0Z" fill="#B9C0C5"/><path d="M${W} ${H} L${top[1]} 0 H${W}Z" fill="#A8AFB5"/>`;
+  return `<svg class="sv-stairs-svg ${dir}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${steps}${sidewalls}${glow}${rails}</svg>`;
+}
 
 /* the street: the stairs down into the subway */
 const snStreet = () => `<div class="sv sv-street">
   <div class="sv-skyline">${[[70, 150, "#C9CED6"], [110, 220, "#B9C2CC"], [90, 180, "#D2D6DC"], [130, 260, "#AEB8C3"], [80, 170, "#C6CCD3"]].map(([w, h, c]) => `<i style="width:${w}px;height:${h}px;background:${c}"></i>`).join("")}</div>
   <div class="sv-tree"><i></i><b></b></div>
-  <div class="sv-pole">${snAt("東口", "pole")}<div class="sv-map">${snTerm("{周辺|しゅうへん}{地図|ちず}")}<i></i></div></div>
+  <div class="sv-pole">${snAt("東口", "pole")}<button class="sv-map" data-act="sn-map" aria-label="The route map"><span lang="ja">${inkHtml("{路線図|ろせんず}")}</span>${mapLines()}</button></div>
   <div class="sv-entrance">
     <div class="sv-ent-sign"><span class="sv-logo">M</span>${snTerm("{地下鉄|ちかてつ}")}${snEki(hereSt(), "sv-ent-name")}</div>
     <div class="sv-canopy"><i></i><i></i>${snAt("入口", "on-canopy")}</div>
-    <button class="sv-down" data-act="sn-nav" data-stage="lobby" data-view="0" data-dir="d" aria-label="Go down the stairs"><span class="sv-steps"></span><span class="sv-rail l"></span><span class="sv-rail r"></span></button>
+    <button class="sv-down" data-act="sn-nav" data-stage="lobby" data-view="0" data-dir="d" aria-label="Go down the stairs">${stairsSvg("down")}</button>
   </div>
   <div class="sv-bikes">${STREET_ART.bike}${STREET_ART.bike}</div>
   <div class="sv-pavement"></div>
@@ -151,7 +186,7 @@ function snStairs(pair) {
       <div class="sv-transfer">${pair === "p34" ? snAt("乗り換え", "hang") : ""}</div>
     </div>
     <div class="sv-stairhall">
-      <button class="sv-up" data-act="sn-nav" data-stage="${pair}" data-view="0" data-dir="u" aria-label="Up the stairs to the platforms"><span class="sv-flight"></span><span class="sv-hand l"></span><span class="sv-hand r"></span></button>
+      <button class="sv-up" data-act="sn-nav" data-stage="${pair}" data-view="0" data-dir="u" aria-label="Up the stairs to the platforms">${stairsSvg("up")}</button>
       <div class="sn-speakers"><div class="sn-speaker-head">${icon("speaker")} Announcements</div>${tripData().ann.map(([w, en]) => snSpeaker(w, en)).join("")}</div>
     </div>
     <p class="sn-hint dark">Tap the stairs to go up to the platforms.</p></div>`;
@@ -182,17 +217,66 @@ function snTrack(n) {
     <button class="btn btn-ghost btn-sm sv-downbtn" data-act="sn-nav" data-stage="paid" data-view="${pairOf(n) === "p12" ? 0 : 1}" data-dir="d">↓ Back down the stairs</button></div>`;
 }
 
-/* the ride: a seat, the doors closing, the city going by, and there */
+/* The ride. Inside the carriage: lights along the ceiling, ads hanging and
+   above the windows (three a ride, picked at random), grab poles and straps,
+   the long blue seat with the priority seats at its end, the door with its
+   screen above. Take a seat: the doors close, the platform slides away, the
+   tunnel's lights stream past, the announcements come, and the next
+   station's platform slides in and stops. The doors open. */
+const AD_ART = {
+  chat: `<svg viewBox="0 0 40 30"><path d="M4 4 H26 V18 H12 L6 24 V18 H4Z" fill="#fff"/><path d="M18 10 H36 V24 H34 V28 L29 24 H18Z" fill="#FFE14D"/></svg>`,
+  can: `<svg viewBox="0 0 40 30"><rect x="12" y="3" width="16" height="25" rx="3" fill="#BFF0C8"/><rect x="12" y="10" width="16" height="10" fill="#fff"/></svg>`,
+  onsen: `<svg viewBox="0 0 40 30"><path d="M6 22 Q20 30 34 22 V26 Q20 32 6 26Z" fill="#fff"/><path d="M14 18 q-3 -5 0 -9 q3 -4 0 -8 M20 18 q-3 -5 0 -9 q3 -4 0 -8 M26 18 q-3 -5 0 -9 q3 -4 0 -8" stroke="#fff" stroke-width="2" fill="none"/></svg>`,
+  bowl: `<svg viewBox="0 0 40 30"><path d="M4 12 H36 Q34 28 20 28 Q6 28 4 12Z" fill="#fff"/><path d="M8 12 q4 -4 8 0 t8 0 t8 0" stroke="#F2C94C" stroke-width="2" fill="none"/></svg>`,
+  cross: `<svg viewBox="0 0 40 30"><circle cx="20" cy="15" r="12" fill="#fff"/><path d="M17 7 H23 V12 H28 V18 H23 V23 H17 V18 H12 V12 H17Z" fill="#E2554B"/></svg>`,
+  mountain: `<svg viewBox="0 0 40 30"><path d="M2 28 L14 8 L22 18 L28 10 L38 28Z" fill="#fff"/><circle cx="32" cy="6" r="3" fill="#FFE14D"/></svg>`,
+  cat: `<svg viewBox="0 0 40 30"><path d="M10 26 Q8 12 13 6 L16 10 Q20 8 24 10 L27 6 Q32 12 30 26Z" fill="#fff"/></svg>`,
+  truck: `<svg viewBox="0 0 40 30"><rect x="3" y="8" width="22" height="14" fill="#fff"/><path d="M25 12 H32 L37 17 V22 H25Z" fill="#fff"/><circle cx="10" cy="24" r="3" fill="#2A2E33"/><circle cx="30" cy="24" r="3" fill="#2A2E33"/></svg>`,
+};
+const adHtml = (a, cls) => `<button class="sv-ad ${cls}" style="--ad:${a.bg}" data-act="kb-gloss" data-say="${esc(furiKana(a.head) + "、" + furiKana(a.sub))}" data-en="${esc(a.en)}">
+  <span class="sv-ad-art">${AD_ART[a.art] || ""}</span><span class="sv-ad-head" lang="ja">${inkHtml(a.head)}</span><span class="sv-ad-sub" lang="ja">${inkHtml(a.sub)}</span></button>`;
 function snRide() {
-  const r = trip.ride;
+  const r = trip.ride, ads = r.ads.map(i => tripData().ads[i]);
+  const ob = tripData().onboard;
+  const win = `<i class="sv-rwin"><b class="sv-tunnel"></b><b class="sv-pform from">${kbNameplate(r.from, stEn(r.from), "sv-pf-name")}</b><b class="sv-pform to">${kbNameplate(r.to, stEn(r.to), "sv-pf-name")}</b></i>`;
   return `<div class="sv sv-ride ${r.phase}">
-    <div class="sv-ride-led">${kbNameplate("{次|つぎ}は、" + r.to + "です。", `Next: ${stEn(r.to)}`, "sv-next")}</div>
-    <div class="sv-ride-wins">${[0, 1, 2].map(() => `<i class="sv-rwin"><b class="sv-city"></b></i>`).join("")}</div>
-    <div class="sv-straps">${[0, 1, 2, 3, 4, 5, 6].map(i => `<i style="--i:${i}"></i>`).join("")}</div>
-    <div class="sv-rdoor"><i></i><i></i></div>
-    <div class="sv-seats"><i></i></div>
-    ${r.phase === "board" ? `<button class="btn kb-main sv-ride-btn" data-act="sn-sit">Take a seat</button>`
-      : r.phase === "there" ? `<button class="btn kb-main sv-ride-btn" data-act="sn-off">Get off at <span lang="ja">${inkHtml(r.to)}</span></button>` : ""}</div>`;
+    <div class="sv-ceil"><i></i><i></i><i></i></div>
+    <div class="sv-hangads">${adHtml(ads[0], "hang")}${adHtml(ads[1], "hang")}</div>
+    <div class="sv-straps">${[0, 1, 2, 3, 4, 5, 6, 7].map(i => `<i style="--i:${i}"></i>`).join("")}</div>
+    <div class="sv-carwall">
+      <div class="sv-bay">
+        <div class="sv-topads">${adHtml(ads[2], "top")}</div>
+        <div class="sv-rwins">${win}${win}</div>
+        <div class="sv-bench"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="sv-yusen">${snTerm("{優先席|ゆうせんせき}")}</div>
+      </div>
+      <i class="sv-grab"></i>
+      <div class="sv-doorway">
+        <div class="sv-lcd">${r.phase === "slowing" || r.phase === "there" ? kbNameplate("まもなく、" + r.to + "です。", `Arriving soon: ${stEn(r.to)}`, "sv-lcd-t") : kbNameplate("{次|つぎ}は、" + r.to + "です。", `Next: ${stEn(r.to)}`, "sv-lcd-t")}</div>
+        <div class="sv-door2"><i class="sv-leaf l"><b></b></i><i class="sv-leaf r"><b></b></i>${win.replace("sv-rwin", "sv-rwin behind")}</div>
+        <i class="sv-chime"></i>
+      </div>
+    </div>
+    <div class="sv-carfloor"></div>
+    <div class="sv-ctl">
+      <div class="sn-speakers sv-onboard">${ob.map(([w, en]) => snSpeaker(w, en)).join("")}</div>
+      ${r.phase === "board" ? `<button class="btn kb-main" data-act="sn-sit">Take a seat</button>`
+        : r.phase === "there" ? `<button class="btn kb-main" data-act="sn-off">Get off at <span lang="ja">${inkHtml(r.to)}</span></button>`
+        : `<span class="sv-riding">${r.phase === "slowing" ? "Slowing down…" : "On the way…"}</span>`}
+    </div></div>`;
+}
+
+/* ---------- the route map ----------
+   The five stations on their line: 品川 and 渋谷 one way, 新宿 and 上野 the
+   other, さくら in the middle. Where you are, and what it costs from here. */
+const MAP_ORDER = () => { const D = tripData().dests, by = n => D.find(d => d.track === n).to; return [by(1), by(2), homeSt().to, by(4), by(3)]; };
+const mapLines = () => `<svg viewBox="0 0 100 40" class="sv-map-mini" aria-hidden="true"><path d="M6 20 H94" stroke="#3E9A4A" stroke-width="5"/><path d="M50 20 H94" stroke="#E8762C" stroke-width="5"/>${[6, 28, 50, 72, 94].map(x => `<circle cx="${x}" cy="20" r="4" fill="#fff" stroke="#1E1D1A" stroke-width="1.5"/>`).join("")}</svg>`;
+function snMapWin() {
+  const order = MAP_ORDER(), here = hereSt();
+  return `<div class="sn-map"><div class="sn-map-head">${snTerm("{路線図|ろせんず}")}<small>Tap a station to hear it</small></div>
+    <div class="sn-map-line">${order.map((to, i) => { const d = to === here ? null : destBy(to);
+      return `<div class="sn-map-st ${to === here ? "here" : ""} ${i < 2 ? "w" : i > 2 ? "e" : "c"}"><i></i>${to === here ? `<span class="sn-map-you">${snTerm("{現在地|げんざいち}")}</span>` : ""}${snStation(to, "sn-map-name")}<small>${d ? "¥" + d.fare : ""}</small></div>`; }).join("")}</div>
+    <p class="muted tiny">Fares are from here, for an adult.</p></div>`;
 }
 
 /* ---------- the windows: the machine, the ticket, a note ---------- */
@@ -225,12 +309,12 @@ function snTicketWin() {
 }
 function snWin() {
   if (!trip.modal) return "";
-  const body = trip.modal === "machine" ? snMachine() : trip.modal === "ticket" ? snTicketWin() : trip.msg;
+  const body = trip.modal === "machine" ? snMachine() : trip.modal === "ticket" ? snTicketWin() : trip.modal === "map" ? snMapWin() : trip.msg;
   return `<div class="sn-modal"><div class="sn-modal-box ${trip.modal}">${body}
     ${trip.modal === "found" ? "" : `<button class="btn btn-ghost btn-sm sn-close" data-act="sn-close">${trip.modal === "machine" ? "Step away" : "Close"}</button>`}</div></div>`;
 }
 const snTicketChip = () => trip.ticket && trip.stage !== "out" && trip.stage !== "ride"
-  ? `<button class="sn-ticket chip printed" data-act="sn-ticket" aria-label="Your ticket"><b lang="ja">${inkHtml("きっぷ")}</b><span lang="ja">${inkHtml(trip.ticket.from)} → ${inkHtml(trip.ticket.to)}</span></button>` : "";
+  ? `<button class="sn-ticket chip printed ${trip.fresh ? "fresh" : ""}" data-act="sn-ticket" aria-label="Your ticket"><b lang="ja">${inkHtml("きっぷ")}</b><span lang="ja">${inkHtml(trip.ticket.from)} → ${inkHtml(trip.ticket.to)}</span></button>` : "";
 
 /* ---------- drawn ---------- */
 
@@ -295,10 +379,11 @@ Object.assign(ACTS, {
   "sn-take": () => {
     const d = destBy(trip.dest);
     trip.ticket = { from: hereSt(), to: d.to, who: trip.who, fare: fareFor(d, trip.who) };
-    trip.modal = null; trip.step = "dest"; noteActivity(); kbDraw();
+    trip.modal = null; trip.step = "dest"; trip.fresh = true; noteActivity(); kbDraw(); trip.fresh = false;
   },
   "sn-cancel": el => { say(el.dataset.say); trip.modal = null; trip.step = "dest"; trip.paid = 0; kbDraw(); },
   "sn-ticket": () => { trip.modal = "ticket"; kbDraw(); },
+  "sn-map": () => { trip.modal = "map"; noteActivity(); kbDraw(); },
   "sn-close": () => { trip.modal = null; kbDraw(); },
   "sn-gate": () => {
     if (!trip.ticket) return snNote(`<p class="sn-msg">The gate beeps and its little doors stay shut. You need a ticket first: the machines are under <b lang="ja">${inkHtml("{切符売|きっぷう}り{場|ば}")}</b>.</p>`);
@@ -317,14 +402,21 @@ Object.assign(ACTS, {
     noteActivity();
   },
   "sn-depart": () => {
-    trip.ride = { to: trip.ticket.to, phase: "board", track: routes().find(x => x.to === trip.ticket.to).track };
+    const n = tripData().ads.length, pick = shuffle([...Array(n).keys()]).slice(0, 3);
+    trip.ride = { from: hereSt(), to: trip.ticket.to, phase: "board", ads: pick, track: routes().find(x => x.to === trip.ticket.to).track };
     trip.modal = null; snGo("ride", 0, "r");
   },
   "sn-sit": () => {
-    trip.ride.phase = "closing"; kbDraw();
+    const r = trip.ride, ob = tripData().onboard, still = () => trip.stage === "ride" && trip.ride === r;
+    const at = (ms, f) => setTimeout(() => { if (still()) f(); }, ms);
+    const phase = p => { r.phase = p; kbDraw(); };
+    phase("closing");
     say(furiKana("ドアが{閉|し}まります。ご{注意|ちゅうい}ください。"));
-    setTimeout(() => { if (trip.stage !== "ride") return; trip.ride.phase = "moving"; kbDraw(); say(furiKana("{次|つぎ}は、" + trip.ride.to + "です。")); }, 1600);
-    setTimeout(() => { if (trip.stage !== "ride") return; trip.ride.phase = "there"; kbDraw(); }, 6200);
+    at(2600, () => { phase("moving"); say(furiKana(ob[0][0])); });                                   /* 本日もご乗車… */
+    at(6000, () => say(furiKana("{次|つぎ}は、" + r.to + "です。")));
+    at(8800, () => { phase("slowing"); say(furiKana("まもなく、" + r.to + "です。")); });
+    at(11200, () => say(furiKana(ob[2][0])));                                                      /* 出口は左側です */
+    at(13400, () => phase("there"));
   },
   "sn-off": () => {
     const r = trip.ride;

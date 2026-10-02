@@ -127,6 +127,24 @@ const SCENES = [
         ["{一|いち}・{二番線|にばんせん}", "Platforms 1 and 2"], ["{三|さん}・{四番線|よんばんせん}", "Platforms 3 and 4"],
         ["{一番線|いちばんせん}", "Platform 1"], ["{二番線|にばんせん}", "Platform 2"], ["{四番線|よんばんせん}", "Platform 4"],
         ["{周辺|しゅうへん}{地図|ちず}", "Map of the area"], ["{地下鉄|ちかてつ}", "Subway"],
+        ["{路線図|ろせんず}", "Route map"], ["{現在地|げんざいち}", "You are here"], ["{優先席|ゆうせんせき}", "Priority seats"],
+      ],
+      /* on the train: what's said between stations (まもなく… and 次は… come per station) */
+      onboard: [
+        ["{本日|ほんじつ}もご{乗車|じょうしゃ}ありがとうございます。", "Thank you for riding with us today."],
+        ["{優先席|ゆうせんせき}の{近|ちか}くでは、{携帯電話|けいたいでんわ}をマナーモードにしてください。", "Near the priority seats, please put your phone on silent."],
+        ["{出口|でぐち}は{左側|ひだりがわ}です。", "The doors on the left will open."],
+      ],
+      /* the ads in the carriage: three a ride, chosen at random */
+      ads: [
+        { head: "{英会話|えいかいわ}なら", sub: "ことばの{森|もり}", en: "For English conversation: Kotoba no Mori (the forest of words)", bg: "#2F6FC4", art: "chat" },
+        { head: "メロンソーダ", sub: "{新発売|しんはつばい}", en: "Melon soda — new!", bg: "#2F9E4A", art: "can" },
+        { head: "{温泉|おんせん}で{休|やす}もう", sub: "{箱根|はこね}まで90{分|ぷん}", en: "Let's rest at a hot spring — Hakone in 90 minutes", bg: "#B5694A", art: "onsen" },
+        { head: "らーめん たぬき", sub: "{駅前店|えきまえてん}オープン", en: "Rāmen Tanuki — a new shop by the station", bg: "#B3241B", art: "bowl" },
+        { head: "ドラッグ はなまる", sub: "ポイント2{倍|ばい}", en: "Drug Hanamaru — double points", bg: "#1F8F8A", art: "cross" },
+        { head: "{夏|なつ}は{北海道|ほっかいどう}", sub: "{旅|たび}に{出|で}よう", en: "Summer is Hokkaido — let's go travelling", bg: "#5FA7D8", art: "mountain" },
+        { head: "{映画|えいが}「ねこの{駅|えき}」", sub: "{上映中|じょうえいちゅう}", en: "The film 'Cat Station' — now showing", bg: "#2A2E33", art: "cat" },
+        { head: "{引|ひ}っ{越|こ}しは", sub: "さくら{運送|うんそう}", en: "For moving house: Sakura Transport", bg: "#E9B43B", art: "truck" },
       ],
       /* what the speakers say on the way to the platforms */
       ann: [

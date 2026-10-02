@@ -841,6 +841,20 @@ aren't picked up, so the panel is "up close", and Read asks what a sign
   Everything else in Japanese (names, the machine, the board, the ticket,
   announcements) says itself and shows for a moment what it is
   (`station.walk.terms`, `ann`, and every station's name and next-stop line).
+- **0.21.0, the ride and the stairs.** Both flights of stairs are drawn
+  (`stairsSvg`): treads and risers in perspective, yellow edges, rails, the
+  walls closing in, light from the far end. The route map (路線図) on the
+  street opens the line's five stations, 現在地 where you are, the fare to
+  each. On the train: ceiling lights, two ads hanging and one above the
+  windows (three of eight, picked at random each ride: `walk.ads`, every
+  one tappable), straps and a grab pole, the blue seat with the priority
+  seats (優先席) at its end, the door with its screen and a blinking chime.
+  Take a seat and the doors slide shut, the platform slides away, the
+  tunnel's lights stream past, and the announcements come in turn (ドアが
+  閉まります, 本日もご乗車…, 次は…, まもなく…, 出口は左側です) until the next
+  platform slides in and stops and the doors open. The buttons sit in a bar
+  of their own, so nothing moves under the pointer. The ticket pops in once,
+  when it's bought; the side buttons have no labels.
 - **Stalls built like stalls.** A roof on poles with the name big along the
   valance (or on a signboard over the taller ones), lanterns and bare bulbs
   hanging under the eaves, someone behind the counter, the counter at

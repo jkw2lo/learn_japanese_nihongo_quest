@@ -78,6 +78,8 @@ Build order. Each step should run end to end before the next one starts.
    (machine, ticket, timetable, gates, stairs, the right train); yatai built
    like yatai; shopfronts at their own heights with names you can hear;
    meanings that fade; readings asked in romaji with near misses.
+9i. ~~The ride~~ (0.21.0): stairs drawn in perspective; the route map; a
+   carriage with ads (random), seats, doors, a tunnel, and announcements.
 10. **More recognition practice at N5**: more scenes (a train ticket, a
    bento label, a konbini's shelf tags, a clinic), a "spot the kanji you
    know" mode over the scenes, and scenes in Sprint.
