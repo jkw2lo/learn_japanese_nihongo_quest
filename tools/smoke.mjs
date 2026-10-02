@@ -55,7 +55,9 @@ const CONTRACT = {
   'js/grammar-ui.js': ['renderGrammar'],
   'js/data/scenes.js': ['SCENES', 'SCENE_BY', 'receiptSums'],
   'js/data/konbini.js': ['KONBINI', 'KONBINI_BY', 'KONBINI_AISLES', 'KONBINI_SHAPES', 'konbiniItems'],
-  'js/konbini-ui.js': ['renderKonbini', 'konbiniKey', 'kbReset', 'kbPack', 'kbType', 'kbNext', 'kbReadable', 'KB_SHAPES'],
+  'js/walk-ui.js': ['WALKS', 'renderWalk', 'walkKey', 'kbReset', 'kbDraw', 'kbNext', 'kbHas', 'kbMark', 'kbProd', 'kbSign', 'kbNameQuiz', 'kbTicksHtml', 'kbPhone'],
+  'js/konbini-ui.js': ['renderKonbini', 'konbiniKey', 'kbPack', 'kbType', 'kbReadable', 'KB_SHAPES', 'KB_DEFS'],
+  'js/stalls-ui.js': ['stallThings', 'sushiPack', 'festPack', 'SUSHI', 'FEST', 'SUSHI_PLATES'],
   'js/scenes-ui.js': ['places', 'placeProgress', 'placeOpen', 'placeLevels', 'outWord', 'inkHtml', 'renderOutHome', 'scenePickerHtml', 'renderScene', 'tapSceneItem', 'qScene', 'startSceneQuiz', 'scenePrompt', 'sceneAnswered', 'sceneGot'],
   'js/stats.js': ['MILESTONES', 'checkMilestones', 'medal', 'celebrate', 'milestoneCheckpoint', 'cheerLine', 'comboPill', 'statsTilesHtml', 'minutesChartHtml', 'learnedChartHtml', 'milestonesHtml', 'heroStatsHtml', 'n5Projection', 'weekAccuracy'],
   'js/book-ui.js': ['BOOK_PENS', 'BOOK_NIBS', 'BOOK_GRIDS', 'BOOK_CAP', 'renderBook', 'bookKey', 'bookAll', 'bookReplaceAll', 'pageSvg', 'inkG', 'strokePath'],
@@ -473,7 +475,7 @@ section('konbini');
   const run = code => vm.runInContext(code, s);
   vm.runInContext(['js/data/menu.js', 'js/data/scenes.js', 'js/data/konbini.js'].map(read).join('\n') +
     ';var ACTS = {}; var esc = t => String(t); var icon = () => ""; var knowsKanji = ch => isLearned("k:" + ch);\n' +
-    read('js/scenes-ui.js') + '\n' + read('js/konbini-ui.js'), s);
+    read('js/scenes-ui.js') + '\n' + ['js/walk-ui.js', 'js/konbini-ui.js', 'js/stalls-ui.js'].map(read).join('\n'), s);
   run('load()');
   const P = run('KONBINI.map(p => ({ ...p }))');
   const ids = P.map(p => p.id);
@@ -505,14 +507,33 @@ section('konbini');
   /* each side quizzes once it can be sounded out, never before the name, in order */
   ok(run('!kbReadable(KONBINI_BY.tuna, "name")'), 'nothing is readable on day one');
   run('KANA.forEach(e => learn(e.k))');
-  ok(run('kbNext(KONBINI_BY.tuna)') === 'name', 'the name comes first');
+  ok(run('kbNext(KONBINI_BY.tuna, WALKS.konbini)') === 'name', 'the name comes first');
   run('state.scenes.konbini = { got: [KONBINI_BY.tuna.i], copy: [], back: [] }');
-  ok(run('kbNext(KONBINI_BY.tuna)') === 'copy', 'then the slogan');
+  ok(run('kbNext(KONBINI_BY.tuna, WALKS.konbini)') === 'copy', 'then the slogan');
   run('state.scenes.konbini.copy = [KONBINI_BY.tuna.i]');
-  ok(run('kbNext(KONBINI_BY.tuna)') === 'back', 'then the back');
+  ok(run('kbNext(KONBINI_BY.tuna, WALKS.konbini)') === 'back', 'then the back');
   ok(run('placeLevels(placeBy("konbini")).list[1].note').startsWith('1 of'), 'names read count towards 分, as every place\'s do');
   run('state.items = {}; ["さ","け"].forEach(k => learn(k))');
   ok(run('kbReadable(KONBINI_BY.sake, "name") && !kbReadable(KONBINI_BY.tuna, "name")'), 'a name is readable when its kana are, kanji or not');
+
+  /* the sushi counter and the festival, walked: their things are their own words */
+  for (const id of ['sushi', 'festival']) {
+    const T = run(`stallThings(SCENE_BY.${id}).map(t => ({ ...t }))`), words = run(`SCENE_BY.${id}.all.map(x => x.w)`);
+    ok(T.length >= 6, `${id}: needs at least six things to pick up`);
+    ok(new Set(T.map(t => t.name)).size === T.length, `${id}: a word is on two things`);
+    T.forEach(t => {
+      ok(words[t.i] === t.name, `${id}: ${t.name} isn't its scene's word ${t.i}`);
+      ok(Number.isInteger(t.price) && t.price > 0, `${id}: ${t.name} has no price`);
+      ok(run(`!!(${id === 'sushi' ? 'SUSHI' : 'FEST'})["${t.name}"]`), `${id}: ${t.name} has no drawing`);
+      if (t.flag) ok(words.includes(t.flag), `${id}: the flag ${t.flag} isn't one of the scene's words`);
+    });
+    ok(run(`WALKS.${id}.sides.join()`) === 'name', `${id}: a plate or a dish has its name to read`);
+  }
+  ok(run('Object.keys(SCENE_BY.sushi.walk.plates).every(k => SUSHI_PLATES[k])'), 'every plate colour is drawn');
+  run('state.items = {}; KANA.forEach(e => learn(e.k)); state.scenes.sushi = { got: [] }');
+  const maguro = run('stallThings(SCENE_BY.sushi).find(t => t.name === "まぐろ").id');
+  run(`kbMark(SCENE_BY.sushi._by["${maguro}"], "name", WALKS.sushi)`);
+  ok(run('sceneGot("sushi").has(SCENE_BY.sushi.all.findIndex(x => x.w === "まぐろ"))'), 'a plate read is its word recognised, as the scene\'s quiz would count it');
 }
 
 section('patterns');

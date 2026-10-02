@@ -1445,6 +1445,85 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 .kb-ps, .kb-hint { display: none; }
 
 
+/* ---------- the sushi counter and the festival stalls, walked (js/stalls-ui.js) ---------- */
+
+.kb-signword { position: relative; border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; }
+.kb-signword .kb-gloss { position: absolute; left: 50%; top: calc(100% + 4px); transform: translateX(-50%); z-index: 6; white-space: nowrap;
+  background: #1E1D1A; color: #FBFAF6; font: 500 .72rem var(--f-body); padding: 3px 8px; border-radius: 6px; pointer-events: none; }
+.kb-signword.known::after { content: ""; position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: #3D7A57; box-shadow: 0 0 0 1.5px #fff; }
+
+/* sushi: plates on the belt */
+.ws-plate { position: relative; width: 96px; height: 76px; color: #1E1D1A; }
+.ws-plate svg { position: absolute; left: 0; top: 0; width: 96px; height: 60px; overflow: visible; }
+.ws-card { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); background: #FFFEF8; border: 1px solid #CFC7B6; border-radius: 2px;
+  padding: 1px 6px; font: 700 10.5px/1.25 var(--f-ja); white-space: nowrap; box-shadow: 0 1px 2px rgba(0, 0, 0, .15); }
+.ws-sushi { background: linear-gradient(#EBDDC3, #E3D2B3 58%, #CDB894); }
+.ws-sushi .kb-strip { padding-top: 18px; gap: 0; align-items: stretch; }
+.ws-door { justify-content: flex-end; padding: 0 28px 0 8px; }
+.ws-noren { display: block; }
+.ws-noren-cloth { display: flex; gap: 3px; }
+.ws-noren-cloth b { width: 42px; height: 96px; background: linear-gradient(#2A3A5C, #1E2A44); color: #F4EEDF; display: flex; justify-content: center; padding-top: 18px;
+  font: 700 1.6rem var(--f-ja-serif); border-radius: 0 0 3px 3px; box-shadow: inset 0 6px 0 #6B4A2B, 0 3px 6px rgba(0, 0, 0, .2); }
+.ws-noren-cloth b .ink-no { opacity: .35; }
+.ws-doorway { width: 132px; height: 120px; margin-top: -4px; background: linear-gradient(#3B2B1D, #241A11); border-radius: 2px 2px 0 0; }
+.ws-counter { padding-right: 24px; align-items: stretch; }
+.ws-wall { display: flex; gap: 22px; align-items: flex-end; padding: 0 18px 12px; }
+.ws-board { display: flex; gap: 10px; background: #5B3A21; border: 3px solid #3E2714; border-radius: 4px; padding: 7px 10px; color: #FBEBD3; font: 700 .78rem var(--f-body); }
+.ws-board span { display: flex; align-items: center; gap: 5px; }
+.ws-board i, .ws-dot { display: inline-block; width: 18px; height: 9px; border-radius: 50%; border: 2px solid; vertical-align: -1px; }
+.ws-dot { width: 12px; height: 7px; border-width: 0; }
+.ws-case { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.ws-case-glass { display: flex; gap: 4px; padding: 8px 10px; border-radius: 6px 6px 2px 2px; background: linear-gradient(160deg, rgba(255, 255, 255, .75), rgba(214, 232, 240, .55)); border: 2px solid #B9C6CC; }
+.ws-case-glass i { width: 16px; height: 9px; border-radius: 2px; }
+.ws-case-label, .ws-tag { background: #FFFEF8; color: #1E1D1A; border: 1px solid #CFC7B6; border-radius: 2px; padding: 0 6px; font: 700 .82rem var(--f-ja); }
+.ws-belt { display: flex; gap: 8px; padding: 10px 14px 8px; border-radius: 8px;
+  background: repeating-linear-gradient(90deg, #C9CED2 0 22px, #BCC2C7 22px 24px); box-shadow: inset 0 3px 0 #E4E8EB, inset 0 -4px 0 #9AA1A7, 0 2px 0 #7D858C; }
+.ws-slot { position: relative; display: flex; justify-content: center; width: 104px; }
+.ws-tick { position: absolute; right: 6px; top: -4px; }
+.ws-bench { display: flex; gap: 26px; align-items: center; padding: 12px 18px 14px; margin-top: 8px; border-radius: 0 0 6px 6px; background: linear-gradient(#B98D5A, #9C7344); }
+.ws-wasabi, .ws-slipsign { display: flex; align-items: center; gap: 6px; }
+.ws-slipsign small { color: #F6EAD6; font: 500 .7rem var(--f-body); }
+.ws-dish { width: 34px; height: 14px; border-radius: 50%; background: #F3F0E8; border: 1px solid #D2CCBE; display: grid; place-items: center; }
+.ws-dish i { width: 12px; height: 7px; border-radius: 50%; background: #8DB255; }
+.ws-tea { width: 22px; height: 26px; border-radius: 3px 3px 7px 7px; background: linear-gradient(90deg, #6C7A5A, #8A9A74, #5E6B4E); }
+
+/* the festival: a summer night, lanterns, a street of stalls */
+.ws-night { background: linear-gradient(#141B33, #2A2446 55%, #3A2C3E); border-color: #2A2446; }
+.ws-street { padding-top: 70px; gap: 18px; align-items: flex-end; position: relative; }
+.ws-ground { height: 22px; background: linear-gradient(#4A3A35, #3A2D29); }
+.ws-gate { justify-content: flex-end; padding-bottom: 40px; }
+.ws-lanterns { display: flex; gap: 10px; }
+.ws-lantern { width: 34px; height: 44px; border-radius: 45%; display: grid; place-items: center; font: 700 1.2rem var(--f-ja-serif); color: #3A0C08;
+  background: radial-gradient(ellipse at 50% 45%, #FFD9A0, #F08A3C 55%, #C8323A); box-shadow: 0 0 18px 4px rgba(255, 160, 80, .45);
+  border-top: 4px solid #2B1A12; border-bottom: 4px solid #2B1A12; }
+.ws-lantern .ink-no { opacity: .3; }
+.ws-lanterns .kb-gloss { top: calc(100% + 8px); }
+.ws-stall { width: 156px; display: flex; flex-direction: column; align-items: center; color: #1E1D1A; }
+.ws-awning { width: 100%; height: 26px; border-radius: 4px 4px 0 0;
+  background: repeating-linear-gradient(90deg, var(--awn) 0 19.5px, #FBF6EC 19.5px 39px); position: relative;
+  -webkit-mask: radial-gradient(circle 10px at 50% 100%, #0000 98%, #000) 50% 100% / 19.5px 100% repeat-x; mask: radial-gradient(circle 10px at 50% 100%, #0000 98%, #000) 50% 100% / 19.5px 100% repeat-x; }
+.ws-banner { width: 92%; margin-top: -2px; background: #FFF6E0; color: #B3241B; font-weight: 900; font-family: var(--f-ja); text-align: center;
+  padding: 4px 4px 3px; border: 2px solid #5A3A1E; border-radius: 2px; box-shadow: 0 2px 6px rgba(0, 0, 0, .35); letter-spacing: .04em; white-space: nowrap; }
+.ws-banner .ink-no { opacity: .25; }
+.ws-booth { position: relative; width: 92%; height: 128px; margin-top: 6px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+  background: linear-gradient(90deg, #6B4A2B 0 5px, rgba(255, 220, 160, .14) 5px calc(100% - 5px), #6B4A2B calc(100% - 5px)); border-bottom: 14px solid #8C6239; }
+.ws-booth::before { content: ""; position: absolute; inset: 0 5px auto; height: 60%; background: radial-gradient(ellipse at 50% 0, rgba(255, 214, 140, .45), transparent 70%); pointer-events: none; }
+.ws-booth .kb-prod { margin-bottom: 4px; }
+.ws-booth .ws-food.bare { transform: scale(1.35); transform-origin: bottom center; }
+.ws-food { position: relative; width: 72px; height: 56px; }
+.ws-food svg { width: 72px; height: 56px; overflow: visible; }
+.ws-food:not(.bare) { height: 74px; }
+.ws-slip { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); background: #FFF6E0; color: #B3241B; border: 1px solid #C9A877; border-radius: 2px;
+  padding: 0 6px; font: 900 10.5px/1.35 var(--f-ja); white-space: nowrap; }
+.ws-price { position: absolute; right: -8px; top: 6px; background: #FFFEF8; border: 1px solid #CFC7B6; border-radius: 2px; padding: 2px 6px; font: .72rem/1.25 var(--f-ja);
+  display: flex; flex-direction: column; align-items: center; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transform: rotate(4deg); }
+.ws-price b { font: 700 .78rem var(--f-body); }
+.ws-hitotsu { font-weight: 700; }
+.ws-flag { position: absolute; left: -6px; top: 4px; background: #F7D14A; color: #8E1C14; border: 1px solid #8E1C14; font: 700 .72rem var(--f-ja); padding: 1px 5px; transform: rotate(-6deg); }
+.kb-big.s-plate { transform: scale(2.4); }
+.kb-big.s-food { transform: scale(2.6); }
+.ws-signs, .ws-phone-lanterns { display: none; }
+
 /* ============================================================
    PHONE LAYER
 
@@ -1870,4 +1949,15 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
   .kb-hold { height: 290px; }
   .kb-row .btn, .kb-main { min-height: 52px; }
   .kb-opts .opt { min-height: 64px; font-size: 1rem; }
+
+  /* the sushi counter and the festival, on a phone: one long belt, one long street */
+  .ws-signs { display: flex; align-items: center; }
+  .ws-signs .ws-noren-cloth b { width: 26px; height: 44px; padding-top: 6px; font-size: 1rem; }
+  .ws-sushi .ws-board { margin: 8px 12px 0; justify-content: center; }
+  .ws-belt-ps { background: linear-gradient(transparent calc(100% - 66px), #BCC2C7 calc(100% - 66px), #9AA1A7 calc(100% - 60px), #F7D96A calc(100% - 60px), #E9C445 100%); }
+  .ws-phone-lanterns { display: flex; justify-content: center; padding: 14px 0 4px; }
+  .ws-street-ps { background: none; }
+  .ws-stall-slot { height: 360px; flex-basis: 74%; }
+  .ws-stall-slot .kb-zoom { transform-origin: bottom center; }
+  .ws-night .kb-hint { color: #CFC6DA; }
 }

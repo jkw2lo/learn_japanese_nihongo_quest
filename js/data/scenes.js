@@ -15,6 +15,10 @@
      intro              one line on what you're looking at
      items              [markup, meaning, who?] — who is "you" or "them" in a chat
      quiz               extra questions: [ask, answer, wrong, wrong, wrong]
+     walk               for a place you walk round rather than look at
+                        (js/stalls-ui.js): which of its words are things to
+                        pick up — a plate on the belt, a dish at a stall —
+                        and what they cost; the rest are signs in the scene
 
    Every string is furigana markup; readings show until their kanji are
    learned, the same as everywhere else. Everything is recorded
@@ -31,7 +35,14 @@ const SCENES = [
       ["かに", "Crab"], ["ねた", "The topping (a sushi-counter word)"], ["おあいそ", "The bill, please (a sushi-counter word)"],
       ["ほたて", "Scallop"], ["あかみ", "Lean tuna"], ["いくら", "Salmon roe"], ["とろ", "Fatty tuna"],
       ["いなり", "Rice in fried tofu"], ["まぐろ", "Tuna"], ["たまご", "Sweet egg omelette"], ["わさび", "Wasabi"],
-    ] },
+    ],
+    /* A conveyor-belt counter: what comes round on a plate, and the plate's
+       colour, which is its price (the board on the wall says so). The rest
+       are signs: the curtain (すし), the topping case (ねた), the dish by
+       your seat (わさび), and what you say at the end (おあいそ). */
+    walk: { plates: { white: 120, blue: 180, red: 260, gold: 380 },
+      things: [["たまご", "white"], ["いか", "white"], ["たこ", "white"], ["いなり", "white"], ["さけ", "blue"], ["まぐろ", "blue"],
+               ["ほたて", "blue"], ["あかみ", "blue"], ["かに", "red"], ["いくら", "red"], ["うに", "gold"], ["とろ", "gold"]] } },
 
   { id: "sento", jp: "ゆ", en: "At the public bath", look: "sign", style: "sento",
     intro: "A curtain with ゆ — hot water — marks a bath. Men's and women's sides are marked too, and so are the taps.",
@@ -50,7 +61,12 @@ const SCENES = [
       ["おこのみやき", "Savoury pancake"], ["やきそば", "Fried noodles"], ["わたあめ", "Candy floss"],
       ["かきごおり", "Shaved ice"], ["りんごあめ", "Candy apple"], ["おでん", "Simmered hotpot"], ["だんご", "Rice dumplings"],
       ["ひとつ", "One (of them)"], ["あまい", "Sweet"], ["からい", "Spicy"],
-    ] },
+    ],
+    /* A street of stalls, each under its hand-painted banner: the dish, its
+       price for one (ひとつ), and a flag where it's sweet or spicy. The
+       lanterns overhead spell おまつり. */
+    walk: { things: [["たこやき", 500], ["やきそば", 500, "からい"], ["いかやき", 600], ["やきとり", 300], ["おこのみやき", 600],
+                     ["おでん", 400], ["わたあめ", 500, "あまい"], ["りんごあめ", 400, "あまい"], ["かきごおり", 400], ["だんご", 300]] } },
 
   { id: "station", jp: "駅", en: "At the station", look: "sign", style: "station",
     intro: "The signs you'll follow and the announcements you'll hear on every train trip.",

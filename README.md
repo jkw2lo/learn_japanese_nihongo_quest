@@ -662,9 +662,9 @@ order.
 
 | Scene | Drawn as | What's in it |
 |---|---|---|
-| すし At the sushi counter | indigo curtain plates | すし, いか, たこ, うに, かに, ねた, おあいそ, まぐろ, わさび |
+| すし At the sushi counter | walked: a conveyor belt (below) | すし, いか, たこ, うに, かに, ねた, おあいそ, まぐろ, わさび |
 | ゆ At the public bath | red curtain plates | ゆ, おとこ, おんな, おゆ / みず, あつい, ぬるい, おけ, ゆかた |
-| 屋台 Festival stalls | yellow banners, red lettering | おまつり, たこやき, やきとり, わたあめ, かきごおり, りんごあめ |
+| 屋台 Festival stalls | walked: a night street of stalls (below) | おまつり, たこやき, やきとり, わたあめ, かきごおり, りんごあめ |
 | 駅 At the station | blue station plates, then announcements | 出口, 改札, 乗り換え, the exits, 各駅停車 / 快速 / 急行; まもなく…, 黄色い線…, 次は… |
 | 看板 Shop and door signs | wooden shop plates | 営業中 / 準備中, 押す / 引く, お手洗い, 禁煙, 割引, 半額, 売り切れ |
 | 道路 Road signs | road signs; 止まれ is the red triangle | 止まれ, 徐行, 一方通行, 通行止め, 横断歩道 |
@@ -737,6 +737,37 @@ the words are the ones on real packets.
 
 Still to come: the cat at the register (いらっしゃいませ, 温めますか, the
 total said aloud), the hot case (おでん, 肉まん), bento.
+
+### Walked: the sushi counter and the festival stalls
+
+The konbini's way of looking round — walk along, pick things up, read
+them — is an engine (`js/walk-ui.js`) that any place can plug into
+(`WALKS[id]`: what it has, how it's drawn, which sides it has to read).
+Two of the hiragana places use it too (`js/stalls-ui.js`), so the first
+thing a learner can walk round is a fortnight in, not the end of katakana.
+
+- **すし, a conveyor-belt counter.** Twelve plates come round, two pieces
+  each, drawn (nigiri, gunkan, inari, tamago with its nori belt), each with
+  a card in front saying what it is. A plate's colour is its price, and the
+  board on the wall says which. The curtain over the door (すし), the
+  topping case (ねた), the wasabi by your seat and おあいそ are signs: tap
+  to hear one and see what it means.
+- **屋台, a summer-night street.** Ten stalls, each under its striped
+  awning and hand-painted banner, with the dish on the counter, a card with
+  its price for one (ひとつ), and a flag where it's sweet or spicy (あまい,
+  からい). The lanterns overhead spell おまつり.
+- **The same words, the same record.** What you pick up is one of the
+  scene's own words, so reading it there is that word recognised in
+  `state.scenes`, exactly as the scene's quiz counts it; old progress
+  carries over. A plate or a dish has one side to read, its name. The
+  quiz on every word (signs included) is still there, under the walk.
+- **Errands**: three plates off the belt and the bill (and how to ask for
+  it: おあいそ); three things from the stalls and what you spent.
+- **Phone**: one long belt, a plate a screen; one long street, a stall a
+  screen. The signs sit above.
+
+The rest of the places stay as they are: signs and announcements are for
+looking at, not walking round.
 
 ---
 
@@ -1187,7 +1218,9 @@ you like.
     js/data/scenes.js       out and about: station, signs, road, receipt, shop, chats
     js/scenes-ui.js         drawing the scenes, and their quizzes
     js/data/konbini.js      the convenience store: 36 products, their packets front and back
-    js/konbini-ui.js        the convenience store: drawing the packages, the shelves, the modes
+    js/walk-ui.js           places you walk round: the modes, what's in your hands, the errand, the phone sheet
+    js/konbini-ui.js        the convenience store: drawing the packages and the shelves
+    js/stalls-ui.js         the sushi counter and the festival stalls, walked: plates, dishes, banners
     js/audio-konbini.js     generated clips for the convenience store
     design/                 mockups, for looking at — not loaded by the app
     js/sync.js              optional sync: Google sign-in, one Firestore document

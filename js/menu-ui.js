@@ -53,9 +53,9 @@ function renderMenu() {
   if (!menuId || !placeBy(menuId)) { el.innerHTML = renderOutHome(); return; }
   /* a visit to an open place clears its "new" */
   if (placeOpen(menuId) && !asList(state.outSeen).includes(menuId)) { state.outSeen = [...asList(state.outSeen), menuId]; save(); }
-  /* the convenience store, which you walk round (js/konbini-ui.js) */
-  if (menuId === "konbini" && typeof renderKonbini === "function") {
-    el.innerHTML = `<div class="ob-head"><div class="eyebrow">街 · Out and about</div></div>${scenePickerHtml()}${renderKonbini()}`;
+  /* a place you walk round: the konbini, the sushi counter, the festival (js/walk-ui.js) */
+  if (typeof WALKS !== "undefined" && WALKS[menuId]) {
+    el.innerHTML = `<div class="ob-head"><div class="eyebrow">街 · Out and about</div></div>${scenePickerHtml()}${renderWalk(menuId)}`;
     return;
   }
   /* one of the out-and-about scenes, rather than a menu */

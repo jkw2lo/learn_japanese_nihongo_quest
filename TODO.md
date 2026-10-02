@@ -64,6 +64,9 @@ Build order. Each step should run end to end before the next one starts.
 9d. ~~コンビニ, the convenience store~~ (0.16.0): 36 products in four aisles,
    drawn packages in ink, Browse / Read / Errand, its own phone layout.
    Next: the cat at the register, the hot case (おでん, 肉まん), bento.
+9e. ~~Walked: すし and 屋台~~ (0.17.0): the konbini's engine split out
+   (js/walk-ui.js); the sushi counter as a belt of plates, the festival as a
+   night street of stalls, on the scenes' own words and records.
 10. **More recognition practice at N5**: more scenes (a train ticket, a
    bento label, a konbini's shelf tags, a clinic), a "spot the kanji you
    know" mode over the scenes, and scenes in Sprint.

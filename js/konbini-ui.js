@@ -1,52 +1,22 @@
 /* Nihongo Quest — コンビニ, the convenience store (data: js/data/konbini.js).
 
-   A place in Out and about you walk round. Every package is drawn here,
-   in SVG, with the words on it in HTML on top so they take the ink: a
-   product's name fills in as its kana are learned.
+   A place you walk round (the engine: js/walk-ui.js). Every package is
+   drawn here, in SVG, with the words on it in HTML on top so they take the
+   ink: a product's name fills in as its kana are learned. A packet has
+   three sides to read, in order: 名 its name, 表 the slogan on the front,
+   裏 the label on the back. What's been read is state.scenes.konbini: got,
+   copy and back.
 
-   Three modes:
-     見る Browse   pick anything up, turn it over, tap a word to hear it
-     読む Read     putting something back asks one question about it, and
-                  each package goes deeper: 名 its name, then 表 the
-                  slogan on the front, then 裏 the label on the back —
-                  each once you can sound it out
-     お使い Errand  a friend's list, in Japanese, of three things you can
-                  read; find them, then the receipt
+   A desktop walks along a wall of cabinets — the cooler, the warmer, the
+   chiller, the sweets shelf, the register. A phone gets one long shelf, a
+   product a screen, big enough to read the packet. */
 
-   What's been read is kept in state.scenes.konbini: got (names, which the
-   place's levels count, as every place's do), copy and back. Like every
-   place it never touches the review schedule.
-
-   The desktop and the phone are drawn separately. A desktop walks along a
-   wall of cabinets — the cooler, the warmer, the chiller, the sweets
-   shelf, the register — with what's in your hands beside it. A phone gets
-   one long shelf, a product a screen, big enough to read the packet, and
-   what's in your hands comes up as a sheet. The phone's styles live only
-   in the PHONE LAYER of css/app.css. */
-
-const KB_PHONE = "(max-width: 720px)";
-const kbPhone = () => matchMedia(KB_PHONE).matches;
-const kb = { mode: "browse", held: null, side: "front", open: new Set(), quiz: null, errand: null, flash: null, list: false };
-
-/* ---------- what's been read, and what can be ---------- */
-
-const kbRec = () => state.scenes.konbini || (state.scenes.konbini = { got: [], copy: [], back: [] });
-const kbHas = (p, side) => asList(kbRec()[side === "name" ? "got" : side]).includes(p.i);
-const kbSound = s => soundable(furiKana(s));
 /* Each side quizzes once it can be sounded out, and never before the name. */
 function kbReadable(p, side) {
   if (!kbSound(p.name)) return false;
   if (side === "copy") return kbSound(p.copy);
   if (side === "back") return p.back.every(r => kbSound(r[0]));
   return true;
-}
-const kbNext = p => ["name", "copy", "back"].find(s => !kbHas(p, s) && kbReadable(p, s));
-const kbTicks = p => ["name", "copy", "back"].filter(s => kbHas(p, s)).length;
-function kbMark(p, side) {
-  const r = kbRec(), k = side === "name" ? "got" : side;
-  r[k] = asList(r[k]);
-  if (!r[k].includes(p.i)) r[k].push(p.i);
-  save();
 }
 
 /* ---------- drawing the packages ----------
@@ -216,11 +186,6 @@ function kbPack(p) {
 
 /* ---------- the shelves ---------- */
 
-function kbProd(p, inner) {
-  const cls = [kb.held === p.id ? "gone" : "", kbSound(p.name) ? "readable" : "", kb.flash === p.id ? "wrong" : ""].join(" ");
-  return `<button class="kb-prod ${cls}" data-act="kb-pick" data-id="${p.id}" aria-label="${esc(p.en)}">${inner || kbPack(p)}</button>`;
-}
-const kbTicksHtml = p => kbTicks(p) ? `<span class="kb-ok" title="${kbTicks(p)} of 3 read">${"✓".repeat(kbTicks(p))}</span>` : "";
 /* A shelf tag: the name on its own line (two where the package breaks it), the price under it. */
 function kbTag(p, width) {
   const one = kbEms(p.name) * 9.5 <= width - 6;
@@ -295,193 +260,46 @@ function kbStorePhone() {
   </div>`;
 }
 
-/* ---------- in your hands ---------- */
+/* ---------- the place ---------- */
 
-function kbTerms(p) {
-  const front = [[p.name, p.en, "Name"], [p.copy, p.copyEn, "Front"], ...p.tags.map((t, i) => [t, p.tagsEn[i], "Tag"])];
-  const back = p.back.map(r => [r[0], `${r[2]}: ${furiPlain(r[1])}`, "Back"]);
-  return (kb.side === "front" ? front : back).map(([w, en, side], i) => {
-    const k = `${p.id}:${kb.side}:${i}`;
-    return `<button class="kb-term ${kb.open.has(k) ? "open" : ""}" data-act="kb-term" data-k="${esc(k)}" data-say="${esc(furiKana(w))}">
-      <span class="jp" lang="ja">${inkHtml(w)}</span><span class="side">${side}</span><span class="en">${esc(en)}</span></button>`;
-  }).join("");
-}
-
-function kbQuiz(p, side) {
-  if (side === "name") {
-    const others = shuffle(KONBINI.filter(x => x.id !== p.id && x.aisle === p.aisle)).slice(0, 3);
-    return Math.random() < .5 || !/\{/.test(p.name)
-      ? { side, ask: `What is <span class="jp" lang="ja">${inkHtml(p.name)}</span>?`, opts: shuffle([p, ...others]).map(x => ({ label: esc(x.en), right: x === p })) }
-      : { side, ask: `How is <span class="jp" lang="ja">${esc(furiPlain(p.name))}</span> read?`, ja: true,
-          opts: shuffle([p, ...others]).map(x => ({ label: esc(x.kana), right: x === p })) };
-  }
-  if (side === "copy") {
-    const [ask, right, ...wrong] = p.cq;
-    return { side, ask: esc(ask), opts: shuffle([right, ...wrong]).map(x => ({ label: esc(x), right: x === right })) };
-  }
-  const row = p.back[Math.floor(Math.random() * p.back.length)];
-  const rows = shuffle([row, ...shuffle(p.back.filter(r => r !== row)).slice(0, 3)]);
-  return { side, ask: `Turn it over. Which line tells you <b>${esc(row[3])}</b>?`, ja: true, value: row[1],
-    opts: rows.map(r => ({ label: inkHtml(r[0]), right: r === row })) };
-}
-
-function kbHands() {
-  const grab = `<div class="kb-grab"></div>`;
-  if (!kb.held && kb.mode === "errand") return grab + kbErrandHtml();
-  if (!kb.held) return `${grab}<h3>In your hands</h3><p class="kb-empty">${kb.mode === "read"
-    ? "Pick something up. Putting it back asks you one thing about it, and each package goes deeper: its name, then what the front says, then the label on the back."
-    : "Walk along the shelves and pick anything up. Turn it over, and tap a word to hear it and see what it means."}</p>`;
-  const p = KONBINI_BY[kb.held], q = kb.quiz;
-  const kana = [...kanaUnits(kanaOnly(p.kana))], have = kana.filter(isLearned).length;
-  const stamps = [["name", "名", "its name"], ["copy", "表", "the front"], ["back", "裏", "the back"]]
-    .map(([s, j, en]) => `<span class="kb-st ${kbHas(p, s) ? "done" : ""}" lang="ja" title="${kbHas(p, s) ? "Read" : "Not yet"}: ${en}">${j}</span>`).join("");
-  const backside = `<div class="kb-back printed" lang="ja"><div class="bh">${inkHtml("{原材料|げんざいりょう}・{成分|せいぶん}")}</div>
+WALKS.konbini = {
+  id: "konbini", eyebrow: "コンビニ", title: "The convenience store", bundle: "konbini",
+  lede: "Walk the shelves at コンビニ さくら. Pick anything up, turn it over, tap a word to hear it. Every packet fills in as you learn its kana.",
+  get things() { return KONBINI; }, get by() { return KONBINI_BY; },
+  sides: ["name", "copy", "back"],
+  stamps: [["name", "名", "its name"], ["copy", "表", "what the front says"], ["back", "裏", "the label on the back"]],
+  readable: kbReadable,
+  peers: p => KONBINI.filter(x => x.aisle === p.aisle),
+  quiz(p, side) {
+    if (side === "name") return kbNameQuiz(p, this.peers(p));
+    if (side === "copy") {
+      const [ask, right, ...wrong] = p.cq;
+      return { side, ask: esc(ask), opts: shuffle([right, ...wrong]).map(x => ({ label: esc(x), right: x === right })) };
+    }
+    const row = p.back[Math.floor(Math.random() * p.back.length)];
+    const rows = shuffle([row, ...shuffle(p.back.filter(r => r !== row)).slice(0, 3)]);
+    return { side, ask: `Turn it over. Which line tells you <b>${esc(row[3])}</b>?`, ja: true, value: row[1],
+      opts: rows.map(r => ({ label: inkHtml(r[0]), right: r === row })) };
+  },
+  terms: (p, view) => view === "back"
+    ? p.back.map(r => [r[0], `${r[2]}: ${furiPlain(r[1])}`, "Back"])
+    : [[p.name, p.en, "Name"], [p.copy, p.copyEn, "Front"], ...p.tags.map((t, i) => [t, p.tagsEn[i], "Tag"])],
+  back: p => `<div class="kb-back printed" lang="ja"><div class="bh">${inkHtml("{原材料|げんざいりょう}・{成分|せいぶん}")}</div>
     <table>${p.back.map(r => `<tr><td>${inkHtml(r[0])}</td><td>${inkHtml(r[1])}</td></tr>`).join("")}
-    <tr><td>${inkHtml("{価格|かかく}（{税込|ぜいこみ}）")}</td><td>¥${p.price}</td></tr></table></div>`;
-  let foot;
-  if (q) {
-    const right = q.opts.find(o => o.right);
-    foot = `<div class="kb-q"><div class="q-ask">${q.ask}</div>
-      <div class="opts kb-opts">${q.opts.map((o, i) => `<button class="opt ${q.picked == null ? "" : o.right ? "right" : i === q.picked ? "wrong" : ""}" data-act="kb-ans" data-i="${i}" ${q.ja ? 'lang="ja"' : ""} ${q.picked == null ? "" : "disabled"}>${o.label}</button>`).join("")}</div>
-      ${q.picked == null ? "" : `<div class="verdict ${q.opts[q.picked].right ? "ok" : ""}">${q.opts[q.picked].right ? "Yes!" : `It's <span ${q.ja ? 'lang="ja"' : ""}>${right.label}</span>.`}${q.value ? ` <span lang="ja">${inkHtml(q.value)}</span>` : ""}</div>
-        <button class="btn kb-main" data-act="kb-done">Put it back</button>`}</div>`;
-  } else {
-    const side = kbNext(p);
-    const note = kb.mode === "errand" ? `<p class="kb-note">On the list? Put it in the basket.</p>`
-      : kb.mode === "browse" ? ""
-      : !kbSound(p.name) ? `<p class="kb-note">Just looking: you can sound out ${have} of ${kana.length} kana in its name. Its questions wait until you can read it all.</p>`
-      : side ? `<p class="kb-note good">You can read this. Putting it back asks about <b>${{ name: "its name", copy: "what the front says", back: "the label on the back" }[side]}</b>.</p>`
-      : `<p class="kb-note good">You've read all you can on this one${kbHas(p, "back") ? "." : ". The back opens once you can sound out its labels."}</p>`;
-    foot = `${note}<div class="kb-row">${kb.mode === "errand"
-      ? `<button class="btn kb-main" data-act="kb-basket">Put in the basket</button><button class="btn btn-ghost" data-act="kb-put">Put it back</button>`
-      : `<button class="btn kb-main" data-act="kb-put">Put it back</button>`}</div>`;
-  }
-  return `${grab}<div class="kb-hhead"><h3>In your hands</h3><div class="kb-stamps">${stamps}</div></div>
-    <div class="kb-hold">${kb.side === "back" ? backside : `<div class="kb-big s-${p.shape}">${kbPack(p)}</div>`}</div>
-    <div class="kb-sides"><div class="seg seg-sm">
-      <button data-act="kb-side" data-s="front" class="${kb.side === "front" ? "on" : ""}" ${q ? "disabled" : ""}><span lang="ja">表</span> Front</button>
-      <button data-act="kb-side" data-s="back" class="${kb.side === "back" ? "on" : ""}" ${q ? "disabled" : ""}><span lang="ja">裏</span> Back</button></div>
-      <button class="btn btn-ghost btn-sm" data-act="say" data-say="${esc(p.kana)}">${icon("speaker")} Hear it</button></div>
-    ${q ? "" : `<div class="kb-terms">${kbTerms(p)}</div>`}
-    ${foot}`;
-}
-
-/* ---------- お使い: the errand ---------- */
-
-function kbNewErrand() {
-  const pool = shuffle(KONBINI.filter(p => kbSound(p.name)));
-  kb.errand = pool.length < 3 ? { shut: pool.length } : { list: pool.slice(0, 3).map(p => p.id), got: [], msg: "" };
-}
-function kbErrandHtml() {
-  const e = kb.errand;
-  if (e.shut != null) return `<h3>お使い · Errand</h3><p class="kb-empty">Errands only ask for things you can read. You can read ${e.shut} name${e.shut === 1 ? "" : "s"} here so far; a list needs three. Keep going with kana and come back.</p>`;
-  if (e.got.length === e.list.length) {
-    const items = e.list.map(id => KONBINI_BY[id]), total = items.reduce((t, p) => t + p.price, 0);
-    return `<h3>At the register</h3>
-      <div class="paper-receipt kb-receipt" lang="ja"><div class="pr-store">コンビニ さくら</div>
-        ${items.map(p => `<div class="pr-row"><span>${inkHtml(p.name)}</span><span>¥${p.price}</span></div>`).join("")}
-        <div class="pr-rule"></div><div class="pr-row big"><span>${inkHtml("{合計|ごうけい}")}（${inkHtml("{税込|ぜいこ}み")}）</span><span>¥${total}</span></div></div>
-      ${numbersKnown() ? `<p class="rc-say" lang="ja">${esc(numberKana(total))}えん</p>` : ""}
-      <p class="kb-note good">All three found.</p>
-      <button class="btn kb-main" data-act="kb-errand">Another list</button>`;
-  }
-  return `<h3>お使い · Errand</h3>
-    <div class="kb-list"><div class="eyebrow">Your friend's list</div><ul>${e.list.map(id =>
-      `<li class="${e.got.includes(id) ? "got" : ""}" lang="ja">${inkHtml(KONBINI_BY[id].name)}</li>`).join("")}</ul></div>
-    <p class="kb-empty">Find each one on the shelves. The list is in Japanese: reading it is the game.</p>
-    ${e.msg ? `<p class="kb-note">${e.msg}</p>` : ""}`;
-}
-
-/* ---------- the page ---------- */
-
-function renderKonbini() {
-  loadBundle("konbini");
-  const pl = placeBy("konbini"), open = placeOpen("konbini"), phone = kbPhone();
-  const up = kb.held || (phone && kb.mode === "errand" && kb.list);
-  const hint = { browse: "Just look. Nothing is tested.", read: "Putting something back asks you about it.", errand: "Find what's on the list." }[kb.mode];
-  return `${KB_DEFS}<section class="card scene kb">
-    <div class="scene-head"><div>
-      <div class="eyebrow">コンビニ · Out and about</div>
-      <h1>The convenience store</h1>
-      <p class="lede">Walk the shelves at コンビニ さくら. Pick anything up, turn it over, tap a word to hear it. Every packet fills in as you learn its kana.</p>
-      ${inkKeyHtml(KONBINI.map(p => p.name))}
-    </div>
-    <div class="scene-score">${ring(placeGot(pl) / pl.items.length, 56, 6)}<span>${placeGot(pl)}<small>/${pl.items.length}</small></span><small>read</small></div></div>
-    ${open ? levelsHtml(pl) : placeShutHtml(pl)}
-    <div class="kb-modes"><div class="seg">
-      <button data-act="kb-mode" data-m="browse" class="${kb.mode === "browse" ? "on" : ""}"><span lang="ja">見る</span> Browse</button>
-      <button data-act="kb-mode" data-m="read" class="${kb.mode === "read" ? "on" : ""}"><span lang="ja">読む</span> Read</button>
-      <button data-act="kb-mode" data-m="errand" class="${kb.mode === "errand" ? "on" : ""}"><span lang="ja">お使い</span> Errand</button></div>
-      <span class="muted small">${hint}</span>
-      <span class="muted tiny kb-dotkey"><i></i> under a product: you can read its name</span></div>
-    <div class="kb-body">${phone ? kbStorePhone() : kbStoreDesk()}
-      <aside class="kb-hands ${up ? "up" : ""}">${kbHands()}</aside></div>
-    ${phone && kb.mode === "errand" && !kb.held ? `<button class="btn cta" data-act="kb-list">${kb.list ? "Back to the shelf" : "Show the list"}</button>` : ""}
-  </section>`;
-}
-
-/* Re-render where you stand: the shelf keeps its place. */
-function kbDraw() {
-  const x = $("#kbStrip")?.scrollLeft || 0;
-  renderMenu();
-  const s = $("#kbStrip");
-  if (s) { s.style.scrollBehavior = "auto"; s.scrollLeft = x; s.style.scrollBehavior = ""; }
-}
-
-/* Leaving the store puts down whatever you were holding. */
-function kbReset() { kb.held = null; kb.quiz = null; kb.list = false; kb.flash = null; }
-
-/* The arrow keys walk the aisle on a desktop; Escape puts a packet back. */
-function konbiniKey(e) {
-  if (view !== "menu" || menuId !== "konbini" || kbPhone() || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return false;
-  if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
-    $("#kbStrip")?.scrollBy({ left: (e.key === "ArrowLeft" ? -1 : 1) * 280, behavior: "smooth" });
-    e.preventDefault();
-    return true;
-  }
-  if (e.key === "Escape" && kb.held && !kb.quiz) { kbReset(); kbDraw(); return true; }
-  return false;
-}
-
-/* A desktop window narrowed to a phone's width (or the other way) gets the other layout. */
-if (typeof matchMedia === "function") matchMedia(KB_PHONE).addEventListener?.("change", () => { if (view === "menu" && menuId === "konbini") kbDraw(); });
-
-Object.assign(ACTS, {
-  "kb-pick": el => {
-    if (kb.quiz && kb.quiz.picked == null) return;          /* answer first */
-    kb.held = el.dataset.id; kb.side = "front"; kb.quiz = null; kb.flash = null;
-    say(KONBINI_BY[kb.held].kana);
-    noteActivity();
-    kbDraw();
+    <tr><td>${inkHtml("{価格|かかく}（{税込|ぜいこみ}）")}</td><td>¥${p.price}</td></tr></table></div>`,
+  pack: kbPack,
+  big: p => "s-" + p.shape,
+  desk: kbStoreDesk,
+  phone: kbStorePhone,
+  receipt: (items, total) => `<div class="paper-receipt kb-receipt" lang="ja"><div class="pr-store">コンビニ さくら</div>
+    ${items.map(p => `<div class="pr-row"><span>${inkHtml(p.name)}</span><span>¥${p.price}</span></div>`).join("")}
+    <div class="pr-rule"></div><div class="pr-row big"><span>${inkHtml("{合計|ごうけい}")}（${inkHtml("{税込|ぜいこ}み")}）</span><span>¥${total}</span></div></div>`,
+  words: {
+    read: "Pick something up. Putting it back asks you one thing about it, and each packet goes deeper: its name, then what the front says, then the label on the back.",
+    browse: "Walk along the shelves and pick anything up. Turn it over, and tap a word to hear it and see what it means.",
+    dot: "under a product: you can read its name", basket: "Put in the basket", list: "Your friend's list",
+    find: "Find each one on the shelves.", foundTitle: "At the register", later: "The back opens once you can sound out its labels.",
   },
-  "kb-side": el => { kb.side = el.dataset.s; kbDraw(); },
-  "kb-term": el => { const k = el.dataset.k; kb.open.has(k) ? kb.open.delete(k) : kb.open.add(k); say(el.dataset.say); noteActivity(); kbDraw(); },
-  "kb-put": () => {
-    const p = KONBINI_BY[kb.held], side = kb.mode === "read" && kbNext(p);
-    if (side) { kb.quiz = kbQuiz(p, side); kb.side = side === "back" ? "back" : "front"; }
-    else kbReset();
-    kbDraw();
-  },
-  "kb-ans": el => {
-    const q = kb.quiz;
-    if (!q || q.picked != null) return;
-    q.picked = +el.dataset.i;
-    if (q.opts[q.picked].right) kbMark(KONBINI_BY[kb.held], q.side);
-    noteActivity();
-    kbDraw();
-  },
-  "kb-done": () => { kbReset(); kbDraw(); },
-  "kb-mode": el => { kb.mode = el.dataset.m; kbReset(); if (kb.mode === "errand") kbNewErrand(); kbDraw(); },
-  "kb-basket": () => {
-    const e = kb.errand, p = KONBINI_BY[kb.held];
-    if (e.list.includes(p.id) && !e.got.includes(p.id)) { e.got.push(p.id); e.msg = ""; if (e.got.length === e.list.length) kb.list = true; }
-    else { e.msg = `That's <span lang="ja">${inkHtml(p.name)}</span>, ${esc(p.en.toLowerCase())}. It isn't on the list.`; kb.flash = p.id; kb.list = true; }
-    kb.held = null;
-    noteActivity();
-    kbDraw();
-  },
-  "kb-errand": () => { kbNewErrand(); kb.list = false; kbDraw(); },
-  "kb-list": () => { kb.list = !kb.list; kbDraw(); },
-  "kb-jump": el => { $("#" + el.dataset.to)?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" }); },
-  "kb-walk": el => { const s = $("#kbStrip"); s?.scrollBy({ left: el.dataset.d * s.clientWidth * .6, behavior: "smooth" }); },
-});
+};
+const renderKonbini = () => renderWalk("konbini");
+const konbiniKey = e => walkKey(e);
