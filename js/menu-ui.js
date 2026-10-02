@@ -48,7 +48,16 @@ function menuCardHtml() {
   </section>`;
 }
 
+/* Every re-render rebuilds the strip of places above a place; keep it
+   scrolled where it was, or picking a place far along it snaps it back to
+   the start. */
 function renderMenu() {
+  const x = $(".scene-strip")?.scrollLeft || 0;
+  renderMenuPage();
+  const strip = $(".scene-strip");
+  if (strip && x) strip.scrollLeft = x;
+}
+function renderMenuPage() {
   const el = $("#v-menu");
   if (!menuId || !placeBy(menuId)) { el.innerHTML = renderOutHome(); return; }
   /* a visit to an open place clears its "new" */
@@ -210,7 +219,7 @@ function startMenuGame() {
 /* Tier-2 dishes are recorded with the word stages. */
 Object.assign(ACTS, {
   mi: el => tapItem(el.dataset.k),
-  "menu-pick": el => { menuId = el.dataset.id; game = null; if (typeof kbReset === "function") kbReset(); renderMenu(); scrollTo(0, 0); },
+  "menu-pick": el => { if (typeof kb !== "undefined" && el.dataset.id !== menuId) kb.at = null; menuId = el.dataset.id; game = null; if (typeof kbReset === "function") kbReset(); renderMenu(); scrollTo(0, 0); },
   "menu-game": () => startMenuGame(),
   "menu-quit": () => { game = null; renderMenu(); },
 });

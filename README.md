@@ -666,7 +666,7 @@ order.
 | ゆ At the public bath | red curtain plates | ゆ, おとこ, おんな, おゆ / みず, あつい, ぬるい, おけ, ゆかた |
 | 屋台 Festival stalls | walked: a night street of stalls (below) | おまつり, たこやき, やきとり, わたあめ, かきごおり, りんごあめ |
 | 駅 At the station | blue station plates, then announcements | 出口, 改札, 乗り換え, the exits, 各駅停車 / 快速 / 急行; まもなく…, 黄色い線…, 次は… |
-| 看板 Shop and door signs | wooden shop plates | 営業中 / 準備中, 押す / 引く, お手洗い, 禁煙, 割引, 半額, 売り切れ |
+| 看板 Shop and door signs | walked: a street of shops (below) | 営業中 / 準備中, 押す / 引く, お手洗い, 禁煙, 割引, 半額, 売り切れ |
 | 道路 Road signs | road signs; 止まれ is the red triangle | 止まれ, 徐行, 一方通行, 通行止め, 横断歩道 |
 | レシート Reading a receipt | a paper receipt; each term on it is tappable | 小計, 消費税, 合計, 税込み, お預かり, お釣り, 点数 |
 | お店 What shop staff say | a speaker line each | いらっしゃいませ, 温めますか, 袋はご利用ですか |
@@ -766,8 +766,64 @@ thing a learner can walk round is a fortnight in, not the end of katakana.
 - **Phone**: one long belt, a plate a screen; one long street, a stall a
   screen. The signs sit above.
 
-The rest of the places stay as they are: signs and announcements are for
-looking at, not walking round.
+- **The sushi counter has a way in**: a tiled eave, the すし curtain hanging
+  from the lintel over a lattice sliding door, a paper lantern. Inside,
+  pendant lamps over a rail of wooden menu plaques (each a word: tap to hear
+  it), the price board, the topping case, the cat as chef in a white cap,
+  then the belt, then your bench (wasabi, ginger, soy sauce, tea, おあいそ).
+
+### Walked: the street of signs
+
+看板 is a short shopping street (`js/street-ui.js`), each of its 21 signs
+where you'd meet it: a café's door with its 営業中 tag and 押す plate and
+its hours on the wall; a ramen shop's 準備中 and 引く; a drugstore's
+automatic door, window posters (割引, 半額, 無料), 売り切れ on a shelf and
+お会計 over the till; a shutter with 本日休業 taped to it; a hallway with
+the toilets, no-smoking and no-photos stickers; and its far end, with the
+smoking room, the green 非常口 and the stairs taped off (立入禁止). Signs
+aren't picked up, so the panel is "up close", and Read asks what a sign
+*means* (or how it's read). The phone gets a shop a screen.
+
+### 0.19.0: the visit, the stalls, the shopfronts, the station, and word lists
+
+- **A sushi visit.** You start outside, at the door, and see only that. Go
+  in, and the cat at the front (in a red kimono) asks how many you are and
+  whether you'd like the counter or a table; you answer by tapping a reply,
+  and a phrasebook beside her has what else you might hear or say (we're
+  full, one moment, write your name and wait, how long's the wait…). These
+  are spoken and inked but aren't the scene's words, so they don't change
+  when the place opens (`walk.talk`). On a desktop the **counter** keeps the
+  room still and moves the belt, four plates at a time, round and round;
+  a **table** is your place setting (wasabi, soy sauce, tea, chopsticks,
+  おあいそ) and a menu in the middle that opens and leafs through, a spread
+  a price. On a phone, either is the long belt. Leave puts you back outside.
+- **Stalls of their own.** Striped awnings, white tents over red-and-white
+  紅白幕, wooden carts on wheels with noren, booths under painted
+  signboards; each with what it cooks on (a takoyaki griddle, a teppan with
+  spatulas, a charcoal grill, the oden pot, a floss machine with its
+  character bags, an ice shaver and syrups, a stand of candy apples), steam
+  and smoke rising, lanterns strung over every booth and across the street,
+  a torii at the start, trees and a moon behind. The cat cooks takoyaki.
+- **Shopfronts like shopfronts**, with made-up names: 喫茶こもれび (brick,
+  lace curtains, a chalkboard easel), らーめん たぬき (a narrow wooden front,
+  noren, a lantern, a tanuki), ドラッグはなまる (くすり in red, shelves of
+  stock, a sale wagon, toilet roll stacked outside, baskets), 山田書店 shut
+  for the day, and さくらビル's lobby and back. Signs **stay where they
+  are** (`stays`): tapping one highlights it and shows it up close beside.
+- **The station, walked through** (`js/station-ui.js`): the entrance, the
+  concourse, the exit corridor, platform three. Signs stay where they are;
+  the announcements are speakers.
+- **Every place has a word list** (一覧): each word inked, its reading and
+  romaji, its meaning, a button to hear it, and a tick once recognised.
+  Walked places have it beside the modes; the others under the scene.
+
+The rest of the places stay as they are: conversations are for listening
+to, not walking round.
+
+**Every word has its sound in Out and about.** The scenes' bundle used to
+skip any clip a word stage already had, so ねた (in stage 8's) was silent
+for anyone who hadn't got there. It now carries everything it needs, as
+the konbini's does, and the smoke test checks both.
 
 ---
 
@@ -1221,6 +1277,8 @@ you like.
     js/walk-ui.js           places you walk round: the modes, what's in your hands, the errand, the phone sheet
     js/konbini-ui.js        the convenience store: drawing the packages and the shelves
     js/stalls-ui.js         the sushi counter and the festival stalls, walked: plates, dishes, banners
+    js/street-ui.js         the street of signs, walked: shopfronts and every kind of sign
+    js/station-ui.js        the station, walked through: entrance, gates, exits, platform three
     js/audio-konbini.js     generated clips for the convenience store
     design/                 mockups, for looking at — not loaded by the app
     js/sync.js              optional sync: Google sign-in, one Firestore document

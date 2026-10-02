@@ -92,11 +92,13 @@ function stageBundles() {
   });
   out['js/audio-grammar.js'] = GRAMMAR_SAY.map(s => furiKana(s)).filter(t => !seen.has(t));
   out['js/audio-grammar.js'].forEach(t => seen.add(t));
-  out['js/audio-scenes.js'] = [...new Set(SCENES.flatMap(sc => [...sc.all.map(x => x.kana), ...(sc.lines || []).map(([w]) => furiKana(w))]))].filter(t => !seen.has(t));
-  /* The store loads only its own bundle (and the kana one, which is always
-     there), so it repeats what the stage and scene bundles have rather than
-     leave a name silent for someone who hasn't reached that stage. */
+  /* Out and about loads only its own bundles (and the kana one, which is
+     always there), so they repeat what the stage bundles have rather than
+     leave a word silent for someone who hasn't reached that stage — ねた
+     was, until 0.18.0, because stage 8 had it. */
   const kana = new Set(speakableKana());
+  const talk = sc => { const t = sc.walk?.talk; return t ? [t.party, ...t.parties, t.seat, ...t.seats, t.go, ...t.more].map(([w]) => furiKana(w)) : []; };
+  out['js/audio-scenes.js'] = [...new Set(SCENES.flatMap(sc => [...sc.all.map(x => x.kana), ...(sc.lines || []).map(([w]) => furiKana(w)), ...talk(sc)]))].filter(t => !kana.has(t));
   out['js/audio-konbini.js'] = [...new Set(KONBINI.flatMap(p => [p.name, p.copy, ...p.tags, ...p.back.map(r => r[0])].map(furiKana)))].filter(t => !kana.has(t));
   return out;
 }

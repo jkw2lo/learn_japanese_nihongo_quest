@@ -67,6 +67,13 @@ Build order. Each step should run end to end before the next one starts.
 9e. ~~Walked: すし and 屋台~~ (0.17.0): the konbini's engine split out
    (js/walk-ui.js); the sushi counter as a belt of plates, the festival as a
    night street of stalls, on the scenes' own words and records.
+9f. ~~The street of signs~~ (0.18.0): 看板 walked, as a street of six
+   shopfronts; the sushi counter's entrance, kitchen and the cat as chef;
+   scene audio that doesn't depend on word stages; the place strip keeps its
+   scroll.
+9g. ~~Richer walks~~ (0.19.0): the sushi visit (door → hostess → counter
+   or table, with a menu), stalls of their own, shopfronts with names, the
+   station walked, a word list for every place.
 10. **More recognition practice at N5**: more scenes (a train ticket, a
    bento label, a konbini's shelf tags, a clinic), a "spot the kanji you
    know" mode over the scenes, and scenes in Sprint.

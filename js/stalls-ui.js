@@ -142,29 +142,134 @@ function sushiBoard() {
     `<span><i style="background:${SUSHI_PLATES[k][0]};border-color:${SUSHI_PLATES[k][1]}"></i>¥${yen}</span>`).join("")}</div>`;
 }
 const sushiNoren = () => kbSign(sushiSc(), "すし", "ws-noren", `<span class="ws-noren-cloth">${[...furiKana("すし")].map(c => `<b>${inkKana(c)}</b>`).join("")}</span>`);
-function sushiDesk() {
-  const sc = sushiSc(), things = stallThings(sc);
-  return `<div class="kb-store ws-sushi">
-    <div class="kb-walk">
-      <button class="kb-walkbtn l" data-act="kb-walk" data-d="-1" aria-label="Walk left">${icon("back")}</button>
-      <button class="kb-walkbtn r" data-act="kb-walk" data-d="1" aria-label="Walk right">${icon("chevron")}</button>
-      <div class="kb-strip" id="kbStrip">
-        <div class="kb-sec ws-door">${sushiNoren()}<div class="ws-doorway"></div></div>
-        <div class="kb-sec ws-counter">
-          <div class="ws-wall">${sushiBoard()}
-            ${kbSign(sc, "ねた", "ws-case", `<span class="ws-case-glass">${["#F08A4B", "#C8283A", "#F2EFE8", "#EC97A7", "#F2C94C"].map(c => `<i style="background:${c}"></i>`).join("")}</span><span class="ws-case-label">${inkHtml("ねた")}</span>`)}
-          </div>
-          <div class="ws-belt">${things.map(t => `<div class="ws-slot">${kbProd(t)}${kbTicksHtml(t) ? `<span class="ws-tick">${kbTicksHtml(t)}</span>` : ""}</div>`).join("")}</div>
-          <div class="ws-bench">
-            ${kbSign(sc, "わさび", "ws-wasabi", `<span class="ws-dish"><i></i></span><span class="ws-tag">${inkHtml("わさび")}</span>`)}
-            <span class="ws-tea"></span>
-            ${kbSign(sc, "おあいそ", "ws-slipsign", `<span class="ws-tag">${inkHtml("おあいそ")}</span><small>what you say at the end</small>`)}
-          </div>
-        </div>
-      </div>
+/* The way in: a tiled eave, the curtain hanging from the lintel over a
+   lattice sliding door, a paper lantern beside it. */
+const sushiFront = () => `<div class="ws-front">
+  <div class="ws-eave"></div>
+  <div class="ws-facade">
+    <span class="ws-chochin"></span>
+    <div class="ws-doorframe"><div class="ws-lattice"></div>${sushiNoren()}</div>
+  </div></div>`;
+/* The chef: the cat, in a white cap, behind the topping case. */
+const sushiChef = () => `<div class="ws-chef">${neko("happy", "ws-cat")}<i class="ws-cap"></i><i class="ws-coat"></i></div>`;
+/* ---------- a visit: the door, being seated, then in ----------
+
+   You arrive at the door and see only that. Go in, and the cat at the
+   front asks how many you are and whether you'd like the counter or a
+   table; answer, and she shows you in. On a desktop the counter is the
+   belt, four plates at a time, and a table is a place setting and a menu to
+   leaf through. On a phone either is the long belt. Leaving the place, or
+   the Leave button, brings you back to the door. */
+const visit = { stage: "door", step: 0, party: null, seat: null, page: 0, from: 0, menu: false, leaf: 0, turn: 0 };
+const sushiTalk = () => sushiSc().walk.talk;
+const talkLine = ([w, en], cls = "") => `<button class="ws-line ${cls}" data-act="say" data-say="${esc(furiKana(w))}">
+  <span class="jp" lang="ja">${inkHtml(w)}</span><small>${esc(en)}</small><span class="ws-hear">${icon("speaker")}</span></button>`;
+function sushiDoor() {
+  return `<div class="ws-street-door">
+    <div class="ws-door-scene">${sushiFront()}</div>
+    <div class="ws-door-side">
+      <p class="lede">A curtain over a sliding door, and on it, <b lang="ja">${inkHtml("すし")}</b>.</p>
+      <p class="muted small">Tap the curtain to hear what it says. When you're ready, slide the door open.</p>
+      <button class="btn kb-main" data-act="sushi-in">Go in</button>
+    </div></div>`;
+}
+const sushiHostess = () => `<div class="ws-hostess">${neko("happy", "ws-cat")}<i class="ws-kimono"></i><i class="ws-obi"></i></div>`;
+function sushiHost() {
+  const T = sushiTalk(), v = visit;
+  const said = [`<div class="ws-bubble them">${talkLine(T.party)}</div>`];
+  if (v.party) said.push(`<div class="ws-bubble you">${talkLine(T.parties.find(x => x[2] === v.party))}</div>`, `<div class="ws-bubble them">${talkLine(T.seat)}</div>`);
+  if (v.seat) said.push(`<div class="ws-bubble you">${talkLine(T.seats.find(x => x[2] === v.seat))}</div>`, `<div class="ws-bubble them">${talkLine(T.go)}</div>`);
+  const answers = !v.party ? T.parties.map(([w, en, n]) => `<button class="ws-answer" data-act="sushi-party" data-n="${n}"><span lang="ja">${inkHtml(w)}</span><small>${esc(en)}</small></button>`)
+    : !v.seat ? T.seats.map(([w, en, k]) => `<button class="ws-answer" data-act="sushi-seat" data-k="${k}"><span lang="ja">${inkHtml(w)}</span><small>${esc(en)}</small></button>`)
+    : [`<button class="btn kb-main" data-act="sushi-follow">Follow her in</button>`];
+  return `<div class="ws-entry">
+    <div class="ws-entry-scene">
+      <div class="ws-foyer"><div class="ws-foyer-wall"></div>${sushiHostess()}<div class="ws-podium"></div></div>
+      <div class="ws-chat">${said.join("")}</div>
+      <div class="ws-answers">${!v.party || !v.seat ? `<div class="eyebrow">Your answer</div>` : ""}${answers.join("")}</div>
     </div>
+    <aside class="ws-phrasebook">
+      <div class="eyebrow">You might also hear or say</div>
+      ${T.more.map(l => talkLine(l, l[2])).join("")}
+      <p class="muted tiny">Tap one to hear it. They're here for reference: they don't count towards the place.</p>
+    </aside></div>`;
+}
+
+/* The counter, on a desktop: the room stays put and the belt brings the
+   plates by, four at a time; the arrows move it on. It goes round. */
+const BELT_PAGE = 4, BELT_SLOT = 112;
+function sushiBar() {
+  const sc = sushiSc(), things = stallThings(sc), pages = Math.ceil(things.length / BELT_PAGE);
+  const loop = [...things, ...things.slice(0, BELT_PAGE)];        /* so the last page runs on into the first */
+  return `<div class="kb-store ws-sushi ws-room">
+    ${sushiWall(sc, things)}
+    <div class="ws-kitchen">
+      ${kbSign(sc, "ねた", "ws-case", `<span class="ws-case-glass">${["#F08A4B", "#C8283A", "#F2EFE8", "#EC97A7", "#F2C94C", "#E8501F", "#F3E3C6"].map(c => `<i style="background:${c}"></i>`).join("")}</span><span class="ws-case-label">${inkHtml("ねた")}</span>`)}
+      ${sushiChef()}
+      <span class="ws-board-cut"><i></i></span>
+    </div>
+    <div class="ws-beltrow">
+      <button class="kb-walkbtn l" data-act="sushi-page" data-d="-1" aria-label="The belt, back">${icon("back")}</button>
+      <div class="ws-beltwin"><div class="ws-track" style="transform:translateX(-${visit.from * BELT_PAGE * BELT_SLOT}px)">${loop.map(t => `<div class="ws-slot">${kbProd(t)}${kbTicksHtml(t) ? `<span class="ws-tick">${kbTicksHtml(t)}</span>` : ""}</div>`).join("")}</div></div>
+      <button class="kb-walkbtn r" data-act="sushi-page" data-d="1" aria-label="The belt, on">${icon("chevron")}</button>
+    </div>
+    <div class="ws-pager">${[...Array(pages)].map((_, k) => `<i class="${k === visit.page % pages ? "on" : ""}"></i>`).join("")}</div>
+    ${sushiBench(sc)}
+    ${sushiLeave()}
   </div>`;
 }
+const sushiWall = (sc, things) => `<div class="ws-wall">
+  <div class="ws-lamps">${[0, 1, 2, 3, 4].map(() => `<i></i>`).join("")}</div>
+  <div class="ws-plaques">${things.map(t => kbSign(sc, t.name, "ws-plaque", `<span class="ws-plaque-jp">${inkHtml(t.name)}</span><i class="ws-dot" style="background:${SUSHI_PLATES[t.plate][0]}"></i>`)).join("")}</div>
+  ${sushiBoard()}
+</div>`;
+const sushiBench = sc => `<div class="ws-bench">
+  ${kbSign(sc, "わさび", "ws-wasabi", `<span class="ws-dish"><i></i></span><span class="ws-tag">${inkHtml("わさび")}</span>`)}
+  <span class="ws-gari"><i></i></span><span class="ws-shoyu"></span><span class="ws-tea"></span><span class="ws-hashi"></span>
+  ${kbSign(sc, "おあいそ", "ws-slipsign", `<span class="ws-tag">${inkHtml("おあいそ")}</span><small>what you say at the end</small>`)}
+</div>`;
+const sushiLeave = () => `<div class="ws-seatbar"><span>${visit.seat === "table" ? "At a table" : "At the counter"}${visit.party > 1 ? `, ${visit.party} of you` : ""}</span>
+  <button class="btn btn-ghost btn-sm" data-act="sushi-leave">Leave</button></div>`;
+
+/* A table, on a desktop: your place set, and the menu in the middle. Open it
+   and leaf through: a spread a price, two dishes a page. */
+function sushiMenuBook() {
+  const sc = sushiSc(), things = stallThings(sc);
+  const tiers = Object.keys(sc.walk.plates), spreads = [];
+  tiers.forEach(k => { const row = things.filter(t => t.plate === k); if (spreads.length && spreads[spreads.length - 1].length + row.length <= 4) spreads[spreads.length - 1].push(...row); else spreads.push(row); });
+  const leaf = Math.min(visit.leaf, spreads.length - 1), items = spreads[leaf];
+  const page = list => `<div class="ws-mpage">${list.map(t => `<div class="ws-mitem">
+    ${kbProd(t, `<div class="ws-mpic">${sushiPack(t)}</div>`)}
+    <div class="ws-mtext"><i class="ws-dot" style="background:${SUSHI_PLATES[t.plate][0]}"></i> <b>¥${t.price}</b>${kbTicksHtml(t)}</div></div>`).join("")}</div>`;
+  return `<div class="ws-menu open ${visit.turn ? (visit.turn > 0 ? "turn-on" : "turn-back") : ""}">
+    <div class="ws-mhead"><span lang="ja">${inkHtml("すし")}</span><small>${leaf + 1} / ${spreads.length}</small></div>
+    <div class="ws-spread">${page(items.slice(0, 2))}${page(items.slice(2, 4))}</div>
+    <div class="ws-mfoot">
+      <button class="btn btn-ghost btn-sm" data-act="sushi-leaf" data-d="-1" ${leaf === 0 ? "disabled" : ""}>${icon("back")} Back a page</button>
+      <button class="btn btn-ghost btn-sm" data-act="sushi-menu">Close the menu</button>
+      <button class="btn btn-ghost btn-sm" data-act="sushi-leaf" data-d="1" ${leaf === spreads.length - 1 ? "disabled" : ""}>Next page ${icon("chevron")}</button>
+    </div></div>`;
+}
+function sushiTable() {
+  const sc = sushiSc(), things = stallThings(sc), others = Math.max(0, (visit.party || 1) - 1);
+  const setting = (cls = "") => `<div class="ws-setting ${cls}"><span class="ws-tea"></span><span class="ws-sdish"></span><span class="ws-hashi"></span></div>`;
+  return `<div class="kb-store ws-sushi ws-room ws-tableroom">
+    ${sushiWall(sc, things)}
+    <div class="ws-table">
+      <div class="ws-far">${[...Array(Math.min(others, 2))].map(() => setting("far")).join("")}</div>
+      <div class="ws-center">${visit.menu ? sushiMenuBook() : `<button class="ws-menu shut" data-act="sushi-menu" aria-label="Open the menu"><span lang="ja">${inkHtml("すし")}</span><small>MENU</small></button>`}</div>
+      <div class="ws-near">
+        ${kbSign(sc, "わさび", "ws-wasabi", `<span class="ws-dish"><i></i></span><span class="ws-tag">${inkHtml("わさび")}</span>`)}
+        <span class="ws-shoyu"></span><span class="ws-gari"><i></i></span>
+        ${setting("mine")}
+        ${kbSign(sc, "おあいそ", "ws-slipsign", `<span class="ws-tag">${inkHtml("おあいそ")}</span><small>for the bill</small>`)}
+      </div>
+    </div>
+    ${others > 2 ? `<p class="muted tiny">…and one more at the end of the table.</p>` : ""}
+    ${sushiLeave()}
+  </div>`;
+}
+function sushiDesk() { return visit.seat === "table" ? sushiTable() : sushiBar(); }
 function sushiPhone() {
   const sc = sushiSc(), things = stallThings(sc);
   return `<div class="kb-store ws-sushi">
@@ -177,35 +282,91 @@ function sushiPhone() {
       <div class="kb-slot end"></div>
     </div>
     <p class="muted tiny kb-hint">Swipe along the belt · tap a plate to take it</p>
+    ${sushiLeave()}
   </div>`;
 }
 
 /* ---------- the festival ---------- */
 
 const festSc = () => SCENE_BY.festival;
-const FEST_AWNINGS = ["#C8323A", "#2F5F9E", "#D9822B", "#3E8A5A", "#8E3E8C"];
+/* Each stall its own: the kind of stall, its colour, and what it cooks on. */
+const FEST_STALLS = {
+  たこやき: { type: "awning", c: "#C8323A", rig: "griddle", cook: true },
+  やきそば: { type: "tent", c: "#2F5F9E", rig: "teppan" },
+  いかやき: { type: "cart", c: "#6B4226", rig: "grill" },
+  やきとり: { type: "booth", c: "#D9822B", rig: "grill" },
+  おこのみやき: { type: "tent", c: "#3E8A5A", rig: "teppan" },
+  おでん: { type: "cart", c: "#5B3A21", rig: "pot" },
+  わたあめ: { type: "booth", c: "#D46AA0", rig: "floss" },
+  りんごあめ: { type: "awning", c: "#B5352B", rig: "apples" },
+  かきごおり: { type: "booth", c: "#2F8FC4", rig: "ice" },
+  だんご: { type: "awning", c: "#3E8A5A", rig: "grill" },
+};
+/* What's behind the counter, 140 × 60. */
+const steam = (x, y) => `<path class="ws-steam" d="M${x} ${y} q-5 -8 0 -15 q5 -7 0 -15" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+const RIGS = {
+  griddle: `<rect x="14" y="30" width="112" height="22" rx="3" fill="#2A2A2E"/><rect x="18" y="26" width="104" height="8" rx="2" fill="#3A3A40"/>
+    ${[0, 1, 2, 3, 4, 5, 6].map(i => `<circle cx="${28 + i * 14}" cy="31" r="5.2" fill="#B8742F"/><circle cx="${26.5 + i * 14}" cy="29.5" r="1.4" fill="#fff" opacity=".3"/>`).join("")}
+    <rect x="22" y="52" width="6" height="8" fill="#555"/><rect x="112" y="52" width="6" height="8" fill="#555"/>${steam(40, 22)}${steam(90, 22)}`,
+  teppan: `<rect x="8" y="34" width="124" height="14" rx="2" fill="#9AA1A7"/><rect x="8" y="46" width="124" height="6" fill="#6E767D"/>
+    ${[22, 34, 46, 58, 70].map(x => `<path d="M${x} 34 q5 -5 10 0 t10 0 t10 0" stroke="#C98A3E" stroke-width="2" fill="none"/>`).join("")}
+    <rect x="96" y="22" width="4" height="16" fill="#8C6239" transform="rotate(20 98 30)"/><rect x="104" y="30" width="16" height="4" fill="#C9CED2" transform="rotate(20 112 32)"/>
+    <rect x="112" y="20" width="4" height="16" fill="#8C6239" transform="rotate(-15 114 28)"/>${steam(30, 28)}${steam(60, 26)}${steam(84, 28)}`,
+  grill: `<rect x="12" y="34" width="116" height="18" rx="2" fill="#3A3A40"/><rect x="16" y="36" width="108" height="8" fill="#E8692C"/>
+    ${[0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => `<circle cx="${22 + i * 12}" cy="40" r="2.5" fill="#FFB347" opacity=".9"/>`).join("")}
+    ${[0, 1, 2, 3, 4, 5].map(i => `<path d="M${18 + i * 18} 34 L${30 + i * 18} 30" stroke="#C9A877" stroke-width="1.8"/><rect x="${20 + i * 18}" y="27" width="8" height="5" rx="1.5" fill="#8E4B1E" transform="rotate(-18 ${24 + i * 18} 30)"/>`).join("")}
+    <path class="ws-smoke" d="M40 26 q-8 -10 2 -18 q10 -6 2 -16" stroke="#D9D4E6" stroke-width="5" opacity=".35" fill="none" stroke-linecap="round"/>
+    <path class="ws-smoke" d="M96 26 q-8 -10 2 -18 q10 -6 2 -16" stroke="#D9D4E6" stroke-width="5" opacity=".3" fill="none" stroke-linecap="round"/>`,
+  pot: `<rect x="22" y="26" width="96" height="28" rx="3" fill="#B9BEC3"/><rect x="26" y="28" width="88" height="10" fill="#D9A55A"/>
+    <path d="M55 28 V38 M85 28 V38" stroke="#9AA1A7" stroke-width="2"/>
+    <ellipse cx="40" cy="31" rx="7" ry="3.5" fill="#F2E6C4"/><ellipse cx="70" cy="31" rx="5" ry="4" fill="#E9CFA0"/><path d="M92 34 L100 27 L106 34Z" fill="#8E8B86"/>${steam(46, 24)}${steam(76, 22)}${steam(100, 24)}`,
+  floss: `<ellipse cx="70" cy="40" rx="34" ry="10" fill="#C9CED2"/><ellipse cx="70" cy="37" rx="28" ry="7" fill="#F2F4F5"/>
+    <circle cx="62" cy="30" r="9" fill="#F7B7D2"/><circle cx="74" cy="27" r="10" fill="#F7B7D2"/><circle cx="84" cy="32" r="7" fill="#FCD9E7"/>
+    <rect x="66" y="44" width="8" height="12" fill="#9AA1A7"/>`,
+  ice: `<rect x="20" y="14" width="40" height="40" rx="3" fill="#2F8FC4"/><circle cx="40" cy="22" r="8" fill="none" stroke="#E4E8EB" stroke-width="3"/><path d="M48 22 H58" stroke="#E4E8EB" stroke-width="3"/>
+    <rect x="30" y="34" width="20" height="10" fill="#E4F2FA"/>
+    ${[["#D7263D", 78], ["#3E9A4A", 92], ["#2F6FC4", 106], ["#E9B43B", 120]].map(([c, x]) => `<rect x="${x - 5}" y="26" width="10" height="26" rx="2" fill="${c}"/><rect x="${x - 2}" y="20" width="4" height="7" fill="#F2F2F2"/>`).join("")}`,
+  apples: `<rect x="14" y="40" width="112" height="14" rx="2" fill="#F2F4F5" stroke="#D2D7DB"/>
+    ${[0, 1, 2, 3, 4, 5, 6].map(i => `<path d="M${24 + i * 15} 40 V30" stroke="#E9DCC4" stroke-width="1.6"/><circle cx="${24 + i * 15}" cy="25" r="6.5" fill="#C8102E"/><circle cx="${22 + i * 15}" cy="22.5" r="1.8" fill="#fff" opacity=".7"/>`).join("")}`,
+};
 const festLanterns = () => kbSign(festSc(), "おまつり", "ws-lanterns", [...furiKana("おまつり")].map(c => `<span class="ws-lantern">${inkKana(c)}</span>`).join(""));
-function festStall(t, k) {
-  const sc = festSc(), n = [...t.kana].length;
-  return `<div class="ws-stall" style="--awn:${FEST_AWNINGS[k % FEST_AWNINGS.length]}">
-    <div class="ws-awning"></div>
-    <div class="ws-banner printed" lang="ja" style="font-size:${Math.min(24, 118 / n).toFixed(1)}px">${inkHtml(t.name)}</div>
+/* A string of lanterns, for over a stall and over the street. */
+const lanternString = (n, cls = "") => `<div class="ws-lstring ${cls}">${[...Array(n)].map((_, i) => `<i style="--d:${(i % 3) * .4}s"></i>`).join("")}</div>`;
+function festStall(t) {
+  const sc = festSc(), S = FEST_STALLS[t.name] || { type: "awning", c: "#C8323A", rig: "grill" }, n = [...t.kana].length;
+  const banner = `<div class="ws-banner printed" lang="ja" style="font-size:${Math.min(24, 118 / n).toFixed(1)}px">${inkHtml(t.name)}</div>`;
+  const top = {
+    awning: `<div class="ws-awning"></div>${banner}`,
+    tent: `<div class="ws-tent"></div>${banner}`,
+    cart: `<div class="ws-cartroof"></div><div class="ws-cartnoren" lang="ja">${[...t.kana].map(c => `<b>${inkKana(c)}</b>`).join("")}</div>`,
+    booth: `<div class="ws-signboard" lang="ja"><span style="font-size:${Math.min(26, 124 / n).toFixed(1)}px">${inkHtml(t.name)}</span></div>`,
+  }[S.type];
+  return `<div class="ws-stall t-${S.type}" style="--awn:${S.c}">
+    ${top}
     <div class="ws-booth">
+      ${lanternString(5, "under")}
+      <svg class="ws-rig" viewBox="0 0 140 60" aria-hidden="true">${RIGS[S.rig]}</svg>
+      ${S.cook ? `<div class="ws-cook">${neko("gambaru", "ws-cat")}</div>` : ""}
+      ${S.rig === "floss" ? `<div class="ws-bags">${["#F28AB2", "#7EC8E3", "#F7D046", "#9BD38A"].map(c => `<i style="background:${c}"></i>`).join("")}</div>` : ""}
       ${t.flag ? kbSign(sc, t.flag, "ws-flag") : ""}
+      <div class="ws-counter"></div>
       ${kbProd(t, festPack(t, true))}
       <div class="ws-price printed">${kbSign(sc, "ひとつ", "ws-hitotsu")}<b>¥${t.price}</b>${kbTicksHtml(t)}</div>
     </div>
+    ${S.type === "cart" ? `<div class="ws-wheels"><i></i><i></i></div>` : S.type === "tent" ? `<div class="ws-kohaku"></div>` : ""}
   </div>`;
 }
 function festDesk() {
   const things = stallThings(festSc());
   return `<div class="kb-store ws-night">
+    <div class="ws-sky"><i class="ws-moon"></i><div class="ws-trees"></div></div>
+    ${lanternString(30, "over")}
     <div class="kb-walk">
       <button class="kb-walkbtn l" data-act="kb-walk" data-d="-1" aria-label="Walk left">${icon("back")}</button>
       <button class="kb-walkbtn r" data-act="kb-walk" data-d="1" aria-label="Walk right">${icon("chevron")}</button>
       <div class="kb-strip ws-street" id="kbStrip">
-        <div class="kb-sec ws-gate">${festLanterns()}</div>
-        ${things.map((t, k) => `<div class="kb-sec">${festStall(t, k)}</div>`).join("")}
+        <div class="kb-sec ws-gate"><div class="ws-torii"><i></i><i></i></div>${festLanterns()}</div>
+        ${things.map(t => `<div class="kb-sec">${festStall(t)}</div>`).join("")}
       </div>
     </div>
     <div class="ws-ground"></div>
@@ -216,7 +377,7 @@ function festPhone() {
   return `<div class="kb-store ws-night">
     <div class="ws-phone-lanterns">${festLanterns()}</div>
     <div class="kb-ps ws-street-ps" id="kbStrip">
-      ${things.map((t, k) => `<div class="kb-slot ws-stall-slot"><div class="kb-zoom" style="transform:scale(1.32)">${festStall(t, k)}</div></div>`).join("")}
+      ${things.map(t => `<div class="kb-slot ws-stall-slot"><div class="kb-zoom" style="transform:scale(1.2)">${festStall(t)}</div></div>`).join("")}
       <div class="kb-slot end"></div>
     </div>
     <p class="muted tiny kb-hint">Swipe down the street · tap a dish to pick it up</p>
@@ -238,7 +399,8 @@ const stallWords = (noun, place) => ({
   dot: `under a ${noun}: you can read its name`, list: "Your friend wants",
   later: "", score: "recognised",
 });
-const stallPlace = (id, extra) => ({
+/* extra's getters stay getters (the sushi counter's words follow where you sat) */
+const stallPlace = (id, extra) => Object.defineProperties({
   id, bundle: "scenes", sides: ["name"], stamps: [["name", "名", "its name"]],
   get things() { return stallThings(SCENE_BY[id]); }, get by() { stallThings(SCENE_BY[id]); return SCENE_BY[id]._by; },
   readable: (t, side) => side === "name" && soundable(t.kana),
@@ -246,12 +408,13 @@ const stallPlace = (id, extra) => ({
   quiz(t) { return kbNameQuiz(t, this.things); },
   back: () => null,
   foot: () => stallFoot(id),
-  ...extra,
-});
+}, Object.getOwnPropertyDescriptors(extra));
 
 WALKS.sushi = stallPlace("sushi", {
   eyebrow: "すし", title: "At the sushi counter",
-  lede: "The plates come round on the belt, each with its card. The colour of the plate is its price: the board on the wall says which. Take one, read it, put it back.",
+  lede: "Find the door, get yourself seated, then read what comes round. A plate's colour is its price: the board on the wall says which.",
+  enter() { Object.assign(visit, { stage: "door", step: 0, party: null, seat: null, page: 0, from: 0, menu: false, leaf: 0, turn: 0 }); },
+  gate: () => visit.stage === "door" ? sushiDoor() : visit.stage === "host" ? sushiHost() : "",
   terms: t => [[t.name, t.en, "Card"]],
   pack: sushiPack, big: () => "s-plate",
   desk: sushiDesk, phone: sushiPhone,
@@ -259,7 +422,39 @@ WALKS.sushi = stallPlace("sushi", {
     ${things.map(t => `<div class="pr-row"><span><i class="ws-dot" style="background:${SUSHI_PLATES[t.plate][0]}"></i> ${inkHtml(t.name)}</span><span>¥${t.price}</span></div>`).join("")}
     <div class="pr-rule"></div><div class="pr-row big"><span>${things.length} plates</span><span>¥${total}</span></div></div>
     <p class="kb-note">To ask for the bill, say <b lang="ja">${inkHtml("おあいそ")}</b>.</p>`,
-  words: { ...stallWords("plate", "the belt"), basket: "Take this plate", find: "Take each one off the belt.", foundTitle: "The bill" },
+  get words() {
+    const table = visit.seat === "table" && !kbPhone();
+    return { ...stallWords("plate", table ? "the menu" : "the belt"),
+      basket: table ? "Order this" : "Take this plate", find: table ? "Find each one in the menu." : "Take each one off the belt.", foundTitle: "The bill",
+      browse: table ? "Open the menu and leaf through it. Tap a dish to look at it, and tap a word to hear it." : "Watch the belt and take any plate. Tap a word to hear it and see what it means; the signs are words too." };
+  },
+});
+
+Object.assign(ACTS, {
+  "sushi-in": () => { visit.stage = "host"; say(furiKana(sushiTalk().party[0])); noteActivity(); kbDraw(); },
+  "sushi-party": el => { visit.party = +el.dataset.n; say(furiKana(sushiTalk().seat[0])); noteActivity(); kbDraw(); },
+  "sushi-seat": el => { visit.seat = el.dataset.k; say(furiKana(sushiTalk().go[0])); noteActivity(); kbDraw(); },
+  "sushi-follow": () => { visit.stage = "in"; kbReset(); kbDraw(); scrollTo({ top: $(".kb-modes")?.getBoundingClientRect().top + scrollY - 80, behavior: "smooth" }); },
+  "sushi-leave": () => { WALKS.sushi.enter(); kbReset(); kbDraw(); },
+  "sushi-page": el => {
+    /* The belt holds the plates and, after them, the first page again, so
+       going on from the last page runs on round; back from the first jumps
+       to that copy and runs back. */
+    const n = Math.ceil(stallThings(sushiSc()).length / BELT_PAGE), d = +el.dataset.d;
+    let from = visit.page, to = from + d;
+    if (to < 0) { from = n; to = n - 1; }
+    visit.from = from;
+    visit.page = to % n;
+    kbDraw();
+    const slide = x => { const tr = $(".ws-track"); if (tr) tr.style.transform = `translateX(-${x * BELT_PAGE * BELT_SLOT}px)`; };
+    $(".ws-track")?.offsetWidth;          /* lay it out where it was, so the move animates */
+    slide(to);
+    visit.from = visit.page;
+    if (to === n) setTimeout(() => { const tr = $(".ws-track"); if (tr) { tr.style.transition = "none"; slide(0); tr.offsetWidth; tr.style.transition = ""; } }, 520);
+    noteActivity();
+  },
+  "sushi-menu": () => { visit.menu = !visit.menu; visit.turn = 0; noteActivity(); kbDraw(); },
+  "sushi-leaf": el => { visit.leaf = Math.max(0, visit.leaf + +el.dataset.d); visit.turn = +el.dataset.d; kbDraw(); setTimeout(() => { visit.turn = 0; }, 0); },
 });
 
 WALKS.festival = stallPlace("festival", {

@@ -42,7 +42,26 @@ const SCENES = [
        your seat (わさび), and what you say at the end (おあいそ). */
     walk: { plates: { white: 120, blue: 180, red: 260, gold: 380 },
       things: [["たまご", "white"], ["いか", "white"], ["たこ", "white"], ["いなり", "white"], ["さけ", "blue"], ["まぐろ", "blue"],
-               ["ほたて", "blue"], ["あかみ", "blue"], ["かに", "red"], ["いくら", "red"], ["うに", "gold"], ["とろ", "gold"]] } },
+               ["ほたて", "blue"], ["あかみ", "blue"], ["かに", "red"], ["いくら", "red"], ["うに", "gold"], ["とろ", "gold"]],
+      /* Being seated: what the cat at the door asks, what you can answer,
+         and what else you might hear or say there. Spoken and inked, but
+         not the scene's words: they're for reference, and don't count
+         towards the place opening. [jp, English, value] */
+      talk: {
+        party: ["いらっしゃいませ！{何名様|なんめいさま}ですか？", "Welcome! How many of you?"],
+        parties: [["ひとりです。", "Just me.", 1], ["ふたりです。", "Two.", 2], ["さんにんです。", "Three.", 3]],
+        seat: ["カウンターとテーブル、どちらがよろしいですか？", "The counter or a table — which would you like?"],
+        seats: [["カウンターでおねがいします。", "The counter, please.", "bar"], ["テーブルでおねがいします。", "A table, please.", "table"]],
+        go: ["こちらへどうぞ。", "This way, please."],
+        more: [
+          ["ただいま{満席|まんせき}です。", "We're full at the moment.", "them"],
+          ["{少々|しょうしょう}お{待|ま}ちください。", "One moment, please.", "them"],
+          ["こちらにお{名前|なまえ}を{書|か}いて、お{待|ま}ちください。", "Please write your name here and wait.", "them"],
+          ["お{好|す}きな{席|せき}へどうぞ。", "Sit wherever you like.", "them"],
+          ["{何分|なんぷん}ぐらい{待|ま}ちますか？", "About how long is the wait?", "you"],
+          ["{待|ま}ちます。", "We'll wait.", "you"],
+        ],
+      } } },
 
   { id: "sento", jp: "ゆ", en: "At the public bath", look: "sign", style: "sento",
     intro: "A curtain with ゆ — hot water — marks a bath. Men's and women's sides are marked too, and so are the taps.",
@@ -97,7 +116,19 @@ const SCENES = [
       ["{立入禁止|たちいりきんし}", "No entry"], ["{撮影禁止|さつえいきんし}", "No photos"],
       ["{割引|わりびき}", "Discount"], ["{半額|はんがく}", "Half price"], ["{売|う}り{切|き}れ", "Sold out"], ["{無料|むりょう}", "Free"],
       ["お{会計|かいけい}", "Pay here"],
-    ] },
+    ],
+    /* A short shopping street, each sign where you'd meet it: a café's door
+       and its hours, a ramen shop not open yet, a drugstore's windows and
+       till, a shutter that's down today, a hallway with the toilets, and its
+       far end: the smoking room, the emergency exit, the stairs taped off. */
+    walk: { shops: [
+      ["cafe", ["{営業中|えいぎょうちゅう}", "{押|お}す", "{営業時間|えいぎょうじかん}", "{定休日|ていきゅうび}"]],
+      ["ramen", ["{準備中|じゅんびちゅう}", "{引|ひ}く"]],
+      ["drug", ["{自動|じどう}ドア", "{割引|わりびき}", "{半額|はんがく}", "{無料|むりょう}", "{売|う}り{切|き}れ", "お{会計|かいけい}"]],
+      ["shut", ["{本日休業|ほんじつきゅうぎょう}"]],
+      ["hall", ["お{手洗|てあら}い", "{男|おとこ}", "{女|おんな}", "{禁煙|きんえん}", "{撮影禁止|さつえいきんし}"]],
+      ["exit", ["{喫煙所|きつえんじょ}", "{非常口|ひじょうぐち}", "{立入禁止|たちいりきんし}"]],
+    ] } },
 
   { id: "road", jp: "道路", en: "Road signs", look: "road",
     intro: "Walking or cycling, these are the ones worth knowing.",

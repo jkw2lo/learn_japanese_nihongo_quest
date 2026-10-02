@@ -39,14 +39,19 @@
      pack(t), big(t)                   the drawing; the class that sizes it in the hand
      desk(), phone()                   the place, drawn
      peers(t)                          the others a name question chooses from
-     words: { noun, empty, browse, read, phoneHint, dot, basket, list, find, foundTitle }
+     words: { browse, read, dot, basket, list, find, foundTitle, later, score, hands }
      receipt(things)                   the bill when an errand is done
-     foot()                            anything under the walk (the scenes' Test yourself) */
+     foot()                            anything under the walk (the scenes' Test yourself)
+     stays                             things stay where they are (signs): looking at one
+                                       doesn't take it away, it's only "up close"
+     gate()                            before you're in: the door, being seated (the sushi
+                                       counter). HTML in place of the walk, or nothing once in
+     enter()                           called on arriving: start the visit at the door */
 
 const WALKS = {};
 const KB_PHONE = "(max-width: 720px)";
 const kbPhone = () => typeof matchMedia === "function" && matchMedia(KB_PHONE).matches;
-const kb = { mode: "browse", held: null, side: "front", open: new Set(), quiz: null, errand: null, flash: null, list: false, at: null };
+const kb = { mode: "browse", held: null, side: "front", open: new Set(), quiz: null, errand: null, flash: null, list: false, at: null, words: false };
 /* the place you're in, if it's a walk */
 const W = () => (typeof menuId !== "undefined" && WALKS[menuId]) || null;
 
@@ -65,10 +70,10 @@ function kbMark(t, side, w = W()) {
 }
 
 /* A name question: what it is, or (for a name with kanji) how it's read. */
-function kbNameQuiz(t, peers) {
+function kbNameQuiz(t, peers, what = "What is") {
   const others = shuffle(peers.filter(x => x.id !== t.id && x.en !== t.en)).slice(0, 3);
   return Math.random() < .5 || !/\{/.test(t.name)
-    ? { side: "name", ask: `What is <span class="jp" lang="ja">${inkHtml(t.name)}</span>?`, opts: shuffle([t, ...others]).map(x => ({ label: esc(x.en), right: x === t })) }
+    ? { side: "name", ask: `${what} <span class="jp" lang="ja">${inkHtml(t.name)}</span>${what === "What is" ? "" : " mean"}?`, opts: shuffle([t, ...others]).map(x => ({ label: esc(x.en), right: x === t })) }
     : { side: "name", ask: `How is <span class="jp" lang="ja">${esc(furiPlain(t.name))}</span> read?`, ja: true,
         opts: shuffle([t, ...others]).map(x => ({ label: esc(x.kana), right: x === t })) };
 }
@@ -77,7 +82,7 @@ function kbNameQuiz(t, peers) {
 
 /* Something you can pick up. inner is its drawing; the place's own by default. */
 function kbProd(t, inner, w = W()) {
-  const cls = [kb.held === t.id ? "gone" : "", w.readable(t, "name") ? "readable" : "", kb.flash === t.id ? "wrong" : ""].join(" ");
+  const cls = [kb.held === t.id ? (w.stays ? "looking" : "gone") : "", w.readable(t, "name") ? "readable" : "", kb.flash === t.id ? "wrong" : ""].join(" ");
   return `<button class="kb-prod ${cls}" data-act="kb-pick" data-id="${esc(t.id)}" aria-label="${esc(t.en)}">${inner || w.pack(t)}</button>`;
 }
 const kbTicksHtml = (t, w = W()) => kbTicks(t, w) ? `<span class="kb-ok" title="${kbTicks(t, w)} of ${w.sides.length} read">${"✓".repeat(kbTicks(t, w))}</span>` : "";
@@ -104,7 +109,7 @@ function kbTerms(t, w) {
 function kbHands(w) {
   const grab = `<div class="kb-grab"></div>`, words = w.words;
   if (!kb.held && kb.mode === "errand") return grab + kbErrandHtml(w);
-  if (!kb.held) return `${grab}<h3>In your hands</h3><p class="kb-empty">${kb.mode === "read" ? words.read : words.browse}</p>`;
+  if (!kb.held) return `${grab}<h3>${esc(words.hands || "In your hands")}</h3><p class="kb-empty">${kb.mode === "read" ? words.read : words.browse}</p>`;
   const t = w.by[kb.held], q = kb.quiz, back = w.back(t);
   const kana = [...kanaUnits(kanaOnly(t.kana))], have = kana.filter(isLearned).length;
   const stamps = w.stamps.map(([s, j, en]) => `<span class="kb-st ${kbHas(t, s, w) ? "done" : ""}" lang="ja" title="${kbHas(t, s, w) ? "Read" : "Not yet"}: ${en}">${j}</span>`).join("");
@@ -114,19 +119,19 @@ function kbHands(w) {
     foot = `<div class="kb-q"><div class="q-ask">${q.ask}</div>
       <div class="opts kb-opts">${q.opts.map((o, i) => `<button class="opt ${q.picked == null ? "" : o.right ? "right" : i === q.picked ? "wrong" : ""}" data-act="kb-ans" data-i="${i}" ${q.ja ? 'lang="ja"' : ""} ${q.picked == null ? "" : "disabled"}>${o.label}</button>`).join("")}</div>
       ${q.picked == null ? "" : `<div class="verdict ${q.opts[q.picked].right ? "ok" : ""}">${q.opts[q.picked].right ? "Yes!" : `It's <span ${q.ja ? 'lang="ja"' : ""}>${right.label}</span>.`}${q.value ? ` <span lang="ja">${inkHtml(q.value)}</span>` : ""}</div>
-        <button class="btn kb-main" data-act="kb-done">Put it back</button>`}</div>`;
+        <button class="btn kb-main" data-act="kb-done">${esc(words.put || "Put it back")}</button>`}</div>`;
   } else {
     const side = kbNext(t, w), last = w.stamps[w.stamps.length - 1];
     const note = kb.mode === "errand" ? `<p class="kb-note">On the list? ${esc(words.basket)}.</p>`
       : kb.mode === "browse" ? ""
       : !w.readable(t, "name") ? `<p class="kb-note">Just looking: you can sound out ${have} of ${kana.length} kana in its name. Its questions wait until you can read it all.</p>`
-      : side ? `<p class="kb-note good">You can read this. Putting it back asks about <b>${w.stamps.find(x => x[0] === side)[2]}</b>.</p>`
+      : side ? `<p class="kb-note good">You can read this. ${w.stays ? "When you're done looking, you'll be asked" : "Putting it back asks"} about <b>${w.stamps.find(x => x[0] === side)[2]}</b>.</p>`
       : `<p class="kb-note good">You've read all you can on this one${kbHas(t, last[0], w) ? "." : `. ${esc(words.later || "")}`}</p>`;
     foot = `${note}<div class="kb-row">${kb.mode === "errand"
-      ? `<button class="btn kb-main" data-act="kb-basket">${esc(words.basket)}</button><button class="btn btn-ghost" data-act="kb-put">Put it back</button>`
-      : `<button class="btn kb-main" data-act="kb-put">Put it back</button>`}</div>`;
+      ? `<button class="btn kb-main" data-act="kb-basket">${esc(words.basket)}</button><button class="btn btn-ghost" data-act="kb-put">${esc(words.put || "Put it back")}</button>`
+      : `<button class="btn kb-main" data-act="kb-put">${esc(words.put || "Put it back")}</button>`}</div>`;
   }
-  return `${grab}<div class="kb-hhead"><h3>In your hands</h3><div class="kb-stamps">${stamps}</div></div>
+  return `${grab}<div class="kb-hhead"><h3>${esc(words.hands || "In your hands")}</h3><div class="kb-stamps">${stamps}</div></div>
     <div class="kb-hold">${kb.side === "back" && back ? back : `<div class="kb-big ${w.big(t)}">${w.pack(t)}</div>`}</div>
     <div class="kb-sides">${back ? `<div class="seg seg-sm">
       <button data-act="kb-side" data-s="front" class="${kb.side === "front" ? "on" : ""}" ${q ? "disabled" : ""}><span lang="ja">表</span> Front</button>
@@ -148,7 +153,7 @@ function kbErrandHtml(w) {
   if (e.got.length === e.list.length) {
     const things = e.list.map(id => w.by[id]), total = things.reduce((n, t) => n + t.price, 0);
     return `<h3>${esc(words.foundTitle)}</h3>${w.receipt(things, total)}
-      ${numbersKnown() ? `<p class="rc-say" lang="ja">${esc(numberKana(total))}えん</p>` : ""}
+      ${total && numbersKnown() ? `<p class="rc-say" lang="ja">${esc(numberKana(total))}えん</p>` : ""}
       <p class="kb-note good">All three found.</p>
       <button class="btn kb-main" data-act="kb-errand">Another list</button>`;
   }
@@ -165,10 +170,14 @@ const KB_HINT = { browse: "Just look. Nothing is tested.", read: "Putting someth
 function renderWalk(id) {
   const w = WALKS[id];
   loadBundle(w.bundle);
-  if (kb.at !== id) { kbReset(); kb.at = id; }
+  if (kb.at !== id) { kbReset(); kb.at = id; w.enter && w.enter(); }
   if (kb.mode === "errand" && (!kb.errand || kb.errand.at !== id)) kbNewErrand(w);
   const pl = placeBy(id), open = placeOpen(id), phone = kbPhone(), got = placeGot(pl);
   const up = kb.held || (phone && kb.mode === "errand" && kb.list);
+  const gate = !kb.words && w.gate ? w.gate() : "";
+  const body = kb.words ? placeListHtml(pl)
+    : gate ? `<div class="kb-gate">${gate}</div>`
+    : `<div class="kb-body">${phone ? w.phone() : w.desk()}<aside class="kb-hands ${up ? "up" : ""}">${kbHands(w)}</aside></div>`;
   return `${typeof KB_DEFS !== "undefined" ? KB_DEFS : ""}<section class="card scene kb kb-${id}">
     <div class="scene-head"><div>
       <div class="eyebrow">${esc(w.eyebrow)} · Out and about</div>
@@ -178,16 +187,15 @@ function renderWalk(id) {
     </div>
     <div class="scene-score">${ring(got / pl.items.length, 56, 6)}<span>${got}<small>/${pl.items.length}</small></span><small>${esc(w.words.score || "read")}</small></div></div>
     ${open ? levelsHtml(pl) : placeShutHtml(pl)}
-    <div class="kb-modes"><div class="seg">
-      <button data-act="kb-mode" data-m="browse" class="${kb.mode === "browse" ? "on" : ""}"><span lang="ja">見る</span> Browse</button>
-      <button data-act="kb-mode" data-m="read" class="${kb.mode === "read" ? "on" : ""}"><span lang="ja">読む</span> Read</button>
-      <button data-act="kb-mode" data-m="errand" class="${kb.mode === "errand" ? "on" : ""}"><span lang="ja">お使い</span> Errand</button></div>
-      <span class="muted small">${KB_HINT[kb.mode]}</span>
-      <span class="muted tiny kb-dotkey"><i></i> ${esc(w.words.dot)}</span></div>
-    <div class="kb-body">${phone ? w.phone() : w.desk()}
-      <aside class="kb-hands ${up ? "up" : ""}">${kbHands(w)}</aside></div>
+    <div class="kb-modes">${gate ? "" : `<div class="seg">
+      <button data-act="kb-mode" data-m="browse" class="${kb.mode === "browse" && !kb.words ? "on" : ""}"><span lang="ja">見る</span> Browse</button>
+      <button data-act="kb-mode" data-m="read" class="${kb.mode === "read" && !kb.words ? "on" : ""}"><span lang="ja">読む</span> Read</button>
+      <button data-act="kb-mode" data-m="errand" class="${kb.mode === "errand" && !kb.words ? "on" : ""}"><span lang="ja">お使い</span> Errand</button></div>`}
+      <button class="btn btn-ghost btn-sm kb-wordsbtn ${kb.words ? "on" : ""}" data-act="kb-words"><span lang="ja">一覧</span> ${kb.words ? "Back to the place" : "Word list"}</button>
+      ${gate || kb.words ? "" : `<span class="muted small">${(w.words.hints || KB_HINT)[kb.mode]}</span><span class="muted tiny kb-dotkey"><i></i> ${esc(w.words.dot)}</span>`}</div>
+    ${body}
     ${w.foot ? w.foot() : ""}
-    ${phone && kb.mode === "errand" && !kb.held ? `<button class="btn cta" data-act="kb-list">${kb.list ? "Back to it" : "Show the list"}</button>` : ""}
+    ${phone && !gate && !kb.words && kb.mode === "errand" && !kb.held ? `<button class="btn cta" data-act="kb-list">${kb.list ? "Back to it" : "Show the list"}</button>` : ""}
   </section>`;
 }
 
@@ -249,7 +257,8 @@ Object.assign(ACTS, {
     kbDraw();
   },
   "kb-done": () => { kbReset(); kbDraw(); },
-  "kb-mode": el => { kb.mode = el.dataset.m; kbReset(); if (kb.mode === "errand") kbNewErrand(); kbDraw(); },
+  "kb-mode": el => { kb.mode = el.dataset.m; kb.words = false; kbReset(); if (kb.mode === "errand") kbNewErrand(); kbDraw(); },
+  "kb-words": () => { kb.words = !kb.words; kbReset(); kbDraw(); },
   "kb-basket": () => {
     const e = kb.errand, t = W().by[kb.held];
     if (e.list.includes(t.id) && !e.got.includes(t.id)) { e.got.push(t.id); e.msg = ""; if (e.got.length === e.list.length) kb.list = true; }

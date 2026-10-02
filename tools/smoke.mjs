@@ -57,7 +57,10 @@ const CONTRACT = {
   'js/data/konbini.js': ['KONBINI', 'KONBINI_BY', 'KONBINI_AISLES', 'KONBINI_SHAPES', 'konbiniItems'],
   'js/walk-ui.js': ['WALKS', 'renderWalk', 'walkKey', 'kbReset', 'kbDraw', 'kbNext', 'kbHas', 'kbMark', 'kbProd', 'kbSign', 'kbNameQuiz', 'kbTicksHtml', 'kbPhone'],
   'js/konbini-ui.js': ['renderKonbini', 'konbiniKey', 'kbPack', 'kbType', 'kbReadable', 'KB_SHAPES', 'KB_DEFS'],
-  'js/stalls-ui.js': ['stallThings', 'sushiPack', 'festPack', 'SUSHI', 'FEST', 'SUSHI_PLATES'],
+  'js/stalls-ui.js': ['stallThings', 'sushiPack', 'festPack', 'SUSHI', 'FEST', 'SUSHI_PLATES', 'stallFoot'],
+  'js/street-ui.js': ['streetThings', 'signPack', 'SIGN_LOOK', 'STREET'],
+  'js/station-ui.js': ['stationThings', 'snPack', 'SN_LOOK', 'STATION', 'SN_ORDER'],
+  'js/menu-ui.js': ['renderMenu', 'renderMenuPage'],
   'js/scenes-ui.js': ['places', 'placeProgress', 'placeOpen', 'placeLevels', 'outWord', 'inkHtml', 'renderOutHome', 'scenePickerHtml', 'renderScene', 'tapSceneItem', 'qScene', 'startSceneQuiz', 'scenePrompt', 'sceneAnswered', 'sceneGot'],
   'js/stats.js': ['MILESTONES', 'checkMilestones', 'medal', 'celebrate', 'milestoneCheckpoint', 'cheerLine', 'comboPill', 'statsTilesHtml', 'minutesChartHtml', 'learnedChartHtml', 'milestonesHtml', 'heroStatsHtml', 'n5Projection', 'weekAccuracy'],
   'js/book-ui.js': ['BOOK_PENS', 'BOOK_NIBS', 'BOOK_GRIDS', 'BOOK_CAP', 'renderBook', 'bookKey', 'bookAll', 'bookReplaceAll', 'pageSvg', 'inkG', 'strokePath'],
@@ -475,7 +478,7 @@ section('konbini');
   const run = code => vm.runInContext(code, s);
   vm.runInContext(['js/data/menu.js', 'js/data/scenes.js', 'js/data/konbini.js'].map(read).join('\n') +
     ';var ACTS = {}; var esc = t => String(t); var icon = () => ""; var knowsKanji = ch => isLearned("k:" + ch);\n' +
-    read('js/scenes-ui.js') + '\n' + ['js/walk-ui.js', 'js/konbini-ui.js', 'js/stalls-ui.js'].map(read).join('\n'), s);
+    read('js/scenes-ui.js') + '\n' + ['js/walk-ui.js', 'js/konbini-ui.js', 'js/stalls-ui.js', 'js/street-ui.js', 'js/station-ui.js'].map(read).join('\n'), s);
   run('load()');
   const P = run('KONBINI.map(p => ({ ...p }))');
   const ids = P.map(p => p.id);
@@ -530,6 +533,24 @@ section('konbini');
     ok(run(`WALKS.${id}.sides.join()`) === 'name', `${id}: a plate or a dish has its name to read`);
   }
   ok(run('Object.keys(SCENE_BY.sushi.walk.plates).every(k => SUSHI_PLATES[k])'), 'every plate colour is drawn');
+  /* the street of signs: every sign word, once, in a shop that's drawn, with a look */
+  const signs = run('streetThings().map(t => ({ name: furiPlain(t.name), shop: t.shop, i: t.i }))'), signWords = run('SCENE_BY.signs.all.map(x => furiPlain(x.w))');
+  ok(signs.length === signWords.length && new Set(signs.map(t => t.name)).size === signs.length, 'every shop sign is on the street, once');
+  signs.forEach(t => {
+    ok(run(`!!STREET["${t.shop}"]`), `the ${t.shop} shop isn't drawn`);
+    ok(run(`!!SIGN_LOOK["${t.name}"]`), `the sign ${t.name} has no look`);
+    ok(run(`STREET["${t.shop}"].toString().includes('"${t.name}"')`), `the ${t.shop} shop doesn't put up ${t.name}`);
+  });
+  /* the station: every sign word put up somewhere, with a look; signs stay put */
+  const stn = run('stationThings().map(t => furiPlain(t.name))'), placed = run('SN_ORDER.map(k => STATION[k].toString()).join(" ")');
+  ok(stn.length === run('SCENE_BY.station.items.length'), 'every station sign is a thing to look at');
+  stn.forEach(w => { ok(placed.includes(`"${w}"`), `the station doesn't put up ${w}`); ok(run(`!!SN_LOOK["${w}"]`), `the station sign ${w} has no look`); });
+  ok(run('WALKS.signs.stays && WALKS.station.stays && !WALKS.konbini.stays'), 'signs stay where they are; packets are picked up');
+  /* the sushi visit starts at the door, and its talk is all there */
+  run('WALKS.sushi.enter()');
+  ok(run('WALKS.sushi.gate().includes("sushi-in")'), 'the sushi counter starts at the door');
+  const T = run('SCENE_BY.sushi.walk.talk');
+  ok(T.parties.length >= 2 && T.seats.map(x => x[2]).sort().join() === 'bar,table' && T.more.length >= 4, 'the hostess asks how many and where, and there are phrases besides');
   run('state.items = {}; KANA.forEach(e => learn(e.k)); state.scenes.sushi = { got: [] }');
   const maguro = run('stallThings(SCENE_BY.sushi).find(t => t.name === "まぐろ").id');
   run(`kbMark(SCENE_BY.sushi._by["${maguro}"], "name", WALKS.sushi)`);
@@ -747,7 +768,8 @@ section('furigana');
   vm.runInContext('globalThis.STAGES = WORD_STAGES', f);
   f.STAGES.forEach(S => strings.push(S.about));
   /* out and about: every sign, line and bubble */
-  f.SCENES.forEach(sc => { sc.all.forEach(x => strings.push(x.w)); (sc.lines || []).forEach(([w]) => strings.push(w)); });
+  f.SCENES.forEach(sc => { sc.all.forEach(x => strings.push(x.w)); (sc.lines || []).forEach(([w]) => strings.push(w));
+    const t = sc.walk && sc.walk.talk; if (t) [t.party, ...t.parties, t.seat, ...t.seats, t.go, ...t.more].forEach(([w]) => strings.push(w)); });
   /* the konbini: every name, slogan, tag and line of every label */
   f.KONBINI.forEach(p => [p.name, p.copy, ...(p.lines || []), ...p.tags, ...p.back.map(r => r[0]), ...p.back.map(r => r[1])].forEach(x => strings.push(x)));
   f.KONBINI_AISLES.forEach(A => strings.push(A.jp));
@@ -777,6 +799,14 @@ if (audioFiles.includes('audio-kana.js')) {
   const clips = a.window.NQ_AUDIO || {};
   const missing = speakable().filter(t => !clips[t]);
   ok(!missing.length, `no clip for: ${missing.slice(0, 20).join(' ')}${missing.length > 20 ? ' …' : ''} — run node tools/make-audio.mjs`);
+  /* Out and about loads only its own bundles and the kana one: a word whose
+     clip is only in a stage bundle is silent until that stage (ねた was) */
+  const only = f => { const c = { window: {} }; vm.createContext(c); ['audio-kana.js', f].forEach(x => vm.runInContext(read('js/' + x), c)); return c.window.NQ_AUDIO; };
+  const { BUNDLES } = await import('./make-audio.mjs');
+  for (const f of ['audio-scenes.js', 'audio-konbini.js']) {
+    const have = only(f), silent = BUNDLES['js/' + f]().filter(t => !have[t]);
+    ok(!silent.length, `${f} is missing clips it should carry: ${silent.slice(0, 12).join(' ')}`);
+  }
 } else {
   console.log('  (js/audio-kana.js not built — skipped; run node tools/make-audio.mjs)');
 }

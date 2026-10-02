@@ -7,6 +7,7 @@
    schedule — it keeps its own tally of what you've recognised. */
 
 const sceneOpen = new Set();                   /* items revealed, "id:i" */
+const sceneList = new Set();                   /* scenes showing their word list */
 const sceneGot = id => new Set(asList(state.scenes[id]?.got));
 
 /* ---------- places: what's open, and when the rest will be ----------
@@ -162,6 +163,24 @@ function placeShutHtml(p) {
     Look round and listen meanwhile; the quiz waits until it opens.</div></div>`;
 }
 
+/* ---------- a place's words, as a list ----------
+
+   Every word in a place, in one table: as it's written (inked), its
+   reading, what it means, a button to hear it, and a tick once it's been
+   recognised. For looking things up while you're there, or going over them
+   after. */
+function placeListHtml(p) {
+  const got = sceneGot(p.id);
+  return `<div class="word-list"><table>
+    <thead><tr><th>Japanese</th><th>Reading</th><th>Meaning</th><th></th></tr></thead>
+    <tbody>${p.items.map(it => `<tr class="${got.has(it.i) ? "known" : ""}">
+      <td class="wl-jp" lang="ja">${inkHtml(it.w)}</td>
+      <td class="wl-r"><span lang="ja">${esc(it.kana)}</span><small>${esc(toRomaji(it.kana))}</small></td>
+      <td class="wl-m">${esc(it.m)}</td>
+      <td class="wl-act"><button class="icon-btn" data-act="say" data-say="${esc(it.kana)}" title="Hear it" aria-label="Hear it">${icon("speaker")}</button>${got.has(it.i) ? `<span class="wl-ok" title="Recognised">${icon("check")}</span>` : ""}</td>
+    </tr>`).join("")}</tbody></table></div>`;
+}
+
 /* ---------- the landing page ---------- */
 
 function renderOutHome() {
@@ -284,7 +303,9 @@ function renderScene(sc) {
     ${body}
     <div class="scene-actions">${open ? `<button class="btn cta" data-act="scene-quiz" data-id="${sc.id}">Test yourself</button>`
       : `<button class="btn cta" disabled>${icon("lock")} Quiz: ${placeProgress(placeBy(sc.id)).more} more word${placeProgress(placeBy(sc.id)).more === 1 ? "" : "s"}</button>`}
-      <button class="btn btn-ghost" data-act="scene-reveal" data-id="${sc.id}">Show every meaning</button></div>
+      <button class="btn btn-ghost" data-act="scene-reveal" data-id="${sc.id}">Show every meaning</button>
+      <button class="btn btn-ghost" data-act="scene-list" data-id="${sc.id}"><span lang="ja">一覧</span> ${sceneList.has(sc.id) ? "Hide the word list" : "Word list"}</button></div>
+    ${sceneList.has(sc.id) ? placeListHtml(placeBy(sc.id)) : ""}
   </section>`;
 }
 
@@ -353,5 +374,6 @@ Object.assign(ACTS, {
   "out-home": () => { menuId = null; game = null; if (view !== "menu") go("menu"); else { renderMenu(); scrollTo(0, 0); } },
   "scene-item": el => tapSceneItem(el.dataset.k),
   "scene-quiz": el => startSceneQuiz(el.dataset.id),
+  "scene-list": el => { const id = el.dataset.id; sceneList.has(id) ? sceneList.delete(id) : sceneList.add(id); renderMenu(); },
   "scene-reveal": el => { SCENE_BY[el.dataset.id].all.forEach(it => sceneOpen.add(`${el.dataset.id}:${it.i}`)); renderMenu(); },
 });
