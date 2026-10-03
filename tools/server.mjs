@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const TYPES = {
   '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript',
-  '.json': 'application/json', '.svg': 'image/svg+xml', '.md': 'text/plain'
+  '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.svg': 'image/svg+xml', '.md': 'text/plain'
 };
 
 createServer(async (req, res) => {

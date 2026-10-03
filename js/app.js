@@ -1557,6 +1557,12 @@ function applyTheme() {
   const t = state.settings.theme;
   if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
   else delete document.documentElement.dataset.theme;
+  /* the status bar of the installed app follows a theme chosen here too,
+     not only the phone's */
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m => {
+    const own = m.media.includes("dark") ? "#151513" : "#F3F0E8";
+    m.content = t === "light" ? "#F3F0E8" : t === "dark" ? "#151513" : own;
+  });
 }
 
 function renderSaveDot() {
