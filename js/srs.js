@@ -35,6 +35,7 @@ const DEFAULT_SETTINGS = {
   bookNib: "medium",     /* fine, medium, broad */
   bookGrid: "cross",     /* the squares' guide lines: cross, star, none */
   bookTrace: true,       /* show the chosen character faintly in the box */
+  offlineWifi: false,    /* fetch the missing sound by itself on Wi-Fi (where the browser can tell) */
 };
 
 /* ---------- dates, in local time ---------- */

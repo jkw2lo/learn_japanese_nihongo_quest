@@ -1500,6 +1500,7 @@ function openSettings() {
         ${voices ? ` A Japanese system voice is also available as a fallback.` : ""}</p>
       <button class="btn btn-ghost btn-sm" data-act="say" data-say="あ">Test: あ</button>
     </div>
+    ${offlineBlockHtml()}
     <div class="set-block">
       <h3>Japanese writing</h3>
       <p class="small">Hiragana, katakana and kanji, how the kana chart is laid out, and why it's in that order.</p>
@@ -1514,6 +1515,7 @@ function openSettings() {
       <button class="btn btn-ghost btn-sm danger" data-act="reset">Reset everything</button>
     </div>
     <p class="muted small">Version ${esc(APP_VERSION)} · ${esc(APP_DATE)}. If this doesn't match what was just published, you're looking at a cached copy.</p>`);
+  offlinePaint();
   syncWarm();
 }
 
@@ -1547,6 +1549,7 @@ function onSetting(el) {
   save();
   crumb(`setting ${key}=${v}`);
   if (key === "theme") applyTheme();
+  if (key === "offlineWifi") offlineAuto();
   render();
 }
 
@@ -1783,7 +1786,7 @@ document.addEventListener("keydown", guard(e => {
 function loadStrokes() {
   if (window.NQ_STROKES) return;
   const el = document.createElement("script");
-  el.src = `js/strokes.js?v=${APP_VERSION}`;
+  el.src = assetUrl("strokes");
   el.async = true;
   el.onload = () => { crumb("strokes loaded"); if (!S) render(); };
   document.head.appendChild(el);

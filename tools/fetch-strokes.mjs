@@ -12,6 +12,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { join } from 'path';
+import { writeHashes } from './hashes.mjs';
 
 const SOURCES = {
   'graphicsJaKana.txt': 'https://raw.githubusercontent.com/parsimonhi/animCJK/master/graphicsJaKana.txt',
@@ -83,4 +84,6 @@ window.NQ_STROKES = ${JSON.stringify(data)};
   writeFileSync(join(root, 'js/strokes.js'), out);
   console.log(`${Object.keys(data).length} kana and kanji → js/strokes.js (${(out.length / 1024).toFixed(0)} KB)`);
   if (missing.length) console.log(`no strokes for: ${missing.join(' ')}`);
+  writeHashes();
+  console.log('re-hashed → js/assets.js');
 }

@@ -95,13 +95,15 @@ const sayKana = k => say(KANA_BY[k]?.say || k);
 /* Fetched after the first render, not as a blocking <script>: nothing on the
    first screen needs sound, and a megabyte of base64 in front of it would
    hold the whole page up. */
-/* A named bundle (audio-s3, audio-grammar…), fetched once. */
+/* A named bundle (audio-s3, audio-grammar…), fetched once. Its URL carries
+   a hash of its contents (js/assets.js), not the app version, so a push that
+   didn't touch the audio doesn't make anyone download it again. */
 const loadedBundles = new Set();
 function loadBundle(name) {
   if (loadedBundles.has(name)) return;
   loadedBundles.add(name);
   const el = document.createElement("script");
-  el.src = `js/audio-${name}.js?v=${APP_VERSION}`;
+  el.src = assetUrl(`audio-${name}`);
   el.async = true;
   el.onerror = () => console.warn(`audio bundle ${name} missing — run node tools/make-audio.mjs`);
   document.head.appendChild(el);
@@ -114,7 +116,7 @@ function loadAudioBundle() {
   if (loadedBundles.has("kana")) return;
   loadedBundles.add("kana");
   const el = document.createElement("script");
-  el.src = `js/audio-kana.js?v=${APP_VERSION}`;
+  el.src = assetUrl("audio-kana");
   el.async = true;
   el.onload = () => { if (typeof onAudioLoaded === "function") onAudioLoaded(); };
   el.onerror = () => console.warn("audio bundle missing — run node tools/make-audio.mjs");

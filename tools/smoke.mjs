@@ -11,6 +11,7 @@ import { join } from 'path';
 import vm from 'vm';
 import { speakable } from './make-audio.mjs';
 import { wanted as strokeWanted } from './fetch-strokes.mjs';
+import { assetsJs } from './hashes.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const read = p => readFileSync(join(root, p), 'utf8');
@@ -865,7 +866,12 @@ const ver = (html.match(/const APP_VERSION = "([^"]+)"/) || [])[1];
 ok(!!ver, 'index.html has no APP_VERSION');
 const local = [...html.matchAll(/(?:src|href)="((?:js|css)\/[^"]+)"/g)].map(m => m[1]);
 local.forEach(u => ok(u.includes(`?v=${ver}`), `${u} isn't stamped with ?v=${ver}`));
-ok(read('js/sound.js').includes('?v=${APP_VERSION}'), 'the audio bundle URL should carry the version');
+ok(!/audio-[^`'"]*\?v=/.test(read('js/sound.js')), 'audio bundles take their URL from assetUrl (a content hash), not ?v=');
+ok(read('js/sound.js').includes('assetUrl(') && read('js/app.js').includes('assetUrl("strokes")'), 'sound.js and the stroke loader should use assetUrl');
+ok(read('js/assets.js') === assetsJs(), 'js/assets.js is out of date — run node tools/hashes.mjs');
+ok((read('sw.js').match(/const VERSION = "([^"]+)"/) || [])[1] === ver, `sw.js isn't stamped with ${ver} — run node tools/version.mjs ${ver}`);
+ok(html.indexOf('js/assets.js') > -1 && html.indexOf('js/assets.js') < html.indexOf('js/sound.js'), 'index.html must load js/assets.js before sound.js');
+ok(html.indexOf('js/offline.js') > html.indexOf('js/app.js'), 'index.html must load js/offline.js after app.js (it adds to ACTS)');
 
 console.log(`\n${passes} passed, ${fails} failed`);
 process.exit(fails ? 1 : 0);

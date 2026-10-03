@@ -23,6 +23,7 @@ import vm from 'vm';
 import { fileURLToPath } from 'url';
 import { join } from 'path';
 import { tmpdir } from 'os';
+import { writeHashes } from './hashes.mjs';
 
 const ARGS = process.argv.slice(2);
 const VOICE = ARGS.find(a => !a.startsWith('--')) || 'Kyoko';
@@ -166,4 +167,6 @@ window.NQ_AUDIO = Object.assign(window.NQ_AUDIO || {}, ${JSON.stringify(clips)})
   rmSync(work, { recursive: true, force: true });
   /* bundles no longer made (audio-n5.js, from before the split) go */
   readdirSync(join(root, 'js')).filter(f => /^audio-.*\.js$/.test(f) && !BUNDLES['js/' + f]).forEach(f => { unlinkSync(join(root, 'js', f)); console.log(`removed js/${f}`); });
+  writeHashes();
+  console.log('re-hashed → js/assets.js');
 }

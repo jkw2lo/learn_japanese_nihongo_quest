@@ -10,6 +10,10 @@
    together or the version on screen stops meaning anything, which is what this
    script is for and what the smoke check enforces.
 
+   The audio bundles and strokes.js are the exception: they carry a hash of
+   their contents instead (tools/hashes.mjs), so a bump doesn't make anyone
+   download them again. sw.js carries the version too, for the offline copy.
+
      node tools/version.mjs              show the current version
      node tools/version.mjs 1.1.0        set it
      node tools/version.mjs patch        1.0.0 -> 1.0.1
@@ -19,8 +23,10 @@
 
 import { readFileSync, writeFileSync } from 'fs';
 import { fileURLToPath } from 'url';
+import { writeHashes } from './hashes.mjs';
 
 const FILE = fileURLToPath(new URL('../index.html', import.meta.url));
+const SW = fileURLToPath(new URL('../sw.js', import.meta.url));
 const src = readFileSync(FILE, 'utf8');
 
 const cur = (src.match(/const APP_VERSION = "([^"]+)"/) || [])[1];
@@ -57,6 +63,10 @@ let out = src
   .replace(/\?v=[^"']+/g, `?v=${next}`);
 
 writeFileSync(FILE, out);
+/* the offline copy is named for the version, so a bump replaces it */
+writeFileSync(SW, readFileSync(SW, 'utf8').replace(/const VERSION = "[^"]+"/, `const VERSION = "${next}"`));
+/* the heavy files keep their own hash, which only moves if they did */
+writeHashes();
 const n = [...out.matchAll(/\?v=/g)].length;
 console.log(`${cur} -> ${next}  (${today})`);
 console.log(`stamped ${n} asset URL${n === 1 ? '' : 's'}`);
