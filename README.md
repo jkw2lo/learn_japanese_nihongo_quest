@@ -682,8 +682,8 @@ order.
   recognised is kept per scene (`state.scenes`), and the ring and the
   picker show it.
 - Everything is furigana markup, so readings drop away as kanji are
-  learned, and everything is recorded (`js/audio-scenes.js`, loaded when
-  a scene opens).
+  learned, and everything is recorded (`js/audio-place-<id>.js`, one per
+  place, loaded when that place opens).
 
 ### コンビニ, the convenience store
 
@@ -943,6 +943,38 @@ the konbini's does, and the smoke test checks both.
   scalloped edge now hangs below it (a mask was clipping the meaning).
 - **No cat at the takoyaki**: someone in the light behind the counter, as
   at the other stalls.
+### 0.24.0: tidying, and lighter places
+
+- **One sound bundle per place** (`js/audio-place-<id>.js`, built by
+  `tools/make-audio.mjs`; `placeAudio(id)` in `js/scenes-ui.js` fetches it
+  when the place opens, when its quiz starts, or when it supplies the
+  word of the day). Going out used to fetch every place's sound at once,
+  2.4 MB; a place is now 20–300 KB (the station, with its announcements
+  and every stop, about 900 KB). Walks no longer name a bundle.
+- **The diner's dishes have sound for everyone.** Their clips were only in
+  the stage 5 bundle, so anyone who hadn't reached stage 5 heard nothing on
+  that menu; each menu now carries its own dishes and phrases.
+- **Kana sound can't be skipped any more.** The kana bundle loaded only
+  if no other bundle had arrived first, and a stage or place bundle started
+  by the first screen could; then kana stayed silent all session. It has
+  its own flag now, and "is there sound?" (`hasAudio`) asks for a kana's
+  clip rather than any clip.
+- **CSS tidied, nothing moved**: rules for things long gone (an old
+  timetable, a belt, a strip, a floor bar, a ride LED, nav labels) removed;
+  rules split across the file (the overview tiles, the street's first
+  sketch under its rewrite, the station frame, a few more) folded into one;
+  the second `@keyframes sn-pop` gone (it nudged the ticket sideways as it
+  popped in). Checked by comparing every element's computed style, old
+  sheet and new, across the main screens at desktop and phone widths.
+- **Out & about is a section again** on a desktop's top bar (街 Out &
+  about), between Notebook and Sprint as in the phone's drawer. From 1300px
+  each label sits on one line; narrower, labels stack, "Out & about" is
+  "Out", and under 1000px the wordmark leaves just its seal, so the bar
+  never runs off the side.
+- **One character per curtain panel**: the noren (Today's Out and about
+  card, the café and the diner) letters each panel with its own character,
+  in the middle of it, as real ones are; lettered in paper colour, so it
+  reads in dark mode too.
 
 ---
 
@@ -1397,11 +1429,11 @@ you like.
     js/konbini-ui.js        the convenience store: drawing the packages and the shelves
     js/stalls-ui.js         the sushi counter and the festival stalls, walked: plates, dishes, banners
     js/street-ui.js         the street of signs, walked: shopfronts and every kind of sign
-    js/station-ui.js        the station, walked through: entrance, gates, exits, platform three
+    js/station-ui.js        the station as a trip: street, machines, gates, stairs, platforms, the ride round the loop
     js/audio-konbini.js     generated clips for the convenience store
     design/                 mockups, for looking at — not loaded by the app
     js/sync.js              optional sync: Google sign-in, one Firestore document
-    js/audio-scenes.js      generated clips for the scenes
+    js/audio-place-*.js     generated clips, one bundle per place (menus and scenes)
     js/audio-kana.js        generated clips — do not hand-edit
     js/strokes.js           generated stroke data — do not hand-edit
     js/furi.js              furigana markup: parse, check, render, derive kana

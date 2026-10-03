@@ -408,7 +408,7 @@ const stallWords = (noun, place) => ({
 });
 /* extra's getters stay getters (the sushi counter's words follow where you sat) */
 const stallPlace = (id, extra) => Object.defineProperties({
-  id, bundle: "scenes", sides: ["name"], stamps: [["name", "名", "its name"]],
+  id, sides: ["name"], stamps: [["name", "名", "its name"]],
   get things() { return stallThings(SCENE_BY[id]); }, get by() { stallThings(SCENE_BY[id]); return SCENE_BY[id]._by; },
   readable: (t, side) => side === "name" && soundable(t.kana),
   peers() { return this.things; },

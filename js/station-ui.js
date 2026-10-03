@@ -454,7 +454,7 @@ const stationView = () => `<div class="kb-store sn-station at-${trip.stage} v-${
   ${snNavHtml()}${snTicketChip()}${snPlatPop()}${snWin()}</div>`;
 
 WALKS.station = {
-  id: "station", eyebrow: "駅", title: "At the station", bundle: "scenes", stays: true,
+  id: "station", eyebrow: "駅", title: "At the station", stays: true,
   lede: "Down the stairs, buy a ticket, through the gates, up to the platform, onto the right train, and off at the right stop. Read the signs on the way: tap one to look closer.",
   enter() { Object.assign(trip, { at: null, stage: "out", view: 0, slide: "", modal: null, step: "dest", dest: null, who: "adult", paid: 0, ticket: null, ride: null, msg: null, pop: null, fresh: false }); },
   get things() { return stationThings(); }, get by() { stationThings(); return stationSc()._by; },

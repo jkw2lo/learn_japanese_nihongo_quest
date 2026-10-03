@@ -45,6 +45,9 @@ function places() {
   return placesCache;
 }
 const placeBy = id => places().find(p => p.id === id);
+/* A place's sound: its own bundle, fetched the first time it's needed (the
+   konbini's is its products'; every other place's is audio-place-<id>). */
+const placeAudio = id => loadBundle(id === "konbini" ? "konbini" : "place-" + id);
 
 function placeProgress(p) {
   const ok = p.words.filter(w => soundable(w)).length, n = p.words.length, need = Math.ceil(n * PLACE_OPEN);
@@ -113,6 +116,7 @@ function outWord() {
 
 function outWordHtml() {
   const { p, it } = outWord();
+  placeAudio(p.id);
   return `<section class="card out-word">
     <div class="eyebrow">今日の言葉 · A word from the street</div>
     <div class="ow-row">
@@ -250,7 +254,6 @@ function itemHtml(sc, it, cls = "") {
 }
 
 function renderScene(sc) {
-  loadBundle("scenes");
   const n = sc.all.length, got = sceneGot(sc.id).size;
   let body = "";
   if (sc.look === "sign" || sc.look === "road") {
@@ -333,6 +336,7 @@ function qSceneExtra(sc, [ask, right, ...wrong]) {
 function startSceneQuiz(id) {
   const sc = SCENE_BY[id];
   if (!placeOpen(id)) return;
+  placeAudio(id);
   const got = sceneGot(id);
   /* not yet recognised first, then the rest */
   const order = [...shuffle(sc.all.filter(it => !got.has(it.i))), ...shuffle(sc.all.filter(it => got.has(it.i)))].slice(0, 12);

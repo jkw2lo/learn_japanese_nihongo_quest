@@ -816,11 +816,14 @@ if (audioFiles.includes('audio-kana.js')) {
   const clips = a.window.NQ_AUDIO || {};
   const missing = speakable().filter(t => !clips[t]);
   ok(!missing.length, `no clip for: ${missing.slice(0, 20).join(' ')}${missing.length > 20 ? ' …' : ''} — run node tools/make-audio.mjs`);
-  /* Out and about loads only its own bundles and the kana one: a word whose
-     clip is only in a stage bundle is silent until that stage (ねた was) */
+  /* A place loads only its own bundle and the kana one: a word whose clip
+     is only in a stage bundle is silent until that stage (ねた was, and the
+     diner's dishes) */
   const only = f => { const c = { window: {} }; vm.createContext(c); ['audio-kana.js', f].forEach(x => vm.runInContext(read('js/' + x), c)); return c.window.NQ_AUDIO; };
   const { BUNDLES } = await import('./make-audio.mjs');
-  for (const f of ['audio-scenes.js', 'audio-konbini.js']) {
+  const placeFiles = Object.keys(BUNDLES).map(f => f.slice(3)).filter(f => /^audio-(place-|konbini)/.test(f));
+  ok(placeFiles.length > 10, 'every place should have its own audio bundle');
+  for (const f of placeFiles) {
     const have = only(f), silent = BUNDLES['js/' + f]().filter(t => !have[t]);
     ok(!silent.length, `${f} is missing clips it should carry: ${silent.slice(0, 12).join(' ')}`);
   }

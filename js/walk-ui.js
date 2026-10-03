@@ -28,7 +28,6 @@
 
    A place's adapter, WALKS[id]:
      id, jp, title, eyebrow, lede      the header
-     bundle                            the audio bundle to load
      things, by                        what can be picked up: { id, i, name, kana, en, price }
      sides                             e.g. ["name"] or ["name", "copy", "back"]
      stamps                            [[side, kanji, "its name"], …]
@@ -229,7 +228,6 @@ function kbErrandHtml(w) {
 const KB_HINT = { browse: "Just look. Nothing is tested.", read: "Putting something back asks you about it.", errand: "Find what's on the list." };
 function renderWalk(id) {
   const w = WALKS[id];
-  loadBundle(w.bundle);
   if (kb.at !== id) { kbReset(); kb.at = id; w.enter && w.enter(); }
   if (kb.mode === "errand" && (!kb.errand || kb.errand.at !== id)) kbNewErrand(w);
   const pl = placeBy(id), open = placeOpen(id), phone = kbPhone(), got = placeGot(pl);

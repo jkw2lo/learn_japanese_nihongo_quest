@@ -3,9 +3,10 @@
      js/audio-kana.js     the kana stage — loaded after the first screen
      js/audio-s<N>.js     one per word stage — loaded as the learner reaches it
      js/audio-grammar.js  the Grammar tab's sentences — loaded when it opens
-     js/audio-scenes.js   out and about: signs, announcements, shop talk
+     js/audio-place-<id>.js  one per place out and about (menus, signs, the station,
+                          shop talk…) — loaded when that place opens
      js/audio-konbini.js  the convenience store: every name, slogan, tag and label
-   Both add to window.NQ_AUDIO rather than replace it, so they load in any order.
+   All add to window.NQ_AUDIO rather than replace it, so they load in any order.
 
    Why bundle at all: see js/sound.js. Why record words whole, from kana:
    see README → Audio — a kanji's sound depends on its word, and kana
@@ -92,10 +93,12 @@ function stageBundles() {
   });
   out['js/audio-grammar.js'] = GRAMMAR_SAY.map(s => furiKana(s)).filter(t => !seen.has(t));
   out['js/audio-grammar.js'].forEach(t => seen.add(t));
-  /* Out and about loads only its own bundles (and the kana one, which is
-     always there), so they repeat what the stage bundles have rather than
-     leave a word silent for someone who hasn't reached that stage — ねた
-     was, until 0.18.0, because stage 8 had it. */
+  /* Out and about: one bundle per place, fetched when you go there, so a
+     visit downloads that place's sound and not every place's. Each loads
+     only itself (and the kana one, which is always there), so they repeat
+     what the stage bundles have rather than leave a word silent for someone
+     who hasn't reached that stage — ねた was, until 0.18.0, because stage 8
+     had it, and the diner's dishes were, until 0.24.0, because stage 5 did. */
   const kana = new Set(speakableKana());
   const talk = sc => {
     const t = sc.walk?.talk, out = t ? [t.party, ...t.parties, t.seat, ...t.seats, t.go, ...t.more].map(([w]) => furiKana(w)) : [];
@@ -108,7 +111,9 @@ function stageBundles() {
     if (sc.walk?.loop) sc.walk.loop.forEach(d => out.push(furiKana(d.to + "{駅|えき}"), furiKana("{次|つぎ}は、" + d.to + "です。"), furiKana("まもなく、" + d.to + "です。")));
     return out;
   };
-  out['js/audio-scenes.js'] = [...new Set(SCENES.flatMap(sc => [...sc.all.map(x => x.kana), ...(sc.lines || []).map(([w]) => furiKana(w)), ...talk(sc)]))].filter(t => !kana.has(t));
+  const own = list => [...new Set(list)].filter(t => !kana.has(t));
+  MENUS.forEach(M => { out[`js/audio-place-${M.id}.js`] = own([...menuItems(M).map(it => it.kana), ...MENU_PHRASES.map(([jp]) => furiKana(jp).replace('〜', ''))]); });
+  SCENES.forEach(sc => { out[`js/audio-place-${sc.id}.js`] = own([...sc.all.map(x => x.kana), ...(sc.lines || []).map(([w]) => furiKana(w)), ...talk(sc)]); });
   out['js/audio-konbini.js'] = [...new Set(KONBINI.flatMap(p => [p.name, p.copy, ...p.tags, ...p.back.map(r => r[0])].map(furiKana)))].filter(t => !kana.has(t));
   return out;
 }

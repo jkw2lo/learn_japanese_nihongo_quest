@@ -85,6 +85,8 @@ Build order. Each step should run end to end before the next one starts.
    that wait to be read; a carriage, ads and stairs redrawn.
 9k. ~~Stairs and stalls~~ (0.23.0): stairs projected from a real camera;
    a word on every stall's flag; banners that say their names.
+9l. ~~Tidying~~ (0.24.0): a sound bundle per place; the kana bundle can't be
+   skipped; dead and split CSS cleaned up.
 10. **More recognition practice at N5**: more scenes (a train ticket, a
    bento label, a konbini's shelf tags, a clinic), a "spot the kanji you
    know" mode over the scenes, and scenes in Sprint.

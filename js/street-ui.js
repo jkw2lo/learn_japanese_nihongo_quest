@@ -166,7 +166,7 @@ function streetPhone() {
 }
 
 WALKS.signs = {
-  id: "signs", eyebrow: "看板", title: "Shop and door signs", bundle: "scenes", stays: true,
+  id: "signs", eyebrow: "看板", title: "Shop and door signs", stays: true,
   lede: "A short street of shops. Is it open? Push or pull? Where's the toilet, and what's half price? Every sign is where you'd meet it: tap one to look closer.",
   get things() { return streetThings(); }, get by() { streetThings(); return signsSc()._by; },
   sides: ["name"], stamps: [["name", "読", "what it says"]],

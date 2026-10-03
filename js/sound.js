@@ -19,7 +19,8 @@ let audioOwner = 0;
 
 const clipFor = t => (window.NQ_AUDIO && window.NQ_AUDIO[t]) || null;
 const clipCount = () => (window.NQ_AUDIO && Object.keys(window.NQ_AUDIO).length) || 0;
-const hasAudio = () => clipCount() > 0;
+/* the kana bundle, not just any: a place's or a stage's can land first */
+const hasAudio = () => !!clipFor("あ");
 
 function ensureAudioEl() {
   if (!audioEl) { audioEl = new Audio(); audioEl.preload = "auto"; }
@@ -106,8 +107,12 @@ function loadBundle(name) {
   document.head.appendChild(el);
 }
 
+/* Its own flag, not window.NQ_AUDIO: any bundle creates that, and a stage or
+   place bundle started by the first render could land before this one did,
+   which then never loaded at all. */
 function loadAudioBundle() {
-  if (window.NQ_AUDIO) return;
+  if (loadedBundles.has("kana")) return;
+  loadedBundles.add("kana");
   const el = document.createElement("script");
   el.src = `js/audio-kana.js?v=${APP_VERSION}`;
   el.async = true;

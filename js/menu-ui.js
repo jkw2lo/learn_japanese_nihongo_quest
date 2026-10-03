@@ -19,12 +19,16 @@ const yen = n => "¥" + n.toLocaleString("en-US");
 
 /* The shop curtain that hangs over a Japanese doorway, with the shop's
    name across it. */
+/* A shop curtain: a panel for each character, the character in the middle
+   of its panel, the way a real noren is lettered. */
 function noren(text, cls = "") {
-  const panels = [0, 1, 2].map(i => `<path class="nr-panel" d="M${14 + i * 64} 16h60v58q-30 8-60 0z"/>`).join("");
-  return `<svg class="noren ${cls}" viewBox="0 0 220 86" aria-hidden="true">
-    <rect class="nr-pole" x="4" y="8" width="212" height="8" rx="4"/>
+  const chars = [...text], W = Math.max(220, 24 + chars.length * 64);
+  const left = (W - (chars.length * 64 - 4)) / 2;
+  const panels = chars.map((c, i) => `<path class="nr-panel" d="M${left + i * 64} 16h60v58q-30 8-60 0z"/>
+    <text class="nr-text" x="${left + i * 64 + 30}" y="53" text-anchor="middle" lang="ja">${esc(c)}</text>`).join("");
+  return `<svg class="noren ${cls}" viewBox="0 0 ${W} 86" aria-hidden="true">
+    <rect class="nr-pole" x="4" y="8" width="${W - 8}" height="8" rx="4"/>
     ${panels}
-    <text class="nr-text" x="110" y="52" text-anchor="middle" lang="ja">${esc(text)}</text>
   </svg>`;
 }
 
@@ -41,7 +45,7 @@ function menuCardHtml() {
       <div class="eyebrow">街 · Out and about</div>
       Sushi counters, signs, menus and shop talk. <b>${open.length} of ${ps.length}</b> places open${
         next ? ` · next: <span lang="ja">${esc(next.p.jp)}</span>, ${next.more} more word${next.more === 1 ? "" : "s"}` : ""}${orders ? ` · ${orders} order${orders > 1 ? "s" : ""} today` : ""}.
-      ${(() => { const { it } = outWord(); return `<button class="ow-mini" data-act="say" data-say="${esc(it.kana)}" title="Hear it">今日の言葉
+      ${(() => { const { p, it } = outWord(); placeAudio(p.id); return `<button class="ow-mini" data-act="say" data-say="${esc(it.kana)}" title="Hear it">今日の言葉
         <span lang="ja">${inkHtml(it.w)}</span> ${esc(it.m)}</button>`; })()}
     </div>
     <button class="btn btn-sm" data-act="out-home">Go out</button>
@@ -60,6 +64,7 @@ function renderMenu() {
 function renderMenuPage() {
   const el = $("#v-menu");
   if (!menuId || !placeBy(menuId)) { el.innerHTML = renderOutHome(); return; }
+  placeAudio(menuId);
   /* a visit to an open place clears its "new" */
   if (placeOpen(menuId) && !asList(state.outSeen).includes(menuId)) { state.outSeen = [...asList(state.outSeen), menuId]; save(); }
   /* a place you walk round: the konbini, the sushi counter, the festival (js/walk-ui.js) */

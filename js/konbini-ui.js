@@ -263,7 +263,7 @@ function kbStorePhone() {
 /* ---------- the place ---------- */
 
 WALKS.konbini = {
-  id: "konbini", eyebrow: "コンビニ", title: "The convenience store", bundle: "konbini",
+  id: "konbini", eyebrow: "コンビニ", title: "The convenience store",
   lede: "Walk the shelves at コンビニ さくら. Pick anything up, turn it over, tap a word to hear it. Every packet fills in as you learn its kana.",
   get things() { return KONBINI; }, get by() { return KONBINI_BY; },
   sides: ["name", "copy", "back"],
