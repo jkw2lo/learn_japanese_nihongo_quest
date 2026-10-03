@@ -70,6 +70,7 @@ function renderMenuPage() {
   /* a place you walk round: the konbini, the sushi counter, the festival (js/walk-ui.js) */
   if (typeof WALKS !== "undefined" && WALKS[menuId]) {
     el.innerHTML = `<div class="ob-head"><div class="eyebrow">街 · Out and about</div></div>${scenePickerHtml()}${renderWalk(menuId)}`;
+    kbFit();
     return;
   }
   /* one of the out-and-about scenes, rather than a menu */
@@ -224,7 +225,8 @@ function startMenuGame() {
 /* Tier-2 dishes are recorded with the word stages. */
 Object.assign(ACTS, {
   mi: el => tapItem(el.dataset.k),
-  "menu-pick": el => { if (typeof kb !== "undefined" && el.dataset.id !== menuId) kb.at = null; menuId = el.dataset.id; game = null; if (typeof kbReset === "function") kbReset(); renderMenu(); scrollTo(0, 0); },
+  "menu-pick": el => { if (typeof kb !== "undefined" && el.dataset.id !== menuId) kb.at = null; menuId = el.dataset.id; game = null; if (typeof kbReset === "function") kbReset(); renderMenu();
+    if (typeof WALKS !== "undefined" && WALKS[menuId]) kbFitScroll(); else scrollTo(0, 0); },
   "menu-game": () => startMenuGame(),
   "menu-quit": () => { game = null; renderMenu(); },
 });

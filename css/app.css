@@ -75,6 +75,26 @@
   color-scheme: dark;
 }
 
+/* The painted places (a shopfront, the sushi door and counter, the station,
+   the konbini, the stalls) are pictures with their own light, the same by
+   day or night: inside them, ink and paper keep their light-theme values,
+   so a word on a pale wall never turns pale itself. What's in your hands
+   beside them follows the theme as usual. */
+.kb-store, .ws-street-door, .ws-entry-scene, .sn-station {
+  --paper: #F3F0E8; --sheet: #FBFAF6; --sunken: #E8E4D9;
+  --ink: #1E1D1A; --ink-2: #4E4B44; --ink-3: #858074;
+  --rule: #D6D0C2; --rule-2: #E6E1D5;
+  --seal: #C2402F; --seal-wash: rgba(194, 64, 47, .09);
+  --ai: #2F4B7C; --ai-wash: rgba(47, 75, 124, .09);
+  --jade: #3D7A57; --jade-wash: rgba(61, 122, 87, .13);
+  --amber: #A86A12; --amber-wash: rgba(168, 106, 18, .13);
+  --c-hira: #2F4B7C; --c-kata: #86457A; --c-kanji: #1E1D1A;
+  --blush: #F2A6A0; --gold: #BF8F2E; --gold-soft: #F3E3BD; --petal: #F6C1CC;
+  --shadow: 0 1px 2px rgba(30, 29, 26, .06), 0 6px 18px rgba(30, 29, 26, .05);
+  --shadow-lift: 0 2px 4px rgba(30, 29, 26, .08), 0 14px 34px rgba(30, 29, 26, .12);
+  color-scheme: light; color: var(--ink);
+}
+
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body {
@@ -2016,6 +2036,7 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 .sv-dboard rt, .sv-led rt { font-size: .58em; }
 .sv-dboard rt { color: #E9ECEE; }
 .sv-db-n .sn-sign.platform { padding: 0 6px; font-size: 11px; flex-direction: row; gap: 4px; } .sv-db-n .sn-num { font-size: 1rem; }
+
 .sv-gates { background: linear-gradient(#F1F3F4, #E6E9EB 64%, #C9CED2 64%); }
 .sv-gaterow { position: absolute; left: 0; right: 0; bottom: 140px; display: flex; justify-content: center; align-items: flex-end; gap: 20px; }
 .sv-office { width: 90px; height: 190px; background: linear-gradient(#DADFE2, #C9CED2); border: 5px solid #8E979E; border-bottom: 0; position: relative; }
@@ -2272,6 +2293,44 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 .kb-gloss { animation: kb-gloss-in .15s ease; }
 @keyframes kb-gloss-in { from { opacity: 0; transform: translate(-50%, -3px); } }
 .kb-dotkey .kb-ok { font-size: .8rem; margin-left: 6px; }
+/* A narrow station: a phone, or a desktop window small enough that the
+   scene beside the side panel is under 720px. The same compact layout
+   either way (it lived in the phone layer, and a narrow desktop got the
+   wide one squeezed: the board wrapping a character at a time, the
+   concourse signs on top of each other). */
+.sn-station { container-type: inline-size; }
+@container (max-width: 719px) {
+  .sv { height: 440px; }
+  .sn-nav { width: 50px; } .sn-nav-ico { width: 40px; height: 40px; }
+  .sv-entrance { transform: translateX(-40%) scale(.74); transform-origin: bottom center; } .sv-bikes { display: none; } .sv-tree { left: -30px; }
+  .sv-pole { left: 4px; transform: scale(.78); transform-origin: bottom left; z-index: 3; }
+  .sv-machines { gap: 6px; bottom: 120px; } .sv-machine { width: 64px; height: 170px; }
+  .sv-exits { padding: 0 52px; } .sv-dboard { width: 92%; top: 190px; padding: 6px 8px; }
+  .sv-db-head, .sv-db-row { grid-template-columns: 40px 76px 1fr 54px; gap: 4px; } .sv-db-to .sn-term { font-size: .95rem; }
+  .sv-gaterow { gap: 8px; bottom: 120px; } .sv-office { display: none; } .sv-gatebank { gap: 10px; } .sv-gate { width: 30px; }
+  .sv-paid-signs { padding: 0 52px; grid-template-columns: 1fr; justify-items: center; } .sv-backexit, .sv-transfer { display: none; }
+  .sv-dirsign { flex-wrap: wrap; justify-content: center; }
+  .sv-stairhall { padding: 0 50px; height: 250px; } .sv-up { width: 190px; height: 230px; } .sv-stairhall .sn-speakers { display: none; }
+  .sv-platrow { grid-template-columns: 1fr; padding: 8px 52px 0; } .sv-platsign { padding-top: 0; display: flex; justify-content: center; }
+  /* the platform on a phone flows: train, edge, the floor sign, announcements, then the way down and the ticket */
+  .sv-plat { height: auto; padding-bottom: 64px; } .sv-plat .sv-edge { position: relative; bottom: auto; }
+  .sv-plat .sv-anns { position: static; margin: 64px 12px 0; grid-template-columns: 1fr; }
+  .sv-women { top: auto; bottom: -62px; } .sv-plat .sv-downbtn { left: 12px; right: auto; margin: 0; }
+  .sn-station:has(.sv-plat) .sn-ticket.chip { bottom: 10px; }
+  .sv-car { height: 170px; } .sv-tdoor i { width: 24px; height: 110px; } .sv-win { width: 30px; }
+  .sv-ekimei { width: 92%; }
+  .sv-ride { height: 600px; } .sv-hangads { left: 8px; right: 8px; gap: 6px; } .sv-ad.hang { width: 48%; } .sv-ad.hang .sv-ad-art, .sv-ad.hang .sv-ad-art svg { width: 54px; }
+  .sv-ad-head { font-size: .82rem; white-space: normal; } .sv-ad-sub { font-size: .66rem; white-space: normal; }
+  .sv-straps { left: 10px; right: 10px; } .sv-carwall { left: 6px; right: 6px; }
+  .sv-band.top .sv-ad.top { display: none; } .sv-lcd { flex: 1; }
+  .sv-row .sv-glass + .sv-pier + .sv-glass { display: none; } .sv-dooropen { flex-basis: 120px; }
+  .sv-pform { padding-left: 6%; } .sv-pform .sv-pf-name { font-size: 1rem; padding: 3px 12px; }
+  .sv-seat { right: 130px; } .sv-cushion i:nth-child(n+5) { display: none; } .sv-partition { display: none; }
+  .sv-ctl { height: auto; flex-wrap: wrap; padding: 8px 10px; } .sv-riding { flex: 1 1 100%; } .sv-ctl .btn { flex: 1; }
+  .sv-annpop { padding-bottom: 110px; }
+  .sn-station .sn-ticket.chip { top: auto; bottom: 64px; right: 8px; }
+}
+
 /* ============================================================
    PHONE LAYER
 
@@ -2729,36 +2788,7 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
   .ws-answers { justify-content: stretch; }
   .ws-answer { flex: 1 1 100%; align-items: flex-start; min-height: 52px; }
 
-  /* the station on a phone: a part of it a screen */
-  /* the station on a phone: the same views, smaller, the side buttons at the edges */
-  .sv { height: 440px; }
-  .sn-nav { width: 50px; } .sn-nav-ico { width: 40px; height: 40px; }
-  .sv-entrance { transform: translateX(-40%) scale(.74); transform-origin: bottom center; } .sv-bikes { display: none; } .sv-tree { left: -30px; }
-  .sv-pole { left: 4px; transform: scale(.78); transform-origin: bottom left; z-index: 3; }
-  .sv-machines { gap: 6px; bottom: 120px; } .sv-machine { width: 64px; height: 170px; }
-  .sv-exits { padding: 0 52px; } .sv-dboard { width: 92%; top: 190px; padding: 6px 8px; }
-  .sv-db-head, .sv-db-row { grid-template-columns: 40px 76px 1fr 54px; gap: 4px; } .sv-db-to .sn-term { font-size: .95rem; }
-  .sv-gaterow { gap: 8px; bottom: 120px; } .sv-office { display: none; } .sv-gatebank { gap: 10px; } .sv-gate { width: 30px; }
-  .sv-paid-signs { padding: 0 52px; grid-template-columns: 1fr; justify-items: center; } .sv-backexit, .sv-transfer { display: none; }
-  .sv-dirsign { flex-wrap: wrap; justify-content: center; }
-  .sv-stairhall { padding: 0 50px; height: 250px; } .sv-up { width: 190px; height: 230px; } .sv-stairhall .sn-speakers { display: none; }
-  .sv-platrow { grid-template-columns: 1fr; padding: 8px 52px 0; } .sv-platsign { padding-top: 0; display: flex; justify-content: center; }
-  /* the platform on a phone flows: train, edge, the floor sign, announcements, then the way down and the ticket */
-  .sv-plat { height: auto; padding-bottom: 64px; } .sv-plat .sv-edge { position: relative; bottom: auto; }
-  .sv-plat .sv-anns { position: static; margin: 64px 12px 0; grid-template-columns: 1fr; }
-  .sv-women { top: auto; bottom: -62px; } .sv-plat .sv-downbtn { left: 12px; right: auto; margin: 0; }
-  .sn-station:has(.sv-plat) .sn-ticket.chip { bottom: 10px; }
-  .sv-car { height: 170px; } .sv-tdoor i { width: 24px; height: 110px; } .sv-win { width: 30px; }
-  .sv-ekimei { width: 92%; }
-  .sv-ride { height: 600px; } .sv-hangads { left: 8px; right: 8px; gap: 6px; } .sv-ad.hang { width: 48%; } .sv-ad.hang .sv-ad-art, .sv-ad.hang .sv-ad-art svg { width: 54px; }
-  .sv-ad-head { font-size: .82rem; white-space: normal; } .sv-ad-sub { font-size: .66rem; white-space: normal; }
-  .sv-straps { left: 10px; right: 10px; } .sv-carwall { left: 6px; right: 6px; }
-  .sv-band.top .sv-ad.top { display: none; } .sv-lcd { flex: 1; }
-  .sv-row .sv-glass + .sv-pier + .sv-glass { display: none; } .sv-dooropen { flex-basis: 120px; }
-  .sv-pform { padding-left: 6%; } .sv-pform .sv-pf-name { font-size: 1rem; padding: 3px 12px; }
-  .sv-seat { right: 130px; } .sv-cushion i:nth-child(n+5) { display: none; } .sv-partition { display: none; }
-  .sv-ctl { height: auto; flex-wrap: wrap; padding: 8px 10px; } .sv-riding { flex: 1 1 100%; } .sv-ctl .btn { flex: 1; }
-  .sv-annpop { padding-bottom: 110px; }
-  .sn-station .sn-ticket.chip { top: auto; bottom: 64px; right: 8px; }
+  /* the station on a phone: its modal over the whole screen (the rest of it,
+     shared with a narrow desktop, is in the container query above) */
   .sn-modal { position: fixed; z-index: 60; }
 }

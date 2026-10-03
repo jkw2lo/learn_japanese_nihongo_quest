@@ -87,6 +87,8 @@ Build order. Each step should run end to end before the next one starts.
    a word on every stall's flag; banners that say their names.
 9l. ~~Tidying~~ (0.24.0): a sound bundle per place; the kana bundle can't be
    skipped; dead and split CSS cleaned up.
+9m. ~~Night and fit~~ (0.25.0): the places keep their light in dark mode; a
+   place fits a desktop screen; a narrow station gets the compact layout.
 10. **More recognition practice at N5**: more scenes (a train ticket, a
    bento label, a konbini's shelf tags, a clinic), a "spot the kanji you
    know" mode over the scenes, and scenes in Sprint.

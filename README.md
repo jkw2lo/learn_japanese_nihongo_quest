@@ -976,6 +976,28 @@ the konbini's does, and the smoke test checks both.
   in the middle of it, as real ones are; lettered in paper colour, so it
   reads in dark mode too.
 
+### 0.25.0: places by night, and on one screen
+
+- **Dark mode leaves the places alone.** The painted scenes (the sushi door,
+  the hostess and the counter, the festival, the shopfronts, the konbini,
+  every part of the station) keep the light theme's ink and paper inside
+  them, so words on a pale wall no longer turn pale themselves ("A curtain
+  over a sliding door…" was all but invisible), and the hostess's speech
+  bubbles are paper, not slate, on the cream wall. What's in your hands
+  beside a scene follows the theme as before.
+- **A place fits the screen on a desktop.** Opening one brings its mode
+  bar up under the top bar (the title and levels are a scroll above), and
+  the scene with its side panel is scaled down (CSS zoom, never below
+  70%) only if its bottom would still be off screen: `kbFit` in
+  `js/walk-ui.js`, measured on every draw and on resize. At 1440×900
+  nothing shrinks; at 1280×720 the street and the konbini go to about 87%.
+- **A narrow station gets the compact layout on a desktop too.** The
+  station's phone rules now live in a container query on `.sn-station`
+  (under 720px wide), so a small desktop window no longer squeezes the
+  wide layout: the timetable's destinations wrapped a character at a time
+  and ran out of the bottom, and the concourse signs sat on top of each
+  other. On a phone nothing changes (checked element by element).
+
 ---
 
 ## Today on one screen

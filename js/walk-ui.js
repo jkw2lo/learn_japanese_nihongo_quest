@@ -265,6 +265,32 @@ function kbDraw() {
   if (s) { s.style.scrollBehavior = "auto"; s.scrollLeft = x; s.style.scrollBehavior = ""; }
 }
 
+/* On a desktop a place fits the screen. Opening one brings its mode bar up
+   under the top bar (the title and levels are a scroll above), and the
+   scene, with what's in your hands beside it, is scaled down (CSS zoom, so
+   it takes up less room too) only as far as it must be for its bottom to be
+   on screen as well. Measured afresh on every draw, since a place changes
+   size as you go (the sushi door, then the counter). */
+const KB_FIT_MIN = .7;
+const kbFitTarget = () => $("#v-menu .kb-body") || $("#v-menu .kb-gate");
+function kbFit() {
+  const body = kbFitTarget();
+  if (!body) return;
+  body.style.zoom = "";
+  if (kbPhone()) return;
+  const modes = $("#v-menu .kb-modes"), bar = $(".topbar");
+  const above = modes ? body.getBoundingClientRect().top - modes.getBoundingClientRect().top : 0;
+  const room = innerHeight - (bar?.offsetHeight || 0) - 24 - above, h = body.getBoundingClientRect().height;
+  if (h > room) body.style.zoom = Math.max(KB_FIT_MIN, room / h).toFixed(3);
+}
+function kbFitScroll() {
+  const at = $("#v-menu .kb-modes") || kbFitTarget();
+  if (!at || kbPhone()) return scrollTo(0, 0);
+  scrollTo(0, Math.max(0, scrollY + at.getBoundingClientRect().top - ($(".topbar")?.offsetHeight || 0) - 12));
+}
+let kbFitTimer = 0;
+if (typeof addEventListener === "function") addEventListener("resize", () => { clearTimeout(kbFitTimer); kbFitTimer = setTimeout(() => { if (view === "menu") kbFit(); }, 120); });
+
 /* Leaving a place puts down whatever you were holding. */
 function kbReset() { kb.held = null; kb.quiz = null; kb.list = false; kb.flash = null; kb.side = "front"; }
 
