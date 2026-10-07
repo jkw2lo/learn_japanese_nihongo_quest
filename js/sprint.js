@@ -5,14 +5,18 @@
    - nothing is marked while you work; the colours arrive when you hand in
      (unless the sheet is set to mark as you go: then each answer colours
      its mark on the strip, and a line under the next question says how the
-     last one went — in the page, never over the next kana)
+     last one went — in the page, never over the next kana; or to stop on
+     misses: a wrong answer is held, put right, until Next, and the clock
+     waits while it is)
    - the sheet is built before the clock starts
    - a miss never touches the review schedule — grade(..., "speed") gives
      credit for a right answer and sends a wrong one to the mistake notebook
    - kana are dealt from a shuffled deck, not drawn at random
 
    Write is the handwriting sheet: see a sound, write its kana in the box,
-   next. The strokes are kept and marked by shape (write.js, the same marker
+   next. Next wants at least one stroke — an empty box shakes — and passing
+   one by is its own button, Skip, at the far end from Next, so a stray
+   Enter or tap can't throw one away. The strokes are kept and marked by shape (write.js, the same marker
    as the lessons, stroke order as set in Settings) only at hand-in — so it
    stays a sheet you work through, not a drill that stops to correct you. */
 
@@ -25,7 +29,7 @@ const SPRINT_MODES = {
 const SPRINT_COUNTS = [20, 40, 60, 100];
 const SPRINT_MINS = [1, 2, 3, 5];
 const SPRINT_SETS = { h: "ひらがな", k: "カタカナ", hk: "both" };
-const SPRINT_MARKS = { end: "At hand-in", go: "As you go" };
+const SPRINT_MARKS = { end: "At hand-in", go: "As you go", stop: "Stop on misses" };
 /* A sheet that would loop through the pool more than this many times is
    offered disabled rather than run: it would be the same five kana forever. */
 const SPRINT_MAX_LOOPS = 6;
@@ -74,7 +78,9 @@ function renderSprint() {
     <section class="card">
       <div class="eyebrow">スプリント · Sprint</div>
       <h1>Minute math, for kana.</h1>
-      <p class="lede">A fixed number in a fixed time. ${p.mark === "go" ? "Each answer is marked as you go, without stopping you." : "Nothing is marked until you hand in."} First: did you finish? Then: how many were right?
+      <p class="lede">A fixed number in a fixed time. ${p.mark === "go" ? "Each answer is marked as you go, without stopping you."
+        : p.mark === "stop" ? "Each answer is marked as you go, and a miss waits, put right, until you go on — the clock waits too."
+        : "Nothing is marked until you hand in."} First: did you finish? Then: how many were right?
         Misses never change your reviews — they go to the mistake notebook.</p>
       <div class="pick"><span class="pick-l">Mode</span>${seg("mode", Object.keys(SPRINT_MODES), m => `<span lang="ja">${SPRINT_MODES[m].jp}</span> ${SPRINT_MODES[m].en}`, m => m === "listen" && !hasAudio())}</div>
       <p class="muted small">${esc(SPRINT_MODES[p.mode].what)} Par is ${par}s a question.</p>
@@ -128,7 +134,8 @@ function startSprint() {
   const pool = sprintPool(p.set);
   if (pool.length < 4) return;
   const qs = dealSheet(pool, p.count).map(k => buildSprintQ(k, p.mode));
-  SP = { ...p, key: sprintKeyOf(p), qs, i: 0, ans: [], t0: 0, tq: 0, limit: p.mins * 60000, timer: null, done: false };
+  SP = { ...p, key: sprintKeyOf(p), qs, i: 0, ans: [], t0: 0, tq: 0, limit: p.mins * 60000, timer: null, done: false,
+    held: 0, heldAt: 0 };
   crumb(`sprint ${SP.key}`);
   $("#sprint").classList.add("on");
   document.body.style.overflow = "hidden";
@@ -154,8 +161,11 @@ function beginSprint() {
 
 const fmtClock = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${pad2(s % 60)}`; };
 
+/* Time on the clock: since the start, less any time held on a miss. */
+const sprintElapsed = () => performance.now() - SP.t0 - SP.held - (SP.heldAt ? performance.now() - SP.heldAt : 0);
+
 function tickSprint() {
-  const left = SP.limit - (performance.now() - SP.t0);
+  const left = SP.limit - sprintElapsed();
   $("#spClock").textContent = fmtClock(left);
   $("#spClock").classList.toggle("low", left < 10000);
   if (left <= 0) handIn(false);
@@ -164,9 +174,10 @@ function tickSprint() {
 /* Marking as you go: how the last answer went, in the verdict's place
    under the next question. Empty for the first, so nothing jumps. */
 function sprintLast() {
-  if (SP.mark !== "go") return "";
+  if (SP.mark === "end") return "";
   const a = SP.ans[SP.i - 1];
-  if (!a) return `<div class="verdict sp-last"></div>`;
+  /* stopping on misses, a miss has just been seen, put right */
+  if (!a || (SP.mark === "stop" && !a.ok)) return `<div class="verdict sp-last"></div>`;
   const e = KANA_BY[SP.qs[SP.i - 1].k];
   const it = `<b lang="ja">${esc(e.k)}</b> <span class="rom-always">${esc(e.r)}</span>`;
   const lbl = `<span class="sp-lbl">Last one</span>`;
@@ -179,7 +190,7 @@ function sprintLast() {
 
 function showSprintQ() {
   const q = SP.qs[SP.i];
-  const live = SP.mark === "go";
+  const live = SP.mark !== "end";
   $$("#spStrip i").forEach((el, i) => {
     el.className = i < SP.i ? (live ? (SP.ans[i].ok ? "ok" : "miss") : "done") : i === SP.i ? "now" : "";
   });
@@ -192,6 +203,7 @@ function showSprintQ() {
       <div class="q-ask">Write <b class="sp-w-r">${esc(e.r)}</b> in ${SET_NAME[e.set]}</div>
       ${padHtml(q.k)}
       <div class="pad-tools">
+        <button class="btn btn-ghost btn-sm" data-act="sp-skip">Skip <kbd>⇧↵</kbd></button>
         <button class="btn btn-ghost btn-sm" data-act="w-undo">Undo <kbd>Z</kbd></button>
         <button class="btn btn-ghost btn-sm" data-act="w-clear">Clear</button>
         <button class="btn btn-ghost btn-sm" data-act="sp-replay" aria-label="Hear it">${icon("speaker")} <kbd>R</kbd></button>
@@ -231,15 +243,64 @@ function sprintAnswer(val) {
     val = t;
   } else ok = val === q.k;
   SP.ans[SP.i] = { val, ok, ms: performance.now() - SP.tq };
+  if (!ok && SP.mark === "stop") holdMiss(q, val);
+  else sprintOn();
+}
+
+function sprintOn() {
+  if (SP.heldAt) { SP.held += performance.now() - SP.heldAt; SP.heldAt = 0; $("#spFoot").innerHTML = ""; }
   SP.i++;
   if (SP.i >= SP.qs.length) handIn(true); else showSprintQ();
+}
+
+/* Stopping on misses: the question stays, put right, and the clock waits
+   until Next. */
+function holdMiss(q, val) {
+  SP.heldAt = performance.now();
+  const e = KANA_BY[q.k];
+  const it = `<b lang="ja">${esc(e.k)}</b> <span class="rom-always">${esc(e.r)}</span>`;
+  $$("#spStrip i")[SP.i].className = "miss";
+  let why = "";
+  if (SP.mode === "write") {
+    if (pad) {
+      pad.locked = true;
+      const res = val.length ? markBy(state.settings, q.k, val) : null;
+      drawInk(res ? res.strokes : undefined);
+      const as = res?.readAs && KANA_BY[res.readAs];
+      why = !val.length ? "Skipped." : as ? `That reads as <span lang="ja">${esc(as.k)}</span> ${esc(as.r)}.` : esc(res.reason);
+    }
+    $("#padModel").innerHTML = modelSvg(q.k, { animate: true });
+    $(".sp-q .pad-tools")?.remove();
+  } else if (SP.mode === "type") {
+    const inp = $("#spInput");
+    if (inp) { inp.disabled = true; inp.value = val || ""; }
+    why = val ? `You typed “${esc(val)}”.` : "Skipped.";
+  } else {
+    $$("#spBody .opt").forEach((b, i) => {
+      b.disabled = true;
+      if (q.opts[i].val === q.k) b.classList.add("right");
+      else if (q.opts[i].val === val) b.classList.add("wrong");
+    });
+  }
+  $(".sp-q > .sp-last")?.remove();
+  $(".sp-q").insertAdjacentHTML("beforeend",
+    `<div class="verdict sp-last miss">${icon("close", "v-ico")} ${it}${why ? ` <span class="sp-you">· ${why}</span>` : ""}</div>`);
+  $("#spFoot").innerHTML = `<span></span><button class="btn" data-act="sp-on" id="spOn">Next <kbd>↵</kbd></button>`;
+  $("#spOn").focus();
+}
+
+/* Next with nothing in the box doesn't skip: the box shakes. Skip does. */
+function sprintNudge() {
+  const p = $("#pad");
+  if (!p) return;
+  p.classList.remove("sp-nudge"); void p.offsetWidth; p.classList.add("sp-nudge");
 }
 
 function handIn(finished) {
   if (!SP || SP.done) return;
   SP.done = true;
   clearInterval(SP.timer);
-  const ms = Math.min(SP.limit, performance.now() - SP.t0);
+  const ms = Math.min(SP.limit, sprintElapsed());
   addStudyTime(ms);
   const sk = SPRINT_MODES[SP.mode].sk;
   SP.ans.forEach((a, i) => { if (a) grade(SP.qs[i].k, sk, a.ok, a.ms, "speed"); });
@@ -265,14 +326,46 @@ function handIn(finished) {
     <div class="sp-review">${SP.qs.map((q, i) => {
       const a = SP.ans[i];
       const cls = a ? (a.ok ? "ok" : "miss") : "skip";
-      if (SP.mode === "write") return `<span class="${cls}" title="${a && !a.ok ? "what you wrote, under it" : ""}"><b lang="ja">${esc(q.k)}</b><small>${esc(KANA_BY[q.k].r)}</small>${
-        a && !a.ok && a.val.length ? inkThumb(a.val) : ""}</span>`;
+      /* a miss opens: the kana written out stroke by stroke, beside yours */
+      if (SP.mode === "write" && a && !a.ok) return `<button class="${cls}" data-act="sp-miss" data-i="${i}" aria-label="${esc(KANA_BY[q.k].r)}: see it written"><b lang="ja">${esc(q.k)}</b><small>${esc(KANA_BY[q.k].r)}</small>${
+        a.val.length ? inkThumb(a.val) : ""}</button>`;
+      if (SP.mode === "write") return `<span class="${cls}"><b lang="ja">${esc(q.k)}</b><small>${esc(KANA_BY[q.k].r)}</small></span>`;
       return `<span class="${cls}" title="${a && !a.ok ? "you: " + esc(SP.mode === "listen" ? a.val : a.val || "(blank)") : ""}"><b lang="ja">${esc(q.k)}</b><small>${esc(KANA_BY[q.k].r)}</small></span>`;
     }).join("")}</div>
+    ${SP.mode === "write" && SP.ans.some(a => a && !a.ok) ? `<p class="muted small">Tap a miss to see it written.</p>` : ""}
   </div>`;
   if (newBest) petals($("#sprint"), 24);
   $("#spFoot").innerHTML = `<button class="btn btn-ghost" data-act="sp-close">Done <kbd>Esc</kbd></button>
     <button class="btn" data-act="sp-again">Same sheet again <kbd>↵</kbd></button>`;
+}
+
+/* A miss in Write's review, opened: the kana drawing itself in order,
+   what you wrote beside it, and why it was marked wrong. A milestone's
+   card (.ms-pop), so Esc, Enter and the backdrop close it. */
+function sprintMiss(i) {
+  const q = SP?.qs[i], a = SP?.ans[i];
+  if (!q || !a) return;
+  const e = KANA_BY[q.k];
+  const res = a.val.length ? markBy(state.settings, q.k, a.val) : null;
+  const as = res?.readAs && KANA_BY[res.readAs];
+  const why = !res ? "Skipped." : as ? `That reads as <span lang="ja">${esc(as.k)}</span> ${esc(as.r)}.` : esc(res.reason);
+  const el = document.createElement("div");
+  el.className = "ms-pop sp-pop";
+  el.innerHTML = `<div class="ms-veil" data-act="ms-close"></div>
+    <div class="ms-card" role="dialog" aria-modal="true" aria-label="${esc(e.r)}, written">
+      <div class="eyebrow"><span lang="ja">${esc(e.k)}</span> · ${esc(e.r)} in ${SET_NAME[e.set]}</div>
+      <div class="sp-pop-pair">
+        <figure><div class="sp-pop-box" id="spPopModel">${modelSvg(q.k, { animate: true })}</div><figcaption>How it goes</figcaption></figure>
+        <figure><div class="sp-pop-box">${a.val.length ? inkThumb(a.val) : ""}</div><figcaption>What you wrote</figcaption></figure>
+      </div>
+      <p class="sp-pop-why">${why}</p>
+      <div class="ask-btns">
+        <button class="btn btn-ghost btn-sm" data-act="say" data-say="${esc(q.k)}">${icon("speaker")} Hear it</button>
+        <button class="btn btn-ghost btn-sm" data-act="sp-miss-again" data-k="${esc(q.k)}">Strokes again</button>
+        <button class="btn btn-sm" data-act="ms-close">Close</button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
 }
 
 /* What you wrote, small, under a miss in the review. */
@@ -311,8 +404,13 @@ function sprintKey(e) {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); againSprint(); }
     return true;
   }
+  if (SP.heldAt) {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); sprintOn(); }
+    return true;
+  }
   if (SP.mode === "write") {
-    if (e.key === "Enter") { e.preventDefault(); ACTS["sp-write-next"](); }
+    if (e.key === "Enter" && e.shiftKey) { e.preventDefault(); ACTS["sp-skip"](); }
+    else if (e.key === "Enter") { e.preventDefault(); ACTS["sp-write-next"](); }
     else if (e.key === "z" || e.key === "Z") padUndo();
     else if (e.key === "r" || e.key === "R") sayKana(SP.qs[SP.i].k);
     return true;
@@ -352,9 +450,17 @@ Object.assign(ACTS, {
     renderSprint();
   },
   "sp-start": () => startSprint(),
-  "sp-opt": el => { const q = SP?.qs[SP.i]; if (q) sprintAnswer(q.opts[+el.dataset.i].val); },
+  "sp-opt": el => { const q = SP?.qs[SP.i]; if (q && !SP.heldAt) sprintAnswer(q.opts[+el.dataset.i].val); },
   "sp-replay": () => { if (SP) sayKana(SP.qs[SP.i].k); },
-  "sp-write-next": () => { if (SP && !SP.done && SP.mode === "write" && pad) sprintAnswer(pad.strokes); },
+  "sp-write-next": () => {
+    if (!SP || SP.done || SP.heldAt || SP.mode !== "write" || !pad) return;
+    if (!pad.strokes.some(st => st.length)) return sprintNudge();
+    sprintAnswer(pad.strokes);
+  },
+  "sp-skip": () => { if (SP && !SP.done && !SP.heldAt && SP.mode === "write") sprintAnswer([]); },
+  "sp-on": () => { if (SP && SP.heldAt) sprintOn(); },
   "sp-close": () => closeSprint(),
+  "sp-miss": el => sprintMiss(+el.dataset.i),
+  "sp-miss-again": el => { const b = $("#spPopModel"); if (b) b.innerHTML = modelSvg(el.dataset.k, { animate: true }); },
   "sp-again": () => againSprint(),
 });

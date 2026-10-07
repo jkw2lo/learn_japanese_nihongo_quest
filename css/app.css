@@ -983,12 +983,24 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 .grade small { font-size: .8rem; }
 .badge-best { display: inline-block; background: var(--jade-wash); color: var(--jade); border-radius: 999px; padding: 3px 12px; font-size: .86rem; margin-bottom: .8rem; }
 .sp-review { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 1rem; }
-.sp-review span { display: flex; flex-direction: column; align-items: center; width: 3rem; padding: 4px 0; border-radius: 6px; border: 1px solid var(--rule-2); }
+.sp-review > span, .sp-review > button { display: flex; flex-direction: column; align-items: center; width: 3rem; padding: 4px 0; border-radius: 6px; border: 1px solid var(--rule-2); }
 .sp-review b { font-weight: 400; font-size: 1.25rem; }
 .sp-review small { font-size: .66rem; color: var(--ink-3); }
 .sp-review .ok { background: var(--jade-wash); border-color: transparent; }
 .sp-review .miss { background: var(--amber-wash); border-color: var(--amber); }
 .sp-review .skip { opacity: .45; }
+.sp-review > button { font: inherit; color: inherit; cursor: pointer; }
+.sp-review button.miss:hover { box-shadow: 0 0 0 2px var(--amber); }
+/* a miss opened */
+.sp-pop-pair { display: flex; justify-content: center; gap: 14px; margin: .8rem 0 .4rem; }
+.sp-pop-pair figure { margin: 0; flex: 1; max-width: 10rem; }
+.sp-pop-pair figcaption { font-size: .8rem; color: var(--ink-3); margin-top: .3rem; }
+.sp-pop-box { position: relative; aspect-ratio: 1; border: 1px solid var(--rule-2); border-radius: 12px; background: var(--paper); }
+.sp-pop-box svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.sp-pop-box .sp-ink { margin: 0; }
+.sp-pop-box .sp-ink polyline { stroke-width: 34; }
+.sp-pop-why { color: var(--ink-2); font-size: .92rem; min-height: 1.4em; }
+.sp-pop .ask-btns { justify-content: center; flex-wrap: wrap; }
 .sp-q.q-w .q-ask { font-size: 1.1rem; }
 .sp-w-r { font: 600 1.6rem var(--f-display); color: var(--ai); margin: 0 .15em; }
 .sp-q .pad-tools { margin-top: .2rem; }
@@ -1000,6 +1012,8 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 .sp-last .sp-lbl { color: var(--ink-3); font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; margin-right: .3rem; }
 .sp-last .sp-you { color: var(--ink-3); font-size: .88rem; margin-left: .2rem; }
 .sp-last .sp-ink { width: 1.7rem; height: 1.7rem; margin: 0; vertical-align: middle; }
+/* Next on an empty box: a shake, not a skip */
+.sp-nudge { animation: shake .35s; }
 
 /* ---------- sheets, ask, crash, toast ---------- */
 
@@ -2599,6 +2613,7 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
   .sp-strip { gap: 1px; }
   .sp-clock { font-size: 1.2rem; }
   .sp-input { font-size: 1.5rem; min-height: 56px; }
+  .sp-q .pad-tools { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
   .sp-count { font-size: 7rem; }
 
   /* ---------- Read a Menu ---------- */

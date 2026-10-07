@@ -998,6 +998,15 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.28.0: no accidental skips, and sprints that stop on misses
+
+- **Sprint → Write:** Next needs at least one stroke (an empty box shakes);
+  skipping is its own button, Skip (⇧↵), at the other end from Next.
+- **Sprint → Marking: Stop on misses**, beside At hand-in and As you go: a
+  miss stays on screen, put right, until Next, with the clock stopped.
+- **Sprint → Write's review:** tap a miss to see it written, stroke by
+  stroke, beside what you wrote and why it was marked wrong.
+
 ### 0.27.0: writing read like a keyboard, sprints marked as you go
 
 - **Settings → How writing is marked** gains a third way, **Read it like a
@@ -1154,20 +1163,30 @@ dealt from a shuffled deck, not drawn at random.
 | **活用 Conjugate** | 食べる + て-form | type 食べて | 4.0 | pattern | with conjugation |
 
 Each sheet can be hiragana, katakana or both, 20–100 questions, 1–5
-minutes, marked **at hand-in** (the default) or **as you go**. As you go,
-each answer colours its mark on the strip at the top, and a line where a
-verdict goes (under the next question) says how the last one went: *Last
-one ✓ か ka*, or *✗ か ka · you: ki*, with a small copy of your ink in Write.
-It never stops the sheet or covers the next kana. Both share one best. Only a **finished** sheet can set a best: finishing comes first,
+minutes, marked **at hand-in** (the default), **as you go**, or **stopping
+on misses**. As you go, each answer colours its mark on the strip at the
+top, and a line where a verdict goes (under the next question) says how the
+last one went: *Last one ✓ か ka*, or *✗ か ka · you: ki*, with a small copy
+of your ink in Write. It never stops the sheet or covers the next kana.
+Stopping on misses, a right answer goes straight on, but a wrong one stays
+on screen put right (the right choice green, yours amber; in Write, your ink
+amber and the model drawing itself) until Next (↵). The clock waits while it
+does, so the time is still time spent answering. All three share one best. Only a **finished** sheet can set a best: finishing comes first,
 then accuracy, then time. A sheet that would loop through its kana more
 than six times is offered disabled.
 
 **Write** is the handwriting sheet. Each question gives the sound and the
 script; you write it in the box (Undo, Clear, hear it again) and go on with
-Next or Enter, and an empty box is a skip. Nothing is marked as you go: the
-strokes are kept and marked by shape at hand-in (or as you go), with the
+Next or Enter. Next on an empty box doesn't skip, it shakes the box:
+passing one by is **Skip** (⇧↵), at the far end of the row from Next, so a
+stray Enter or tap can't throw a question away. The strokes are kept and
+marked at hand-in (or as you go, if the sheet is set to), with the
 lessons' own marker, as set in Settings → How writing is marked (`markBy`). The review shows
-each miss with a small copy of what you wrote under it. Only kana with
+each miss with a small copy of what you wrote under it, and **tapping a
+miss** opens a card: the kana drawing itself stroke by stroke (*Strokes
+again* replays it), what you wrote beside it, why it was marked wrong
+(*That reads as お o*, *3 strokes, and you drew 1*, *Skipped*), and *Hear
+it*. Esc, Enter or the backdrop close it. Only kana with
 stroke data are dealt (きゃ is two kana you already write), and choosing
 Write turns a sheet too fast to finish at par into 20 in 3 minutes.
 
