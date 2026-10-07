@@ -28,6 +28,7 @@ const DEFAULT_SETTINGS = {
   reviewEvery: 3,        /* a review day after this many days of new lessons; 0 = never */
   writing: true,         /* writing drills as reinforcement */
   strokeOrder: false,    /* also check stroke order and direction */
+  writeCheck: "shape",   /* shape: stroke by stroke | read: like a handwriting keyboard (write.js) */
   writeKanji: false,     /* writing drills for kanji too — opt-in */
   furigana: "auto",      /* over kanji you don't know | always | never */
   theme: "auto",

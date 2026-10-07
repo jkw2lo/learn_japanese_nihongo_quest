@@ -119,18 +119,22 @@ function cheerLine(acc, n) {
   return `<div class="cheer"><b lang="ja">${esc(jp)}</b> ${esc(en)}</div>`;
 }
 
-/* A run of right answers in a session: a little pill at 5, 10, 20… */
+/* A run of right answers in a session: a little pill at 5, 10, 20… It sits
+   in the top bar, over the session's title, and is gone by the time the
+   next question comes up (AUTO_ADVANCE_MS) — in the middle of the screen it
+   covered the next kana. */
+const COMBO_MS = 1200;
 const COMBO_AT = { 5: ["いいね！", "5 in a row"], 10: ["すごい！", "10 in a row"], 20: ["天才！", "20 in a row"], 30: ["神！", "30 in a row"] };
 function comboPill(n) {
   const c = COMBO_AT[n];
   if (!c) return;
-  const host = $("#session");
+  const host = $("#session .s-top");
   host.querySelector(".combo")?.remove();
   const el = document.createElement("div");
   el.className = "combo";
   el.innerHTML = `${icon("sparkle")} <b lang="ja">${esc(c[0])}</b> ${esc(c[1])}`;
   host.appendChild(el);
-  setTimeout(() => el.remove(), 1900);
+  setTimeout(() => el.remove(), COMBO_MS);
 }
 
 /* ---------- the dashboard ---------- */

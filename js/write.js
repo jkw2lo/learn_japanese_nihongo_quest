@@ -8,16 +8,20 @@
    (x, y) becomes (x, 900 − y), and what the learner draws needs no
    conversion beyond the pad's size.
 
-   Two ways of marking, chosen in Settings → Check stroke order:
+   Three ways of marking, chosen in Settings → How writing is marked:
 
-   - off (the default): the SHAPE is marked, not the order. Each stroke of
+   - shape (the default): the SHAPE is marked, not the order. Each stroke of
      the model has to be matched by one of yours, in any order and either
      direction. Writing here is reinforcement — the aim is that your hand
      knows the shape — so a learner who draws し from the bottom up still
      gets the credit for knowing し.
-   - on: stroke i has to be the model's stroke i, drawn the right way round.
+   - in order: stroke i has to be the model's stroke i, drawn the right way
+     round.
+   - read: what you wrote is read like a handwriting keyboard reads it — see
+     readWriting. For later on, when the shapes are in your hand and being
+     marked stroke by stroke starts to get in the way.
 
-   The matcher is pure (no DOM), so tools/smoke.mjs can run it on the real
+   The markers are pure (no DOM), so tools/smoke.mjs can run them on the real
    stroke data: every kana's own medians must pass, and look-alikes must fail. */
 
 const WRITE_N = 24;                 /* points a stroke is resampled to */
@@ -148,6 +152,112 @@ function markWriting(k, userStrokes, ordered = false) {
       ? `${model.length} stroke${model.length > 1 ? "s" : ""}, and you drew ${user.length}.`
       : "The shape isn't quite there — compare it with the model.",
   };
+}
+
+/* ---------- reading it, like a handwriting keyboard ---------- */
+
+/* The other way of marking, chosen in Settings → How writing is marked. A
+   phone's handwriting keyboard doesn't count your strokes: it reads what
+   you wrote against every character it knows and offers the closest. This
+   does the same, against every kana (or every kanji) with stroke data, and
+   it's right when what you wrote reads as the one asked for.
+
+   So strokes may be joined up (き's last two in one go), split, or come in
+   any order, and anything the stroke-by-stroke marking would pass passes
+   here too. Direction still counts: it's most of what tells ソ from ン, so
+   a stroke the wrong way round is a miss, and the miss says so.
+
+   Each drawing becomes a cloud of points, spread along its strokes, each
+   carrying the way its stroke was heading. Two clouds are as far apart as
+   the mean distance from each point to the nearest in the other, both ways
+   round (a missing stroke and an extra one both cost). That mean is taken
+   twice, over every point and stroke by stroke, and the two averaged: by
+   points alone, a dakuten is a few dots in a big shape and ど reads as と. */
+
+const READ_N = 64;          /* points a drawing is spread over */
+const READ_MIN = 4;         /* …but never fewer than this on one stroke */
+const READ_DIR = 60;        /* what heading the opposite way costs, in 1024 units */
+const READ_CAP = 90;        /* closer than this, or it can't be read at all; scribbles start about here */
+/* Drawn alike, so read alike: neither can be told from the other written
+   on its own, and asking for one, the other is right. */
+const READ_SAME = ["へヘ", "べベ", "ぺペ", "つっ", "ツッ"];
+const sameShape = (a, b) => a === b || READ_SAME.some(s => s.includes(a) && s.includes(b));
+const isKanaChar = k => /^[぀-ヿ]+$/.test(k);
+
+function cloud(strokes) {
+  const lens = strokes.map(strokeLen), total = lens.reduce((a, b) => a + b, 0) || 1;
+  const out = [];
+  strokes.forEach((st, s) => {
+    const n = Math.max(READ_MIN, Math.round(READ_N * lens[s] / total));
+    const r = resample(st, n);
+    r.forEach((p, j) => {
+      const a = r[Math.max(0, j - 1)], b = r[Math.min(n - 1, j + 1)];
+      const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.sqrt(dx * dx + dy * dy);
+      out.push([p[0], p[1], l ? dx / l : 0, l ? dy / l : 0, s]);
+    });
+  });
+  return out;
+}
+
+/* From each point of A to the nearest of B: the mean over every point, and
+   the mean of each stroke's mean, averaged. */
+function cloudHalf(A, B, dir) {
+  const { sqrt } = Math;      /* looked up once: this loop runs ~1.3M times a read */
+  const per = new Map();
+  let all = 0;
+  for (const a of A) {
+    let m = Infinity;
+    for (const b of B) {
+      const dx = a[0] - b[0], dy = a[1] - b[1], tx = a[2] - b[2], ty = a[3] - b[3];
+      const d = sqrt(dx * dx + dy * dy) + dir * sqrt(tx * tx + ty * ty);
+      if (d < m) m = d;
+    }
+    all += m;
+    const g = per.get(a[4]) || per.set(a[4], [0, 0]).get(a[4]);
+    g[0] += m; g[1]++;
+  }
+  let strokes = 0;
+  per.forEach(([s, n]) => { strokes += s / n; });
+  return (all / A.length + strokes / per.size) / 2;
+}
+
+const modelClouds = {};
+function readDist(user, k, dir = READ_DIR) {
+  const model = modelMedians(k);
+  const M = modelClouds[k] || (modelClouds[k] = cloud(model));
+  const U = cloud(align(user, model));
+  return (cloudHalf(U, M, dir) + cloudHalf(M, U, dir)) / 2;
+}
+
+/* Returns markWriting's shape, plus readAs: what it read as (null if it
+   couldn't be read as anything). */
+function readWriting(k, userStrokes) {
+  const user = userStrokes.filter(st => st.length > 0);
+  if (!user.length) return { ok: false, strokes: [], reason: "Nothing written yet.", readAs: null };
+  /* Whatever the stroke-by-stroke marking passes, this passes too, so
+     switching to it never turns a right answer wrong. It's also quicker. */
+  const shape = markWriting(k, user, false);
+  if (shape.ok) return { ...shape, readAs: k };
+  const kana = isKanaChar(k);
+  const pool = Object.keys(window.NQ_STROKES).filter(c => isKanaChar(c) === kana);
+  const closest = dir => pool.map(c => [c, readDist(user, c, dir)]).sort((a, b) => a[1] - b[1])[0];
+  const [best, bestD] = closest(READ_DIR);
+  const readAs = bestD <= READ_CAP ? best : null;
+  const ok = !!readAs && sameShape(readAs, k);
+  /* A miss that would read right if direction didn't count is the right
+     shape with a stroke going the wrong way round — worth saying so. */
+  const backwards = !ok && (([c, d]) => d <= READ_CAP && sameShape(c, k))(closest(0));
+  return {
+    ok, readAs,
+    strokes: user.map((_, j) => ({ user: j, ok })),
+    reason: ok ? "" : backwards ? "The shape's there, but a stroke goes the wrong way round."
+      : readAs ? `That reads as ${readAs}.` : "That can't be read as anything yet — compare it with the model.",
+  };
+}
+
+/* Whichever way Settings asks for. */
+function markBy(settings, k, userStrokes) {
+  return settings.writeCheck === "read" ? readWriting(k, userStrokes) : markWriting(k, userStrokes, settings.strokeOrder);
 }
 
 /* ---------- drawing the model ---------- */

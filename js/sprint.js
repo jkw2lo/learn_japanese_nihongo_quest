@@ -3,6 +3,9 @@
    Lifted from Hanzi Quest's 速练 ("minute math, for characters"):
    - a fixed number of questions in a fixed number of minutes
    - nothing is marked while you work; the colours arrive when you hand in
+     (unless the sheet is set to mark as you go: then each answer colours
+     its mark on the strip, and a line under the next question says how the
+     last one went — in the page, never over the next kana)
    - the sheet is built before the clock starts
    - a miss never touches the review schedule — grade(..., "speed") gives
      credit for a right answer and sends a wrong one to the mistake notebook
@@ -17,11 +20,12 @@ const SPRINT_MODES = {
   read:   { jp: "読む", en: "Read",   sk: "r", par: 1.5, what: "See a kana, pick its sound." },
   listen: { jp: "聞く", en: "Listen", sk: "p", par: 2.5, what: "Hear a sound, pick its kana." },
   type:   { jp: "打つ", en: "Type",   sk: "r", par: 2.5, what: "See a kana, type its romaji." },
-  write:  { jp: "書く", en: "Write",  sk: "w", par: 6,   what: "See a sound, write its kana. Marked by shape when you hand in." },
+  write:  { jp: "書く", en: "Write",  sk: "w", par: 6,   what: "See a sound, write its kana in the box." },
 };
 const SPRINT_COUNTS = [20, 40, 60, 100];
 const SPRINT_MINS = [1, 2, 3, 5];
 const SPRINT_SETS = { h: "ひらがな", k: "カタカナ", hk: "both" };
+const SPRINT_MARKS = { end: "At hand-in", go: "As you go" };
 /* A sheet that would loop through the pool more than this many times is
    offered disabled rather than run: it would be the same five kana forever. */
 const SPRINT_MAX_LOOPS = 6;
@@ -34,7 +38,7 @@ let pick = null;        /* the sheet being set up */
 let SP = null;          /* the sheet being run */
 
 function sprintPick() {
-  if (!pick) pick = { mode: "read", set: "h", count: 40, mins: 2, ...(state.sprint.pick || {}) };
+  if (!pick) pick = { mode: "read", set: "h", count: 40, mins: 2, mark: "end", ...(state.sprint.pick || {}) };
   return pick;
 }
 
@@ -70,13 +74,14 @@ function renderSprint() {
     <section class="card">
       <div class="eyebrow">スプリント · Sprint</div>
       <h1>Minute math, for kana.</h1>
-      <p class="lede">A fixed number in a fixed time. Nothing is marked until you hand in. First: did you finish? Then: how many were right?
+      <p class="lede">A fixed number in a fixed time. ${p.mark === "go" ? "Each answer is marked as you go, without stopping you." : "Nothing is marked until you hand in."} First: did you finish? Then: how many were right?
         Misses never change your reviews — they go to the mistake notebook.</p>
       <div class="pick"><span class="pick-l">Mode</span>${seg("mode", Object.keys(SPRINT_MODES), m => `<span lang="ja">${SPRINT_MODES[m].jp}</span> ${SPRINT_MODES[m].en}`, m => m === "listen" && !hasAudio())}</div>
       <p class="muted small">${esc(SPRINT_MODES[p.mode].what)} Par is ${par}s a question.</p>
       <div class="pick"><span class="pick-l">Kana</span>${seg("set", Object.keys(SPRINT_SETS), s => `<span lang="ja">${SPRINT_SETS[s]}</span>`, s => sprintPool(s).length < 4)}</div>
       <div class="pick"><span class="pick-l">Questions</span>${seg("count", SPRINT_COUNTS, x => x, c => c > pool.length * SPRINT_MAX_LOOPS)}</div>
       <div class="pick"><span class="pick-l">Minutes</span>${seg("mins", SPRINT_MINS)}</div>
+      <div class="pick"><span class="pick-l">Marking</span>${seg("mark", Object.keys(SPRINT_MARKS), m => SPRINT_MARKS[m])}</div>
       ${loading ? `<p class="muted small">Loading the stroke shapes…</p>`
         : tooFew ? `<p class="warn">Learn a few more kana first — a sheet needs at least four to choose from.</p>`
         : p.count > pool.length * SPRINT_MAX_LOOPS ? `<p class="warn">That's more questions than ${pool.length} kana can fill sensibly — pick fewer.</p>`
@@ -156,9 +161,29 @@ function tickSprint() {
   if (left <= 0) handIn(false);
 }
 
+/* Marking as you go: how the last answer went, in the verdict's place
+   under the next question. Empty for the first, so nothing jumps. */
+function sprintLast() {
+  if (SP.mark !== "go") return "";
+  const a = SP.ans[SP.i - 1];
+  if (!a) return `<div class="verdict sp-last"></div>`;
+  const e = KANA_BY[SP.qs[SP.i - 1].k];
+  const it = `<b lang="ja">${esc(e.k)}</b> <span class="rom-always">${esc(e.r)}</span>`;
+  const lbl = `<span class="sp-lbl">Last one</span>`;
+  if (a.ok) return `<div class="verdict sp-last ok">${lbl} ${icon("check", "v-ico")} ${it}</div>`;
+  const you = SP.mode === "write" ? (a.val.length ? inkThumb(a.val) : "nothing")
+    : SP.mode === "type" ? (a.val ? `“${esc(a.val)}”` : "nothing")
+    : SP.mode === "read" ? esc(KANA_BY[a.val].r) : `<span lang="ja">${esc(a.val)}</span>`;
+  return `<div class="verdict sp-last miss">${lbl} ${icon("close", "v-ico")} ${it} <span class="sp-you">· you: ${you}</span></div>`;
+}
+
 function showSprintQ() {
   const q = SP.qs[SP.i];
-  $$("#spStrip i").forEach((el, i) => { el.className = i < SP.i ? "done" : i === SP.i ? "now" : ""; });
+  const live = SP.mark === "go";
+  $$("#spStrip i").forEach((el, i) => {
+    el.className = i < SP.i ? (live ? (SP.ans[i].ok ? "ok" : "miss") : "done") : i === SP.i ? "now" : "";
+  });
+  const last = sprintLast();
   SP.tq = performance.now();
   const body = $("#spBody");
   if (SP.mode === "write") {
@@ -171,7 +196,7 @@ function showSprintQ() {
         <button class="btn btn-ghost btn-sm" data-act="w-clear">Clear</button>
         <button class="btn btn-ghost btn-sm" data-act="sp-replay" aria-label="Hear it">${icon("speaker")} <kbd>R</kbd></button>
         <button class="btn btn-sm" data-act="sp-write-next">Next <kbd>↵</kbd></button>
-      </div></div>`;
+      </div>${last}</div>`;
     bindPad();
     if (state.settings.autoplay) sayKana(q.k);
     return;
@@ -179,13 +204,14 @@ function showSprintQ() {
   if (SP.mode === "type") {
     body.innerHTML = `<div class="q sp-q"><div class="glyph-l" lang="ja">${esc(q.k)}</div>
       <input class="sp-input" id="spInput" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" placeholder="romaji, then Enter">
-      <div class="muted small">Enter hands it in · an empty Enter skips</div></div>`;
+      <div class="muted small">Enter hands it in · an empty Enter skips</div>${last}</div>`;
     $("#spInput").focus();
     return;
   }
   body.innerHTML = `<div class="q sp-q">
     ${SP.mode === "read" ? `<div class="glyph-l" lang="ja">${esc(q.k)}</div>` : `<button class="play" data-act="sp-replay" aria-label="Play again">${icon("speaker")}</button>`}
     <div class="opts n${q.opts.length}">${q.opts.map((o, i) => `<button class="opt ${o.jp ? "jp" : ""}" data-act="sp-opt" data-i="${i}" ${o.jp ? 'lang="ja"' : ""}><kbd>${i + 1}</kbd><span>${esc(o.label)}</span></button>`).join("")}</div>
+    ${last}
   </div>`;
   if (SP.mode === "listen") sayKana(q.k);
 }
@@ -198,7 +224,7 @@ function sprintAnswer(val) {
   if (SP.mode === "write") {
     /* nothing drawn is a skip, marked wrong */
     val = val.filter(st => st.length).map(st => st.map(p => [...p]));
-    ok = val.length > 0 && markWriting(q.k, val, state.settings.strokeOrder).ok;
+    ok = val.length > 0 && markBy(state.settings, q.k, val).ok;
   } else if (SP.mode === "type") {
     const t = String(val).trim().toLowerCase().replace(/[^a-z']/g, "");
     ok = t === e.r || (ROMAJI_ALT[e.r] || []).includes(t);
@@ -262,6 +288,9 @@ async function closeSprint() {
   clearTimeout(SP.cd); clearInterval(SP.timer);
   SP = null;
   $("#sprint").classList.remove("on");
+  /* a sheet given up half-way leaves its answer buttons here, and the
+     session's answer() — which looks for .opt anywhere — would trip on them */
+  $("#spBody").innerHTML = "";
   $("#spFoot").innerHTML = "";
   document.body.style.overflow = "";
   render();

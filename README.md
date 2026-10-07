@@ -998,6 +998,22 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.27.0: writing read like a keyboard, sprints marked as you go
+
+- **Settings → How writing is marked** gains a third way, **Read it like a
+  keyboard**, for once the shapes are in your hand: strokes can be joined
+  up or split, and it's right if it reads as the right kana. Stroke by
+  stroke stays the default. It replaces the *Check stroke order* switch,
+  which is now the second option. See **Writing → Read it like a keyboard**.
+- **Sprint → Marking: As you go.** Every mode, Write included: the strip
+  colours as you answer and a small line under the next question says how
+  the last one went.
+- **The *5 in a row* pill** moved from over the question to the top bar,
+  and is gone in 1.2 s, before the next card: it used to sit on the next
+  kana for most of a second.
+- **Fixed:** giving up a Read or Listen sprint half-way left its buttons
+  behind, and the next multiple-choice answer in a lesson crashed.
+
 ### 0.26.1: install it as an app
 
 - **`manifest.webmanifest`** and the 日 seal as icons (`icons/`, drawn by
@@ -1122,7 +1138,8 @@ is the one place the colour rules allow it. Motion respects
 
 Lifted as a whole from Hanzi Quest's 速练 (*minute math, for characters*):
 a fixed number of questions in a fixed number of minutes. Nothing is marked
-until you hand in, the sheet is built before the clock starts, a miss never
+until you hand in (unless you ask for it as you go, below), the sheet is
+built before the clock starts, a miss never
 touches your review schedule (`grade(..., {speed: true})`), and cards are
 dealt from a shuffled deck, not drawn at random.
 
@@ -1137,15 +1154,19 @@ dealt from a shuffled deck, not drawn at random.
 | **活用 Conjugate** | 食べる + て-form | type 食べて | 4.0 | pattern | with conjugation |
 
 Each sheet can be hiragana, katakana or both, 20–100 questions, 1–5
-minutes. Only a **finished** sheet can set a best: finishing comes first,
+minutes, marked **at hand-in** (the default) or **as you go**. As you go,
+each answer colours its mark on the strip at the top, and a line where a
+verdict goes (under the next question) says how the last one went: *Last
+one ✓ か ka*, or *✗ か ka · you: ki*, with a small copy of your ink in Write.
+It never stops the sheet or covers the next kana. Both share one best. Only a **finished** sheet can set a best: finishing comes first,
 then accuracy, then time. A sheet that would loop through its kana more
 than six times is offered disabled.
 
 **Write** is the handwriting sheet. Each question gives the sound and the
 script; you write it in the box (Undo, Clear, hear it again) and go on with
 Next or Enter, and an empty box is a skip. Nothing is marked as you go: the
-strokes are kept and marked by shape at hand-in, with the lessons' own
-marker (`markWriting`, stroke order as set in Settings). The review shows
+strokes are kept and marked by shape at hand-in (or as you go), with the
+lessons' own marker, as set in Settings → How writing is marked (`markBy`). The review shows
 each miss with a small copy of what you wrote under it. Only kana with
 stroke data are dealt (きゃ is two kana you already write), and choosing
 Write turns a sheet too fast to finish at par into 20 in 3 minutes.
@@ -1274,15 +1295,19 @@ or small. Each stroke is resampled to 24 points, and two strokes match when:
 - no **stretch** of four points is far off (the small loop that makes る
   not ろ).
 
-Two modes, chosen in **Settings → Check stroke order** (off by default):
+Three ways, chosen in **Settings → How writing is marked**:
 
-- **Off:** strokes may come in **any order**. Each model stroke is paired
-  with its closest stroke of yours. Strokes still have to go the usual way
-  round, top to bottom and left to right, because direction is the whole
-  difference between ソ and ン, and between シ and ツ.
-- **On:** stroke *i* has to be the model's stroke *i*, the right way round.
+- **Stroke by stroke** (the default): strokes may come in **any order**.
+  Each model stroke is paired with its closest stroke of yours. Strokes
+  still have to go the usual way round, top to bottom and left to right,
+  because direction is the whole difference between ソ and ン, and between
+  シ and ツ.
+- **Stroke by stroke, in order:** stroke *i* has to be the model's stroke
+  *i*, the right way round. (This was the old *Check stroke order* switch,
+  and is still kept as `strokeOrder`.)
+- **Read it like a keyboard:** see below.
 
-In both modes the **stroke count must be exact**. Allowing one more or
+Stroke by stroke, the **stroke count must be exact**. Allowing one more or
 fewer let は pass for ほ and ば for ぼ.
 
 The smoke test runs this against the real data. Every kana's own strokes
@@ -1292,6 +1317,38 @@ wobbly) pass about 97% of the time with order off and 99.7% with it on. And
 fail against each other. What still passes for each other is either
 identical in shape (へ/ヘ, べ/ベ), different only in size (っ/つ), or a
 hiragana–katakana near miss (ナ/ヤ, コ/ユ).
+
+### Read it like a keyboard
+
+Stroke-by-stroke marking is the training: it holds you to the textbook
+shape. Later on it gets in the way. Real handwriting joins strokes up
+(こ in one go, き's last two together), and a phone's handwriting keyboard
+doesn't mind: it reads what you wrote against everything it knows and
+offers the closest. `readWriting` does the same, and you're right when your
+writing **reads as** the kana asked for.
+
+- Your drawing and each model become a cloud of points spread along the
+  strokes, each with the way its stroke was heading. Two clouds are as far
+  apart as the mean distance from each point to the nearest in the other,
+  both ways round, taken over every point and stroke by stroke and averaged
+  (by points alone, a dakuten is a few dots and ど reads as と).
+- Everything with stroke data is a candidate: all the kana for a kana, all
+  the kanji for a kanji. So writing か when カ was asked is a miss, and the
+  miss says *That reads as か ka*.
+- Anything stroke by stroke would pass, this passes too (it's tried
+  first), so switching never turns a right answer wrong.
+- Direction still counts. A stroke the wrong way round is a miss, and the
+  miss says so: *The shape's there, but a stroke goes the wrong way round.*
+- へ/ヘ, べ/ベ, ぺ/ペ, つ/っ and ツ/ッ are drawn alike, so read alike.
+- Past a distance of 90 it can't be read as anything (right answers come
+  in under about 70; scribbles start about 90).
+
+Measured on the real stroke data with made-up wobble (shift, scale, a
+slight turn, shaky lines): own strokes 100%; wobbly and right 99% (stroke
+by stroke: 97%); wobbly with two strokes joined 97% (stroke by stroke: 11%,
+since the count is wrong); in reverse order 100%. Wobbly look-alikes taken
+for each other: about 3%, nearly all る/ろ, which stroke by stroke also
+confuses when wobbly. A read takes about 5 ms in a browser.
 
 ### Stroke data
 

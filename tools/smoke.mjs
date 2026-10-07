@@ -86,7 +86,7 @@ const CONTRACT = {
   'js/sync.js': ['SYNC_CONFIG', 'SYNC_STORE', 'sync', 'syncInit', 'syncSignIn', 'syncSignOut', 'syncConfigured', 'syncWarm'],
   'js/sound.js': ['say', 'sayKana', 'hasAudio', 'clipCount', 'unlockAudio', 'loadAudioBundle', 'soundBlocked'],
   'js/write.js': ['strokesFor', 'canWrite', 'markWriting', 'modelSvg', 'modelAnimMs', 'padHtml', 'bindPad', 'drawInk',
-    'padUndo', 'padClear', 'pad', 'WRITE_TOL'],
+    'padUndo', 'padClear', 'pad', 'WRITE_TOL', 'readWriting', 'markBy', 'READ_CAP', 'READ_SAME'],
   'js/furi.js': ['furiParse', 'furiKana', 'furiPlain', 'furiKanji', 'furiProblems', 'furiHtml'],
   'js/guide.js': ['WORDS_INTRO', 'GUIDE', 'KIND_INTRO', 'infoCard', 'guideCards', 'infoHtml', 'startGuide'],
   'js/app.js': ['ACTS', 'render', 'go', 'view', 'S', 'askConfirm', 'crumb', 'shuffle', 'esc', '$', '$$',
@@ -700,8 +700,8 @@ section('writing');
 {
   const w = { window: {}, Math, console };
   vm.createContext(w);
-  vm.runInContext(read('js/strokes.js') + read('js/write.js') + ';globalThis.W = { markWriting, modelMedians };', w);
-  const { markWriting, modelMedians } = w.W;
+  vm.runInContext(read('js/strokes.js') + read('js/write.js') + ';globalThis.W = { markWriting, readWriting, markBy, modelMedians };', w);
+  const { markWriting, readWriting, markBy, modelMedians } = w.W;
   const strokes = w.window.NQ_STROKES;
   const missing = strokeWanted().filter(k => !strokes[k]);
   ok(!missing.length, `no stroke data for: ${missing.join(' ')} — run node tools/fetch-strokes.mjs`);
@@ -744,6 +744,29 @@ section('writing');
   const backwards = modelMedians('し').map(st => [...st].reverse());
   ok(!markWriting('し', backwards, true).ok, 'stroke-order marking should refuse a backwards stroke');
   ok(!markWriting('は', modelMedians('は').slice(0, 2), false).ok, 'a missing stroke should fail');
+
+  /* Read, like a handwriting keyboard (Settings → How writing is marked).
+     About 10 ms a read here, so a sample rather than everything. */
+  const sample = K.filter((_, i) => i % 9 === 0);
+  sample.forEach(k => ok(readWriting(k, modelMedians(k)).ok, `${k}: its own strokes don't read as ${k}`));
+  /* joined up — two strokes in one go — is the point of it; stroke by stroke can't pass these */
+  const join = st => st.length < 2 ? st : [[...st[0], ...st[1]], ...st.slice(2)];
+  let jr = 0, jn = 0;
+  sample.filter(k => strokes[k].m.length > 1).forEach(k => { jn++; if (readWriting(k, join(sloppy(modelMedians(k)))).ok) jr++; });
+  ok(jr / jn >= 0.85, `joined-up but right handwriting reads right only ${(jr / jn * 100).toFixed(1)}%`);
+  ok(readWriting('あ', shuffled).ok, 'reading should accept any stroke order');
+  /* it never refuses what stroke-by-stroke marking would pass */
+  sample.forEach(k => { const u = sloppy(modelMedians(k)); if (markWriting(k, u, false).ok) ok(readWriting(k, u).ok, `${k}: passes stroke by stroke but not read`); });
+  [['ソ', 'ン'], ['ン', 'ソ'], ['シ', 'ツ'], ['ツ', 'シ'], ['れ', 'わ'], ['わ', 'れ'], ['は', 'ほ'], ['ほ', 'は'], ['ぬ', 'め'],
+   ['め', 'ぬ'], ['る', 'ろ'], ['ろ', 'る'], ['ば', 'ぱ'], ['ぱ', 'ば'], ['か', 'カ'], ['人', '入']]
+    .forEach(([asked, drawn]) => { const r = readWriting(asked, modelMedians(drawn));
+      ok(!r.ok && r.readAs === drawn, `asked for ${asked}, ${drawn} read as ${r.readAs} and ${r.ok ? 'passed' : 'failed'}`); });
+  ok(readWriting('へ', modelMedians('ヘ')).ok && readWriting('っ', modelMedians('つ')).ok, 'shapes drawn alike should read alike');
+  const back = readWriting('し', backwards);
+  ok(!back.ok && /wrong way round/.test(back.reason), 'a backwards し should be a miss that says why');
+  ok(!readWriting('く', [[[500, 500]]]).ok, 'a dot should not read as く');
+  ok(markBy({ writeCheck: 'read' }, 'あ', join(modelMedians('あ'))).ok && !markBy({ writeCheck: 'shape' }, 'あ', join(modelMedians('あ'))).ok,
+    'markBy should follow the setting');
 }
 
 /* ---------- furigana ---------- */

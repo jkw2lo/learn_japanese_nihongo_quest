@@ -923,7 +923,7 @@ function showCard() {
 
 function showWrite(c) {
   const n = strokesFor(c.ch).s.length;
-  const ordered = state.settings.strokeOrder;
+  const ordered = state.settings.strokeOrder && state.settings.writeCheck !== "read";
   let what;
   if (isKanjiKey(c.k)) {
     const K = KANJI_BY[c.ch];
@@ -968,7 +968,7 @@ function checkWrite() {
   if (!c || c.kind !== "w" || S.answered) return;
   if (!pad || !pad.strokes.length) { toast("Write it in the box first."); return; }
   pad.locked = true;
-  const res = markWriting(c.ch, pad.strokes, state.settings.strokeOrder);
+  const res = markBy(state.settings, c.ch, pad.strokes);
   const ok = res.ok;
   /* A trace is practice, and a peek withholds the credit (Hanzi Quest's
      writing drill works the same way): the answer counts for the day, but
@@ -992,7 +992,9 @@ function checkWrite() {
     v.innerHTML = `${icon("check", "v-ico")} ${label}${S.peeked && !c.trace ? ` <span class="muted small">— after a peek, so it's practice this time</span>` : ""}`;
   } else {
     v.className = "verdict miss";
-    v.innerHTML = `${esc(res.reason)} <span class="muted small">Here's how it goes.</span>`;
+    /* read like a keyboard, a miss can say what it read as instead */
+    const as = res.readAs && KANA_BY[res.readAs];
+    v.innerHTML = `${as ? `That reads as <span lang="ja">${esc(as.k)}</span> <span class="rom-always">${esc(as.r)}</span>.` : esc(res.reason)} <span class="muted small">Here's how it goes.</span>`;
     $("#padModel").innerHTML = modelSvg(c.ch, { animate: true });
   }
   afterAnswer(ok);
@@ -1489,7 +1491,9 @@ function openSettings() {
       <select data-set="reviewEvery">${[[3, "Every 4th day"], [2, "Every 3rd day"], [4, "Every 5th day"], [0, "Never"]].map(([n, t]) => `<option value="${n}" ${s.reviewEvery === n ? "selected" : ""}>${t}</option>`).join("")}</select></label>
     ${tog("writing", "Writing practice", "Trace each new kana, and write today's from memory. Draw with a mouse, finger or pen.")}
     ${tog("writeKanji", "Write kanji too", "Trace each new kanji, and write today's from memory. Off by default — reading them is the part that gets you by.")}
-    ${tog("strokeOrder", "Check stroke order", "Off: any order is fine — the shape is what's marked (strokes still go the usual way round, which is what tells ソ from ン). On: each stroke has to come in its proper turn too.")}
+    <label class="set-row"><span>How writing is marked<small><b>Stroke by stroke</b> holds you to the textbook shape: every stroke there, in its place, going the usual way round. <b>In order</b> wants them in turn too. <b>Read it like a keyboard</b> is for later, once the shapes are in your hand: it reads your writing the way a phone's handwriting keyboard does, so strokes can be joined up, and it's right if it reads as the right kana.</small></span>
+      <select data-set="writeMark">${[["shape", "Stroke by stroke"], ["order", "Stroke by stroke, in order"], ["read", "Read it like a keyboard"]].map(([v, t]) =>
+        `<option value="${v}" ${(s.writeCheck === "read" ? "read" : s.strokeOrder ? "order" : "shape") === v ? "selected" : ""}>${t}</option>`).join("")}</select></label>
     <label class="set-row"><span>Furigana<small>The small kana over a kanji that say how to read it. “auto” shows them over kanji you haven't learned — which, until kanji arrive, is all of them.</small></span>
       <select data-set="furigana">${["auto", "always", "never"].map(t => `<option ${s.furigana === t ? "selected" : ""}>${t}</option>`).join("")}</select></label>
     <label class="set-row"><span>Theme</span>
@@ -1545,7 +1549,9 @@ function onSetting(el) {
   const key = el.dataset.set;
   let v = el.type === "checkbox" ? el.checked : el.value;
   if (key === "newPerDay" || key === "reviewEvery") v = +v;
-  state.settings[key] = v;
+  /* one choice in Settings, kept as the two settings it's always been */
+  if (key === "writeMark") { state.settings.writeCheck = v === "read" ? "read" : "shape"; state.settings.strokeOrder = v === "order"; }
+  else state.settings[key] = v;
   save();
   crumb(`setting ${key}=${v}`);
   if (key === "theme") applyTheme();

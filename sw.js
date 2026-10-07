@@ -17,7 +17,7 @@
    VERSION is stamped by tools/version.mjs. Changing it is what makes the
    browser install a new worker. */
 
-const VERSION = "0.26.1";
+const VERSION = "0.27.0";
 const CORE = `nq-core-${VERSION}`, CLIPS = "nq-clips", FONTS = "nq-fonts";
 const HOME = new URL("./", self.location).href;
 const WAIT_MS = 4000;
