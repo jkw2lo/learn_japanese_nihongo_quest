@@ -998,12 +998,16 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.29.3: Next first
+
+- In the Write sprint, Next sits straight under the box, and Skip, Undo,
+  Clear and Hear it move to the row below it.
+
 ### 0.29.2: a bigger Next
 
-- In the Write sprint, Next has a row of its own under the box, as wide as
-  the box (on a phone, a full-width button where the thumb is). Skip,
-  Undo, Clear and Hear it share the row above. Stopping on a miss, the
-  same button goes on, without moving.
+- In the Write sprint, Next has a row of its own under the box, as wide
+  as the box (on a phone, a full-width button where the thumb is).
+  Skip, Undo, Clear and Hear it share the row above it. Stopping on a miss, the same button goes on, without moving.
 
 ### 0.29.1: ji or ji?
 
@@ -1204,11 +1208,11 @@ than six times is offered disabled.
 
 **Write** is the handwriting sheet. Each question gives the sound, the
 script and the number of strokes, as the lessons do; you write it in the box (Undo, Clear, hear it again) and go on with
-Next or Enter. **Next** is a row of its own under the box, as wide as the
-box, the quickest thing to hit; stopping on a miss, the same button goes on
+Next or Enter. **Next** is a row of its own straight under the box, as
+wide as the box, the quickest thing to hit; stopping on a miss, the same button goes on
 from it, and the row above keeps its place so Next doesn't move. Next on
 an empty box doesn't skip, it shakes the box: passing one by is **Skip**
-(⇧↵), in the row of small tools above, so a stray Enter or tap can't throw
+(⇧↵), in the row of small tools below it, so a stray Enter or tap can't throw
 a question away. The strokes are kept and
 marked at hand-in (or as you go, if the sheet is set to), with the
 lessons' own marker, as set in Settings → How writing is marked (`markBy`). The review shows

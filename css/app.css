@@ -1003,9 +1003,9 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 .sp-pop .ask-btns { justify-content: center; flex-wrap: wrap; }
 .sp-q.q-w .q-ask { font-size: 1.1rem; }
 .sp-w-r { font: 600 1.6rem var(--f-display); color: var(--ai); margin: 0 .15em; }
-.sp-q .pad-tools { margin-top: .2rem; }
-/* Write's Next: a row of its own, as wide as the box, where it's quickest to hit */
-.sp-next { display: flex; justify-content: center; width: min(19rem, 72vw); margin: .6rem auto 0; min-height: 48px; }
+.sp-q .pad-tools { margin-top: .6rem; }
+/* Write's Next: a row of its own straight under the box, as wide as it, where it's quickest to hit */
+.sp-next { display: flex; justify-content: center; width: min(19rem, 72vw); margin: 0 auto; min-height: 48px; }
 .sp-ink { width: 2.2rem; height: 2.2rem; margin-top: 2px; }
 .sp-ink polyline { fill: none; stroke: var(--amber); stroke-width: 60; stroke-linecap: round; stroke-linejoin: round; }
 .sp-ink circle { fill: var(--amber); }
@@ -2618,7 +2618,8 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
   /* the box gives up a little height for Next's own row; everything is the box's width */
   .sp-q.q-w .pad, .sp-q .pad-tools, .sp-next { width: min(92vw, calc(100svh - 350px)); }
   .sp-q .pad-tools { min-width: 0; }
-  .sp-next { min-height: 56px; font-size: 1.05rem; border-radius: 999px; margin-top: 10px; }
+  .sp-next { min-height: 56px; font-size: 1.05rem; border-radius: 999px; }
+  .sp-q .pad-tools { margin-top: 10px; }
   .sp-count { font-size: 7rem; }
 
   /* ---------- Read a Menu ---------- */

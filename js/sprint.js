@@ -203,13 +203,13 @@ function showSprintQ() {
       <div class="q-ask">Write <b class="sp-w-r">${esc(kanaAsked(e))}</b> in ${SET_NAME[e.set]}
         <span class="muted small">· ${strokesFor(q.k).m.length} stroke${strokesFor(q.k).m.length > 1 ? "s" : ""}</span></div>
       ${padHtml(q.k)}
+      <button class="btn sp-next" data-act="sp-write-next">Next <kbd>↵</kbd></button>
       <div class="pad-tools">
         <button class="btn btn-ghost btn-sm" data-act="sp-skip">Skip <kbd>⇧↵</kbd></button>
         <button class="btn btn-ghost btn-sm" data-act="w-undo">Undo <kbd>Z</kbd></button>
         <button class="btn btn-ghost btn-sm" data-act="w-clear">Clear</button>
         <button class="btn btn-ghost btn-sm" data-act="sp-replay" aria-label="Hear it">${icon("speaker")} <kbd>R</kbd></button>
-      </div>
-      <button class="btn sp-next" data-act="sp-write-next">Next <kbd>↵</kbd></button>${last}</div>`;
+      </div>${last}</div>`;
     bindPad();
     if (state.settings.autoplay) sayKana(q.k);
     return;
