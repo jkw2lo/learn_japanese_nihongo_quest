@@ -26,6 +26,11 @@
 
 const WRITE_N = 24;                 /* points a stroke is resampled to */
 const WRITE_TOL = 150;               /* mean distance, in 1024 units, for a stroke to match */
+/* Drawn alike, so marked alike: neither can be told from the other written
+   on its own, and asking for one, the other is right. */
+const READ_SAME = ["へヘ", "べベ", "ぺペ", "つっ", "ツッ"];
+const sameShape = (a, b) => a === b || READ_SAME.some(s => s.includes(a) && s.includes(b));
+const isKanaChar = k => /^[\u3040-\u30ff]+$/.test(k);
 
 const strokesFor = k => (window.NQ_STROKES && window.NQ_STROKES[k]) || null;
 const canWrite = k => !!strokesFor(k);
@@ -96,60 +101,114 @@ function align(user, model) {
 
 /* ---------- marking ---------- */
 
-/* Returns { ok, strokes: [{ model, user, d, ok }], reason } */
+/* A short stroke — a tick, a dakuten, a dot — is where handwriting and
+   the font part ways most: か's last stroke is a long curve in the font and
+   a short tick in most hands. A model stroke shorter than WRITE_SHORT may be
+   drawn shorter, down to WRITE_SHORT_MIN of it, as long as it follows the
+   start of the model's path; the missing part costs a little. Long strokes
+   get no such allowance — the loop at the end of る is what makes it る. */
+const WRITE_SHORT = 500;
+const WRITE_SHORT_MIN = 0.4;
+const WRITE_SHORT_COST = 40;      /* for a whole stroke missing, pro rata */
+
+function startOf(st, t) {
+  const r = resample(st, 60);
+  return r.slice(0, Math.max(2, Math.round(t * 59) + 1));
+}
+
+function strokeDist(u, m) {
+  const U = resample(u), d = meanDist(U, resample(m));
+  const lm = strokeLen(m), lu = strokeLen(u);
+  if (lm >= WRITE_SHORT || lu >= lm) return d;
+  const t = Math.max(WRITE_SHORT_MIN, lu / lm);
+  return Math.min(d, meanDist(U, resample(startOf(m, t))) + WRITE_SHORT_COST * (1 - t));
+}
+
+/* Pair each model stroke with one of yours: in order, stroke i with stroke
+   i; in any order, closest pairs first. Direction counts either way — a
+   stroke drawn the wrong way round is what turns ソ into ン and シ into ツ. */
+function pairStrokes(user, model, ordered) {
+  if (ordered) return model.map((m, i) => ({ i, j: user[i] ? i : null, d: user[i] ? strokeDist(user[i], m) : Infinity }));
+  const all = [];
+  model.forEach((m, i) => user.forEach((u, j) => all.push({ i, j, d: strokeDist(u, m) })));
+  all.sort((a, b) => a.d - b.d);
+  const usedM = new Set(), usedU = new Set(), out = [];
+  for (const p of all) {
+    if (usedM.has(p.i) || usedU.has(p.j)) continue;
+    usedM.add(p.i); usedU.add(p.j); out.push(p);
+  }
+  model.forEach((_, i) => { if (!usedM.has(i)) out.push({ i, j: null, d: Infinity }); });
+  return out.sort((a, b) => a.i - b.i);
+}
+
+/* The box lines a drawing up roughly, but a box is set by its extremes:
+   write か's tick a little short and the whole thing shifts and shrinks
+   before a stroke is compared. So once strokes are paired, the drawing is
+   fitted again on every point of every pair — centre, size and a little of
+   the width-to-height — and paired again. Twice is enough to settle. The
+   fit is held close (WRITE_FIT_*): let it stretch freely and ス fits ヌ. */
+const WRITE_FIT_ROUNDS = 2;
+const WRITE_FIT_SCALE = 1.2;      /* size, either way */
+const WRITE_FIT_ASPECT = 1.1;     /* width against height, either way */
+function refit(user, model, pairs) {
+  const A = [], B = [];
+  pairs.forEach(p => {
+    if (p.j == null) return;
+    const u = resample(user[p.j]), m = resample(model[p.i]);
+    u.forEach((q, n) => { A.push(q); B.push(m[n]); });
+  });
+  if (!A.length) return user;
+  const mean = P => [P.reduce((s, p) => s + p[0], 0) / P.length, P.reduce((s, p) => s + p[1], 0) / P.length];
+  const [ax, ay] = mean(A), [bx, by] = mean(B);
+  let sxx = 0, sxb = 0, syy = 0, syb = 0;
+  A.forEach((p, n) => {
+    const dx = p[0] - ax, dy = p[1] - ay;
+    sxx += dx * dx; sxb += dx * (B[n][0] - bx); syy += dy * dy; syb += dy * (B[n][1] - by);
+  });
+  const kx0 = sxx ? sxb / sxx : 1, ky0 = syy ? syb / syy : 1;
+  const g = Math.min(WRITE_FIT_SCALE, Math.max(1 / WRITE_FIT_SCALE, Math.sqrt(Math.abs(kx0 * ky0)) || 1));
+  const ar = Math.min(WRITE_FIT_ASPECT, Math.max(1 / WRITE_FIT_ASPECT, Math.sqrt(Math.abs(kx0 / ky0)) || 1));
+  const kx = g * ar, ky = g / ar;
+  return user.map(st => st.map(([x, y]) => [bx + (x - ax) * kx, by + (y - ay) * ky]));
+}
+
+/* The shape alone: { ok, pairs, score } — score is the mean distance of
+   the pairs, for comparing one kana against another. */
+function shapeOf(k, user, ordered) {
+  const model = modelMedians(k);
+  let a = align(user, model), pairs = pairStrokes(a, model, ordered);
+  for (let r = 0; r < WRITE_FIT_ROUNDS; r++) { a = refit(a, model, pairs); pairs = pairStrokes(a, model, ordered); }
+  const ok = user.length === model.length && pairs.every(p => p.d <= WRITE_TOL);
+  return { ok, pairs, score: pairs.reduce((s, p) => s + p.d, 0) / pairs.length };
+}
+
+/* Returns { ok, strokes: [{ model, user, d, ok }], reason, readAs }.
+
+   Passing on its own shape isn't quite enough: it also has to fit better
+   than every other character with as many strokes (bar the ones drawn
+   alike, READ_SAME). That's what keeps the allowances above from letting a
+   wobbly ろ through for る — and when it fails that way, readAs says which
+   one it looked like. */
 function markWriting(k, userStrokes, ordered = false) {
   const model = modelMedians(k);
   const user = userStrokes.filter(st => st.length > 0);
   if (!user.length) return { ok: false, strokes: [], reason: "Nothing written yet." };
-  const aligned = align(user, model).map(st => resample(st));
-  const models = model.map(st => resample(st));
-  const tol = WRITE_TOL;
-
-  if (ordered) {
-    const out = [];
-    let ok = user.length === model.length;
-    models.forEach((m, i) => {
-      const u = aligned[i];
-      const d = u ? meanDist(u, m) : Infinity;
-      const good = d <= tol;
-      if (!good) ok = false;
-      out.push({ model: i, user: u ? i : null, d, ok: good });
-    });
-    const first = out.find(s => !s.ok);
-    return {
-      ok, strokes: out,
-      reason: ok ? "" : user.length !== model.length
-        ? `${model.length} stroke${model.length > 1 ? "s" : ""}, and you drew ${user.length}.`
-        : `Stroke ${first.model + 1} isn't right — its place, shape or direction.`,
-    };
-  }
-
-  /* Any order: pair each model stroke with its closest unused stroke of
-     yours, closest pairs first. Direction still counts — a stroke drawn the
-     wrong way round is what turns ソ into ン and シ into ツ. */
-  const pairs = [];
-  models.forEach((m, i) => aligned.forEach((u, j) => {
-    pairs.push({ i, j, d: meanDist(u, m) });
-  }));
-  pairs.sort((a, b) => a.d - b.d);
-  const usedM = new Set(), usedU = new Set(), out = [];
-  for (const p of pairs) {
-    if (usedM.has(p.i) || usedU.has(p.j)) continue;
-    usedM.add(p.i); usedU.add(p.j);
-    out.push({ model: p.i, user: p.j, d: p.d, ok: p.d <= tol });
-  }
-  models.forEach((_, i) => { if (!usedM.has(i)) out.push({ model: i, user: null, d: Infinity, ok: false }); });
-  out.sort((a, b) => a.model - b.model);
-
-  /* The count has to be exact. Allowing one stroke more or fewer let は pass
-     for ほ, ば for ぼ and き for さ — the stroke count is part of the shape. */
+  const own = shapeOf(k, user, ordered);
+  const strokes = own.pairs.map(p => ({ model: p.i, user: p.j, d: p.d, ok: p.d <= WRITE_TOL }));
   const countOk = user.length === model.length;
-  const unmatched = out.filter(s => !s.ok);
-  const ok = countOk && unmatched.length === 0;
+  let rival = null;
+  if (own.ok) {
+    const kana = isKanaChar(k);
+    rival = Object.keys(window.NQ_STROKES).find(c => !sameShape(c, k) && isKanaChar(c) === kana
+      && window.NQ_STROKES[c].m.length === user.length && shapeOf(c, user, false).score < own.score) || null;
+  }
+  const ok = own.ok && !rival;
+  const first = strokes.find(s => !s.ok);
   return {
-    ok, strokes: out,
-    reason: ok ? "" : !countOk
-      ? `${model.length} stroke${model.length > 1 ? "s" : ""}, and you drew ${user.length}.`
+    ok, strokes, readAs: rival,
+    reason: ok ? "" : !countOk ? `${model.length} stroke${model.length > 1 ? "s" : ""}, and you drew ${user.length}.`
+      : rival ? `That looks more like ${rival}.`
+      : ordered ? `Stroke ${first.model + 1} isn't right — its place, shape or direction.`
       : "The shape isn't quite there — compare it with the model.",
   };
 }
@@ -178,11 +237,6 @@ const READ_N = 64;          /* points a drawing is spread over */
 const READ_MIN = 4;         /* …but never fewer than this on one stroke */
 const READ_DIR = 60;        /* what heading the opposite way costs, in 1024 units */
 const READ_CAP = 90;        /* closer than this, or it can't be read at all; scribbles start about here */
-/* Drawn alike, so read alike: neither can be told from the other written
-   on its own, and asking for one, the other is right. */
-const READ_SAME = ["へヘ", "べベ", "ぺペ", "つっ", "ツッ"];
-const sameShape = (a, b) => a === b || READ_SAME.some(s => s.includes(a) && s.includes(b));
-const isKanaChar = k => /^[぀-ヿ]+$/.test(k);
 
 function cloud(strokes) {
   const lens = strokes.map(strokeLen), total = lens.reduce((a, b) => a + b, 0) || 1;

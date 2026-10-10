@@ -700,7 +700,7 @@ section('writing');
 {
   const w = { window: {}, Math, console };
   vm.createContext(w);
-  vm.runInContext(read('js/strokes.js') + read('js/write.js') + ';globalThis.W = { markWriting, readWriting, markBy, modelMedians };', w);
+  vm.runInContext(read('js/strokes.js') + read('js/write.js') + ';globalThis.W = { markWriting, readWriting, markBy, modelMedians, resample };', w);
   const { markWriting, readWriting, markBy, modelMedians } = w.W;
   const strokes = w.window.NQ_STROKES;
   const missing = strokeWanted().filter(k => !strokes[k]);
@@ -744,6 +744,18 @@ section('writing');
   const backwards = modelMedians('し').map(st => [...st].reverse());
   ok(!markWriting('し', backwards, true).ok, 'stroke-order marking should refuse a backwards stroke');
   ok(!markWriting('は', modelMedians('は').slice(0, 2), false).ok, 'a missing stroke should fail');
+  /* か and が as hands write them: the font's last stroke is a long curve,
+     most people's a short tick; often narrower, with less of a hook. */
+  const startPart = (st, t) => { const r = w.W.resample(st, 40); return r.slice(0, Math.round(t * 39) + 1); };
+  const narrowed = (sts, f) => sts.map(st => st.map(([x, y]) => [512 + (x - 512) * f, y]));
+  for (const k of ['か', 'が']) for (const tick of [0.6, 0.45, 0.35]) for (const f of [1, 0.85, 0.75]) for (const ordered of [false, true]) {
+    const u = narrowed(modelMedians(k).map((st, i) => i === 0 ? startPart(st, 0.85) : i === 2 ? startPart(st, tick) : st), f);
+    ok(markWriting(k, u, ordered).ok, `${k} with a short tick (${tick}), ${f} wide, ${ordered ? 'in order' : 'any order'}: marked wrong`);
+  }
+  /* the allowances must not let a look-alike through: it has to fit its own kana best */
+  const ro = markWriting('る', modelMedians('ろ'), false);
+  ok(!ro.ok, 'ろ passes for る');
+  ok(markWriting('ヌ', modelMedians('ス'), false).readAs === 'ス', 'ス for ヌ should say it looks more like ス');
 
   /* Read, like a handwriting keyboard (Settings → How writing is marked).
      About 10 ms a read here, so a sample rather than everything. */

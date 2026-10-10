@@ -998,6 +998,17 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.29.0: writing marked more like a teacher would
+
+- **か and が** (and every kana with a tick or dakuten) are no longer marked
+  wrong for a short last tick, a narrower body or less of a hook. Short
+  strokes may be drawn shorter, the drawing is fitted to the model on every
+  stroke rather than its box, and a pass must fit its own character better
+  than any other with as many strokes. Kana written right now pass 98.6% of
+  the time (was 92%), look-alikes slip through 1.7% (was 5.6%), and kanji
+  pass 99.8% (was 89.5%). See **Writing → How it's marked**.
+- A miss that fits another character better says so: *That reads as ス su*.
+
 ### 0.28.0: no accidental skips, and sprints that stop on misses
 
 - **Sprint → Write:** Next needs at least one stroke (an empty box shakes);
@@ -1313,6 +1324,32 @@ or small. Each stroke is resampled to 24 points, and two strokes match when:
 - neither **end** is far off (わ curls back where れ kicks out), and
 - no **stretch** of four points is far off (the small loop that makes る
   not ろ).
+
+Three things, added in 0.29.0 after か and が kept being marked wrong when
+they were right:
+
+- **Short strokes may be drawn shorter.** A model stroke under 500 units (a
+  tick, a dakuten, a dot) may be drawn down to 40% of its length, as long as
+  it follows the start of the model's path; the missing part costs a
+  little. The font's か ends in a long curve where most hands write a short
+  tick. Long strokes get no allowance: the loop at the end of る is what
+  makes it る.
+- **A second fit.** The box is set by the drawing's extremes, so a short
+  tick shifted and shrank the whole か before anything was compared. Once
+  strokes are paired, the drawing is fitted again on every point of every
+  pair (centre, size within ×1.2, width-to-height within ×1.1) and paired
+  again, twice.
+- **It has to fit its own character best.** A drawing that passes is also
+  scored against every other character with as many strokes; if one of
+  those fits better, it's a miss that says so (*That looks more like ス*).
+  This is what stops the two allowances above from letting look-alikes in.
+
+Measured on the real stroke data with realistic variation (proportions,
+each stroke placed and sized a little differently, ends shortened, a
+slight turn, shaky lines), before → after: kana written right and passed,
+92% → 98.6%; か and が with a short tick, narrower, less hook, 58% → 100%;
+kana look-alikes wrongly passed, 5.6% → 1.7%; kanji written right and
+passed, 89.5% → 99.8%. A check takes about 5 ms in a browser.
 
 Three ways, chosen in **Settings → How writing is marked**:
 
