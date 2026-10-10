@@ -46,7 +46,7 @@ section('contract');
 /* Four classic scripts share one global scope, so a name removed from one
    file while another still calls it fails only at runtime, on a click. */
 const CONTRACT = {
-  'js/data/kana.js': ['LESSONS', 'KANA', 'KANA_BY', 'KANA_ALIKE', 'KANA_WORDS', 'KANA_PAIRS_WORDS',
+  'js/data/kana.js': ['LESSONS', 'KANA', 'KANA_BY', 'kanaAsked', 'KANA_ALIKE', 'KANA_WORDS', 'KANA_PAIRS_WORDS',
     'KANA_CONCEPT', 'ROMAJI_ALT', 'kanaUnits', 'toRomaji', 'toHira', 'toKata', 'romajiToKana', 'kanaSame'],
   'js/data/words.js': ['WORDS', 'WORD_BY', 'WORD_STAGES', 'WORD_LESSONS'],
   'js/conj.js': ['conj', 'isVerb', 'stems', 'CONJ_FORMS', 'CONJ_TAUGHT'],

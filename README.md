@@ -998,6 +998,15 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.29.1: ji or ji?
+
+- ぢ and づ (and ヂ, ヅ) sound just like じ and ず, so "write ji" had two
+  right answers. Wherever you're asked to produce one, they're now named
+  with their keyboard spelling too: **ji (di)** and **zu (du)**, what you
+  type to get them (`kanaAsked`). A stroke count wouldn't have done it:
+  ジ and ヂ are both five.
+- The Write sprint shows the stroke count, as the lessons always have.
+
 ### 0.29.0: writing marked more like a teacher would
 
 - **か and が** (and every kana with a tick or dakuten) are no longer marked
@@ -1186,8 +1195,8 @@ does, so the time is still time spent answering. All three share one best. Only 
 then accuracy, then time. A sheet that would loop through its kana more
 than six times is offered disabled.
 
-**Write** is the handwriting sheet. Each question gives the sound and the
-script; you write it in the box (Undo, Clear, hear it again) and go on with
+**Write** is the handwriting sheet. Each question gives the sound, the
+script and the number of strokes, as the lessons do; you write it in the box (Undo, Clear, hear it again) and go on with
 Next or Enter. Next on an empty box doesn't skip, it shakes the box:
 passing one by is **Skip** (⇧↵), at the far end of the row from Next, so a
 stray Enter or tap can't throw a question away. The strokes are kept and

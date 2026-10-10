@@ -898,7 +898,7 @@ function showCard() {
   const prompts = {
     r: () => `<div class="q-ask">How is this read?</div><div class="glyph-l" lang="ja">${esc(c.k)}</div>`,
     p: () => `<div class="q-ask">Which one did you hear?</div><button class="play" data-act="replay" aria-label="Play again">${icon("speaker")}</button>`,
-    a: () => `<div class="q-ask">Which one is <b>${esc(KANA_BY[c.k].r)}</b>?</div><button class="play small" data-act="replay" aria-label="Play again">${icon("speaker")}</button>`,
+    a: () => `<div class="q-ask">Which one is <b>${esc(kanaAsked(KANA_BY[c.k]))}</b>?</div><button class="play small" data-act="replay" aria-label="Play again">${icon("speaker")}</button>`,
     x: () => `<div class="q-ask">Which spelling did you hear?</div><button class="play" data-act="replay" aria-label="Play again">${icon("speaker")}</button>
               <div class="muted small">${esc(c.word.m)}</div>`,
     word: () => `<div class="q-ask">What does this mean?</div><div class="glyph-l word" lang="ja">${esc(c.word.w)}</div>`,
@@ -930,7 +930,7 @@ function showWrite(c) {
     what = `${c.trace ? `<b lang="ja">${esc(c.ch)}</b> ` : "the kanji for "}<b>${esc(K.m)}</b>`;
   } else {
     const e = KANA_BY[c.k];
-    what = `${c.trace ? `<b lang="ja">${esc(e.k)}</b> ` : ""}<b>${esc(e.r)}</b> in ${SET_NAME[e.set]}`;
+    what = `${c.trace ? `<b lang="ja">${esc(e.k)}</b> ` : ""}<b>${esc(kanaAsked(e))}</b> in ${SET_NAME[e.set]}`;
   }
   $("#sBody").innerHTML = `<div class="q q-w">
     <div class="q-ask">${c.trace ? "Trace it" : "Write it from memory"}: ${what}
@@ -985,7 +985,7 @@ function checkWrite() {
 
   drawInk(res.strokes);
   const label = isKanjiKey(c.k) ? `<span lang="ja">${esc(c.ch)}</span> <span class="rom-always">${esc(KANJI_BY[c.ch].m)}</span>`
-    : `<span lang="ja">${esc(KANA_BY[c.k].k)}</span> <span class="rom-always">${esc(KANA_BY[c.k].r)}</span>`;
+    : `<span lang="ja">${esc(KANA_BY[c.k].k)}</span> <span class="rom-always">${esc(kanaAsked(KANA_BY[c.k]))}</span>`;
   const v = $("#verdict");
   if (ok) {
     v.className = "verdict ok";
@@ -994,7 +994,7 @@ function checkWrite() {
     v.className = "verdict miss";
     /* read like a keyboard, a miss can say what it read as instead */
     const as = res.readAs && KANA_BY[res.readAs];
-    v.innerHTML = `${as ? `That reads as <span lang="ja">${esc(as.k)}</span> <span class="rom-always">${esc(as.r)}</span>.` : esc(res.reason)} <span class="muted small">Here's how it goes.</span>`;
+    v.innerHTML = `${as ? `That reads as <span lang="ja">${esc(as.k)}</span> <span class="rom-always">${esc(kanaAsked(as))}</span>.` : esc(res.reason)} <span class="muted small">Here's how it goes.</span>`;
     $("#padModel").innerHTML = modelSvg(c.ch, { animate: true });
   }
   afterAnswer(ok);

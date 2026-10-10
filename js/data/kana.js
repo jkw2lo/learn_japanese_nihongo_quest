@@ -333,6 +333,14 @@ const ROMAJI_ALT = {
   chu: ["tyu", "cyu"], cho: ["tyo", "cyo"], ja: ["zya", "jya"], ju: ["zyu", "jyu"], jo: ["zyo", "jyo"],
 };
 
+/* How a kana is named when you're asked to produce it. ぢ and づ say the
+   same as じ and ず, so "ji" alone has two right answers; they're named by
+   their keyboard spelling as well — di and du are what you type to get them
+   — which tells them apart without showing the shape. (A stroke count would
+   do it for hiragana, but ジ and ヂ are both five.) */
+const KANA_ASKED = { "ぢ": "di", "づ": "du", "ヂ": "di", "ヅ": "du" };
+const kanaAsked = e => KANA_ASKED[e.k] ? `${e.r} (${KANA_ASKED[e.k]})` : e.r;
+
 /* Split a kana string into the units lessons teach: きゃ is one, っ is one. */
 function kanaUnits(s) {
   const out = [];

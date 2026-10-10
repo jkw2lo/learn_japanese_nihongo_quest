@@ -179,7 +179,7 @@ function sprintLast() {
   /* stopping on misses, a miss has just been seen, put right */
   if (!a || (SP.mark === "stop" && !a.ok)) return `<div class="verdict sp-last"></div>`;
   const e = KANA_BY[SP.qs[SP.i - 1].k];
-  const it = `<b lang="ja">${esc(e.k)}</b> <span class="rom-always">${esc(e.r)}</span>`;
+  const it = `<b lang="ja">${esc(e.k)}</b> <span class="rom-always">${esc(kanaAsked(e))}</span>`;
   const lbl = `<span class="sp-lbl">Last one</span>`;
   if (a.ok) return `<div class="verdict sp-last ok">${lbl} ${icon("check", "v-ico")} ${it}</div>`;
   const you = SP.mode === "write" ? (a.val.length ? inkThumb(a.val) : "nothing")
@@ -200,7 +200,8 @@ function showSprintQ() {
   if (SP.mode === "write") {
     const e = KANA_BY[q.k];
     body.innerHTML = `<div class="q q-w sp-q">
-      <div class="q-ask">Write <b class="sp-w-r">${esc(e.r)}</b> in ${SET_NAME[e.set]}</div>
+      <div class="q-ask">Write <b class="sp-w-r">${esc(kanaAsked(e))}</b> in ${SET_NAME[e.set]}
+        <span class="muted small">· ${strokesFor(q.k).m.length} stroke${strokesFor(q.k).m.length > 1 ? "s" : ""}</span></div>
       ${padHtml(q.k)}
       <div class="pad-tools">
         <button class="btn btn-ghost btn-sm" data-act="sp-skip">Skip <kbd>⇧↵</kbd></button>
@@ -258,7 +259,7 @@ function sprintOn() {
 function holdMiss(q, val) {
   SP.heldAt = performance.now();
   const e = KANA_BY[q.k];
-  const it = `<b lang="ja">${esc(e.k)}</b> <span class="rom-always">${esc(e.r)}</span>`;
+  const it = `<b lang="ja">${esc(e.k)}</b> <span class="rom-always">${esc(kanaAsked(e))}</span>`;
   $$("#spStrip i")[SP.i].className = "miss";
   let why = "";
   if (SP.mode === "write") {
@@ -267,7 +268,7 @@ function holdMiss(q, val) {
       const res = val.length ? markBy(state.settings, q.k, val) : null;
       drawInk(res ? res.strokes : undefined);
       const as = res?.readAs && KANA_BY[res.readAs];
-      why = !val.length ? "Skipped." : as ? `That reads as <span lang="ja">${esc(as.k)}</span> ${esc(as.r)}.` : esc(res.reason);
+      why = !val.length ? "Skipped." : as ? `That reads as <span lang="ja">${esc(as.k)}</span> ${esc(kanaAsked(as))}.` : esc(res.reason);
     }
     $("#padModel").innerHTML = modelSvg(q.k, { animate: true });
     $(".sp-q .pad-tools")?.remove();
@@ -327,9 +328,9 @@ function handIn(finished) {
       const a = SP.ans[i];
       const cls = a ? (a.ok ? "ok" : "miss") : "skip";
       /* a miss opens: the kana written out stroke by stroke, beside yours */
-      if (SP.mode === "write" && a && !a.ok) return `<button class="${cls}" data-act="sp-miss" data-i="${i}" aria-label="${esc(KANA_BY[q.k].r)}: see it written"><b lang="ja">${esc(q.k)}</b><small>${esc(KANA_BY[q.k].r)}</small>${
+      if (SP.mode === "write" && a && !a.ok) return `<button class="${cls}" data-act="sp-miss" data-i="${i}" aria-label="${esc(kanaAsked(KANA_BY[q.k]))}: see it written"><b lang="ja">${esc(q.k)}</b><small>${esc(kanaAsked(KANA_BY[q.k]))}</small>${
         a.val.length ? inkThumb(a.val) : ""}</button>`;
-      if (SP.mode === "write") return `<span class="${cls}"><b lang="ja">${esc(q.k)}</b><small>${esc(KANA_BY[q.k].r)}</small></span>`;
+      if (SP.mode === "write") return `<span class="${cls}"><b lang="ja">${esc(q.k)}</b><small>${esc(kanaAsked(KANA_BY[q.k]))}</small></span>`;
       return `<span class="${cls}" title="${a && !a.ok ? "you: " + esc(SP.mode === "listen" ? a.val : a.val || "(blank)") : ""}"><b lang="ja">${esc(q.k)}</b><small>${esc(KANA_BY[q.k].r)}</small></span>`;
     }).join("")}</div>
     ${SP.mode === "write" && SP.ans.some(a => a && !a.ok) ? `<p class="muted small">Tap a miss to see it written.</p>` : ""}
@@ -348,12 +349,12 @@ function sprintMiss(i) {
   const e = KANA_BY[q.k];
   const res = a.val.length ? markBy(state.settings, q.k, a.val) : null;
   const as = res?.readAs && KANA_BY[res.readAs];
-  const why = !res ? "Skipped." : as ? `That reads as <span lang="ja">${esc(as.k)}</span> ${esc(as.r)}.` : esc(res.reason);
+  const why = !res ? "Skipped." : as ? `That reads as <span lang="ja">${esc(as.k)}</span> ${esc(kanaAsked(as))}.` : esc(res.reason);
   const el = document.createElement("div");
   el.className = "ms-pop sp-pop";
   el.innerHTML = `<div class="ms-veil" data-act="ms-close"></div>
-    <div class="ms-card" role="dialog" aria-modal="true" aria-label="${esc(e.r)}, written">
-      <div class="eyebrow"><span lang="ja">${esc(e.k)}</span> · ${esc(e.r)} in ${SET_NAME[e.set]}</div>
+    <div class="ms-card" role="dialog" aria-modal="true" aria-label="${esc(kanaAsked(e))}, written">
+      <div class="eyebrow"><span lang="ja">${esc(e.k)}</span> · ${esc(kanaAsked(e))} in ${SET_NAME[e.set]}</div>
       <div class="sp-pop-pair">
         <figure><div class="sp-pop-box" id="spPopModel">${modelSvg(q.k, { animate: true })}</div><figcaption>How it goes</figcaption></figure>
         <figure><div class="sp-pop-box">${a.val.length ? inkThumb(a.val) : ""}</div><figcaption>What you wrote</figcaption></figure>
