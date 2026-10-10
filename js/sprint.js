@@ -208,8 +208,8 @@ function showSprintQ() {
         <button class="btn btn-ghost btn-sm" data-act="w-undo">Undo <kbd>Z</kbd></button>
         <button class="btn btn-ghost btn-sm" data-act="w-clear">Clear</button>
         <button class="btn btn-ghost btn-sm" data-act="sp-replay" aria-label="Hear it">${icon("speaker")} <kbd>R</kbd></button>
-        <button class="btn btn-sm" data-act="sp-write-next">Next <kbd>↵</kbd></button>
-      </div>${last}</div>`;
+      </div>
+      <button class="btn sp-next" data-act="sp-write-next">Next <kbd>↵</kbd></button>${last}</div>`;
     bindPad();
     if (state.settings.autoplay) sayKana(q.k);
     return;
@@ -271,7 +271,12 @@ function holdMiss(q, val) {
       why = !val.length ? "Skipped." : as ? `That reads as <span lang="ja">${esc(as.k)}</span> ${esc(kanaAsked(as))}.` : esc(res.reason);
     }
     $("#padModel").innerHTML = modelSvg(q.k, { animate: true });
-    $(".sp-q .pad-tools")?.remove();
+    /* hidden, not removed, so the big Next stays where the thumb is — and
+       goes on from the miss */
+    const tools = $(".sp-q .pad-tools");
+    if (tools) tools.style.visibility = "hidden";
+    const nb = $(".sp-next");
+    if (nb) nb.dataset.act = "sp-on";
   } else if (SP.mode === "type") {
     const inp = $("#spInput");
     if (inp) { inp.disabled = true; inp.value = val || ""; }
@@ -286,6 +291,7 @@ function holdMiss(q, val) {
   $(".sp-q > .sp-last")?.remove();
   $(".sp-q").insertAdjacentHTML("beforeend",
     `<div class="verdict sp-last miss">${icon("close", "v-ico")} ${it}${why ? ` <span class="sp-you">· ${why}</span>` : ""}</div>`);
+  if (SP.mode === "write" && $(".sp-next")) { $(".sp-next").focus(); return; }
   $("#spFoot").innerHTML = `<span></span><button class="btn" data-act="sp-on" id="spOn">Next <kbd>↵</kbd></button>`;
   $("#spOn").focus();
 }
