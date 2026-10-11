@@ -180,6 +180,19 @@ gets its own flow and doesn't go into the review queue:
   to meaning (ねこ: a cat curled round your neck), only where there's a
   good one.
 
+### Hiragana and katakana side by side (0.35.0)
+
+The Kana tab's chart has a fourth view, **あ⇄ア**: the hiragana chart with
+each kana's katakana beside it in the same square (hiragana in its blue,
+katakana in its pink, the romaji under them), each faded until it's
+learned. Pairs that look alike — か/カ, き/キ, け/ケ, こ/コ, せ/セ, に/ニ, へ/ヘ,
+も/モ, や/ヤ, り/リ and their voiced forms — carry a gold dot (`ALIKE`). A
+tap opens the two big side by side, to hear and to open either one's own
+card (strokes, words, standing). Katakana's own sounds — ー and the
+loanword pairs (ティ, ファ, ウィ…) — have a card of their own. It's a
+reference, so katakana not yet open can still be looked at, as the
+katakana chart already allows.
+
 ### The introduction
 
 A brand-new learner doesn't know Japanese has three scripts, never mind why
@@ -1039,6 +1052,12 @@ the konbini's does, and the smoke test checks both.
   wide layout: the timetable's destinations wrapped a character at a time
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
+
+### 0.35.0: hiragana and katakana side by side
+
+- **Kana → あ⇄ア**: every hiragana with its katakana beside it, look-alikes
+  marked, and a tap to compare the two big. See **Kana → Hiragana and
+  katakana side by side**.
 
 ### 0.34.0: grammar, taught
 

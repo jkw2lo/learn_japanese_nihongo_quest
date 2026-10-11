@@ -1345,8 +1345,10 @@ async function closeSession() {
 function renderKana() {
   const el = $("#v-kana");
   const set = chartSet;
+  const both = set === "hk";
   const locked = set === "k" && !kataOpen();
-  const lessons = LESSONS.filter(L => L.set === set);
+  /* side by side, the chart is laid out from hiragana, each with its katakana beside it */
+  const lessons = LESSONS.filter(L => L.set === (both ? "h" : set));
   const cell = k => {
     if (!k) return `<span class="kc blank"></span>`;
     const e = KANA_BY[k];
@@ -1371,7 +1373,7 @@ function renderKana() {
      each row. These show whatever the romaji setting says — they're how
      the chart is read, not answers — and a new learner needs them most. */
   const consonant = k => KANA_BY[k].r.replace(/[aiueo]$/, "");
-  const section = (title, jp, kinds, cols, head) => {
+  const section = (title, jp, kinds, cols, head, cellFn = both ? pairCell : cell) => {
     const ls = lessons.filter(L => kinds.includes(L.kind));
     if (!ls.length) return "";
     const rows = [];
@@ -1395,16 +1397,47 @@ function renderKana() {
       <div class="card-head"><h2><span lang="ja">${jp}</span> ${esc(title)}</h2></div>
       <div class="kgrid c${cols} ${head ? "labelled" : ""}">
         ${head ? `<span class="kh"></span>${head.map(h => `<span class="kh kh-col">${h}</span>`).join("")}` : ""}
-        ${rows.map(r => (head ? lab(r.label) : "") + r.cells.map(cell).join("")).join("")}
+        ${rows.map(r => (head ? lab(r.label) : "") + r.cells.map(cellFn).join("")).join("")}
       </div>
     </section>`;
   };
   const segs = `<div class="seg">
         <button class="${set === "h" ? "on" : ""}" data-act="chart-set" data-set="h"><span lang="ja">ひらがな</span></button>
         <button class="${set === "k" ? "on" : ""}" data-act="chart-set" data-set="k"><span lang="ja">カタカナ</span></button>
+        <button class="${both ? "on" : ""}" data-act="chart-set" data-set="hk" aria-label="Hiragana and katakana side by side"><span lang="ja">あ⇄ア</span></button>
         <button class="${set === "j" ? "on" : ""}" data-act="chart-set" data-set="j"><span lang="ja">漢字</span></button>
       </div>`;
   if (set === "j") { el.innerHTML = `<div class="chart-head">${segs}</div>${kanjiChartHtml()}`; return; }
+  if (both) {
+    const pairs = KANA.filter(e => e.set === "h" && !e.concept);
+    const bothN = pairs.filter(e => isLearned(e.k) && isLearned(toKata(e.k))).length;
+    const kataOnly = [...LESSONS.filter(L => L.set === "k" && L.kind === "loan").flatMap(L => L.items), ...KANA.filter(e => e.set === "k" && e.concept && !KANA_BY[toHira(e.k)]).map(e => e.k)];
+    el.innerHTML = `
+    <div class="chart-head">
+      ${segs}
+      <span class="muted">${bothN} of ${pairs.length} pairs known both ways · tap a pair to compare</span>
+    </div>
+    <section class="card pair-intro">
+      <p>The same sounds, written two ways. <b>Hiragana</b> <span lang="ja" class="kg-h">あ</span> writes Japanese words and the endings
+        on them; <b>katakana</b> <span lang="ja" class="kg-k">ア</span> writes words borrowed from other languages, foreign names, and
+        sometimes emphasis. Pairs marked <i class="alike-dot"></i> look alike — many come from the same kanji (<span lang="ja">か</span> and
+        <span lang="ja">カ</span> both from <span lang="ja">加</span>). The rest you simply learn.</p>
+    </section>
+    <div class="chart-cols">
+      <div>${section("Basic", "清音", ["base"], 5, ["a", "i", "u", "e", "o"])}</div>
+      <div>
+        ${section("Voiced", "濁音", ["voiced"], 5, ["a", "i", "u", "e", "o"])}
+        ${section("Combined", "拗音", ["combo"], 3, ["a", "u", "o"])}
+        ${section("The pause", "促音", ["concept"], 3)}
+        <section class="card chart-sec">
+          <div class="card-head"><h2><span lang="ja">カタカナだけ</span> Only in katakana</h2><span class="count">long sounds and loanword sounds</span></div>
+          <div class="kgrid c4">${kataOnly.map(cell).join("")}</div>
+        </section>
+      </div>
+    </div>
+    <p class="muted small legend"><span lang="ja" class="kg-h">あ</span> hiragana · <span lang="ja" class="kg-k">ア</span> katakana · <i class="alike-dot"></i> look alike · faded: not learned yet</p>`;
+    return;
+  }
   const learnedN = KANA.filter(e => e.set === set && isLearned(e.k)).length;
   const totalN = KANA.filter(e => e.set === set).length;
   el.innerHTML = `
@@ -1432,6 +1465,34 @@ function renderKana() {
       </div>
     </div>
     <p class="muted small legend"><i class="dots d3"></i> solid — three quick passes reading ${hasAudio() ? "and hearing" : ""} · <i class="dots d1"></i> on the way</p>`;
+}
+
+/* Side by side: a hiragana and its katakana in one square, each faded
+   until learned. Pairs that look alike are marked. */
+const ALIKE = "かきけこせにへもやり";
+const alikePair = k => ALIKE.includes([...k][0].normalize("NFD")[0]);
+
+function pairCell(k) {
+  if (!k) return `<span class="kc blank"></span>`;
+  const kk = toKata(k), e = KANA_BY[k];
+  return `<button class="kc pair ${alikePair(k) ? "alike" : ""}" data-act="kana-pair" data-k="${esc(k)}" lang="ja" aria-label="${esc(k)} and ${esc(kk)}">
+    <span class="kp"><span class="kg-h ${isLearned(k) ? "" : "not"}">${esc(k)}</span><span class="kg-k ${isLearned(kk) ? "" : "not"}">${esc(kk)}</span></span>
+    ${e.concept ? "" : `<span class="kr">${esc(e.r)}</span>`}</button>`;
+}
+
+function openPair(k) {
+  const kk = toKata(k), e = KANA_BY[k];
+  if (!e) return;
+  if (!e.concept) sayKana(k);
+  const side = (g, name, cls) => `<div class="pair-side"><button class="glyph-xl ${cls}" lang="ja" data-act="kana-cell" data-k="${esc(g)}" ${KANA_BY[g] ? "" : "disabled"}>${esc(g)}</button>
+    <small>${name}${isLearned(g) ? "" : " · not learned yet"}</small></div>`;
+  openSheet(`<div class="kana-detail">
+    <div class="pair-xl">${side(k, "hiragana", "kg-h")}${side(kk, "katakana", "kg-k")}</div>
+    <div class="intro-rom">${esc(e.concept ? "" : e.r)}</div>
+    <p>${alikePair(k) ? "These two look alike — the katakana is close to the hiragana's shape." : "Different shapes for the same sound — worth learning side by side."}
+      Tap either one for its strokes, its words and how you're doing with it.</p>
+    ${e.concept ? "" : `<button class="btn btn-ghost btn-sm" data-act="say" data-say="${esc(e.say)}">${icon("speaker")} Hear it</button>`}
+  </div>`);
 }
 
 function openKana(k) {
@@ -1799,6 +1860,7 @@ const ACTS = {
   say: el => { if (!say(el.dataset.say)) toast(state.settings.sound ? "No recording for that yet." : "Sound is off in Settings."); },
   "kana-cell": el => openKana(el.dataset.k),
   "chart-set": el => { chartSet = el.dataset.set; renderKana(); },
+  "kana-pair": el => openPair(el.dataset.k),
   opt: el => answer(+el.dataset.i),
   /* any card that isn't a question just reads, so Next always moves on from it */
   next: () => { if (S && (S.card && S.card.t !== "q" || S.answered || S.finished)) next(); },
