@@ -2364,6 +2364,59 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
   .sn-station .sn-ticket.chip { top: auto; bottom: 64px; right: 8px; }
 }
 
+/* ---------- 読む Read ---------- */
+
+.rd-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.rd-intro, .rd-later { grid-column: 1 / -1; }
+.rd-rung-head { display: flex; align-items: center; gap: .6rem; margin-bottom: .3rem; }
+.rd-rung-head h2 { margin: 0; }
+.rd-n { width: 1.8rem; height: 1.8rem; border-radius: 50%; display: grid; place-items: center; background: var(--ai-wash); color: var(--ai); font-weight: 600; font-size: .9rem; flex: none; }
+.rd-rung.locked { opacity: .6; }
+.rd-stat { margin: .4rem 0 .8rem; font-size: .95rem; }
+.rd-later-list { margin: .2rem 0 0; padding-left: 1.3rem; display: grid; gap: .6rem; }
+.rd-pace { font: 600 .95rem var(--f-body); font-variant-numeric: tabular-nums; color: var(--ink-2); min-width: 4.5rem; text-align: right; }
+
+/* Flash: the word holds its place when it's gone, so nothing jumps */
+.rd-word-wrap { min-height: 7rem; display: grid; place-items: center; }
+.rd-word { transition: opacity .12s; }
+.rd-word.gone { opacity: 0; }
+
+/* Word chains: big characters you drag across; a found word keeps its colour */
+.rd-chains { text-align: center; }
+.rd-chain {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 0; margin: 1.4rem auto 1rem; max-width: 40rem;
+  touch-action: none; user-select: none; -webkit-user-select: none; cursor: pointer;
+}
+.rd-ch {
+  font-size: clamp(1.9rem, 7vw, 3rem); line-height: 1.25; padding: .15em .06em; min-width: 1.1em; margin: 3px 0;
+  border: 2px solid transparent; border-left-width: 0; border-right-width: 0;
+  transition: background .12s, transform .12s, margin .2s;
+}
+/* adjacent characters overlap a pixel, so a band has no seams — which is
+   why a band's colours are solid (mixed with the paper), not see-through:
+   an overlap of two see-through ones would draw a line */
+.rd-ch + .rd-ch { margin-left: -1px; }
+/* a selection, and a found word, are one band with rounded ends */
+.rd-ch.sel { background: color-mix(in srgb, var(--ai) 12%, var(--paper)); border-color: var(--ai); }
+.rd-ch.sel.s0 { border-left: 2px solid var(--ai); border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
+.rd-ch.sel.s1 { border-right: 2px solid var(--ai); border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+.rd-ch.nope { animation: rd-nope .4s; }
+@keyframes rd-nope { 20% { transform: translateX(-4px); background: var(--amber-wash); } 60% { transform: translateX(4px); background: var(--amber-wash); } }
+.rd-ch.found { cursor: default; }
+.rd-ch.found.ws { margin-left: 6px; border-left: 2px solid color-mix(in srgb, var(--hue) 55%, var(--paper)); border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
+.rd-ch.found.we { margin-right: 6px; border-right: 2px solid color-mix(in srgb, var(--hue) 55%, var(--paper)); border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+.rd-ch.found.h0, .rd-chip.h0 { --hue: var(--c-hira); }
+.rd-ch.found.h1, .rd-chip.h1 { --hue: var(--jade); }
+.rd-ch.found.h2, .rd-chip.h2 { --hue: var(--gold); }
+.rd-ch.found.h3, .rd-chip.h3 { --hue: var(--c-kata); }
+.rd-ch.found.h4, .rd-chip.h4 { --hue: var(--blush); }
+.rd-ch.found { background: color-mix(in srgb, var(--hue) 22%, var(--paper)); border-color: color-mix(in srgb, var(--hue) 55%, var(--paper)); }
+.rd-chain.done .rd-ch { animation: rd-pop .4s ease-out; }
+@keyframes rd-pop { 40% { transform: translateY(-6px); } }
+.rd-found { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; min-height: 2.2rem; }
+.rd-chip { padding: 4px 12px; border-radius: 999px; font-size: .9rem; background: color-mix(in srgb, var(--hue) 18%, transparent); animation: fade .2s; }
+.rd-chip b { font-weight: 500; margin-right: .3rem; font-size: 1.05rem; }
+
 /* ============================================================
    PHONE LAYER
 
@@ -2829,4 +2882,8 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
   /* the station on a phone: its modal over the whole screen (the rest of it,
      shared with a narrow desktop, is in the container query above) */
   .sn-modal { position: fixed; z-index: 60; }
+
+  /* ---------- 読む Read ---------- */
+  .rd-grid { grid-template-columns: 1fr; gap: 12px; }
+  .rd-chain { margin-top: 2.2rem; }
 }

@@ -38,23 +38,33 @@ const canWrite = k => !!strokesFor(k);
 
 /* ---------- geometry ---------- */
 
-const modelMedians = k => strokesFor(k).m.map(st => st.map(([x, y]) => [x, 900 - y]));
+/* kept once worked out: a check compares against every kana with as many
+   strokes, so each model is wanted many times. Nobody changes them in place. */
+const medianCache = {};
+const modelMedians = k => medianCache[k] || (medianCache[k] = strokesFor(k).m.map(st => st.map(([x, y]) => [x, 900 - y])));
+const resampled = new WeakMap();
+const resampleModel = st => resampled.get(st) || (resampled.set(st, resample(st)), resampled.get(st));
 
+/* Math is looked up once a function in the loops below: tools/smoke.mjs runs
+   this in a vm sandbox, where every global lookup is slow, and it marks
+   thousands of drawings. */
 function strokeLen(pts) {
+  const { sqrt } = Math;
   let d = 0;
-  for (let i = 1; i < pts.length; i++) d += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+  for (let i = 1; i < pts.length; i++) { const dx = pts[i][0] - pts[i - 1][0], dy = pts[i][1] - pts[i - 1][1]; d += sqrt(dx * dx + dy * dy); }
   return d;
 }
 
 function resample(pts, n = WRITE_N) {
   if (pts.length === 1) return Array.from({ length: n }, () => pts[0]);
+  const { sqrt } = Math;
   const total = strokeLen(pts) || 1;
   const step = total / (n - 1);
   const out = [pts[0]];
   let acc = 0, i = 1, prev = pts[0];
   while (out.length < n - 1 && i < pts.length) {
     const cur = pts[i];
-    const seg = Math.hypot(cur[0] - prev[0], cur[1] - prev[1]);
+    const sx = cur[0] - prev[0], sy = cur[1] - prev[1], seg = sqrt(sx * sx + sy * sy);
     if (acc + seg >= step && seg > 0) {
       const t = (step - acc) / seg;
       const p = [prev[0] + t * (cur[0] - prev[0]), prev[1] + t * (cur[1] - prev[1])];
@@ -76,18 +86,19 @@ function resample(pts, n = WRITE_N) {
 const WRITE_END_TOL = 190;
 const WRITE_WIN_TOL = 200;
 function meanDist(a, b) {
-  const dd = a.map((p, i) => Math.hypot(p[0] - b[i][0], p[1] - b[i][1]));
-  const mean = dd.reduce((s, d) => s + d, 0) / dd.length;
-  const n = dd.length - 1;
-  const ends = Math.max(dd[0], dd[n]);
+  const { sqrt } = Math;
+  const n = a.length, dd = new Array(n);
+  let sum = 0;
+  for (let i = 0; i < n; i++) { const dx = a[i][0] - b[i][0], dy = a[i][1] - b[i][1]; dd[i] = sqrt(dx * dx + dy * dy); sum += dd[i]; }
+  const ends = dd[0] > dd[n - 1] ? dd[0] : dd[n - 1];
   let worst = 0;
-  for (let i = 0; i + 4 <= dd.length; i++) worst = Math.max(worst, (dd[i] + dd[i + 1] + dd[i + 2] + dd[i + 3]) / 4);
-  return mean + Math.max(0, ends - WRITE_END_TOL) + Math.max(0, worst - WRITE_WIN_TOL);
+  for (let i = 0; i + 4 <= n; i++) { const w = (dd[i] + dd[i + 1] + dd[i + 2] + dd[i + 3]) / 4; if (w > worst) worst = w; }
+  return sum / n + (ends > WRITE_END_TOL ? ends - WRITE_END_TOL : 0) + (worst > WRITE_WIN_TOL ? worst - WRITE_WIN_TOL : 0);
 }
 
 function bbox(strokes) {
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-  strokes.forEach(st => st.forEach(([x, y]) => { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }));
+  for (const st of strokes) for (const [x, y] of st) { if (x < x0) x0 = x; if (y < y0) y0 = y; if (x > x1) x1 = x; if (y > y1) y1 = y; }
   return { x0, y0, x1, y1, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, size: Math.max(x1 - x0, y1 - y0, 1) };
 }
 
@@ -118,7 +129,7 @@ function startOf(st, t) {
 }
 
 function strokeDist(u, m) {
-  const U = resample(u), d = meanDist(U, resample(m));
+  const U = resample(u), d = meanDist(U, resampleModel(m));
   const lm = strokeLen(m), lu = strokeLen(u);
   if (lm >= WRITE_SHORT || lu >= lm) return d;
   const t = Math.max(WRITE_SHORT_MIN, lu / lm);
@@ -155,7 +166,7 @@ function refit(user, model, pairs) {
   const A = [], B = [];
   pairs.forEach(p => {
     if (p.j == null) return;
-    const u = resample(user[p.j]), m = resample(model[p.i]);
+    const u = resample(user[p.j]), m = resampleModel(model[p.i]);
     u.forEach((q, n) => { A.push(q); B.push(m[n]); });
   });
   if (!A.length) return user;

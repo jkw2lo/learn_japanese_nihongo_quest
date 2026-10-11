@@ -93,7 +93,8 @@ const CONTRACT = {
     'distractors', 'renderSoundBar', 'onAudioLoaded', 'toast', 'openSession', 'closeSheet', 'SET_NAME',
     'qWrite', 'stickyWrite', 'reviewKind', 'showWrite', 'checkWrite', 'showStrokes', 'loadStrokes', 'settle', 'settleNearly', 'afterAnswer', 'rebuild', 'quickMs',
     'todaysWords', 'wordDay', 'wordTasks', 'allTasksDone', 'stagesFinished', 'lessonNames'],
-  'js/sprint.js': ['renderSprint', 'sprintKey', 'sprintLabel'],
+  'js/sprint.js': ['renderSprint', 'sprintKey', 'sprintLabel', 'sprintWords', 'otherMeanings'],
+  'js/read-ui.js': ['renderRead', 'readKey', 'readText', 'readPool', 'splits', 'makeChain', 'chainable', 'READ_RUNGS', 'openRead', 'closeRead'],
   'js/phone.js': ['isPhone', 'openDrawer', 'closeDrawer', 'initDrawerLoop', 'centerDrawer', 'drawerTick', 'phoneAfterRender', 'drawerOpen'],
 };
 const declares = (src, name) => {
@@ -432,6 +433,36 @@ section('menu');
   const N = { 400: 'よんひゃく', 1100: 'せんひゃく', 1250: 'せんにひゃくごじゅう', 300: 'さんびゃく', 600: 'ろっぴゃく',
     800: 'はっぴゃく', 3000: 'さんぜん', 8000: 'はっせん', 2980: 'にせんきゅうひゃくはちじゅう', 10500: 'いちまんごひゃく', 15: 'じゅうご' };
   Object.entries(N).forEach(([n, want]) => ok(numberKana(+n) === want, `numberKana(${n}) = ${numberKana(+n)}, want ${want}`));
+}
+
+section('read');
+{
+  /* Word chains: a chain splits into the words it was made of, and only that
+     way; kanji you know show as kanji, the rest as kana (README → Read). */
+  const s = sandbox();
+  const run = code => vm.runInContext(code, s);
+  vm.runInContext(';var ACTS = {}; var esc = t => String(t); var icon = () => ""; var knows = new Set(); var knowsKanji = ch => knows.has(ch);' +
+    'var shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };' +
+    'var sample = (a, n) => shuffle([...a]).slice(0, n);\n' + read('js/read-ui.js'), s);
+  ok(run('readText("{食|た}べる")') === 'たべる', 'a kanji you don\'t know reads as its kana');
+  run('knows.add("食")');
+  ok(run('readText("{食|た}べる")') === '食べる', 'a kanji you know reads as itself');
+  ok(run('splits("いえ", ["い", "え", "いえ"])') === 2, 'いえ splits two ways when い and え are words too');
+  ok(run('splits("かさいえ", ["かさ", "いえ"])') === 1, 'かさいえ splits one way');
+  const bad = run(`(() => {
+    const pool = KANA_WORDS.map(w => ({ key: "kw:" + w.w, text: w.w, kana: w.w, m: w.m }));
+    const texts = [...new Set(pool.filter(chainable).map(w => w.text))];
+    const out = [];
+    for (let n = 2; n <= 5; n++) for (let t = 0; t < 40; t++) {
+      const c = makeChain(pool, n);
+      if (!c) { out.push("no chain of " + n); continue; }
+      if (c.spans.map(([a, b]) => [...c.text].slice(a, b).join("")).join("|") !== c.words.map(w => w.text).join("|")) out.push("spans off: " + c.text);
+      if (splits(c.text, texts) !== 1) out.push("splits more than one way: " + c.text);
+      if (new Set(c.words.map(w => w.text)).size !== n) out.push("a word twice: " + c.text);
+    }
+    return out;
+  })()`);
+  ok(!bad.length, `word chains: ${bad.slice(0, 4).join('; ')}`);
 }
 
 section('out and about');

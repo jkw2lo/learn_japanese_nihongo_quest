@@ -60,6 +60,10 @@ const asList = v => Array.isArray(v) ? v : (v && typeof v === "object" ? Object.
 
 /* ---------- state ---------- */
 
+/* Reading: Flash keeps the pace you've reached (characters a second), Word
+   chains the words a chain you're up to; each keeps its best. */
+const freshRead = () => ({ flash: { cps: 1.5, best: 0, rounds: 0 }, chains: { n: 2, best: 0, rounds: 0 } });
+
 const freshState = () => ({
   app: "nihongo-quest", v: 1,
   created: today(),
@@ -71,6 +75,7 @@ const freshState = () => ({
   days: {},           /* date  -> { n, ok: {r:[],p:[],a:[],x:[]}, learned:[], rev:[], check } */
   settings: { ...DEFAULT_SETTINGS },
   sprint: { best: {}, recent: [] },
+  read: freshRead(),  /* 読む: the pace on each rung (README → Read) */
   mistakes: {},       /* glyph -> count, from drills and sprints */
   kataOpen: null,     /* the day katakana unlocked; never relocks */
   milestones: {},     /* id -> the day it was reached */
@@ -102,6 +107,8 @@ function normalise(s) {
     Object.keys(d.ok).forEach(k => { d.ok[k] = asList(d.ok[k]); });
   });
   out.sprint = { best: {}, ...(s.sprint || {}) };
+  const fr = freshRead(), sr = s.read && typeof s.read === "object" ? s.read : {};
+  out.read = { flash: { ...fr.flash, ...(sr.flash || {}) }, chains: { ...fr.chains, ...(sr.chains || {}) } };
   out.sprint.recent = asList(out.sprint.recent);
   out.mistakes = s.mistakes && typeof s.mistakes === "object" ? s.mistakes : {};
   out.spelled = asList(s.spelled);          /* kana words already sounded out in a lesson */
@@ -542,6 +549,11 @@ function mergeState(a, b) {
       .filter(r => { const id = JSON.stringify(r); return !seen.has(id) && seen.add(id); })
       .sort((x, y) => (y.at || "").localeCompare(x.at || "")).slice(0, 30),
   };
+  /* the pace and chain length are where you are, so the newer side's; bests and rounds only grow */
+  out.read = {};
+  ["flash", "chains"].forEach(r => {
+    out.read[r] = { ...older.read[r], ...newer.read[r], best: bigger(a.read[r].best, b.read[r].best), rounds: bigger(a.read[r].rounds, b.read[r].rounds) };
+  });
   out.created = earlierOf(a.created, b.created);
   out.kataOpen = earlierOf(a.kataOpen, b.kataOpen);
   out.spelled = unionList(a.spelled, b.spelled);

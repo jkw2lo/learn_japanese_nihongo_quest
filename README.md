@@ -998,6 +998,19 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.31.0: 読む Read
+
+- **A Read tab**, a ladder from reading kana to reading Japanese, made only
+  of words you know. **一瞬 Flash**: a word shows for a moment, pick its
+  meaning, at a pace that rises as you get them right. **区切り Word chains**:
+  words run together with no spaces; drag across each to find it, and the
+  spaces appear as you do. Phrases, sentences and subtitles come as the
+  words and grammar to build them arrive. See **Read**.
+- Record shows your reading pace and best.
+- The writing marker's inner loops look Math up once (the smoke test, in a
+  vm sandbox, went from 25 s back to 7) and keep each model's strokes once
+  worked out.
+
 ### 0.30.0: △ nearly, word sprints, word mistakes, sticky writing
 
 - **△ Nearly**, the teacher's mark for partly right: plainly the character
@@ -1194,6 +1207,48 @@ line drawing.
 Red here is the seal family (the teacher's pen and stamp are seals), which
 is the one place the colour rules allow it. Motion respects
 `prefers-reduced-motion`.
+
+## 読む Read
+
+Knowing every kana is where reading starts, not where it ends. Once ぬ turns
+into *nu* without thinking, the bottlenecks move: seeing たべます as one word
+rather than five sounds, finding the words in a line that has no spaces
+between them, and keeping up with text you don't set the pace of
+(subtitles run at about four characters a second). The kana sprint can't
+train any of that, so the Read tab does, as a **ladder**: each rung opens
+when you know enough for it, and every rung is made only of words you
+already know (`readPool`: the words sprint's pool, every word from the word
+lessons and every word spelled in kana you've learned). Kanji you know are
+shown as kanji, the rest in kana, with no furigana — there's none on a sign
+(`readText`).
+
+1. **一瞬 Flash.** A word shows for a moment and goes; pick what it meant,
+   from four. The moment is set by your **pace** in characters a second:
+   right answers raise it 8%, wrong ones lower it 12% (0.8 to 8). The pace
+   carries over between rounds of twelve, and a round of nine right or
+   better can set a best. A wrong answer brings the word back and waits.
+   Lesson words are graded like a sprint answer (`r`, speed).
+2. **区切り Word chains.** Two to five words run together with no spaces;
+   drag across each word to find it (a tap is a one-kana word). A found word
+   becomes one band of its own colour, steps a little apart from its
+   neighbours — the spaces appear as you find them — says itself, and
+   leaves its meaning below. A stretch that isn't a word wobbles and lets
+   go. Two clean chains in a row add a word; a messy one takes one away.
+   *Show one* gives a word away, and that chain doesn't count. A chain is
+   only dealt if it splits into words you know **exactly one way**
+   (`splits`, `makeChain`), so there's never a second right answer. Each
+   round of eight keeps its reading speed (characters a second, over the
+   chains found without help), and the best.
+3. **句 Phrases** (later): words joined by particles, わたしのかさ, once は and
+   の are learned (stage 4).
+4. **文 Sentences** (later): whole sentences against the clock, then a
+   question, once there are enough sentences you can read.
+5. **字幕 Subtitles** (later): short scenes with sound, lines timing out.
+
+The pace and the chain length are kept in `state.read` and synced (the
+newer side's pace, the larger best). Record shows them beside the sprints.
+
+---
 
 ## スプリント Sprint
 
@@ -1713,6 +1768,7 @@ you like.
     js/app.js               Today, the kana chart, Record, sessions, settings, backup
     js/guide.js             the introduction and the new-kind cards
     js/sprint.js            the Sprint tab
+    js/read-ui.js           the Read tab: Flash and Word chains
     js/phone.js             the sections button and the rolodex (inert on a desktop)
     js/art.js               icons, the cat, the hanamaru, stamps, petals
     js/conj.js              verb conjugation, generated, never stored

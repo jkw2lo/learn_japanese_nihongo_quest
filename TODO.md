@@ -92,6 +92,10 @@ Build order. Each step should run end to end before the next one starts.
 10. **More recognition practice at N5**: more scenes (a train ticket, a
    bento label, a konbini's shelf tags, a clinic), a "spot the kanji you
    know" mode over the scenes, and scenes in Sprint.
+10b. **読む Read** (0.31.0): the ladder from kana to reading — ~~Flash~~,
+   ~~Word chains~~; next, Phrases (words joined by particles, once は and の
+   are learned), then timed Sentences on a graded sentence bank, then
+   Subtitles; and a Today that leads with reading once there's enough of it.
 11. **N4**: on hold. Staying at N5 for now.
 
 ## Smaller, from 0.4.0

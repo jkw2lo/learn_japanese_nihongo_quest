@@ -73,6 +73,7 @@ function render() {
   else if (view === "words") renderWords();
   else if (view === "menu") renderMenu();
   else if (view === "grammar") renderGrammar();
+  else if (view === "read") renderRead();
   else if (view === "cards") renderCards();
   else if (view === "book") renderBook();
   else if (view === "sprint") renderSprint();
@@ -1514,6 +1515,14 @@ function renderRecord() {
           `${rows.length > 1 ? `<div class="mist-l">${label}</div>` : ""}<div class="chips">${list.map(chip).join("")}</div>`).join("")
           : `<p class="muted small">Whatever you keep missing collects here — kana, words and kanji — from lessons, practice and sprints.</p>`}
       </section>
+      ${state.read.flash.rounds || state.read.chains.rounds ? `<section class="card">
+        <div class="card-head"><h2><span lang="ja">読む</span> Reading</h2><button class="link" data-act="nav" data-nav="read">Read ›</button></div>
+        <ul class="plain">
+          ${state.read.flash.rounds ? `<li><span lang="ja">一瞬</span> Flash — pace <b>${state.read.flash.cps.toFixed(1)}</b> characters a second${state.read.flash.best ? `, best ${state.read.flash.best.toFixed(1)}` : ""} <small class="muted">${state.read.flash.rounds} round${state.read.flash.rounds > 1 ? "s" : ""}</small></li>` : ""}
+          ${state.read.chains.rounds ? `<li><span lang="ja">区切り</span> Word chains — best <b>${state.read.chains.best.toFixed(1)}</b> characters a second, ${state.read.chains.n} words a chain <small class="muted">${state.read.chains.rounds} round${state.read.chains.rounds > 1 ? "s" : ""}</small></li>` : ""}
+        </ul>
+        <p class="muted small">Subtitles run at about four characters a second.</p>
+      </section>` : ""}
       ${recent.length ? `<section class="card">
         <div class="card-head"><h2>Latest sprints</h2><button class="link" data-act="nav" data-nav="sprint">Sprint ›</button></div>
         <ul class="plain">${recent.map(r => `<li>${esc(sprintLabel(r.key))} — ${r.right}/${r.total} in ${(r.ms / 1000).toFixed(0)}s <small class="muted">${esc(r.at)}</small></li>`).join("")}</ul>
@@ -1823,6 +1832,7 @@ document.addEventListener("keydown", guard(e => {
   const inField = /INPUT|TEXTAREA|SELECT/.test(e.target.tagName);
   if (askDone) { if (e.key === "Escape") closeAsk(false); return; }
   if ($(".ms-pop")) { if (e.key === "Escape" || e.key === "Enter" || e.key === " ") { e.preventDefault(); ACTS["ms-close"](); } return; }
+  if (typeof readKey === "function" && readKey(e)) return;
   if (typeof sprintKey === "function" && sprintKey(e)) return;
   if (typeof cardsKey === "function" && cardsKey(e)) return;
   if (typeof bookKey === "function" && bookKey(e)) return;
