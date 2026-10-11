@@ -2417,6 +2417,42 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 .rd-chip { padding: 4px 12px; border-radius: 999px; font-size: .9rem; background: color-mix(in srgb, var(--hue) 18%, transparent); animation: fade .2s; }
 .rd-chip b { font-weight: 500; margin-right: .3rem; font-size: 1.05rem; }
 
+/* ---------- 探す Word search ---------- */
+
+.rd-search { grid-column: 1 / -1; }
+.rd-n.rd-game { background: var(--gold-soft); color: var(--ink); font-size: 1rem; }
+.srch-play { display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center; align-items: flex-start; width: 100%; }
+/* wider than the usual column, so the clues sit beside the grid on a desktop */
+.s-body > .srch-play { max-width: 62rem; }
+.srch-board { text-align: center; }
+/* the grid is a square as big as the screen allows; a cell's character is half its width */
+.srch-grid {
+  --w: min(92vw, 30rem, calc(100svh - 230px));
+  position: relative; width: var(--w); height: var(--w); margin: .8rem auto 0;
+  display: grid; grid-template-columns: repeat(var(--n), 1fr); grid-template-rows: repeat(var(--n), 1fr);
+  background: var(--sheet); border: 1.5px solid var(--rule); border-radius: 14px;
+  touch-action: none; user-select: none; -webkit-user-select: none; cursor: pointer;
+}
+.srch-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.srch-lines line { stroke-width: .78; stroke-linecap: round; opacity: .3; }
+.srch-lines .sel { stroke: var(--ai); opacity: .22; }
+.srch-lines .h0 { stroke: var(--c-hira); } .srch-lines .h1 { stroke: var(--jade); } .srch-lines .h2 { stroke: var(--gold); }
+.srch-lines .h3 { stroke: var(--c-kata); } .srch-lines .h4 { stroke: var(--blush); }
+.srch-c { position: relative; display: grid; place-items: center; font-size: calc(var(--w) / var(--n) * .5); line-height: 1; }
+.srch-c.nope { animation: rd-nope .4s; border-radius: 8px; }
+.srch-c.hint { animation: srch-hint 1.6s ease-out; border-radius: 50%; }
+@keyframes srch-hint { 0%, 60% { box-shadow: 0 0 0 3px var(--gold); background: var(--gold-soft); } 100% { box-shadow: 0 0 0 0 transparent; } }
+.srch-side { width: min(92vw, 16rem); display: flex; flex-direction: column; gap: .7rem; padding-top: 2.2rem; }
+.srch-count { font: 600 1.05rem var(--f-body); color: var(--ink-2); }
+.srch-clues, .srch-bonus { display: flex; flex-wrap: wrap; gap: 6px; }
+.srch-clue { padding: 4px 12px; border-radius: 999px; font-size: .92rem; border: 1px solid var(--rule-2); }
+.srch-clue.got { border-color: transparent; }
+.srch-extra { --hue: var(--ink-3); border: 1px dashed var(--rule); }
+.srch-extra small { color: var(--ink-3); margin-left: .2rem; }
+.srch-done { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.srch-done .neko { width: 56px; height: 56px; }
+.srch-done .stamp { transform: scale(.7); transform-origin: left center; }
+
 /* ============================================================
    PHONE LAYER
 
@@ -2886,4 +2922,9 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
   /* ---------- 読む Read ---------- */
   .rd-grid { grid-template-columns: 1fr; gap: 12px; }
   .rd-chain { margin-top: 2.2rem; }
+
+  /* word search: the grid the width of the screen, the clues under it */
+  .srch-grid { --w: min(92vw, calc(100svh - 300px)); }
+  .srch-side { padding-top: 0; width: min(92vw, 30rem); }
+  .srch-play { gap: .8rem; }
 }

@@ -16,6 +16,9 @@
    3–5. Phrases with particles, timed sentences, subtitles — later, as the
       words and grammar to build them arrive.
 
+   And beside the ladder, a game: 探す Word search, a grid of kana you know
+   with words you know hidden in it, across, down and diagonally.
+
    Words come from the same pool as the words sprint (sprintWords): every
    word learned in the word lessons and every word spelled only in kana
    you've learned. Kanji you know are shown as kanji, the rest in kana —
@@ -73,6 +76,63 @@ function makeChain(pool, n, pick = (a, k) => sample(a, k)) {
   return null;
 }
 
+/* ---------- 探す Word search: the grid ---------- */
+
+/* A word is hidden → across, ↓ down (Japanese is often written in columns)
+   or ↘ diagonally — never backwards: reading a word backwards teaches
+   nothing about reading it. Dragging from either end finds it. */
+const SEARCH_DIRS = [[0, 1], [1, 0], [1, 1]];
+const ALL_DIRS = [[0, 1], [1, 0], [1, 1], [0, -1], [-1, 0], [-1, -1], [1, -1], [-1, 1]];
+const cellKey = (r, c) => r * 100 + c;
+
+/* Every place a word can be read in the grid, in any of the eight
+   directions, each as the set of its cells (so みみ, read both ways over the
+   same two cells, is one place). */
+function searchPlaces(grid, word) {
+  const size = grid.length, w = [...word], out = new Map();
+  for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) for (const [dr, dc] of ALL_DIRS) {
+    let ok = true;
+    for (let i = 0; i < w.length && ok; i++) {
+      const rr = r + dr * i, cc = c + dc * i;
+      ok = rr >= 0 && cc >= 0 && rr < size && cc < size && grid[rr][cc] === w[i];
+    }
+    if (ok) { const cells = w.map((_, i) => cellKey(r + dr * i, c + dc * i)).sort((a, b) => a - b); out.set(cells.join(), cells); }
+  }
+  return [...out.values()];
+}
+
+/* Hide up to n of the words (two characters or more, each meaning once) in
+   a size×size grid and fill the rest from filler, so that each hidden word
+   can be read in exactly one place. Returns { grid, placed: [{ w, cells,
+   from, to }] } or null. */
+function makeSearch(words, size, n, filler) {
+  const rand = k => Math.floor(Math.random() * k);
+  for (let attempt = 0; attempt < 40; attempt++) {
+    const grid = Array.from({ length: size }, () => new Array(size).fill(null));
+    const seenM = new Set(), seenT = new Set();
+    const cands = shuffle(words.filter(w => { const L = [...w.text].length; return L >= 2 && L <= size; }))
+      .filter(w => !seenM.has(w.m) && !seenT.has(w.text) && seenM.add(w.m) && seenT.add(w.text))
+      .slice(0, n * 3).sort((a, b) => [...b.text].length - [...a.text].length);
+    const placed = [];
+    for (const w of cands) {
+      if (placed.length >= n) break;
+      const ch = [...w.text], L = ch.length;
+      for (let t = 0; t < 80; t++) {
+        const [dr, dc] = SEARCH_DIRS[rand(SEARCH_DIRS.length)];
+        const r0 = rand(size - dr * (L - 1)), c0 = rand(size - dc * (L - 1));
+        if (!ch.every((x, i) => { const g = grid[r0 + dr * i][c0 + dc * i]; return g === null || g === x; })) continue;
+        ch.forEach((x, i) => { grid[r0 + dr * i][c0 + dc * i] = x; });
+        placed.push({ w, cells: ch.map((_, i) => cellKey(r0 + dr * i, c0 + dc * i)).sort((a, b) => a - b), from: [r0, c0], to: [r0 + dr * (L - 1), c0 + dc * (L - 1)] });
+        break;
+      }
+    }
+    if (placed.length < Math.min(n, 3)) continue;
+    for (const row of grid) for (let c = 0; c < size; c++) if (row[c] === null) row[c] = filler[rand(filler.length)];
+    if (placed.every(p => searchPlaces(grid, p.w.text).length === 1)) return { grid, placed };
+  }
+  return null;
+}
+
 /* ---------- the rungs ---------- */
 
 const READ_RUNGS = [
@@ -116,6 +176,7 @@ function renderRead() {
       <button class="btn cta" data-act="rd-start" data-r="flash">Flash ${FLASH_N} words</button>`)}
     ${rung(READ_RUNGS[1], `<div class="rd-stat">${r.chains.rounds ? `Best: <b>${cpsText(r.chains.best)}</b> · up to ${r.chains.n} words a chain` : "Starts with two words a chain."}</div>
       <button class="btn cta" data-act="rd-start" data-r="chains">Find the words in ${CHAIN_N} chains</button>`)}
+    ${searchCard(pool)}
     <section class="card rd-later">
       <div class="card-head"><h2>Further up</h2><span class="count">as you learn more</span></div>
       <ol class="rd-later-list" start="3">${READ_LATER.map(x => `<li><b><span lang="ja">${x.jp}</span> ${x.en}</b><br><span class="muted small">${esc(x.what)}</span></li>`).join("")}</ol>
@@ -134,6 +195,7 @@ function openRead(rung) {
   crumb(`read ${rung}`);
   $("#read").classList.add("on");
   document.body.style.overflow = "hidden";
+  if (rung === "search") return searchOpen();
   if (rung === "flash") {
     RD.cps = state.read.flash.cps;
     RD.cps0 = RD.cps;
@@ -162,7 +224,7 @@ function rdStep() {
 
 function closeRead() {
   if (!RD) return;
-  clearTimeout(RD.hide); clearTimeout(RD.next);
+  clearTimeout(RD.hide); clearTimeout(RD.next); clearInterval(RD.timer);
   RD = null;
   $("#read").classList.remove("on");
   $("#rdBody").innerHTML = ""; $("#rdFoot").innerHTML = "";
@@ -330,6 +392,181 @@ function chainHelp() {
   chainFound(w);
 }
 
+/* ---------- 探す Word search: the game ---------- */
+
+const SEARCH_SIZES = { 6: 5, 8: 8, 10: 12 };          /* side -> words hidden */
+const SEARCH_CLUES = { m: "Meanings", w: "Words", n: "Just a number" };
+const searchable = pool => pool.filter(w => chainable(w) && [...w.text].length >= 2);
+const fmtTime = ms => { const s = Math.round(ms / 1000); return `${Math.floor(s / 60)}:${pad2(s % 60)}`; };
+
+function searchCard(pool) {
+  const s = state.read.search, words = searchable(pool);
+  const open = words.length >= 6;
+  const seg = (field, opts, label) => `<div class="seg">${Object.keys(opts).map(o => `<button class="${String(s[field]) === o ? "on" : ""}" data-act="srch-pick" data-f="${field}" data-v="${o}">${label(o)}</button>`).join("")}</div>`;
+  const best = s.best[s.size];
+  return `<section class="card rd-rung rd-search ${open ? "" : "locked"}">
+    <div class="rd-rung-head"><span class="rd-n rd-game" lang="ja">探</span><h2><span lang="ja">探す</span> Word search</h2></div>
+    <p>A grid of kana you know, with words you know hidden in it — across, down (the way Japanese is often written) and diagonally. Drag from a word's first character to its last.</p>
+    ${open ? `<div class="pick"><span class="pick-l">Grid</span>${seg("size", SEARCH_SIZES, o => `${o}×${o}`)}</div>
+      <div class="pick"><span class="pick-l">Clues</span>${seg("clue", SEARCH_CLUES, o => SEARCH_CLUES[o])}</div>
+      <p class="muted small">${s.clue === "m" ? "You get the meanings, and find the Japanese." : s.clue === "w" ? "You get the words, and find them." : "You only get how many — finding them is the reading."}
+        ${best ? ` Best on ${s.size}×${s.size}: <b>${fmtTime(best)}</b>.` : ""}</p>
+      <button class="btn cta" data-act="rd-start" data-r="search">Find ${Math.min(SEARCH_SIZES[s.size], words.length)} words</button>`
+      : `<p class="muted small">Learn a few more words first — this needs six you can read.</p>`}
+  </section>`;
+}
+
+function searchOpen() {
+  const s = state.read.search, size = +s.size;
+  const words = searchable(RD.pool);
+  /* the filler is kana you've learned, in the scripts the words use, with
+     the words' own characters mixed in so they don't stand out */
+  const kata = words.some(w => /[\u30a1-\u30fa]/.test(w.text)), hira = words.some(w => /[\u3041-\u3096]/.test(w.text));
+  const known = learnedKana().filter(e => [...e.k].length === 1 && !e.concept && ((e.set === "k" && kata) || (e.set === "h" && hira))).map(e => e.k);
+  const own = words.flatMap(w => [...w.text]);
+  const g = makeSearch(words, size, SEARCH_SIZES[size], [...known, ...known, ...own]);
+  if (!g) { closeRead(); toast("Couldn't hide enough words in that grid — try a bigger one."); return; }
+  Object.assign(RD, { size, clue: s.clue, g, found: new Set(), bonus: new Set(), helped: false, n: g.placed.length, t0: performance.now() });
+  $("#rdStrip").innerHTML = g.placed.map((_, i) => `<i data-i="${i}"></i>`).join("");
+  $("#rdPace").textContent = "0:00";
+  RD.timer = setInterval(() => { if (RD && !RD.done) $("#rdPace").textContent = fmtTime(performance.now() - RD.t0); }, 500);
+  $("#rdBody").innerHTML = `<div class="srch-play">
+    <div class="srch-board">
+      <div class="q-ask">${RD.clue === "n" ? `Find <b>${RD.n}</b> words.` : "Find these words."} Drag from the first character to the last.</div>
+      <div class="srch-grid" id="wsGrid" lang="ja" style="--n:${size}">
+        <svg class="srch-lines" id="wsLines" viewBox="0 0 ${size} ${size}" aria-hidden="true"></svg>
+        ${g.grid.map((row, r) => row.map((ch, c) => `<span class="srch-c" data-r="${r}" data-c="${c}">${esc(ch)}</span>`).join("")).join("")}
+      </div>
+    </div>
+    <div class="srch-side">
+      <div class="srch-count" id="wsCount">0 of ${RD.n}</div>
+      <div class="srch-clues" id="wsClues">${RD.clue === "n" ? "" : g.placed.map((p, i) => `<span class="srch-clue" data-i="${i}">${RD.clue === "m" ? esc(p.w.m) : `<b lang="ja">${esc(p.w.text)}</b>`}</span>`).join("")}</div>
+      <div class="srch-bonus" id="wsBonus"></div>
+    </div>
+  </div>`;
+  $("#rdFoot").innerHTML = `<button class="btn btn-ghost" data-act="srch-hint">Show me where</button><span></span>`;
+  bindSearch();
+}
+
+/* the line a drag makes, snapped to the nearest of the eight directions */
+function searchSnap(r0, c0, r1, c1, size) {
+  const dr = r1 - r0, dc = c1 - c0;
+  if (!dr && !dc) return [r0, c0];
+  const step = Math.round(Math.atan2(dr, dc) / (Math.PI / 4));
+  const sr = Math.round(Math.sin(step * Math.PI / 4)), sc = Math.round(Math.cos(step * Math.PI / 4));
+  let len = Math.max(Math.abs(dr), Math.abs(dc));
+  while (len > 0 && (r0 + sr * len < 0 || r0 + sr * len >= size || c0 + sc * len < 0 || c0 + sc * len >= size)) len--;
+  return [r0 + sr * len, c0 + sc * len];
+}
+
+const wsLine = (a, b, cls) => `<line x1="${a[1] + .5}" y1="${a[0] + .5}" x2="${b[1] + .5}" y2="${b[0] + .5}" class="${cls}"/>`;
+
+function bindSearch() {
+  const box = $("#wsGrid"), lines = $("#wsLines");
+  let from = null, to = null;
+  const at = e => {
+    const el = document.elementFromPoint(e.clientX, e.clientY)?.closest?.(".srch-c");
+    return el && box.contains(el) ? [+el.dataset.r, +el.dataset.c] : null;
+  };
+  const drawSel = () => {
+    lines.querySelector(".sel")?.remove();
+    if (from) lines.insertAdjacentHTML("beforeend", wsLine(from, to, "sel"));
+  };
+  box.addEventListener("pointerdown", e => {
+    const p = at(e);
+    if (!p || !RD || RD.done) return;
+    e.preventDefault();
+    try { box.setPointerCapture(e.pointerId); } catch {}
+    from = to = p; drawSel();
+  });
+  box.addEventListener("pointermove", e => {
+    if (!from) return;
+    const p = at(e);
+    if (!p) return;
+    const s = searchSnap(from[0], from[1], p[0], p[1], RD.size);
+    if (s[0] !== to[0] || s[1] !== to[1]) { to = s; drawSel(); }
+  });
+  const up = () => {
+    if (!from) return;
+    const a = from, b = to;
+    from = to = null; drawSel();
+    searchPick(a, b);
+  };
+  box.addEventListener("pointerup", up);
+  box.addEventListener("pointercancel", () => { from = to = null; drawSel(); });
+}
+
+function searchPick(a, b) {
+  const len = Math.max(Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1])) + 1;
+  const sr = Math.sign(b[0] - a[0]), sc = Math.sign(b[1] - a[1]);
+  const path = Array.from({ length: len }, (_, i) => [a[0] + sr * i, a[1] + sc * i]);
+  const key = path.map(([r, c]) => cellKey(r, c)).sort((x, y) => x - y).join();
+  const i = RD.g.placed.findIndex((p, j) => !RD.found.has(j) && p.cells.join() === key);
+  if (i >= 0) return searchFound(i);
+  /* a word you know that isn't one of the hidden ones: a bonus, not a find */
+  const text = path.map(([r, c]) => RD.g.grid[r][c]).join("");
+  const other = len >= 2 && !RD.g.placed.some(p => p.w.text === text) && RD.pool.find(w => w.text === text);
+  if (other && !RD.bonus.has(text)) {
+    RD.bonus.add(text);
+    $("#wsBonus").insertAdjacentHTML("beforeend", `<span class="rd-chip srch-extra"><b lang="ja">${esc(other.text)}</b> ${esc(other.m)} <small>bonus</small></span>`);
+    if (state.settings.sound) say(other.say);
+    return;
+  }
+  if (len < 2) return;
+  path.forEach(([r, c]) => { const el = $(`.srch-c[data-r="${r}"][data-c="${c}"]`); el.classList.remove("nope"); void el.offsetWidth; el.classList.add("nope"); });
+}
+
+function searchFound(i) {
+  const p = RD.g.placed[i];
+  RD.found.add(i);
+  const hue = RD.found.size % CHAIN_HUES;
+  $("#wsLines").insertAdjacentHTML("afterbegin", wsLine(p.from, p.to, "h" + hue));
+  p.cells.forEach(k => $(`.srch-c[data-r="${Math.floor(k / 100)}"][data-c="${k % 100}"]`).classList.add("got"));
+  const chip = `<b lang="ja">${esc(p.w.text)}</b> ${esc(p.w.m)}`;
+  const clue = $(`.srch-clue[data-i="${i}"]`);
+  if (clue) { clue.className = `srch-clue rd-chip h${hue} got`; clue.innerHTML = chip; }
+  else $("#wsClues").insertAdjacentHTML("beforeend", `<span class="srch-clue rd-chip h${hue} got">${chip}</span>`);
+  $("#wsCount").textContent = `${RD.found.size} of ${RD.n}`;
+  RD.res[RD.found.size - 1] = "ok";
+  rdStrip();
+  if (state.settings.sound) say(p.w.say);
+  if (RD.found.size === RD.n) searchDone();
+}
+
+/* Show me where: the first character of a word not yet found pulses. Using
+   it means the time can't be a best. */
+function searchHint() {
+  if (!RD || RD.done || RD.rung !== "search") return;
+  const left = RD.g.placed.map((p, i) => i).filter(i => !RD.found.has(i));
+  if (!left.length) return;
+  const p = RD.g.placed[sample(left, 1)[0]];
+  RD.helped = true;
+  const el = $(`.srch-c[data-r="${p.from[0]}"][data-c="${p.from[1]}"]`);
+  el.classList.remove("hint"); void el.offsetWidth; el.classList.add("hint");
+}
+
+function searchDone() {
+  RD.done = true;
+  clearInterval(RD.timer);
+  const ms = performance.now() - RD.t0;
+  addStudyTime(ms);
+  const s = state.read.search;
+  s.rounds = (s.rounds || 0) + 1;
+  const best = !RD.helped && (!s.best[RD.size] || ms < s.best[RD.size]);
+  if (best) s.best[RD.size] = Math.round(ms);
+  save();
+  crumb(`read done search ${RD.size} ${fmtTime(ms)}`);
+  $("#rdPace").textContent = fmtTime(ms);
+  setTimeout(() => {
+    if (!RD) return;
+    $("#rdFoot").innerHTML = `<button class="btn btn-ghost" data-act="rd-close">Done <kbd>Esc</kbd></button>
+      <button class="btn" data-act="rd-again">Another grid <kbd>↵</kbd></button>`;
+    $(".srch-side").insertAdjacentHTML("afterbegin", `<div class="srch-done">${neko(best ? "cheer" : "happy", "hop")}${best ? stamp("新記録") : ""}
+      <div><b>All ${RD.n} in ${fmtTime(ms)}</b>${RD.bonus.size ? ` · ${RD.bonus.size} bonus` : ""}${RD.helped ? ` <small class="muted">— with a hint</small>` : best ? ` <small class="muted">— a new best on ${RD.size}×${RD.size}</small>` : ""}</div></div>`);
+    if (best) petals($("#read"), 24);
+  }, 500);
+}
+
 /* ---------- the end of a round ---------- */
 
 function rdFinish() {
@@ -385,6 +622,13 @@ Object.assign(ACTS, {
   "rd-opt": el => flashAnswer(+el.dataset.i),
   "rd-next": () => { if (RD && !RD.done) { RD.i++; rdStep(); } },
   "rd-help": () => chainHelp(),
+  "srch-hint": () => searchHint(),
+  "srch-pick": el => {
+    const s = state.read.search;
+    s[el.dataset.f] = el.dataset.f === "size" ? +el.dataset.v : el.dataset.v;
+    save();
+    renderRead();
+  },
   "rd-close": () => closeRead(),
   "rd-again": () => { const r = RD?.rung; closeRead(); if (r) openRead(r); },
 });

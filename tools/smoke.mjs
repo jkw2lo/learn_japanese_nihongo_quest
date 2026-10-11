@@ -94,7 +94,8 @@ const CONTRACT = {
     'qWrite', 'stickyWrite', 'reviewKind', 'showWrite', 'checkWrite', 'showStrokes', 'loadStrokes', 'settle', 'settleNearly', 'afterAnswer', 'rebuild', 'quickMs',
     'todaysWords', 'wordDay', 'wordTasks', 'allTasksDone', 'stagesFinished', 'lessonNames'],
   'js/sprint.js': ['renderSprint', 'sprintKey', 'sprintLabel', 'sprintWords', 'otherMeanings'],
-  'js/read-ui.js': ['renderRead', 'readKey', 'readText', 'readPool', 'splits', 'makeChain', 'chainable', 'READ_RUNGS', 'openRead', 'closeRead'],
+  'js/read-ui.js': ['renderRead', 'readKey', 'readText', 'readPool', 'splits', 'makeChain', 'chainable', 'READ_RUNGS', 'openRead', 'closeRead',
+    'makeSearch', 'searchPlaces', 'searchSnap', 'SEARCH_DIRS', 'SEARCH_SIZES', 'searchCard'],
   'js/phone.js': ['isPhone', 'openDrawer', 'closeDrawer', 'initDrawerLoop', 'centerDrawer', 'drawerTick', 'phoneAfterRender', 'drawerOpen'],
 };
 const declares = (src, name) => {
@@ -463,6 +464,32 @@ section('read');
     return out;
   })()`);
   ok(!bad.length, `word chains: ${bad.slice(0, 4).join('; ')}`);
+
+  /* Word search: a full grid, every hidden word readable in exactly one
+     place, hidden only forwards (→ ↓ ↘), and no two with the same meaning. */
+  const wsBad = run(`(() => {
+    const words = KANA_WORDS.map(w => ({ key: "kw:" + w.w, text: w.w, kana: w.w, m: w.m }));
+    const filler = [...new Set(words.flatMap(w => [...w.text]))];
+    const out = [];
+    for (const size of [6, 8, 10]) for (let t = 0; t < 12; t++) {
+      const g = makeSearch(words, size, SEARCH_SIZES[size], filler);
+      if (!g) { out.push("no grid " + size); continue; }
+      if (g.grid.length !== size || g.grid.some(row => row.length !== size || row.some(ch => !ch))) out.push("grid not full " + size);
+      if (new Set(g.placed.map(p => p.w.m)).size !== g.placed.length) out.push("a meaning twice");
+      for (const p of g.placed) {
+        const places = searchPlaces(g.grid, p.w.text);
+        if (places.length !== 1) out.push(p.w.text + " readable " + places.length + " ways");
+        else if (places[0].join() !== p.cells.join()) out.push(p.w.text + " is not where it was hidden");
+        const dr = Math.sign(p.to[0] - p.from[0]), dc = Math.sign(p.to[1] - p.from[1]);
+        if (!SEARCH_DIRS.some(([a, b]) => a === dr && b === dc)) out.push(p.w.text + " hidden backwards");
+      }
+    }
+    return out;
+  })()`);
+  ok(!wsBad.length, `word search: ${wsBad.slice(0, 4).join('; ')}`);
+  ok(run('JSON.stringify(searchSnap(2, 2, 5, 4, 8))') === '[5,5]', 'a drag down and a bit right snaps to the diagonal');
+  ok(run('JSON.stringify(searchSnap(2, 2, 2, 9, 8))') === '[2,7]', 'a drag off the grid stops at its edge');
+  ok(run('JSON.stringify(searchSnap(0, 0, 4, 1, 8))') === '[4,0]', 'a drag mostly down snaps straight down');
 }
 
 section('out and about');

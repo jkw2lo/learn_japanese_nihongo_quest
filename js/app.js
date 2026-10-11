@@ -1515,10 +1515,11 @@ function renderRecord() {
           `${rows.length > 1 ? `<div class="mist-l">${label}</div>` : ""}<div class="chips">${list.map(chip).join("")}</div>`).join("")
           : `<p class="muted small">Whatever you keep missing collects here — kana, words and kanji — from lessons, practice and sprints.</p>`}
       </section>
-      ${state.read.flash.rounds || state.read.chains.rounds ? `<section class="card">
+      ${state.read.flash.rounds || state.read.chains.rounds || state.read.search.rounds ? `<section class="card">
         <div class="card-head"><h2><span lang="ja">読む</span> Reading</h2><button class="link" data-act="nav" data-nav="read">Read ›</button></div>
         <ul class="plain">
           ${state.read.flash.rounds ? `<li><span lang="ja">一瞬</span> Flash — pace <b>${state.read.flash.cps.toFixed(1)}</b> characters a second${state.read.flash.best ? `, best ${state.read.flash.best.toFixed(1)}` : ""} <small class="muted">${state.read.flash.rounds} round${state.read.flash.rounds > 1 ? "s" : ""}</small></li>` : ""}
+          ${state.read.search.rounds ? `<li><span lang="ja">探す</span> Word search — best ${Object.entries(state.read.search.best).sort((x, y) => x[0] - y[0]).map(([n, ms]) => `${n}×${n} <b>${fmtTime(ms)}</b>`).join(", ") || "none yet without a hint"} <small class="muted">${state.read.search.rounds} grid${state.read.search.rounds > 1 ? "s" : ""}</small></li>` : ""}
           ${state.read.chains.rounds ? `<li><span lang="ja">区切り</span> Word chains — best <b>${state.read.chains.best.toFixed(1)}</b> characters a second, ${state.read.chains.n} words a chain <small class="muted">${state.read.chains.rounds} round${state.read.chains.rounds > 1 ? "s" : ""}</small></li>` : ""}
         </ul>
         <p class="muted small">Subtitles run at about four characters a second.</p>

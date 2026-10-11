@@ -998,6 +998,13 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.32.0: 探す Word search
+
+- **Read → 探す Word search**: a grid of kana you know with words you know
+  hidden across, down and diagonally. Clues as meanings, as the words, or
+  just a number to find. Bonus words, a hint, best times per size. See
+  **Read**.
+
 ### 0.31.0: 読む Read
 
 - **A Read tab**, a ladder from reading kana to reading Japanese, made only
@@ -1245,8 +1252,25 @@ shown as kanji, the rest in kana, with no furigana — there's none on a sign
    question, once there are enough sentences you can read.
 5. **字幕 Subtitles** (later): short scenes with sound, lines timing out.
 
-The pace and the chain length are kept in `state.read` and synced (the
-newer side's pace, the larger best). Record shows them beside the sprints.
+Beside the ladder, a game: **探す Word search**. A square grid (6×6 with five
+words, 8×8 with eight, 10×10 with twelve) of kana you know, with words you
+know hidden in it → across, ↓ down (Japanese is often written in columns)
+and ↘ diagonally, overlapping where they share a character. Never
+backwards: reading a word backwards teaches nothing about reading it, but a
+drag from either end finds it. Drags snap to the nearest of the eight
+directions. Three kinds of clue: **Meanings** (find the Japanese for
+*cat*), **Words** (find ねこ) or **Just a number** (*find 8 words* — spotting
+them is the reading). A found word gets a coloured capsule, says itself and
+shows its meaning; a word you know that wasn't hidden on purpose is a
+**bonus**, noted but not counted. *Show me where* pulses a word's first
+character, and that grid's time can't be a best. The filler is kana you've
+learned, in the scripts the words use, mixed with the words' own
+characters so nothing stands out; every hidden word can be read in exactly
+one place (`makeSearch`, `searchPlaces`). Best times are kept per size.
+
+The pace, the chain length and the word search's bests are kept in
+`state.read` and synced (the newer side's pace, the larger best, the
+faster time). Record shows them beside the sprints.
 
 ---
 
@@ -1768,7 +1792,7 @@ you like.
     js/app.js               Today, the kana chart, Record, sessions, settings, backup
     js/guide.js             the introduction and the new-kind cards
     js/sprint.js            the Sprint tab
-    js/read-ui.js           the Read tab: Flash and Word chains
+    js/read-ui.js           the Read tab: Flash, Word chains, Word search
     js/phone.js             the sections button and the rolodex (inert on a desktop)
     js/art.js               icons, the cat, the hanamaru, stamps, petals
     js/conj.js              verb conjugation, generated, never stored
