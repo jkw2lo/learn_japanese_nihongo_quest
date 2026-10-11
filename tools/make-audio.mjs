@@ -92,8 +92,13 @@ function stageBundles() {
     out[`js/audio-s${st}.js`] = stageClips(st).filter(t => !seen.has(t));
     out[`js/audio-s${st}.js`].forEach(t => seen.add(t));
   });
-  out['js/audio-grammar.js'] = GRAMMAR_SAY.map(s => furiKana(s)).filter(t => !seen.has(t));
-  out['js/audio-grammar.js'].forEach(t => seen.add(t));
+  /* The Grammar tab shows every pattern from the start, learned or not, so
+     its bundle holds every sentence it can play — the reference's own and
+     every pattern's examples — repeating what the stage bundles have rather
+     than leave them silent until that stage is reached. Until 0.33.0 it
+     left out anything a stage bundle had, and the tab was nearly mute. */
+  const kanaOnly = new Set(speakableKana());
+  out['js/audio-grammar.js'] = [...new Set([...GRAMMAR_SAY.map(s => furiKana(s)), ...PATTERNS.flatMap(p => p.ex.map(e => e.kana))])].filter(t => !kanaOnly.has(t));
   /* Out and about: one bundle per place, fetched when you go there, so a
      visit downloads that place's sound and not every place's. Each loads
      only itself (and the kana one, which is always there), so they repeat

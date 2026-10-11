@@ -458,7 +458,12 @@ offers 待って / 待った / 待ちます.
 
 ### The Grammar tab
 
-A reference to come back to (`js/data/grammar.js`, `js/grammar-ui.js`):
+A reference to come back to (`js/data/grammar.js`, `js/grammar-ui.js`).
+Every sentence on it plays: `js/audio-grammar.js` holds the tab's own
+sentences and every pattern's examples, repeating what the stage bundles
+have, because the tab shows every pattern from the start. (Until 0.33.0 it
+left out anything a stage bundle had, and for anyone who hadn't reached
+those stages the tab was nearly silent.)
 
 - **How a sentence is built:** 私は 毎日 電車で 駅に 行きます, cut into its
   chunks (topic, when, how, where to, verb), with the points that matter.
@@ -998,6 +1003,20 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.33.0: subtitles, matching, and the Grammar tab heard
+
+- **Read → 字幕 Subtitles**, rung 3: a line at the foot of a screen, said
+  aloud, gone when your pace is up; then its meaning from four. Words
+  first, then sentences from the patterns and words you've learned, the
+  lines growing as you keep up.
+- **Read → 結ぶ Match**: four meanings beside four words to connect, or one
+  word to drag onto one of four meanings.
+- **Word chains:** a found word lifts out of the line and drops into its
+  place in a line below.
+- **Fixed:** the Grammar tab was nearly silent — 85 of its 97 sentences
+  were recorded only in stage bundles that hadn't loaded. Its bundle now
+  holds them all (no new recording; the clips were already made).
+
 ### 0.32.0: 探す Word search
 
 - **Read → 探す Word search**: a grid of kana you know with words you know
@@ -1237,22 +1256,42 @@ shown as kanji, the rest in kana, with no furigana — there's none on a sign
    Lesson words are graded like a sprint answer (`r`, speed).
 2. **区切り Word chains.** Two to five words run together with no spaces;
    drag across each word to find it (a tap is a one-kana word). A found word
-   becomes one band of its own colour, steps a little apart from its
-   neighbours — the spaces appear as you find them — says itself, and
-   leaves its meaning below. A stretch that isn't a word wobbles and lets
-   go. Two clean chains in a row add a word; a messy one takes one away.
+   lifts out of the line, says itself, and drops into its place in a line
+   below with its meaning — so what's left gets shorter and easier to drag
+   across, and the line below builds the chain back up with the spaces in
+   (0.33.0; it used to stay put as a coloured band). A stretch that isn't a
+   word wobbles and lets go; so does a drag across the gap a found word
+   left. Two clean chains in a row add a word; a messy one takes one away.
    *Show one* gives a word away, and that chain doesn't count. A chain is
    only dealt if it splits into words you know **exactly one way**
    (`splits`, `makeChain`), so there's never a second right answer. Each
    round of eight keeps its reading speed (characters a second, over the
    chains found without help), and the best.
-3. **句 Phrases** (later): words joined by particles, わたしのかさ, once は and
-   の are learned (stage 4).
-4. **文 Sentences** (later): whole sentences against the clock, then a
-   question, once there are enough sentences you can read.
-5. **字幕 Subtitles** (later): short scenes with sound, lines timing out.
+3. **字幕 Subtitles.** A line shows at the foot of a dark screen, white on
+   black as a subtitle is, and is said aloud; it goes when your pace is up,
+   with a bar draining under it, and only then do four meanings appear —
+   read first, answer after. The lines grow with you: words first, then,
+   as you learn them, every example of a pattern you know and every example
+   of a word you know (`subsPool`). Every third right in a row allows lines
+   two characters longer; right answers raise the pace 6%, wrong ones lower
+   it 10%. The wrong meanings come from lines of about the same length, so
+   a long line doesn't give itself away. A wrong answer brings the line
+   back and waits (*Again* plays it). Ten lines a round; pace, line length
+   and best are kept.
+4. **句 Phrases** (later): word chains joined by particles, わたしのかさ, once
+   は and の are learned (stage 4).
+5. **文章 Short texts** (later): a message, a sign, a menu, read in one go.
 
-Beside the ladder, a game: **探す Word search**. A square grid (6×6 with five
+Beside the ladder, two games. **結ぶ Match**: meanings and words you know,
+paired — **four and four** (four meanings beside four words; tap one and
+then its partner, or draw a line between them; five sets) or **one at a
+time** (one word above four meanings; drag it onto its meaning or tap it;
+twelve words, and no ruling out by elimination — the default on a phone,
+with the meanings down where the thumb is). Right first time counts; a
+lesson word is graded either way, like a sprint answer; a round without a
+slip can set a best time.
+
+And **探す Word search**. A square grid (6×6 with five
 words, 8×8 with eight, 10×10 with twelve) of kana you know, with words you
 know hidden in it → across, ↓ down (Japanese is often written in columns)
 and ↘ diagonally, overlapping where they share a character. Never
@@ -1792,7 +1831,7 @@ you like.
     js/app.js               Today, the kana chart, Record, sessions, settings, backup
     js/guide.js             the introduction and the new-kind cards
     js/sprint.js            the Sprint tab
-    js/read-ui.js           the Read tab: Flash, Word chains, Word search
+    js/read-ui.js           the Read tab: Flash, Word chains, Subtitles, Match, Word search
     js/phone.js             the sections button and the rolodex (inert on a desktop)
     js/art.js               icons, the cat, the hanamaru, stamps, petals
     js/conj.js              verb conjugation, generated, never stored

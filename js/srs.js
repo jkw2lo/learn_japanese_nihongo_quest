@@ -63,7 +63,8 @@ const asList = v => Array.isArray(v) ? v : (v && typeof v === "object" ? Object.
 /* Reading: Flash keeps the pace you've reached (characters a second), Word
    chains the words a chain you're up to; each keeps its best. */
 const freshRead = () => ({ flash: { cps: 1.5, best: 0, rounds: 0 }, chains: { n: 2, best: 0, rounds: 0 },
-  search: { size: 8, clue: "m", best: {}, rounds: 0 } });
+  search: { size: 8, clue: "m", best: {}, rounds: 0 }, match: { layout: null, best: {}, rounds: 0 },
+  subs: { cps: 1.2, len: 4, best: 0, rounds: 0 } });
 
 const freshState = () => ({
   app: "nihongo-quest", v: 1,
@@ -109,7 +110,8 @@ function normalise(s) {
   });
   out.sprint = { best: {}, ...(s.sprint || {}) };
   const fr = freshRead(), sr = s.read && typeof s.read === "object" ? s.read : {};
-  out.read = { flash: { ...fr.flash, ...(sr.flash || {}) }, chains: { ...fr.chains, ...(sr.chains || {}) }, search: { ...fr.search, ...(sr.search || {}) } };
+  out.read = { flash: { ...fr.flash, ...(sr.flash || {}) }, chains: { ...fr.chains, ...(sr.chains || {}) }, search: { ...fr.search, ...(sr.search || {}) }, match: { ...fr.match, ...(sr.match || {}) }, subs: { ...fr.subs, ...(sr.subs || {}) } };
+  out.read.match.best = out.read.match.best && typeof out.read.match.best === "object" ? out.read.match.best : {};
   out.read.search.best = out.read.search.best && typeof out.read.search.best === "object" ? out.read.search.best : {};
   out.sprint.recent = asList(out.sprint.recent);
   out.mistakes = s.mistakes && typeof s.mistakes === "object" ? s.mistakes : {};
@@ -553,12 +555,14 @@ function mergeState(a, b) {
   };
   /* the pace and chain length are where you are, so the newer side's; bests and rounds only grow */
   out.read = {};
-  ["flash", "chains"].forEach(r => {
+  ["flash", "chains", "subs"].forEach(r => {
     out.read[r] = { ...older.read[r], ...newer.read[r], best: bigger(a.read[r].best, b.read[r].best), rounds: bigger(a.read[r].rounds, b.read[r].rounds) };
   });
   /* a word search's best is a time: the smaller, per grid size */
   out.read.search = { ...older.read.search, ...newer.read.search, rounds: bigger(a.read.search.rounds, b.read.search.rounds),
     best: mergeBy(a.read.search.best, b.read.search.best, (x, y) => Math.min(x || Infinity, y || Infinity)) };
+  out.read.match = { ...older.read.match, ...newer.read.match, rounds: bigger(a.read.match.rounds, b.read.match.rounds),
+    best: mergeBy(a.read.match.best, b.read.match.best, (x, y) => Math.min(x || Infinity, y || Infinity)) };
   out.created = earlierOf(a.created, b.created);
   out.kataOpen = earlierOf(a.kataOpen, b.kataOpen);
   out.spelled = unionList(a.spelled, b.spelled);

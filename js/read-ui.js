@@ -13,8 +13,11 @@
    2. 区切り Word chains — two to five words you know run together with no
       spaces; drag across each word to find it. The chains grow as you find
       them cleanly.
-   3–5. Phrases with particles, timed sentences, subtitles — later, as the
-      words and grammar to build them arrive.
+   3. 字幕 Subtitles — a line shows at the foot of a screen, with its sound,
+      for as long as your pace allows; then say what it meant. Words first;
+      longer phrases and whole sentences join as you learn them, and the
+      lines grow as you keep up.
+   Later: phrases with particles, and short texts read in one go.
 
    And beside the ladder, a game: 探す Word search, a grid of kana you know
    with words you know hidden in it, across, down and diagonally.
@@ -138,11 +141,11 @@ function makeSearch(words, size, n, filler) {
 const READ_RUNGS = [
   { id: "flash", jp: "一瞬", en: "Flash", what: "A word you know shows for a moment. Pick what it means before it's gone — the moment shrinks as you get them right.", min: 6 },
   { id: "chains", jp: "区切り", en: "Word chains", what: "Words you know, run together with no spaces, the way Japanese is written. Drag across each word to find it.", min: 6 },
+  { id: "subs", jp: "字幕", en: "Subtitles", what: "A line flashes up at the foot of a screen with its sound, like a subtitle, and goes. Read it in time, then say what it meant. Words first — phrases and whole sentences join as you learn them, and the lines grow as you keep up.", min: 6 },
 ];
 const READ_LATER = [
-  { jp: "句", en: "Phrases", what: "Words joined by particles — わたしのかさ, えきはどこ. Opens once you've learned は and の (stage 4)." },
-  { jp: "文", en: "Sentences", what: "Whole sentences against the clock, then a question. Opens once there are enough sentences you can read." },
-  { jp: "字幕", en: "Subtitles", what: "Short scenes with sound, the lines timing out like subtitles do." },
+  { jp: "句", en: "Phrases", what: "Word chains joined by particles — わたしのかさ, えきはどこ — once you've learned は and の (stage 4)." },
+  { jp: "文章", en: "Short texts", what: "A message, a sign, a menu: a few lines read in one go, then a question or two." },
 ];
 const FLASH_N = 12, CHAIN_N = 8;
 const FLASH_CPS = [0.8, 8];        /* the pace stays in here, characters a second */
@@ -176,10 +179,14 @@ function renderRead() {
       <button class="btn cta" data-act="rd-start" data-r="flash">Flash ${FLASH_N} words</button>`)}
     ${rung(READ_RUNGS[1], `<div class="rd-stat">${r.chains.rounds ? `Best: <b>${cpsText(r.chains.best)}</b> · up to ${r.chains.n} words a chain` : "Starts with two words a chain."}</div>
       <button class="btn cta" data-act="rd-start" data-r="chains">Find the words in ${CHAIN_N} chains</button>`)}
+    ${rung(READ_RUNGS[2], `<div class="rd-stat">${r.subs.rounds ? `Pace <b>${cpsText(r.subs.cps)}</b> · lines up to ${r.subs.len} characters${r.subs.best ? ` · best ${r.subs.best.toFixed(1)}` : ""}` : "Starts with short words, slowly."}
+        <small class="muted">${subsPool().filter(x => x.kind === "sentence").length ? `${subsPool().filter(x => x.kind === "sentence").length} sentences you can read are in it` : "— sentences join once you've learned some patterns"}</small></div>
+      <button class="btn cta" data-act="rd-start" data-r="subs">Watch ${SUBS_N} lines</button>`)}
     ${searchCard(pool)}
+    ${matchCard(pool)}
     <section class="card rd-later">
       <div class="card-head"><h2>Further up</h2><span class="count">as you learn more</span></div>
-      <ol class="rd-later-list" start="3">${READ_LATER.map(x => `<li><b><span lang="ja">${x.jp}</span> ${x.en}</b><br><span class="muted small">${esc(x.what)}</span></li>`).join("")}</ol>
+      <ol class="rd-later-list" start="4">${READ_LATER.map(x => `<li><b><span lang="ja">${x.jp}</span> ${x.en}</b><br><span class="muted small">${esc(x.what)}</span></li>`).join("")}</ol>
     </section>
   </div>`;
 }
@@ -196,12 +203,20 @@ function openRead(rung) {
   $("#read").classList.add("on");
   document.body.style.overflow = "hidden";
   if (rung === "search") return searchOpen();
+  if (rung === "match") return matchOpen();
   if (rung === "flash") {
     RD.cps = state.read.flash.cps;
     RD.cps0 = RD.cps;
     RD.words = sample(pool, Math.min(FLASH_N, pool.length));
     while (RD.words.length < FLASH_N) RD.words.push(sample(pool, 1)[0]);
     RD.n = FLASH_N;
+  } else if (rung === "subs") {
+    const s = state.read.subs;
+    Object.assign(RD, { cps: s.cps, cps0: s.cps, len: s.len, n: SUBS_N, streak: 0, lines: subsPool(), seen: new Set() });
+    /* the sound for every line it can show: each stage you have words from,
+       and the grammar bundle, which holds every pattern's examples */
+    new Set(learnedWords().map(x => x.st)).forEach(st => loadBundle("s" + st));
+    loadBundle("grammar");
   } else {
     RD.len = state.read.chains.n;
     RD.n = CHAIN_N;
@@ -219,7 +234,7 @@ function rdStep() {
   rdStrip();
   $("#rdFoot").innerHTML = "";
   if (RD.i >= RD.n) return rdFinish();
-  if (RD.rung === "flash") flashShow(); else chainShow();
+  if (RD.rung === "flash") flashShow(); else if (RD.rung === "subs") subsShow(); else chainShow();
 }
 
 function closeRead() {
@@ -275,6 +290,88 @@ function flashAnswer(i) {
   else $("#rdFoot").innerHTML = `<span></span><button class="btn" data-act="rd-next" id="rdNext">Next <kbd>↵</kbd></button>`;
 }
 
+/* ---------- 3 · Subtitles ---------- */
+
+const SUBS_N = 10;
+const SUBS_CPS = [0.8, 10];
+
+/* Everything you could be shown: the words, and sentences made of what
+   you've learned — every example of a pattern you know, and every example
+   of a word you know — each as you'd read it, with what it means and the
+   text its recording is under. */
+function subsPool() {
+  const out = new Map();
+  /* kana: what otherMeanings tells spellings apart by */
+  const add = (text, m, sayText, kind) => { const t = text.trim(); if (t && !out.has(t)) out.set(t, { text: t, kana: sayText, m, say: sayText, kind, len: [...t].length }); };
+  readPool().forEach(w => add(w.text, w.m, w.say, "word"));
+  PATTERNS.filter(p => isLearned(p.key)).forEach(p => p.ex.forEach(e => add(readText(e.jp), e.en, e.kana, "sentence")));
+  learnedWords().forEach(x => (x.ex || []).forEach(([jp, en]) => add(readText(jp), en, furiKana(jp), "sentence")));
+  return [...out.values()];
+}
+
+/* the next line: as long as you're up to, if there is one, and not one
+   seen already this round */
+function subsNext() {
+  const fits = RD.lines.filter(x => x.len <= RD.len && !RD.seen.has(x.text));
+  const pool = fits.length ? fits : RD.lines.filter(x => !RD.seen.has(x.text));
+  const top = Math.max(...pool.map(x => x.len));
+  const near = pool.filter(x => x.len >= Math.max(1, Math.min(top, RD.len) - 2));
+  return sample(near.length ? near : pool, 1)[0];
+}
+
+function subsShow() {
+  const x = subsNext();
+  RD.seen.add(x.text);
+  /* three other meanings from lines of about the same length, so a long
+     line's meaning doesn't give itself away by being long */
+  const like = RD.lines.filter(y => y !== x && Math.abs(y.len - x.len) <= Math.max(2, x.len * .4));
+  const opts = shuffle([x, ...otherMeanings(x, like.length >= 6 ? like : RD.lines, 3)]);
+  RD.q = { x, opts, answered: false, shown: false };
+  const ms = Math.max(400, x.len * 1000 / RD.cps);
+  $("#rdPace").textContent = `${RD.cps.toFixed(1)}/s`;
+  $("#rdBody").innerHTML = `<div class="sb-play">
+    <div class="sb-screen" id="sbScreen">
+      <div class="sb-line" lang="ja" id="sbLine">${esc(x.text)}</div>
+      <div class="sb-time"><i style="animation-duration:${ms}ms"></i></div>
+    </div>
+    <div class="opts n4 words sb-opts" id="sbOpts" hidden>${opts.map((o, i) => `<button class="opt" data-act="sb-opt" data-i="${i}"><kbd>${i + 1}</kbd><span>${esc(o.m)}</span></button>`).join("")}</div>
+    <div class="verdict" id="sbVerdict" aria-live="polite"></div>
+  </div>`;
+  if (state.settings.sound) say(x.say);
+  RD.hide = setTimeout(() => {
+    if (!RD?.q || RD.q.x !== x) return;
+    $("#sbLine").classList.add("gone");
+    $("#sbOpts").hidden = false;
+    RD.q.shown = true;
+    RD.q.t0 = performance.now();
+  }, ms);
+}
+
+function subsAnswer(i) {
+  const q = RD?.q;
+  if (!q || q.answered || !q.shown) return;
+  q.answered = true;
+  const ok = q.opts[i] === q.x;
+  RD.res[RD.i] = ok ? "ok" : "miss";
+  /* keeping up: faster, and every third right in a row, longer lines */
+  RD.cps = Math.min(SUBS_CPS[1], Math.max(SUBS_CPS[0], RD.cps * (ok ? 1.06 : 0.9)));
+  RD.streak = ok ? RD.streak + 1 : 0;
+  const longest = Math.max(...RD.lines.map(x => x.len));
+  if (RD.streak >= 3 && RD.len < longest) { RD.len = Math.min(longest, RD.len + 2); RD.streak = 0; }
+  $$("#sbOpts .opt").forEach((b, j) => {
+    b.disabled = true;
+    if (q.opts[j] === q.x) b.classList.add("right");
+    else if (j === i) b.classList.add("wrong");
+  });
+  $("#sbLine").classList.remove("gone");
+  const v = $("#sbVerdict");
+  v.className = "verdict " + (ok ? "ok" : "miss");
+  v.innerHTML = `${icon(ok ? "check" : "close", "v-ico")} ${esc(q.x.m)}`;
+  rdStrip();
+  if (ok) RD.next = setTimeout(() => { RD.i++; rdStep(); }, 900);
+  else $("#rdFoot").innerHTML = `<button class="btn btn-ghost" data-act="sb-again">${icon("speaker")} Again</button><button class="btn" data-act="rd-next" id="rdNext">Next <kbd>↵</kbd></button>`;
+}
+
 /* ---------- 2 · Word chains ---------- */
 
 const CHAIN_MAX = 5;
@@ -295,16 +392,19 @@ function chainShow() {
   bindChain();
 }
 
+/* A drag picks a run of the characters still showing; each knows where it
+   sat in the chain (data-i), since found words leave it. */
 function bindChain() {
   const box = $("#rdChain");
   let from = null, to = null;
+  const tiles = () => $$(".rd-ch:not(.leaving)", box);
   const at = e => {
     const el = document.elementFromPoint(e.clientX, e.clientY)?.closest?.(".rd-ch");
-    return el && box.contains(el) ? +el.dataset.i : null;
+    return el && box.contains(el) && !el.classList.contains("leaving") ? tiles().indexOf(el) : null;
   };
   const paint = () => {
     const [a, b] = from == null ? [-1, -2] : [Math.min(from, to), Math.max(from, to)];
-    $$(".rd-ch", box).forEach((el, i) => {
+    tiles().forEach((el, i) => {
       el.classList.toggle("sel", i >= a && i <= b);
       el.classList.toggle("s0", i === a);
       el.classList.toggle("s1", i === b);
@@ -312,7 +412,7 @@ function bindChain() {
   };
   box.addEventListener("pointerdown", e => {
     const i = at(e);
-    if (i == null || !RD?.ch) return;
+    if (i == null || i < 0 || !RD?.ch) return;
     e.preventDefault();
     try { box.setPointerCapture(e.pointerId); } catch {}
     from = to = i; paint();
@@ -320,13 +420,13 @@ function bindChain() {
   box.addEventListener("pointermove", e => {
     if (from == null) return;
     const i = at(e);
-    if (i != null && i !== to) { to = i; paint(); }
+    if (i != null && i >= 0 && i !== to) { to = i; paint(); }
   });
   const up = () => {
     if (from == null) return;
-    const a = Math.min(from, to), b = Math.max(from, to) + 1;
+    const picked = tiles().slice(Math.min(from, to), Math.max(from, to) + 1);
     from = to = null; paint();
-    chainPick(a, b);
+    chainPick(picked);
   };
   box.addEventListener("pointerup", up);
   box.addEventListener("pointercancel", () => { from = to = null; paint(); });
@@ -334,34 +434,40 @@ function bindChain() {
 
 const CHAIN_HUES = 5;
 
-function chainPick(a, b) {
+function chainPick(picked) {
   const ch = RD?.ch;
-  if (!ch) return;
-  const w = ch.spans.findIndex(([s, e], i) => s === a && e === b && !ch.found.has(i));
+  if (!ch || !picked.length) return;
+  const idx = picked.map(el => +el.dataset.i);
+  const a = idx[0], b = idx[idx.length - 1] + 1;
+  const run = idx.every((x, j) => x === a + j);
+  const w = run ? ch.spans.findIndex(([s, e], i) => s === a && e === b && !ch.found.has(i)) : -1;
   if (w < 0) {
     /* a stretch that isn't one of the words: it wobbles and lets go */
     ch.wrong++;
-    $$(".rd-ch", $("#rdChain")).forEach((el, i) => { if (i >= a && i < b && !el.classList.contains("found")) { el.classList.remove("nope"); void el.offsetWidth; el.classList.add("nope"); } });
+    picked.forEach(el => { el.classList.remove("nope"); void el.offsetWidth; el.classList.add("nope"); });
     return;
   }
   chainFound(w);
 }
 
+/* A found word lifts out of the line — what's left is easier to read and to
+   drag across — and drops into its place in the line below, which builds
+   the chain back up with the spaces in. */
 function chainFound(w) {
   const ch = RD.ch;
   ch.found.add(w);
   const [s, e] = ch.spans[w];
   const hue = ch.found.size % CHAIN_HUES;
-  /* the word becomes one band, and steps a little apart from its
-     neighbours: the spaces appear as you find the words */
-  $$(".rd-ch", $("#rdChain")).forEach((el, i) => {
+  $$(".rd-ch", $("#rdChain")).forEach(el => {
+    const i = +el.dataset.i;
     if (i < s || i >= e) return;
-    el.classList.add("found", "h" + hue);
-    if (i === s) el.classList.add("ws");
-    if (i === e - 1) el.classList.add("we");
+    el.classList.add("found", "leaving", "h" + hue);
+    setTimeout(() => el.remove(), 260);
   });
   const x = ch.words[w];
-  $("#rdFound").insertAdjacentHTML("beforeend", `<span class="rd-chip h${hue}"><b lang="ja">${esc(x.text)}</b> ${esc(x.m)}</span>`);
+  const chip = `<span class="rd-chip h${hue}" data-s="${s}"><b lang="ja">${esc(x.text)}</b> ${esc(x.m)}</span>`;
+  const after = $$("#rdFound .rd-chip").find(c => +c.dataset.s > s);
+  if (after) after.insertAdjacentHTML("beforebegin", chip); else $("#rdFound").insertAdjacentHTML("beforeend", chip);
   if (state.settings.sound) say(x.say);
   if (ch.found.size === ch.words.length) chainDone();
 }
@@ -377,7 +483,7 @@ function chainDone() {
   RD.streak = clean ? RD.streak + 1 : 0;
   if (RD.streak >= 2 && RD.len < CHAIN_MAX) { RD.len++; RD.streak = 0; }
   else if (ch.wrong >= 2 && RD.len > 2) RD.len--;
-  $("#rdChain").classList.add("done");
+  $("#rdFound").classList.add("done");
   RD.ch = null;
   rdStrip();
   RD.next = setTimeout(() => { RD.i++; rdStep(); }, 700);
@@ -567,6 +673,251 @@ function searchDone() {
   }, 500);
 }
 
+/* ---------- 結ぶ Match ---------- */
+
+/* Meanings to words. Two ways to lay it out:
+   - four: four meanings beside four words; connect each pair, by tapping
+     one and then the other or by drawing a line between them. Five sets.
+   - one: one word above four meanings; drag it onto its meaning (or tap
+     the meaning). Less on the screen, and no ruling out the others by
+     elimination. Twelve words. The default on a phone.
+   A word right first time counts; one that took a second go is a miss,
+   and a lesson word is graded either way, like a sprint answer. */
+const MATCH_SETS = 5, MATCH_ONE = 12;
+const MATCH_LAYOUTS = { four: "Four and four", one: "One at a time" };
+
+function matchCard(pool) {
+  const m = state.read.match, open = pool.length >= 8;
+  const layout = m.layout || (isPhone() ? "one" : "four");
+  const best = m.best[layout];
+  return `<section class="card rd-rung rd-match ${open ? "" : "locked"}">
+    <div class="rd-rung-head"><span class="rd-n rd-game" lang="ja">結</span><h2><span lang="ja">結ぶ</span> Match</h2></div>
+    <p>Meanings and words you know — put each word with what it means.</p>
+    ${open ? `<div class="pick"><span class="pick-l">Layout</span><div class="seg">${Object.keys(MATCH_LAYOUTS).map(o => `<button class="${layout === o ? "on" : ""}" data-act="mt-pick" data-v="${o}">${MATCH_LAYOUTS[o]}</button>`).join("")}</div></div>
+      <p class="muted small">${layout === "four" ? "Four meanings beside four words: tap one and then its partner, or draw a line between them." : "One word and four meanings: drag the word onto its meaning, or tap the meaning."}
+        ${best ? ` Best without a slip: <b>${fmtTime(best)}</b>.` : ""}</p>
+      <button class="btn cta" data-act="rd-start" data-r="match">${layout === "four" ? `Match ${MATCH_SETS * 4} words` : `Match ${MATCH_ONE} words`}</button>`
+      : `<p class="muted small">Learn a few more words first — this needs eight you can read.</p>`}
+  </section>`;
+}
+
+/* n words with different meanings and different spellings */
+function matchPick(pool, n) {
+  const seenM = new Set(), seenK = new Set();
+  return shuffle([...pool]).filter(w => !seenM.has(w.m) && !seenK.has(w.kana) && seenM.add(w.m) && seenK.add(w.kana)).slice(0, n);
+}
+
+function matchOpen() {
+  const m = state.read.match;
+  const layout = m.layout || (isPhone() ? "one" : "four");
+  Object.assign(RD, { layout, slips: 0, t0: performance.now() });
+  if (layout === "four") {
+    RD.n = MATCH_SETS * 4;
+    RD.sets = Array.from({ length: MATCH_SETS }, () => matchPick(RD.pool, 4)).filter(s => s.length === 4);
+    RD.n = RD.sets.length * 4;
+  } else {
+    RD.words = matchPick(RD.pool, MATCH_ONE);
+    while (RD.words.length < MATCH_ONE) RD.words.push(sample(RD.pool, 1)[0]);
+    RD.n = MATCH_ONE;
+  }
+  $("#rdStrip").innerHTML = Array.from({ length: RD.n }, (_, i) => `<i data-i="${i}"></i>`).join("");
+  RD.timer = setInterval(() => { if (RD && !RD.done) $("#rdPace").textContent = fmtTime(performance.now() - RD.t0); }, 500);
+  $("#rdPace").textContent = "0:00";
+  if (layout === "four") { RD.set = 0; matchFourShow(); } else matchOneShow();
+}
+
+/* the strip: one mark a word, in the order they're settled */
+function matchMark(ok) { RD.res[RD.i] = ok ? "ok" : "miss"; RD.i++; rdStrip(); }
+
+function matchFirst(w, ok, ms) {
+  grade(w.key, "r", ok, ms, "speed");
+  matchMark(ok);
+  if (!ok) RD.slips++;
+}
+
+/* --- four and four --- */
+
+function matchFourShow() {
+  const set = RD.sets[RD.set];
+  const left = shuffle([...set]), right = shuffle([...set]);
+  RD.four = { set, left, right, done: new Set(), tried: new Set(), sel: null, t0: performance.now() };
+  $("#rdBody").innerHTML = `<div class="mt-four">
+    <div class="q-ask">Set ${RD.set + 1} of ${RD.sets.length}: put each word with its meaning.</div>
+    <div class="mt-board" id="mtBoard">
+      <svg class="mt-lines" id="mtLines" aria-hidden="true"></svg>
+      <div class="mt-col">${left.map((w, i) => `<button class="mt-card mt-m" data-side="m" data-i="${i}">${esc(w.m)}</button>`).join("")}</div>
+      <div class="mt-col">${right.map((w, i) => `<button class="mt-card mt-w" data-side="w" data-i="${i}" lang="ja">${esc(w.text)}</button>`).join("")}</div>
+    </div>
+  </div>`;
+  bindFour();
+}
+
+function bindFour() {
+  const board = $("#mtBoard"), lines = $("#mtLines");
+  let from = null;
+  const cardAt = (x, y) => document.elementFromPoint(x, y)?.closest?.(".mt-card");
+  const centre = el => { const b = board.getBoundingClientRect(), r = el.getBoundingClientRect();
+    return [el.dataset.side === "m" ? r.right - b.left : r.left - b.left, r.top - b.top + r.height / 2]; };
+  const drawTemp = (x, y) => {
+    lines.querySelector(".tmp")?.remove();
+    if (!from || x == null) return;
+    const [x1, y1] = centre(from), b = board.getBoundingClientRect();
+    lines.insertAdjacentHTML("beforeend", `<line class="tmp" x1="${x1}" y1="${y1}" x2="${x - b.left}" y2="${y - b.top}"/>`);
+  };
+  board.addEventListener("pointerdown", e => {
+    const el = e.target.closest(".mt-card");
+    if (!el || el.disabled || !RD?.four) return;
+    e.preventDefault();
+    try { board.setPointerCapture(e.pointerId); } catch {}
+    const sel = RD.four.sel;
+    /* a tap on the other side, with one already chosen, pairs them */
+    if (sel && sel.dataset.side !== el.dataset.side) { from = null; return matchPair(sel, el); }
+    from = el;
+    $$(".mt-card.sel", board).forEach(c => c.classList.remove("sel"));
+    el.classList.add("sel");
+    RD.four.sel = el;
+  });
+  board.addEventListener("pointermove", e => { if (from) drawTemp(e.clientX, e.clientY); });
+  board.addEventListener("pointerup", e => {
+    if (!from) return;
+    const el = cardAt(e.clientX, e.clientY), a = from;
+    from = null; drawTemp();
+    /* a line drawn to a card on the other side pairs them; letting go
+       anywhere else leaves the first one chosen, for a tap */
+    if (el && !el.disabled && el.dataset.side !== a.dataset.side) matchPair(a, el);
+  });
+  board.addEventListener("pointercancel", () => { from = null; drawTemp(); });
+}
+
+function matchPair(a, b) {
+  const F = RD.four;
+  const mEl = a.dataset.side === "m" ? a : b, wEl = a.dataset.side === "w" ? a : b;
+  const mw = F.left[+mEl.dataset.i], ww = F.right[+wEl.dataset.i];
+  F.sel = null;
+  $$(".mt-card.sel").forEach(c => c.classList.remove("sel"));
+  const ms = performance.now() - F.t0;
+  if (mw === ww) {
+    if (!F.tried.has(ww)) matchFirst(ww, true, ms);
+    F.done.add(ww);
+    const hue = F.done.size % CHAIN_HUES;
+    [mEl, wEl].forEach(el => { el.disabled = true; el.classList.add("got", "h" + hue); });
+    const board = $("#mtBoard").getBoundingClientRect(), r1 = mEl.getBoundingClientRect(), r2 = wEl.getBoundingClientRect();
+    $("#mtLines").insertAdjacentHTML("beforeend", `<line class="h${hue}" x1="${r1.right - board.left}" y1="${r1.top - board.top + r1.height / 2}" x2="${r2.left - board.left}" y2="${r2.top - board.top + r2.height / 2}"/>`);
+    if (state.settings.sound) say(ww.say);
+    if (F.done.size === 4) {
+      RD.set++;
+      RD.next = setTimeout(() => RD.set < RD.sets.length ? matchFourShow() : matchDone(), 650);
+    }
+    return;
+  }
+  /* wrong: both shake; the word it should have been is now a slip */
+  [mEl, wEl].forEach(el => { el.classList.remove("nope"); void el.offsetWidth; el.classList.add("nope"); });
+  if (!F.tried.has(ww) && !F.done.has(ww)) { F.tried.add(ww); matchFirst(ww, false, ms); }
+}
+
+/* --- one at a time --- */
+
+function matchOneShow() {
+  if (RD.i >= RD.n) return matchDone();
+  const w = RD.words[RD.i];
+  const opts = shuffle([w, ...otherMeanings(w, RD.pool, 3)]);
+  RD.one = { w, opts, tried: false, t0: performance.now() };
+  $("#rdBody").innerHTML = `<div class="mt-one">
+    <div class="q-ask">Drag the word onto what it means — or tap the meaning.</div>
+    <div class="mt-drag-home"><div class="mt-drag" id="mtDrag" lang="ja">${esc(w.text)}</div></div>
+    <div class="mt-targets">${opts.map((o, i) => `<button class="mt-card mt-t" data-act="mt-tap" data-i="${i}"><kbd>${i + 1}</kbd>${esc(o.m)}</button>`).join("")}</div>
+  </div>`;
+  bindOne();
+}
+
+function bindOne() {
+  const card = $("#mtDrag");
+  let start = null;
+  card.addEventListener("pointerdown", e => {
+    if (!RD?.one) return;
+    e.preventDefault();
+    try { card.setPointerCapture(e.pointerId); } catch {}
+    start = [e.clientX, e.clientY];
+    card.classList.add("lift");
+  });
+  card.addEventListener("pointermove", e => {
+    if (!start) return;
+    card.style.transform = `translate(${e.clientX - start[0]}px, ${e.clientY - start[1]}px)`;
+    const over = matchTargetAt(e.clientX, e.clientY);
+    $$(".mt-t").forEach(t => t.classList.toggle("over", t === over));
+  });
+  const drop = e => {
+    if (!start) return;
+    start = null;
+    card.classList.remove("lift");
+    $$(".mt-t").forEach(t => t.classList.remove("over"));
+    const t = matchTargetAt(e.clientX, e.clientY);
+    if (t) matchOne(+t.dataset.i, card);
+    else card.style.transform = "";
+  };
+  card.addEventListener("pointerup", drop);
+  card.addEventListener("pointercancel", () => { start = null; card.style.transform = ""; card.classList.remove("lift"); });
+}
+
+/* the meaning under the pointer, looking past the card being dragged */
+function matchTargetAt(x, y) {
+  const card = $("#mtDrag");
+  card.style.pointerEvents = "none";
+  const t = document.elementFromPoint(x, y)?.closest?.(".mt-t");
+  card.style.pointerEvents = "";
+  return t && !t.disabled ? t : null;
+}
+
+function matchOne(i, card = $("#mtDrag")) {
+  const O = RD?.one;
+  if (!O) return;
+  const t = $(`.mt-t[data-i="${i}"]`);
+  const ok = O.opts[i] === O.w;
+  if (ok) {
+    /* right first time is a mark; after a slip, the slip already is one */
+    if (!O.tried) { RD.res[RD.i] = "ok"; grade(O.w.key, "r", true, performance.now() - O.t0, "speed"); }
+    t.classList.add("got", "h1");
+    card.classList.add("home");
+    card.style.transform = "";
+    t.insertAdjacentHTML("beforeend", `<b class="mt-in" lang="ja">${esc(O.w.text)}</b>`);
+    card.style.visibility = "hidden";
+    if (state.settings.sound) say(O.w.say);
+    RD.one = null;
+    RD.i++;
+    rdStrip();
+    RD.next = setTimeout(matchOneShow, 600);
+    return;
+  }
+  card.style.transform = "";
+  t.classList.remove("nope"); void t.offsetWidth; t.classList.add("nope");
+  t.disabled = true;
+  if (!O.tried) { O.tried = true; RD.res[RD.i] = "miss"; RD.slips++; grade(O.w.key, "r", false, performance.now() - O.t0, "speed"); rdStrip(); }
+}
+
+function matchDone() {
+  RD.done = true;
+  clearInterval(RD.timer);
+  const ms = performance.now() - RD.t0;
+  addStudyTime(ms);
+  const m = state.read.match;
+  m.rounds = (m.rounds || 0) + 1;
+  const best = RD.slips === 0 && (!m.best[RD.layout] || ms < m.best[RD.layout]);
+  if (best) m.best[RD.layout] = Math.round(ms);
+  save();
+  crumb(`read done match ${RD.layout} ${RD.slips} slips`);
+  const right = RD.res.filter(x => x === "ok").length;
+  $("#rdPace").textContent = fmtTime(ms);
+  $("#rdBody").innerHTML = `<div class="finish">
+    <div class="celebrate">${neko(best ? "cheer" : RD.slips <= 2 ? "happy" : "think", "hop")}${best ? stamp("新記録") : ""}</div>
+    <div class="finish-big">${right}<small>/${RD.n}</small></div>
+    <p>Right first time, in <b>${fmtTime(ms)}</b>${RD.slips ? ` · ${RD.slips} slip${RD.slips > 1 ? "s" : ""}` : " — not a slip"}</p>
+    ${best ? `<div class="badge-best">New best</div>` : ""}
+  </div>`;
+  if (best) petals($("#read"), 24);
+  $("#rdFoot").innerHTML = `<button class="btn btn-ghost" data-act="rd-close">Done <kbd>Esc</kbd></button>
+    <button class="btn" data-act="rd-again">Again <kbd>↵</kbd></button>`;
+}
+
 /* ---------- the end of a round ---------- */
 
 function rdFinish() {
@@ -579,7 +930,11 @@ function rdFinish() {
   const right = RD.res.filter(x => x === "ok").length;
   let line, best = false;
   r.rounds = (r.rounds || 0) + 1;
-  if (RD.rung === "flash") {
+  if (RD.rung === "subs") {
+    r.cps = RD.cps; r.len = RD.len;
+    if (right / total >= 0.7 && RD.cps > (r.best || 0)) { r.best = RD.cps; best = true; }
+    line = `Pace now <b>${cpsText(RD.cps)}</b>, lines up to ${RD.len} characters <small class="muted">— subtitles run at about ${SUBTITLE_CPS}</small>`;
+  } else if (RD.rung === "flash") {
     /* the pace carries over; a round of nine in twelve or better can set a best */
     r.cps = RD.cps;
     if (right / total >= 0.75 && RD.cps > (r.best || 0)) { r.best = RD.cps; best = true; }
@@ -610,6 +965,11 @@ function readKey(e) {
   if (!RD) return false;
   if (e.key === "Escape") { e.preventDefault(); closeRead(); return true; }
   if (RD.done) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); ACTS["rd-again"](); } return true; }
+  if (RD.rung === "match" && RD.one && /^[1-4]$/.test(e.key)) { e.preventDefault(); matchOne(+e.key - 1); }
+  if (RD.rung === "subs") {
+    if (/^[1-4]$/.test(e.key)) { e.preventDefault(); subsAnswer(+e.key - 1); }
+    else if ((e.key === "Enter" || e.key === " ") && $("#rdNext")) { e.preventDefault(); ACTS["rd-next"](); }
+  }
   if (RD.rung === "flash") {
     if (/^[1-4]$/.test(e.key)) { e.preventDefault(); flashAnswer(+e.key - 1); }
     else if ((e.key === "Enter" || e.key === " ") && $("#rdNext")) { e.preventDefault(); ACTS["rd-next"](); }
@@ -623,6 +983,10 @@ Object.assign(ACTS, {
   "rd-next": () => { if (RD && !RD.done) { RD.i++; rdStep(); } },
   "rd-help": () => chainHelp(),
   "srch-hint": () => searchHint(),
+  "mt-pick": el => { state.read.match.layout = el.dataset.v; save(); renderRead(); },
+  "mt-tap": el => matchOne(+el.dataset.i),
+  "sb-opt": el => subsAnswer(+el.dataset.i),
+  "sb-again": () => { if (RD?.q) say(RD.q.x.say); },
   "srch-pick": el => {
     const s = state.read.search;
     s[el.dataset.f] = el.dataset.f === "size" ? +el.dataset.v : el.dataset.v;

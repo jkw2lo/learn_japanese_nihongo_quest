@@ -96,7 +96,8 @@ Build order. Each step should run end to end before the next one starts.
    ~~Word chains~~; next, Phrases (words joined by particles, once は and の
    are learned), then timed Sentences on a graded sentence bank, then
    Subtitles; and a Today that leads with reading once there's enough of it.
-   ~~Word search~~ (0.32.0).
+   ~~Word search~~ (0.32.0). ~~Subtitles~~, ~~Match~~ (0.33.0). Next: Phrases
+   (chains with particles), Short texts, and more sentences to read.
 11. **N4**: on hold. Staying at N5 for now.
 
 ## Smaller, from 0.4.0
