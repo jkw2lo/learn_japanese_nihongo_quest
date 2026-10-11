@@ -998,6 +998,27 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.30.0: △ nearly, word sprints, word mistakes, sticky writing
+
+- **△ Nearly**, the teacher's mark for partly right: plainly the character
+  with one thing off (joined or split strokes, one stroke off or the wrong
+  way round, the order when it's checked). Practice, not a mistake, and it
+  replays just the stroke that was off. In the Write sprint too. See
+  **Writing → Nearly**.
+- **Sprint → 言葉 Words and 言葉を打つ Type words**, over every word you've
+  learned or can read.
+- **The mistake notebook** lists words and kanji beside the kana, and
+  *Practise these* asks each its own way. **Fixed:** it asked words as
+  kana, and crashed when one was in the top twelve.
+- **A word typed wrong** in a lesson brings the kana you got wrong back for
+  review today, and says which (`kanaWentWrong`).
+- **Sticky writing:** once a kana's had a writing drill, its reviews are
+  writing until three land (Hanzi Quest's rule).
+- **Fixed:** writing after *Show me*, or typing after *Hint*, still counted
+  towards solid. Now it's practice, as the README always said.
+- **Hardened:** the lesson's answer buttons are looked for in the lesson
+  only, and the writing box ignores input while it has no size.
+
 ### 0.29.3: Next first
 
 - In the Write sprint, Next sits straight under the box, and Skip, Undo,
@@ -1189,12 +1210,12 @@ dealt from a shuffled deck, not drawn at random.
 | **聞く Listen** | a sound | pick the kana | 2.5 | kana `p` | ✓ |
 | **打つ Type** | a kana | type its romaji (`si` for し is fine) | 2.5 | kana `r` | ✓ |
 | **書く Write** | a sound (ka, in hiragana) | write the kana in the box, by hand | 6 | kana `w` | ✓ |
-| **言葉 Words** | a word | pick the meaning | 2.4 | `r` | next |
-| **言葉を打つ Type words** | a meaning | type it in kana | 4.5 | `c` | next |
+| **言葉 Words** | a word | pick the meaning | 2.4 | `r` | ✓ |
+| **言葉を打つ Type words** | a meaning | type it in romaji, shown as kana | 4.5 | `c` | ✓ |
 | **活用 Conjugate** | 食べる + て-form | type 食べて | 4.0 | pattern | with conjugation |
 
-Each sheet can be hiragana, katakana or both, 20–100 questions, 1–5
-minutes, marked **at hand-in** (the default), **as you go**, or **stopping
+Each sheet can be hiragana, katakana or both (a words sheet is every word
+you've learned or can read), 20–100 questions, 1–5 minutes, marked **at hand-in** (the default), **as you go**, or **stopping
 on misses**. As you go, each answer colours its mark on the strip at the
 top, and a line where a verdict goes (under the next question) says how the
 last one went: *Last one ✓ か ka*, or *✗ か ka · you: ki*, with a small copy
@@ -1222,11 +1243,29 @@ again* replays it), what you wrote beside it, why it was marked wrong
 (*That reads as お o*, *3 strokes, and you drew 1*, *Skipped*), and *Hear
 it*. Esc, Enter or the backdrop close it. Only kana with
 stroke data are dealt (きゃ is two kana you already write), and choosing
-Write turns a sheet too fast to finish at par into 20 in 3 minutes.
+Write turns a sheet too fast to finish at par into 20 in 3 minutes. A
+write that's nearly right (**△**, see **Writing → Nearly**) scores as not
+right, isn't a mistake in the notebook, shows as a dashed gold tile in the
+review and half-and-half on the strip, and replays just the stroke that
+was off.
+
+**言葉 Words** and **言葉を打つ Type words** are the same sheet over words: every
+word learned in the word lessons, and every word spelled only in kana
+you've learned (Today's *words you can read*), one per spelling, so a words
+sheet is there from the first few kana. Words pick their meaning from four
+(the wrong three never share its meaning or spelling); Type words shows the
+meaning and turns your romaji into kana as you type, marked as the lessons
+mark it (`typedRight`). Lesson words are graded like any sprint answer
+(`r`, `c`); the kana-only words have no record of their own, so they only
+count on the sheet.
 
 It keeps the boards (a best score per sheet: the mode, the count and the
 minutes), the speed grades from the ratio to par, and the mistake notebook
-(間違いノート), which collects what you keep missing.
+(間違いノート), which collects what you keep missing: kana, words and kanji,
+each in a row of its own on Record, each opening its card. **Practise
+these** asks each the way it's learned — kana read and heard, words read
+and typed, kanji by meaning and reading. (Until 0.30.0 it asked everything
+as a kana, and a word among the top twelve crashed the session.)
 
 ---
 
@@ -1329,12 +1368,43 @@ by default (Settings → Writing practice) and appears in three places:
 - **Go deeper → 書く Write**, the ten shakiest, from everything learned.
 
 Only single glyphs are written. きゃ is two kana you already write, and the
-loanword pairs likewise. No sprint gives writing credit (from Hanzi Quest),
-because nothing in a sprint asks you to draw.
+loanword pairs likewise. The **書く Write** sprint is the one sprint that
+gives writing credit (kana `w`), as any sprint does: a right answer counts,
+a miss goes to the mistake notebook and never touches the review schedule.
+See **Sprint**.
 
 **Show me** (`S`) animates the strokes in order in the box, then leaves the
 model there faintly. Writing it after a peek counts as practice, not credit,
-as in Hanzi Quest. A miss shows why and animates the model.
+as in Hanzi Quest. (Until 0.30.0 it was graded anyway; so was a typed word
+after a Hint. Now right-after-help counts for the day and goes no further,
+and wrong-after-help is still a miss.) A miss shows why and animates the
+model.
+
+**Sticky** (Hanzi Quest's rule): once a kana has had a writing drill from
+memory, its reviews are writing until three land, then it goes back to
+reading and hearing. You learn a shape by writing it several times in a
+short window, not once a month; without this the reps scatter and nothing
+gets solid in writing (Hanzi Quest measured 4 characters solid in writing
+after 150 days without it, 55 with). Kanji too, with Write kanji too on.
+Traces don't count as having had one (`stickyWrite`).
+
+### Nearly (△)
+
+A Japanese teacher marks ○ right, × wrong and △ partly right, and so does
+the writing check. A drawing that isn't right but is plainly the character
+asked for, with one thing off, is △ (`nearlyWriting`):
+
+- the strokes **out of order**, when order is checked, but the shape right;
+- **one stroke more or fewer** (two joined in one go, one lifted in two),
+  when it still reads as the character;
+- **one stroke off**, when it still reads as the character, and if turning
+  it round makes it right, that it goes **the wrong way round**.
+
+Whatever looks more like another character is never △. A △ says what was
+off (*Nearly — stroke 2 goes the wrong way round*), colours that stroke of
+yours gold, and replays just that stroke of the model. It's practice: it
+counts for the day, isn't graded, isn't a mistake, breaks a run of right
+answers, and comes back at the end of the session to be written right.
 
 ### How it's marked
 

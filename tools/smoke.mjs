@@ -73,7 +73,7 @@ const CONTRACT = {
   'js/menu-ui.js': ['menuOpen', 'canReadItem', 'menuCardHtml', 'renderMenu', 'tapItem', 'startMenuGame', 'noren', 'inked'],
   'js/art.js': ['icon', 'neko', 'hanamaru', 'hanamaruPath', 'stamp', 'petals'],
   'js/words-ui.js': ['qWordConj', 'formsTable', 'knowsKanji', 'wordHtml', 'learnedWords', 'sayWord', 'wordLessonCards', 'qWordRead', 'qWordHear',
-    'qWordType', 'wordPrompt', 'showType', 'checkType', 'typedRight', 'wordVerdict', 'renderWords', 'libraryEntries',
+    'qWordType', 'wordPrompt', 'showType', 'checkType', 'typedRight', 'kanaWentWrong', 'reviewKana', 'wordVerdict', 'renderWords', 'libraryEntries',
     'openLibWord', 'loadAudioN5', 'wordIntroHtml'],
   'js/srs.js': ['state', 'load', 'save', 'today', 'addDays', 'daysBetween', 'pad2', 'asList', 'day', 'dayOkList',
     'item', 'isLearned', 'learnedKana', 'isDue', 'skill', 'skillsFor', 'learn', 'grade', 'solidness', 'standing',
@@ -86,12 +86,12 @@ const CONTRACT = {
   'js/sync.js': ['SYNC_CONFIG', 'SYNC_STORE', 'sync', 'syncInit', 'syncSignIn', 'syncSignOut', 'syncConfigured', 'syncWarm'],
   'js/sound.js': ['say', 'sayKana', 'hasAudio', 'clipCount', 'unlockAudio', 'loadAudioBundle', 'soundBlocked'],
   'js/write.js': ['strokesFor', 'canWrite', 'markWriting', 'modelSvg', 'modelAnimMs', 'padHtml', 'bindPad', 'drawInk',
-    'padUndo', 'padClear', 'pad', 'WRITE_TOL', 'readWriting', 'markBy', 'READ_CAP', 'READ_SAME'],
+    'padUndo', 'padClear', 'pad', 'WRITE_TOL', 'readWriting', 'markBy', 'READ_CAP', 'READ_SAME', 'nearlyWriting', 'nearlyText'],
   'js/furi.js': ['furiParse', 'furiKana', 'furiPlain', 'furiKanji', 'furiProblems', 'furiHtml'],
   'js/guide.js': ['WORDS_INTRO', 'GUIDE', 'KIND_INTRO', 'infoCard', 'guideCards', 'infoHtml', 'startGuide'],
   'js/app.js': ['ACTS', 'render', 'go', 'view', 'S', 'askConfirm', 'crumb', 'shuffle', 'esc', '$', '$$',
     'distractors', 'renderSoundBar', 'onAudioLoaded', 'toast', 'openSession', 'closeSheet', 'SET_NAME',
-    'qWrite', 'showWrite', 'checkWrite', 'showStrokes', 'loadStrokes', 'settle', 'afterAnswer', 'rebuild', 'quickMs',
+    'qWrite', 'stickyWrite', 'reviewKind', 'showWrite', 'checkWrite', 'showStrokes', 'loadStrokes', 'settle', 'settleNearly', 'afterAnswer', 'rebuild', 'quickMs',
     'todaysWords', 'wordDay', 'wordTasks', 'allTasksDone', 'stagesFinished', 'lessonNames'],
   'js/sprint.js': ['renderSprint', 'sprintKey', 'sprintLabel'],
   'js/phone.js': ['isPhone', 'openDrawer', 'closeDrawer', 'initDrawerLoop', 'centerDrawer', 'drawerTick', 'phoneAfterRender', 'drawerOpen'],
@@ -700,7 +700,7 @@ section('writing');
 {
   const w = { window: {}, Math, console };
   vm.createContext(w);
-  vm.runInContext(read('js/strokes.js') + read('js/write.js') + ';globalThis.W = { markWriting, readWriting, markBy, modelMedians, resample };', w);
+  vm.runInContext(read('js/strokes.js') + read('js/write.js') + ';globalThis.W = { markWriting, readWriting, markBy, modelMedians, resample, nearlyWriting };', w);
   const { markWriting, readWriting, markBy, modelMedians } = w.W;
   const strokes = w.window.NQ_STROKES;
   const missing = strokeWanted().filter(k => !strokes[k]);
@@ -743,6 +743,7 @@ section('writing');
   ok(!markWriting('あ', shuffled, true).ok, 'stroke-order marking should refuse the wrong order');
   const backwards = modelMedians('し').map(st => [...st].reverse());
   ok(!markWriting('し', backwards, true).ok, 'stroke-order marking should refuse a backwards stroke');
+  ok(!markWriting('し', backwards, false).ok, 'any-order marking should still refuse a backwards stroke');
   ok(!markWriting('は', modelMedians('は').slice(0, 2), false).ok, 'a missing stroke should fail');
   /* か and が as hands write them: the font's last stroke is a long curve,
      most people's a short tick; often narrower, with less of a hook. */
@@ -751,6 +752,19 @@ section('writing');
   for (const k of ['か', 'が']) for (const tick of [0.6, 0.45, 0.35]) for (const f of [1, 0.85, 0.75]) for (const ordered of [false, true]) {
     const u = narrowed(modelMedians(k).map((st, i) => i === 0 ? startPart(st, 0.85) : i === 2 ? startPart(st, tick) : st), f);
     ok(markWriting(k, u, ordered).ok, `${k} with a short tick (${tick}), ${f} wide, ${ordered ? 'in order' : 'any order'}: marked wrong`);
+  }
+  /* △ nearly: plainly the character with one thing off — never another character */
+  {
+    const { nearlyWriting } = w.W;
+    const S = { writeCheck: 'shape', strokeOrder: false };
+    const near = (k, u, s = S) => nearlyWriting(s, k, u, markBy(s, k, u));
+    const m = modelMedians;
+    ok(near('こ', [[...m('こ')[0], ...m('こ')[1]]])?.why === 'count', 'こ in one joined stroke should be nearly');
+    ok(near('け', m('け').map((st, i) => i === 1 ? [...st].reverse() : st))?.why === 'dir', 'け with a stroke backwards should be nearly, the wrong way round');
+    ok(near('あ', [...m('あ')].reverse(), { writeCheck: 'shape', strokeOrder: true })?.why === 'order', 'あ out of order should be nearly when order is checked');
+    ok(near('は', m('ほ')) === null, 'ほ for は should be wrong, not nearly');
+    ok(near('ヌ', m('ス')) === null, 'ス for ヌ should be wrong, not nearly');
+    ok(near('か', m('か')) === null, 'a right answer is not nearly');
   }
   /* the allowances must not let a look-alike through: it has to fit its own kana best */
   const ro = markWriting('る', modelMedians('ろ'), false);

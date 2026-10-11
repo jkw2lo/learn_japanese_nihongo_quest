@@ -16,20 +16,60 @@
    Write is the handwriting sheet: see a sound, write its kana in the box,
    next. Next wants at least one stroke — an empty box shakes — and passing
    one by is its own button, Skip, at the far end from Next, so a stray
-   Enter or tap can't throw one away. The strokes are kept and marked by shape (write.js, the same marker
-   as the lessons, stroke order as set in Settings) only at hand-in — so it
-   stays a sheet you work through, not a drill that stops to correct you. */
+   Enter or tap can't throw one away. The strokes are marked with the
+   lessons' own marker, as Settings says (write.js, markBy).
+
+   言葉 Words and 言葉を打つ Type words are the same sheet over the words you've
+   learned instead of the kana: see a word and pick its meaning, or see a
+   meaning and type the word in romaji, which turns into kana as you go. */
 
 const SPRINT_MODES = {
   read:   { jp: "読む", en: "Read",   sk: "r", par: 1.5, what: "See a kana, pick its sound." },
   listen: { jp: "聞く", en: "Listen", sk: "p", par: 2.5, what: "Hear a sound, pick its kana." },
   type:   { jp: "打つ", en: "Type",   sk: "r", par: 2.5, what: "See a kana, type its romaji." },
   write:  { jp: "書く", en: "Write",  sk: "w", par: 6,   what: "See a sound, write its kana in the box." },
+  words:  { jp: "言葉", en: "Words",  sk: "r", par: 2.4, what: "See a word, pick its meaning.", words: true },
+  typew:  { jp: "言葉を打つ", en: "Type words", sk: "c", par: 4.5, what: "See a meaning, type the word in romaji — it turns into kana as you type.", words: true },
 };
+const isWordMode = m => !!SPRINT_MODES[m]?.words;
+
+/* The words a sheet can ask: every word learned in the word lessons, and
+   every word spelled only in kana you've learned (Today's "words you can
+   read"), so a sheet of words is there from the first few kana. One entry
+   per spelling: { key, w (furigana markup), kana, m, r }. Lesson words keep
+   their own key ("w:…") and are graded like any sprint answer; the kana
+   words ("kw:…") have no record of their own, so they only count on the
+   sheet. */
+function sprintWords() {
+  const out = new Map();
+  learnedWords().forEach(x => out.set(x.kana, { key: x.key, w: x.w, kana: x.kana, m: x.m, r: x.r }));
+  readableWords().forEach(x => { if (!out.has(x.w)) out.set(x.w, { key: "kw:" + x.w, w: x.w, kana: x.w, m: x.m, r: x.r }); });
+  return [...out.values()];
+}
+let wordsBy = {};       /* key -> entry, for the sheet being run */
+const sw = k => wordsBy[k] || WORD_BY[k];
+
+/* Three wrong meanings from the same pool: never the same meaning, never
+   the same spelling. */
+function otherMeanings(x, pool, n) {
+  const out = [], seenM = new Set([x.m]), seenK = new Set([x.kana]);
+  for (const y of shuffle([...pool])) {
+    if (out.length >= n) break;
+    if (seenM.has(y.m) || seenK.has(y.kana)) continue;
+    seenM.add(y.m); seenK.add(y.kana); out.push(y);
+  }
+  return out;
+}
 const SPRINT_COUNTS = [20, 40, 60, 100];
 const SPRINT_MINS = [1, 2, 3, 5];
 const SPRINT_SETS = { h: "ひらがな", k: "カタカナ", hk: "both" };
 const SPRINT_MARKS = { end: "At hand-in", go: "As you go", stop: "Stop on misses" };
+/* An answer's colour: ○ ok, × miss, △ near (Write only: nearly — it scores
+   as a miss, but isn't one in the mistake notebook), or never reached. */
+const ansCls = a => !a ? "skip" : a.ok ? "ok" : a.near ? "near" : "miss";
+const ansWhy = a => !a.val.length ? "Skipped." : a.near ? esc(nearlyText(a.near))
+  : a.res?.readAs && KANA_BY[a.res.readAs] ? `That reads as <span lang="ja">${esc(a.res.readAs)}</span> ${esc(kanaAsked(KANA_BY[a.res.readAs]))}.`
+  : esc(a.res?.reason || "");
 /* A sheet that would loop through the pool more than this many times is
    offered disabled rather than run: it would be the same five kana forever. */
 const SPRINT_MAX_LOOPS = 6;
@@ -46,15 +86,17 @@ function sprintPick() {
   return pick;
 }
 
-const sprintKeyOf = p => `${p.mode}-${p.set}-${p.count}-${p.mins}`;
+/* a words sheet has no kana set: it's keyed "w", every word learned */
+const sprintKeyOf = p => `${p.mode}-${isWordMode(p.mode) ? "w" : p.set}-${p.count}-${p.mins}`;
 function sprintLabel(key) {
   const [mode, set, count, mins] = key.split("-");
   const m = SPRINT_MODES[mode];
-  return `${m ? m.jp + " " + m.en : mode} · ${SPRINT_SETS[set] || set} · ${count} in ${mins} min`;
+  return `${m ? m.jp + " " + m.en : mode} · ${set === "w" ? "words" : SPRINT_SETS[set] || set} · ${count} in ${mins} min`;
 }
 
 /* Writing needs stroke data, so きゃ (two kana you already write) is left out. */
 function sprintPool(set, mode = sprintPick().mode) {
+  if (isWordMode(mode)) return sprintWords().map(x => x.key);
   return KANA.filter(e => !e.concept && set.includes(e.set) && isLearned(e.k) && (mode !== "write" || canWrite(e.k))).map(e => e.k);
 }
 
@@ -73,24 +115,28 @@ function renderSprint() {
   const recent = asList(state.sprint.recent).slice(0, 10);
   const tooFew = pool.length < 4;
   const par = SPRINT_MODES[p.mode].par;
+  const wordy = isWordMode(p.mode);
+  const unit = wordy ? "words" : "kana";
 
   el.innerHTML = `<div class="sprint-grid">
     <section class="card">
       <div class="eyebrow">スプリント · Sprint</div>
-      <h1>Minute math, for kana.</h1>
+      <h1>Minute math, for ${unit}.</h1>
       <p class="lede">A fixed number in a fixed time. ${p.mark === "go" ? "Each answer is marked as you go, without stopping you."
         : p.mark === "stop" ? "Each answer is marked as you go, and a miss waits, put right, until you go on — the clock waits too."
         : "Nothing is marked until you hand in."} First: did you finish? Then: how many were right?
         Misses never change your reviews — they go to the mistake notebook.</p>
-      <div class="pick"><span class="pick-l">Mode</span>${seg("mode", Object.keys(SPRINT_MODES), m => `<span lang="ja">${SPRINT_MODES[m].jp}</span> ${SPRINT_MODES[m].en}`, m => m === "listen" && !hasAudio())}</div>
+      <div class="pick"><span class="pick-l">Mode</span>${seg("mode", Object.keys(SPRINT_MODES), m => `<span lang="ja">${SPRINT_MODES[m].jp}</span> ${SPRINT_MODES[m].en}`,
+        m => (m === "listen" && !hasAudio()) || (isWordMode(m) && sprintWords().length < 4))}</div>
       <p class="muted small">${esc(SPRINT_MODES[p.mode].what)} Par is ${par}s a question.</p>
-      <div class="pick"><span class="pick-l">Kana</span>${seg("set", Object.keys(SPRINT_SETS), s => `<span lang="ja">${SPRINT_SETS[s]}</span>`, s => sprintPool(s).length < 4)}</div>
+      ${wordy ? `<div class="pick"><span class="pick-l">Words</span><span class="muted small">every word you've learned or can read — ${pool.length} so far</span></div>`
+        : `<div class="pick"><span class="pick-l">Kana</span>${seg("set", Object.keys(SPRINT_SETS), s => `<span lang="ja">${SPRINT_SETS[s]}</span>`, s => sprintPool(s).length < 4)}</div>`}
       <div class="pick"><span class="pick-l">Questions</span>${seg("count", SPRINT_COUNTS, x => x, c => c > pool.length * SPRINT_MAX_LOOPS)}</div>
       <div class="pick"><span class="pick-l">Minutes</span>${seg("mins", SPRINT_MINS)}</div>
       <div class="pick"><span class="pick-l">Marking</span>${seg("mark", Object.keys(SPRINT_MARKS), m => SPRINT_MARKS[m])}</div>
       ${loading ? `<p class="muted small">Loading the stroke shapes…</p>`
-        : tooFew ? `<p class="warn">Learn a few more kana first — a sheet needs at least four to choose from.</p>`
-        : p.count > pool.length * SPRINT_MAX_LOOPS ? `<p class="warn">That's more questions than ${pool.length} kana can fill sensibly — pick fewer.</p>`
+        : tooFew ? `<p class="warn">Learn a few more ${unit} first — a sheet needs at least four to choose from.</p>`
+        : p.count > pool.length * SPRINT_MAX_LOOPS ? `<p class="warn">That's more questions than ${pool.length} ${unit} can fill sensibly — pick fewer.</p>`
         : `<button class="btn btn-lg cta" data-act="sp-start">Start the sheet <kbd>↵</kbd></button>`}
       <p class="muted small">${best ? `Best on this sheet: <b>${best.right}/${best.total}</b> in ${(best.ms / 1000).toFixed(1)}s (${esc(best.at)}).` : "No run on this sheet yet."}</p>
     </section>
@@ -125,12 +171,14 @@ function dealSheet(pool, n) {
 function buildSprintQ(k, mode) {
   if (mode === "read") return { k, opts: shuffle([k, ...distractors(k, 3, "r")]).map(x => ({ label: KANA_BY[x].r, val: x })) };
   if (mode === "listen") return { k, opts: shuffle([k, ...distractors(k, 3, "say")]).map(x => ({ label: x, val: x, jp: true })) };
+  if (mode === "words") { const x = sw(k); return { k, opts: shuffle([x, ...otherMeanings(x, Object.values(wordsBy), 3)]).map(y => ({ label: y.m, val: y.key })) }; }
   return { k };
 }
 
 function startSprint() {
   const p = sprintPick();
   state.sprint.pick = { ...p }; save();
+  if (isWordMode(p.mode)) wordsBy = Object.fromEntries(sprintWords().map(x => [x.key, x]));
   const pool = sprintPool(p.set);
   if (pool.length < 4) return;
   const qs = dealSheet(pool, p.count).map(k => buildSprintQ(k, p.mode));
@@ -173,18 +221,31 @@ function tickSprint() {
 
 /* Marking as you go: how the last answer went, in the verdict's place
    under the next question. Empty for the first, so nothing jumps. */
+/* The item, named: a kana and its sound, or a word and its meaning. */
+function sprintIt(k) {
+  if (isWordMode(SP.mode)) { const x = sw(k); return `<b lang="ja">${wordHtml(x.w, "always")}</b> <span class="rom-always">${esc(x.m)}</span>`; }
+  const e = KANA_BY[k];
+  return `<b lang="ja">${esc(e.k)}</b> <span class="rom-always">${esc(kanaAsked(e))}</span>`;
+}
+/* What you answered, for a miss */
+function sprintYou(a) {
+  if (SP.mode === "write") return a.val.length ? inkThumb(a.val) : "nothing";
+  if (SP.mode === "type" || SP.mode === "typew") return a.val ? `“${esc(a.val)}”` : "nothing";
+  if (SP.mode === "read") return esc(KANA_BY[a.val].r);
+  if (SP.mode === "words") return esc(sw(a.val).m);
+  return `<span lang="ja">${esc(a.val)}</span>`;
+}
+
 function sprintLast() {
   if (SP.mark === "end") return "";
   const a = SP.ans[SP.i - 1];
   /* stopping on misses, a miss has just been seen, put right */
   if (!a || (SP.mark === "stop" && !a.ok)) return `<div class="verdict sp-last"></div>`;
-  const e = KANA_BY[SP.qs[SP.i - 1].k];
-  const it = `<b lang="ja">${esc(e.k)}</b> <span class="rom-always">${esc(kanaAsked(e))}</span>`;
+  const it = sprintIt(SP.qs[SP.i - 1].k);
   const lbl = `<span class="sp-lbl">Last one</span>`;
   if (a.ok) return `<div class="verdict sp-last ok">${lbl} ${icon("check", "v-ico")} ${it}</div>`;
-  const you = SP.mode === "write" ? (a.val.length ? inkThumb(a.val) : "nothing")
-    : SP.mode === "type" ? (a.val ? `“${esc(a.val)}”` : "nothing")
-    : SP.mode === "read" ? esc(KANA_BY[a.val].r) : `<span lang="ja">${esc(a.val)}</span>`;
+  if (a.near) return `<div class="verdict sp-last near">${lbl} ${icon("tri", "v-ico")} ${it} <span class="sp-you">· ${ansWhy(a)}</span></div>`;
+  const you = sprintYou(a);
   return `<div class="verdict sp-last miss">${lbl} ${icon("close", "v-ico")} ${it} <span class="sp-you">· you: ${you}</span></div>`;
 }
 
@@ -192,7 +253,7 @@ function showSprintQ() {
   const q = SP.qs[SP.i];
   const live = SP.mark !== "end";
   $$("#spStrip i").forEach((el, i) => {
-    el.className = i < SP.i ? (live ? (SP.ans[i].ok ? "ok" : "miss") : "done") : i === SP.i ? "now" : "";
+    el.className = i < SP.i ? (live ? ansCls(SP.ans[i]) : "done") : i === SP.i ? "now" : "";
   });
   const last = sprintLast();
   SP.tq = performance.now();
@@ -221,9 +282,23 @@ function showSprintQ() {
     $("#spInput").focus();
     return;
   }
+  if (SP.mode === "typew") {
+    const x = sw(q.k);
+    body.innerHTML = `<div class="q q-c sp-q"><div class="q-ask">Type it in ${isKataWord(x) ? "katakana" : "kana"}:</div>
+      <div class="type-m">${esc(x.m)}</div>
+      <input class="sp-input type-in" id="spInput" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" placeholder="romaji — it turns into kana">
+      <div class="type-preview" lang="ja" id="spPreview">&nbsp;</div>
+      <div class="muted small">Enter hands it in · an empty Enter skips</div>${last}</div>`;
+    const inp = $("#spInput");
+    inp.addEventListener("input", () => { $("#spPreview").textContent = romajiToKana(inp.value, isKataWord(x)) || "\u00a0"; });
+    inp.focus();
+    return;
+  }
   body.innerHTML = `<div class="q sp-q">
-    ${SP.mode === "read" ? `<div class="glyph-l" lang="ja">${esc(q.k)}</div>` : `<button class="play" data-act="sp-replay" aria-label="Play again">${icon("speaker")}</button>`}
-    <div class="opts n${q.opts.length}">${q.opts.map((o, i) => `<button class="opt ${o.jp ? "jp" : ""}" data-act="sp-opt" data-i="${i}" ${o.jp ? 'lang="ja"' : ""}><kbd>${i + 1}</kbd><span>${esc(o.label)}</span></button>`).join("")}</div>
+    ${SP.mode === "read" ? `<div class="glyph-l" lang="ja">${esc(q.k)}</div>`
+      : SP.mode === "words" ? `<div class="glyph-l word" lang="ja">${wordHtml(sw(q.k).w)}</div>`
+      : `<button class="play" data-act="sp-replay" aria-label="Play again">${icon("speaker")}</button>`}
+    <div class="opts n${q.opts.length} ${SP.mode === "words" ? "words" : ""}">${q.opts.map((o, i) => `<button class="opt ${o.jp ? "jp" : ""}" data-act="sp-opt" data-i="${i}" ${o.jp ? 'lang="ja"' : ""}><kbd>${i + 1}</kbd><span>${esc(o.label)}</span></button>`).join("")}</div>
     ${last}
   </div>`;
   if (SP.mode === "listen") sayKana(q.k);
@@ -232,18 +307,23 @@ function showSprintQ() {
 function sprintAnswer(val) {
   if (!SP || SP.done || !SP.t0) return;
   const q = SP.qs[SP.i];
-  const e = KANA_BY[q.k];
-  let ok;
+  const e = KANA_BY[q.k];        /* undefined for a word */
+  let ok, res = null, near = null;
   if (SP.mode === "write") {
     /* nothing drawn is a skip, marked wrong */
     val = val.filter(st => st.length).map(st => st.map(p => [...p]));
-    ok = val.length > 0 && markBy(state.settings, q.k, val).ok;
+    res = val.length ? markBy(state.settings, q.k, val) : null;
+    ok = !!res?.ok;
+    near = res && !ok ? nearlyWriting(state.settings, q.k, val, res) : null;
   } else if (SP.mode === "type") {
     const t = String(val).trim().toLowerCase().replace(/[^a-z']/g, "");
     ok = t === e.r || (ROMAJI_ALT[e.r] || []).includes(t);
     val = t;
+  } else if (SP.mode === "typew") {
+    val = String(val).trim();
+    ok = !!val && typedRight(sw(q.k), val);
   } else ok = val === q.k;
-  SP.ans[SP.i] = { val, ok, ms: performance.now() - SP.tq };
+  SP.ans[SP.i] = { val, ok, near, res, ms: performance.now() - SP.tq };
   if (!ok && SP.mark === "stop") holdMiss(q, val);
   else sprintOn();
 }
@@ -258,26 +338,24 @@ function sprintOn() {
    until Next. */
 function holdMiss(q, val) {
   SP.heldAt = performance.now();
-  const e = KANA_BY[q.k];
-  const it = `<b lang="ja">${esc(e.k)}</b> <span class="rom-always">${esc(kanaAsked(e))}</span>`;
-  $$("#spStrip i")[SP.i].className = "miss";
+  const it = sprintIt(q.k);
+  const a = SP.ans[SP.i];
+  $$("#spStrip i")[SP.i].className = ansCls(a);
   let why = "";
   if (SP.mode === "write") {
     if (pad) {
       pad.locked = true;
-      const res = val.length ? markBy(state.settings, q.k, val) : null;
-      drawInk(res ? res.strokes : undefined);
-      const as = res?.readAs && KANA_BY[res.readAs];
-      why = !val.length ? "Skipped." : as ? `That reads as <span lang="ja">${esc(as.k)}</span> ${esc(kanaAsked(as))}.` : esc(res.reason);
+      drawInk(a.res ? a.res.strokes : undefined, !!a.near);
+      why = ansWhy(a);
     }
-    $("#padModel").innerHTML = modelSvg(q.k, { animate: true });
+    $("#padModel").innerHTML = modelSvg(q.k, { animate: true, only: a.near?.stroke ?? null });
     /* hidden, not removed, so the big Next stays where the thumb is — and
        goes on from the miss */
     const tools = $(".sp-q .pad-tools");
     if (tools) tools.style.visibility = "hidden";
     const nb = $(".sp-next");
     if (nb) nb.dataset.act = "sp-on";
-  } else if (SP.mode === "type") {
+  } else if (SP.mode === "type" || SP.mode === "typew") {
     const inp = $("#spInput");
     if (inp) { inp.disabled = true; inp.value = val || ""; }
     why = val ? `You typed “${esc(val)}”.` : "Skipped.";
@@ -290,7 +368,7 @@ function holdMiss(q, val) {
   }
   $(".sp-q > .sp-last")?.remove();
   $(".sp-q").insertAdjacentHTML("beforeend",
-    `<div class="verdict sp-last miss">${icon("close", "v-ico")} ${it}${why ? ` <span class="sp-you">· ${why}</span>` : ""}</div>`);
+    `<div class="verdict sp-last ${a.near ? "near" : "miss"}">${icon(a.near ? "tri" : "close", "v-ico")} ${it}${why ? ` <span class="sp-you">· ${why}</span>` : ""}</div>`);
   if (SP.mode === "write" && $(".sp-next")) { $(".sp-next").focus(); return; }
   $("#spFoot").innerHTML = `<span></span><button class="btn" data-act="sp-on" id="spOn">Next <kbd>↵</kbd></button>`;
   $("#spOn").focus();
@@ -310,7 +388,8 @@ function handIn(finished) {
   const ms = Math.min(SP.limit, sprintElapsed());
   addStudyTime(ms);
   const sk = SPRINT_MODES[SP.mode].sk;
-  SP.ans.forEach((a, i) => { if (a) grade(SP.qs[i].k, sk, a.ok, a.ms, "speed"); });
+  /* △ is neither: no credit, and nothing for the mistake notebook */
+  SP.ans.forEach((a, i) => { if (a && !a.near) grade(SP.qs[i].k, sk, a.ok, a.ms, "speed"); });
   const right = SP.ans.filter(a => a && a.ok).length;
   const total = SP.qs.length;
   const res = { right, total, ms: Math.round(ms), finished };
@@ -320,7 +399,7 @@ function handIn(finished) {
 
   const perQ = ms / 1000 / total / SPRINT_MODES[SP.mode].par;
   const g = GRADES.find(([lim]) => perQ <= lim);
-  $$("#spStrip i").forEach((el, i) => { el.className = SP.ans[i] ? (SP.ans[i].ok ? "ok" : "miss") : "skip"; });
+  $$("#spStrip i").forEach((el, i) => { el.className = ansCls(SP.ans[i]); });
   $("#spBody").innerHTML = `<div class="finish sp-finish">
     <div class="celebrate">${neko(!finished ? "think" : newBest ? "cheer" : "happy", "hop")}${newBest ? stamp("新記録") : ""}</div>
     ${finished
@@ -329,14 +408,17 @@ function handIn(finished) {
       : `<div class="grade miss"><span lang="ja">時間</span><small>Time ran out</small></div>
          <div class="muted">${SP.ans.filter(Boolean).length} of ${total} answered. Fewer questions or more minutes next time — finishing comes first.</div>`}
     <div class="finish-big">${right}<small>/${total}</small></div>
+    ${SP.ans.some(a => a?.near) ? `<div class="muted small sp-near-n">${icon("tri", "v-ico sp-pop-tri")} ${SP.ans.filter(a => a?.near).length} nearly — not counted right, and not mistakes</div>` : ""}
     ${newBest ? `<div class="badge-best">New best on this sheet</div>` : ""}
-    <div class="sp-review">${SP.qs.map((q, i) => {
+    <div class="sp-review ${isWordMode(SP.mode) ? "words" : ""}">${SP.qs.map((q, i) => {
       const a = SP.ans[i];
-      const cls = a ? (a.ok ? "ok" : "miss") : "skip";
+      const cls = ansCls(a);
       /* a miss opens: the kana written out stroke by stroke, beside yours */
       if (SP.mode === "write" && a && !a.ok) return `<button class="${cls}" data-act="sp-miss" data-i="${i}" aria-label="${esc(kanaAsked(KANA_BY[q.k]))}: see it written"><b lang="ja">${esc(q.k)}</b><small>${esc(kanaAsked(KANA_BY[q.k]))}</small>${
         a.val.length ? inkThumb(a.val) : ""}</button>`;
       if (SP.mode === "write") return `<span class="${cls}"><b lang="ja">${esc(q.k)}</b><small>${esc(kanaAsked(KANA_BY[q.k]))}</small></span>`;
+      if (isWordMode(SP.mode)) { const x = sw(q.k);
+        return `<span class="${cls}" title="${a && !a.ok ? "you: " + esc(SP.mode === "words" ? sw(a.val).m : a.val || "(blank)") : ""}"><b lang="ja">${wordHtml(x.w, "always")}</b><small>${esc(x.m)}</small></span>`; }
       return `<span class="${cls}" title="${a && !a.ok ? "you: " + esc(SP.mode === "listen" ? a.val : a.val || "(blank)") : ""}"><b lang="ja">${esc(q.k)}</b><small>${esc(KANA_BY[q.k].r)}</small></span>`;
     }).join("")}</div>
     ${SP.mode === "write" && SP.ans.some(a => a && !a.ok) ? `<p class="muted small">Tap a miss to see it written.</p>` : ""}
@@ -353,22 +435,21 @@ function sprintMiss(i) {
   const q = SP?.qs[i], a = SP?.ans[i];
   if (!q || !a) return;
   const e = KANA_BY[q.k];
-  const res = a.val.length ? markBy(state.settings, q.k, a.val) : null;
-  const as = res?.readAs && KANA_BY[res.readAs];
-  const why = !res ? "Skipped." : as ? `That reads as <span lang="ja">${esc(as.k)}</span> ${esc(kanaAsked(as))}.` : esc(res.reason);
+  const only = a.near?.stroke ?? "";
+  const why = (a.near ? `${icon("tri", "v-ico sp-pop-tri")} ` : "") + ansWhy(a);
   const el = document.createElement("div");
   el.className = "ms-pop sp-pop";
   el.innerHTML = `<div class="ms-veil" data-act="ms-close"></div>
     <div class="ms-card" role="dialog" aria-modal="true" aria-label="${esc(kanaAsked(e))}, written">
       <div class="eyebrow"><span lang="ja">${esc(e.k)}</span> · ${esc(kanaAsked(e))} in ${SET_NAME[e.set]}</div>
       <div class="sp-pop-pair">
-        <figure><div class="sp-pop-box" id="spPopModel">${modelSvg(q.k, { animate: true })}</div><figcaption>How it goes</figcaption></figure>
+        <figure><div class="sp-pop-box" id="spPopModel">${modelSvg(q.k, { animate: true, only: a.near?.stroke ?? null })}</div><figcaption>${a.near?.stroke != null ? "That stroke" : "How it goes"}</figcaption></figure>
         <figure><div class="sp-pop-box">${a.val.length ? inkThumb(a.val) : ""}</div><figcaption>What you wrote</figcaption></figure>
       </div>
       <p class="sp-pop-why">${why}</p>
       <div class="ask-btns">
         <button class="btn btn-ghost btn-sm" data-act="say" data-say="${esc(q.k)}">${icon("speaker")} Hear it</button>
-        <button class="btn btn-ghost btn-sm" data-act="sp-miss-again" data-k="${esc(q.k)}">Strokes again</button>
+        <button class="btn btn-ghost btn-sm" data-act="sp-miss-again" data-k="${esc(q.k)}" data-only="${only}">Strokes again</button>
         <button class="btn btn-sm" data-act="ms-close">Close</button>
       </div>
     </div>`;
@@ -383,7 +464,7 @@ async function closeSprint() {
   if (!SP) return;
   if (!SP.done && SP.t0 && SP.i > 0) {
     const yes = await askConfirm({ k: "やめる", title: "Give up this sheet?", body: "It won't be marked or recorded.", yes: "Give up", no: "Keep going" });
-    if (!yes) { if (SP.mode === "type") $("#spInput")?.focus(); return; }
+    if (!yes) { if (SP.mode === "type" || SP.mode === "typew") $("#spInput")?.focus(); return; }
   }
   clearTimeout(SP.cd); clearInterval(SP.timer);
   SP = null;
@@ -422,7 +503,7 @@ function sprintKey(e) {
     else if (e.key === "r" || e.key === "R") sayKana(SP.qs[SP.i].k);
     return true;
   }
-  if (SP.mode === "type") {
+  if (SP.mode === "type" || SP.mode === "typew") {
     if (e.key === "Enter" && e.target.id === "spInput") { e.preventDefault(); sprintAnswer(e.target.value); }
     return true;
   }
@@ -468,6 +549,6 @@ Object.assign(ACTS, {
   "sp-on": () => { if (SP && SP.heldAt) sprintOn(); },
   "sp-close": () => closeSprint(),
   "sp-miss": el => sprintMiss(+el.dataset.i),
-  "sp-miss-again": el => { const b = $("#spPopModel"); if (b) b.innerHTML = modelSvg(el.dataset.k, { animate: true }); },
+  "sp-miss-again": el => { const b = $("#spPopModel"); if (b) b.innerHTML = modelSvg(el.dataset.k, { animate: true, only: el.dataset.only === "" ? null : +el.dataset.only }); },
   "sp-again": () => againSprint(),
 });

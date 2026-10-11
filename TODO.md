@@ -96,14 +96,14 @@ Build order. Each step should run end to end before the next one starts.
 
 ## Smaller, from 0.4.0
 
-- Sprint modes for words and conjugation: 言葉 read, 書く type, 活用 conjugate
-  (README → Sprint).
+- ~~Sprint modes for words~~ (0.30.0: 言葉 Words, 言葉を打つ Type words). Still
+  to do: 活用 conjugate (README → Sprint).
 - The menu's third tier: an izakaya board (本日のおすすめ).
-- A missed word should drop a review onto the kana you got wrong.
-- Word mistakes in Record's mistake notebook (it lists kana only).
+- ~~A missed word should drop a review onto the kana you got wrong~~ (0.30.0,
+  for typed words).
+- ~~Word mistakes in Record's mistake notebook~~ (0.30.0, kanji too).
 
 ## Later, maybe
 
 - Placement, for someone who already reads kana (README → Placement).
-- Sticky writing drills (Hanzi Quest's: once a kana has had one, keep
-  giving it one until three land).
+- ~~Sticky writing drills~~ (0.30.0).

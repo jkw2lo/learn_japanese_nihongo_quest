@@ -163,6 +163,31 @@ function typedRight(x, typed) {
   return kanaSame(kana, x.kana) || flat(typed) === flat(x.r) || flat(typed).replace(/ou/g, "oo") === flat(x.r).replace(/ou/g, "oo");
 }
 
+/* A word typed wrong brings back the kana that went wrong in it: the units
+   of the word your spelling dropped or changed, lined up with what you
+   typed (the longest run they share — so "tabmasu" for たべます is べ, not
+   everything after it). They come due today if they weren't; nothing is
+   marked against them — it's the word that was missed. Returns the kana. */
+function kanaWentWrong(x, typed) {
+  const want = kanaUnits(x.kana), got = kanaUnits(romajiToKana(typed, isKataWord(x)));
+  const same = (a, b) => toHira(a) === toHira(b);
+  const L = Array.from({ length: want.length + 1 }, () => new Array(got.length + 1).fill(0));
+  for (let i = want.length - 1; i >= 0; i--) for (let j = got.length - 1; j >= 0; j--)
+    L[i][j] = same(want[i], got[j]) ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+  const wrong = [];
+  for (let i = 0, j = 0; i < want.length;) {
+    if (j < got.length && same(want[i], got[j])) { i++; j++; }
+    else if (j < got.length && L[i][j + 1] >= L[i + 1][j]) j++;
+    else { wrong.push(want[i]); i++; }
+  }
+  return [...new Set(wrong)].filter(u => KANA_BY[u] && isLearned(u));
+}
+
+function reviewKana(units) {
+  const t = today();
+  units.forEach(u => { const it = item(u); if (it && it.due > t) { it.due = t; it.t = Date.now(); } });
+}
+
 function checkType() {
   const c = S?.card;
   if (!c || (c.kind !== "c" && c.kind !== "j") || S.answered) return;
@@ -171,13 +196,16 @@ function checkType() {
   const x = WORD_BY[c.k];
   const ok = c.kind === "j" ? kanaSame(romajiToKana(inp.value), furiKana(c.target)) : typedRight(x, inp.value);
   settle(c, ok, performance.now() - S.t0, !S.hinted);
+  const back = !ok && c.kind === "c" ? kanaWentWrong(x, inp.value) : [];
+  if (back.length) { reviewKana(back); save(); }
   inp.disabled = true;
   const v = $("#verdict");
   v.className = "verdict " + (ok ? "ok" : "miss");
   const shown = c.kind === "j"
     ? `<span lang="ja">${wordHtml(c.target, "always")}</span> <span class="rom-always">${esc(toRomaji(furiKana(c.target)))}</span>`
     : wordVerdict(x);
-  v.innerHTML = (ok ? icon("check", "v-ico") + " " : "It's ") + shown + (S.hinted && ok ? ` <span class="muted small">— after a hint, so it's practice this time</span>` : "");
+  v.innerHTML = (ok ? icon("check", "v-ico") + " " : "It's ") + shown + (S.hinted && ok ? ` <span class="muted small">— after a hint, so it's practice this time</span>` : "")
+    + (back.length ? `<div class="note">Back for review today: <span lang="ja">${back.map(esc).join(" ")}</span></div>` : "");
   if (state.settings.autoplay) { if (c.kind === "j") say(furiKana(c.target)); else sayWord(x); }
   const hint = $('[data-act="type-hint"]');
   if (hint) { hint.dataset.act = "replay"; hint.innerHTML = `${icon("speaker")} Again <kbd>R</kbd>`; }

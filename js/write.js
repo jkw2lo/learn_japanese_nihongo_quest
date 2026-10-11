@@ -11,10 +11,11 @@
    Three ways of marking, chosen in Settings → How writing is marked:
 
    - shape (the default): the SHAPE is marked, not the order. Each stroke of
-     the model has to be matched by one of yours, in any order and either
-     direction. Writing here is reinforcement — the aim is that your hand
-     knows the shape — so a learner who draws し from the bottom up still
-     gets the credit for knowing し.
+     the model has to be matched by one of yours, in any order. Writing here
+     is reinforcement — the aim is that your hand knows the shape — so the
+     order is let go. The direction isn't: each stroke still has to go the
+     usual way round, because direction is all that tells ソ from ン and シ
+     from ツ (a backwards し fails, and smoke.mjs checks it does).
    - in order: stroke i has to be the model's stroke i, drawn the right way
      round.
    - read: what you wrote is read like a handwriting keyboard reads it — see
@@ -309,6 +310,50 @@ function readWriting(k, userStrokes) {
   };
 }
 
+/* ---------- nearly ---------- */
+
+/* Right and wrong aren't all there is. A Japanese teacher marks ○, × and △
+   — partly right — and so does this: a drawing that isn't right, but is
+   plainly the character asked for with one thing off, is △. It counts as
+   practice: not towards solid, not as a mistake.
+
+   Nearly is, in this order:
+   - the strokes out of order, when order is being checked, but the shape
+     right with order let go;
+   - one stroke more or fewer than the model (two joined in one go, or one
+     lifted in two), when it still reads as the character;
+   - exactly one stroke off, when it still reads as the character — and if
+     turning that one round makes it right, it's that it goes the wrong way.
+   Whatever looks more like another character is never nearly: that's ×.
+   Returns null, or { why: "order" | "count" | "dir" | "stroke", stroke, drew, n }. */
+function nearlyWriting(settings, k, userStrokes, res) {
+  if (res.ok) return null;
+  const user = userStrokes.filter(st => st.length > 0);
+  if (!user.length) return null;
+  if (res.readAs && !sameShape(res.readAs, k)) return null;
+  const n = modelMedians(k).length;
+  if (settings.writeCheck === "read") return /wrong way round/.test(res.reason) ? { why: "dir", stroke: null } : null;
+  if (settings.strokeOrder && markWriting(k, user, false).ok) return { why: "order" };
+  const reads = readWriting(k, user);
+  if (!reads.ok && !/wrong way round/.test(reads.reason)) return null;
+  if (user.length !== n) return Math.abs(user.length - n) === 1 ? { why: "count", drew: user.length, n } : null;
+  const off = res.strokes.filter(s => !s.ok);
+  if (off.length !== 1) return null;
+  const { model: i, user: j } = off[0];
+  if (j != null) {
+    const turned = user.map((st, m) => m === j ? [...st].reverse() : st);
+    if (markWriting(k, turned, settings.strokeOrder).ok) return { why: "dir", stroke: i };
+  }
+  return { why: "stroke", stroke: i };
+}
+
+function nearlyText(near) {
+  if (near.why === "order") return "Right shape — but the strokes are out of order.";
+  if (near.why === "count") return `Nearly — that's ${near.drew} stroke${near.drew > 1 ? "s" : ""}, and it's written in ${near.n}.`;
+  if (near.why === "dir") return near.stroke != null ? `Nearly — stroke ${near.stroke + 1} goes the wrong way round.` : "Nearly — a stroke goes the wrong way round.";
+  return `Nearly — stroke ${near.stroke + 1} is a little off.`;
+}
+
 /* Whichever way Settings asks for. */
 function markBy(settings, k, userStrokes) {
   return settings.writeCheck === "read" ? readWriting(k, userStrokes) : markWriting(k, userStrokes, settings.strokeOrder);
@@ -318,7 +363,7 @@ function markBy(settings, k, userStrokes) {
 
 /* The model as SVG in the 1024 screen box: outlines, optionally faint (a
    guide to trace), optionally animated stroke by stroke in order. */
-function modelSvg(k, { faint = false, animate = false, cls = "" } = {}) {
+function modelSvg(k, { faint = false, animate = false, only = null, cls = "" } = {}) {
   const d = strokesFor(k);
   if (!d) return "";
   const id = "m" + Math.random().toString(36).slice(2, 7);
@@ -327,8 +372,10 @@ function modelSvg(k, { faint = false, animate = false, cls = "" } = {}) {
   if (animate) {
     /* Each stroke is a thick line swept along its median, clipped to the
        stroke's outline — the way hanzi-writer draws — one after another. */
+    /* only: sweep just that stroke, the rest left as ghosts — for a near miss */
     let t = 0;
     body = d.s.map((paths, i) => {
+      if (only != null && i !== only) return paths.map(p => `<path d="${p}" class="mdl-ghost"/>`).join("");
       const med = d.m[i];
       const len = Math.round(strokeLen(med)) + 60;
       const dur = Math.max(0.25, len / 1100);
@@ -376,8 +423,11 @@ function bindPad(onChange) {
     const r = el.getBoundingClientRect();
     return [Math.round((e.clientX - r.left) / r.width * 1024), Math.round((e.clientY - r.top) / r.height * 1024)];
   };
+  /* a pad with no size yet (still laying out, or hidden) would turn every
+     point into NaN, and NaN strokes crash the marking — ignore input till then */
+  const sized = () => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
   el.addEventListener("pointerdown", e => {
-    if (pad.locked) return;
+    if (pad.locked || !sized()) return;
     e.preventDefault();
     /* capture keeps a stroke going when the pen strays outside the box; if
        the browser refuses it, the stroke should still be drawn */
@@ -398,10 +448,11 @@ function bindPad(onChange) {
   el.addEventListener("pointercancel", end);
 }
 
-function drawInk(marks) {
+/* marks colour each stroke right or wrong; nearly, the wrong ones are △'s gold */
+function drawInk(marks, nearly = false) {
   if (!pad) return;
   pad.el.innerHTML = pad.strokes.map((st, j) => {
-    const cls = marks ? (marks.find(m => m.user === j)?.ok ? "ok" : "miss") : "";
+    const cls = marks ? (marks.find(m => m.user === j)?.ok ? "ok" : nearly ? "near" : "miss") : "";
     return st.length === 1
       ? `<circle cx="${st[0][0]}" cy="${st[0][1]}" r="26" class="${cls}"/>`
       : `<polyline points="${st.map(p => p.join(",")).join(" ")}" class="${cls}"/>`;

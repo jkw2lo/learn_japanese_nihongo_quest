@@ -548,8 +548,26 @@ function qFor(k, kind, mode) {
   return null;
 }
 
-/* The weaker of reading and hearing, for a review. */
+/* Writing is sticky (Hanzi Quest's rule, README → Writing): you learn a
+   shape by writing it several times in a short window, not once a month.
+   So once a kana — or a kanji, with Write kanji too on — has had a writing
+   drill from memory, its reviews are writing until three land; otherwise
+   the reps scatter and nothing gets solid in writing. Traces don't count as
+   having had one. If the stroke shapes haven't loaded yet, it's an ordinary
+   review rather than none. */
+function stickyWrite(k) {
+  if (!state.settings.writing) return false;
+  const kanji = isKanjiKey(k);
+  if (kanji ? !state.settings.writeKanji : !KANA_BY[k] || KANA_BY[k].concept) return false;
+  if (!canWrite(kanji ? k.slice(2) : k)) return false;
+  const s = skill(k, "w");
+  return s.n > 0 && s.ok < PASSES_FOR_SOLID;
+}
+
+/* The weaker of reading and hearing, for a review — or writing, while it's
+   sticky. */
 function reviewKind(k) {
+  if (stickyWrite(k)) return "w";
   if (isKanjiKey(k)) return solidness(k, "y") <= solidness(k, "m") ? "y" : "m";
   if (isPatternKey(k)) return hasGaps(PATTERN_BY[k]) && solidness(k, "f") <= solidness(k, "r") ? "f" : "r";
   if (isWordKey(k)) {
@@ -728,12 +746,17 @@ function startDeeper(kind) {
   openSession({ kind: "practice", title: TASK_TITLES[kind], queue });
 }
 
+/* The notebook holds kana, words, kanji and patterns alike, and each is
+   practised its own way. (Until 0.30.0 everything was asked as a kana, and a
+   word among the top twelve crashed the session.) */
+const MISTAKE_KINDS = k => isWordKey(k) ? ["r", "c"] : isKanjiKey(k) ? ["m", "y"] : isPatternKey(k) ? ["f", "r"] : ["r", "p"];
+
 function startMistakes() {
   const top = Object.entries(state.mistakes).filter(([k]) => isLearned(k) && !KANA_BY[k]?.concept)
     .sort((a, b) => b[1] - a[1]).slice(0, 12).map(([k]) => k);
   if (!top.length) return;
   const queue = [];
-  shuffle(top).forEach(k => { queue.push(() => qRead(k, "practice"), () => qFor(k, "p", "practice")); });
+  shuffle(top).forEach(k => MISTAKE_KINDS(k).forEach(kind => queue.push(() => qFor(k, kind, "practice"))));
   openSession({ kind: "practice", title: "間違いノート · Mistakes", queue: shuffle(queue) });
 }
 
@@ -970,6 +993,8 @@ function checkWrite() {
   pad.locked = true;
   const res = markBy(state.settings, c.ch, pad.strokes);
   const ok = res.ok;
+  /* △: not right, but plainly the character with one thing off */
+  const near = ok || c.trace ? null : nearlyWriting(state.settings, c.ch, pad.strokes, res);
   /* A trace is practice, and a peek withholds the credit (Hanzi Quest's
      writing drill works the same way): the answer counts for the day, but
      not towards "solid" in writing. Traces stay out of the first-try score. */
@@ -981,15 +1006,20 @@ function checkWrite() {
       S.queue.push(() => qWrite(c.k, c.mode, true));
     }
     save();
-  } else settle(c, ok, null, !S.peeked);
+  } else if (near) settleNearly(c);
+  else settle(c, ok, null, !S.peeked);
 
-  drawInk(res.strokes);
+  drawInk(res.strokes, !!near);
   const label = isKanjiKey(c.k) ? `<span lang="ja">${esc(c.ch)}</span> <span class="rom-always">${esc(KANJI_BY[c.ch].m)}</span>`
     : `<span lang="ja">${esc(KANA_BY[c.k].k)}</span> <span class="rom-always">${esc(kanaAsked(KANA_BY[c.k]))}</span>`;
   const v = $("#verdict");
   if (ok) {
     v.className = "verdict ok";
     v.innerHTML = `${icon("check", "v-ico")} ${label}${S.peeked && !c.trace ? ` <span class="muted small">— after a peek, so it's practice this time</span>` : ""}`;
+  } else if (near) {
+    v.className = "verdict near";
+    v.innerHTML = `${icon("tri", "v-ico")} ${esc(nearlyText(near))} <span class="muted small">Practice, not a mistake. ${near.stroke != null ? "Here's that stroke." : "Here's how it goes."}</span>`;
+    $("#padModel").innerHTML = modelSvg(c.ch, { animate: true, only: near.stroke ?? null });
   } else {
     v.className = "verdict miss";
     /* read like a keyboard, a miss can say what it read as instead */
@@ -1064,17 +1094,38 @@ function settle(c, ok, ms, credit = true) {
   if (quick) S.quick++;
   S.combo = ok ? (S.combo || 0) + 1 : 0;
   if (ok) comboPill(S.combo);
-  if (c.kind === "word" || c.kind === "sc" || !credit) day().n++;
+  /* Right after a peek or a hint is practice: it counts for the day, and
+     goes no further — not towards solid, not into today's ticks. (Until
+     0.30.0 it was graded anyway.) Wrong after one is still a miss. */
+  const helped = !credit && ok;
+  if (c.kind === "word" || c.kind === "sc" || helped) day().n++;
   /* a kana word has no item of its own, but Today's word task still needs the evidence */
   if (c.kind === "word" && ok && credit) { const d = day(), l = d.ok.word || (d.ok.word = []); if (!l.includes(c.word.w)) l.push(c.word.w); }
   if (c.kind === "sc") sceneAnswered(c, ok);
-  else grade(c.k, c.kind, ok, ms, c.mode);
+  else if (!helped) grade(c.k, c.kind, ok, ms, c.mode);
   if (!ok && c.k) S.missed.add(c.k);
   /* a miss comes back at the end of the session, freshly shuffled */
   if (!ok && tries < 3) S.queue.push(rebuild(c));
   save();
   crumb(`answer ${c.kind}${c.wk ? " word" : ""} ${ok ? "ok" : "miss"}`);
   return { quick };
+}
+
+/* △ in a writing drill: practice. It counts for the day, isn't graded either
+   way, ends a run of right answers, and comes back at the end to be written
+   right. */
+function settleNearly(c) {
+  S.answered = true;
+  stopTimer();
+  const key = c.kind + ":" + c.k;
+  const tries = (S.tries.get(key) || 0) + 1;
+  S.tries.set(key, tries);
+  if (tries === 1) S.first++;
+  S.combo = 0;
+  day().n++;
+  if (tries < 3) S.queue.push(rebuild(c));
+  save();
+  crumb(`answer w nearly`);
 }
 
 /* The Next button: counts down after a right answer, waits after a wrong one. */
@@ -1100,7 +1151,9 @@ function answer(idx) {
   const ok = o.val === c.answer;
   const { quick } = settle(c, ok, ms);
 
-  $$(".opt").forEach((b, i) => {
+  /* this session's options only: a sprint or a place can leave .opt buttons
+     of its own lying about (0.27.0's crash was a sprint's) */
+  $$("#sBody .opt").forEach((b, i) => {
     b.disabled = true;
     if (c.opts[i].val === c.answer) b.classList.add("right");
     else if (i === idx) b.classList.add("wrong");
@@ -1409,7 +1462,11 @@ function renderRecord() {
     const lv = n === 0 ? 0 : n < 20 ? 1 : n < 60 ? 2 : 3;
     cal.push(`<i class="l${lv}${k === today() ? " now" : ""}" title="${k}: ${n} answers"></i>`);
   }
-  const mist = Object.entries(state.mistakes).filter(([k]) => KANA_BY[k]).sort((a, b) => b[1] - a[1]).slice(0, 16);
+  const byCount = keep => Object.entries(state.mistakes).filter(([k]) => keep(k) && isLearned(k)).sort((a, b) => b[1] - a[1]);
+  const mist = byCount(k => KANA_BY[k]).slice(0, 16);
+  const mistW = byCount(k => isWordKey(k) && WORD_BY[k]).slice(0, 12);
+  const mistK = byCount(k => isKanjiKey(k) && KANJI_BY[k.slice(2)]).slice(0, 12);
+  const anyMist = mist.length || mistW.length || mistK.length;
   const checkDays = hiraCheckDays();
   const recent = asList(state.sprint.recent).slice(0, 5);
 
@@ -1448,9 +1505,14 @@ function renderRecord() {
       </section>
       <section class="card">
         <div class="card-head"><h2><span lang="ja">間違いノート</span> Mistakes</h2>
-          ${mist.length ? `<button class="link" data-act="mistakes">Practise these ›</button>` : ""}</div>
-        ${mist.length ? `<div class="chips">${mist.map(([k, n]) => `<button class="chip" lang="ja" data-act="kana-cell" data-k="${esc(k)}">${esc(k)} <small>×${n}</small></button>`).join("")}</div>`
-          : `<p class="muted small">Whatever you keep missing collects here, from lessons, practice and sprints.</p>`}
+          ${anyMist ? `<button class="link" data-act="mistakes">Practise these ›</button>` : ""}</div>
+        ${anyMist ? [
+          [mist, "Kana", ([k, n]) => `<button class="chip" lang="ja" data-act="kana-cell" data-k="${esc(k)}">${esc(k)} <small>×${n}</small></button>`],
+          [mistW, "Words", ([k, n]) => `<button class="chip" lang="ja" data-act="lib-open" data-src="stage" data-w="${esc(k)}">${esc(WORD_BY[k].plain)} <small>×${n}</small></button>`],
+          [mistK, "Kanji", ([k, n]) => `<button class="chip" lang="ja" data-act="kanji-cell" data-k="${esc(k.slice(2))}">${esc(k.slice(2))} <small>×${n}</small></button>`],
+        ].filter(([list]) => list.length).map(([list, label, chip], _, rows) =>
+          `${rows.length > 1 ? `<div class="mist-l">${label}</div>` : ""}<div class="chips">${list.map(chip).join("")}</div>`).join("")
+          : `<p class="muted small">Whatever you keep missing collects here — kana, words and kanji — from lessons, practice and sprints.</p>`}
       </section>
       ${recent.length ? `<section class="card">
         <div class="card-head"><h2>Latest sprints</h2><button class="link" data-act="nav" data-nav="sprint">Sprint ›</button></div>

@@ -594,8 +594,12 @@ button.glyph-xl:hover:not(:disabled) { background: var(--sunken); }
 .verdict { min-height: 3.2rem; margin-top: 1.1rem; font-size: 1.05rem; }
 .verdict.ok { color: var(--jade); }
 .verdict.miss { color: var(--amber); }
+/* △ nearly: neither jade nor amber — ink, with the mark in gold */
+.verdict.near { color: var(--ink); }
+.verdict.near .v-ico { color: var(--gold); fill: none; }
 .verdict [lang="ja"] { font-size: 1.2em; color: var(--ink); }
 .verdict .note { color: var(--ink-2); font-size: .88rem; margin-top: .3rem; }
+.mist-l { font-size: .78rem; color: var(--ink-3); margin: .5rem 0 .25rem; }
 .badge-quick { display: inline-block; font-size: .75rem; background: var(--jade-wash); color: var(--jade); border-radius: 999px; padding: 1px 8px; margin-left: .4rem; vertical-align: 2px; }
 
 .finish { text-align: center; }
@@ -620,6 +624,7 @@ button.glyph-xl:hover:not(:disabled) { background: var(--sunken); }
 .pad-ink circle { fill: var(--ink); }
 .pad-ink .ok { stroke: var(--jade); } .pad-ink circle.ok { fill: var(--jade); stroke: none; }
 .pad-ink .miss { stroke: var(--amber); } .pad-ink circle.miss { fill: var(--amber); stroke: none; }
+.pad-ink .near { stroke: var(--gold); } .pad-ink circle.near { fill: var(--gold); stroke: none; }
 .pad-tools { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
 .mdl path { fill: var(--ink); }
 .mdl.faint path { fill: var(--ink); opacity: .13; }
@@ -972,6 +977,7 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 .sp-strip i.now { background: var(--ink); }
 .sp-strip i.ok { background: var(--jade); }
 .sp-strip i.miss { background: var(--amber); }
+.sp-strip i.near { background: linear-gradient(90deg, var(--jade) 50%, var(--amber) 50%); }
 .sp-clock { font: 600 1.1rem var(--f-body); font-variant-numeric: tabular-nums; min-width: 3.2rem; text-align: right; }
 .sp-clock.low { color: var(--seal); }
 .sp-ready { text-align: center; }
@@ -989,8 +995,14 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 .sp-review .ok { background: var(--jade-wash); border-color: transparent; }
 .sp-review .miss { background: var(--amber-wash); border-color: var(--amber); }
 .sp-review .skip { opacity: .45; }
+.sp-review .near { background: var(--gold-soft); border: 1px dashed var(--gold); }
+/* a words sheet: tiles as wide as their word */
+.sp-review.words > span { width: auto; min-width: 3rem; padding: 4px 8px; }
+.sp-review.words b { font-size: 1.05rem; }
+.sp-review.words small { font-size: .7rem; max-width: 9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sp-review > button { font: inherit; color: inherit; cursor: pointer; }
-.sp-review button.miss:hover { box-shadow: 0 0 0 2px var(--amber); }
+.sp-review button.miss:hover, .sp-review button.near:hover { box-shadow: 0 0 0 2px var(--amber); }
+.sp-pop-tri { color: var(--gold); vertical-align: -3px; }
 /* a miss opened */
 .sp-pop-pair { display: flex; justify-content: center; gap: 14px; margin: .8rem 0 .4rem; }
 .sp-pop-pair figure { margin: 0; flex: 1; max-width: 10rem; }
