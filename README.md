@@ -456,6 +456,43 @@ offers 待って / 待った / 待ちます.
   文型 fill the gaps and 文 understand them. Go deeper has a 文型 tile, and
   the **Grammar tab** lists every pattern.
 
+### Teaching a pattern (0.34.0, stages 3 and 4 so far)
+
+One card and two drills told you what a pattern was; it didn't teach it.
+Now a pattern with a teaching entry (`PATTERN_TEACH` in
+`js/data/patterns.js`) is walked through, three to a lesson:
+
+1. **Hear it used.** A few lines of conversation where the pattern does
+   its job — meeting someone, asking a price — A on the left and B on the
+   right, each line tappable.
+2. **How it's built.** One sentence cut into its parts, each with its job
+   underneath and the pattern's own parts lit; the rule in a line. Each part
+   plays when tapped.
+3. **Don't mix it up**, where there's a classic mix-up: two sentences that
+   differ only there, side by side, and what the difference does (は and が,
+   は and も, この and これ, AのB either way round).
+4. Its **examples**, as before.
+
+Then two new drills beside fill-the-gap and understand-it:
+
+- **Build it** (`o`): the English, and the sentence in pieces to tap into
+  order — the first drill where you put Japanese together yourself, word
+  order and particles both. A decoy or two (が where を is wrong, です where
+  じゃないです is wanted) means it isn't only ordering. Enter checks,
+  Backspace takes the last piece back, numbers pick from the tray.
+- **Change it** (`t`): a sentence and a change to make — make it not,
+  make it a question, say it's true of you too — and four sentences to
+  choose from, three of them the near misses people make
+  (これはペンないです). It can't be played until it's answered.
+
+Both count towards the **fill** skill (`c.sk`), since both are producing
+the pattern, so Today's tasks and reviews are as they were. Every sentence
+in the teaching uses only words from its stage or before (and kana words),
+names stay in katakana, and the smoke test checks every kanji, every
+furigana run and the shape of every part; every sentence is recorded
+(`patternSay`: the stage bundle for lessons, the grammar bundle for the
+tab). The Grammar tab shows the same teaching inside each pattern.
+
 ### The Grammar tab
 
 A reference to come back to (`js/data/grammar.js`, `js/grammar-ui.js`).
@@ -1003,6 +1040,24 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.34.0: grammar, taught
+
+- **Fixed: on a phone, the Read tab showed only Match's button.** Each
+  activity's start button was styled as a screen's one main button, which a
+  phone pins bottom-left — so all five sat in one spot, Match on top. They
+  sit in their own cards now. (A screen keeps one `.cta`.)
+- **Match, one at a time,** is a compass: the word in the middle, a meaning
+  each way round it, and a short swipe toward the right one answers.
+
+- **Stage 3 and 4 patterns are taught, not just shown** (いくら, 〜時, は〜です,
+  じゃないです, ですか, の, この/その/あの, も, が好きです): a conversation
+  where each is used, the sentence cut into its parts, the mix-up it's
+  confused with, then examples — and two new drills, **Build it** (tiles
+  into a sentence) and **Change it** (make it not, a question, too). See
+  **Patterns → Teaching a pattern**. Stages 5–10 next.
+- The Grammar tab shows the same teaching inside each of those patterns.
+- 41 new clips: the teaching's sentences and parts (the grammar bundle holds copies).
+
 ### 0.33.1: tap any word on the Grammar tab
 
 - Every part of *How a sentence is built* plays when tapped, and the
@@ -1292,9 +1347,12 @@ shown as kanji, the rest in kana, with no furigana — there's none on a sign
 Beside the ladder, two games. **結ぶ Match**: meanings and words you know,
 paired — **four and four** (four meanings beside four words; tap one and
 then its partner, or draw a line between them; five sets) or **one at a
-time** (one word above four meanings; drag it onto its meaning or tap it;
-twelve words, and no ruling out by elimination — the default on a phone,
-with the meanings down where the thumb is). Right first time counts; a
+time** (one word in the middle with a meaning above, right, below and
+left of it; a short swipe toward a meaning answers, so there's no carrying
+it all the way and dropping it early — the meaning it's heading for lights
+first, and a swipe under 40px springs back; a tap, an arrow key or 1–4
+answers too; twelve words, no ruling out by elimination, the default on a
+phone, low on the screen where the thumb is). Right first time counts; a
 lesson word is graded either way, like a sprint answer; a round without a
 slip can set a best time.
 

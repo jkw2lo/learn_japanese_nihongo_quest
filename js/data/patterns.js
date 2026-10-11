@@ -182,6 +182,134 @@ const PATTERNS = [
     ex: [["{明日|あした}{行|い}く。", "I'll go tomorrow. (casual)"], ["{昨日|きのう}{見|み}た。", "I saw it yesterday. (casual)"], ["{今日|きょう}は{行|い}かない。", "I'm not going today. (casual)"]] },
 ];
 
+/* ---- teaching (README → Patterns → Teaching a pattern) ----
+
+   A pattern with a teach entry gets a guided lesson rather than one card:
+     talk    a few lines of conversation where the pattern does its job
+             [who, sentence, english]
+     built   one sentence cut into its parts, each with its job:
+             { parts: [[jp, job]…], hl: [the pattern's parts], en }
+     rule    the rule in a line
+     vs      a mix-up, side by side: { a: [jp, en], b: [jp, en], why }
+     tiles   sentences to build from tiles: [[tiles…], english, decoys?] —
+             the tiles in order are the sentence; decoys are extra tiles
+             that belong nowhere in it
+     change  turn one sentence into another:
+             { from, do, to, wrong: [three that look close] }
+   Every sentence uses only words from the pattern's stage or before (and
+   kana words), and smoke.mjs checks every kanji. Stages 3 and 4 first. */
+const PATTERN_TEACH = {
+  ikura: {
+    talk: [["A", "すみません、これはいくらですか。", "Excuse me, how much is this?"],
+           ["B", "{三百円|さんびゃくえん}です。", "It's 300 yen."],
+           ["A", "ありがとうございます。", "Thank you."]],
+    built: { parts: [["これ", "this"], ["は", "what you're asking about"], ["いくら", "how much"], ["です", "is"], ["か", "makes it a question"]],
+             hl: [1, 2, 3, 4], en: "How much is this?" },
+    rule: "Say the thing first, then はいくらですか.",
+    tiles: [[["コーヒー", "は", "いくら", "ですか。"], "How much is the coffee?", ["が"]],
+            [["これ", "は", "いくら", "ですか。"], "How much is this?", ["を"]]],
+  },
+  ji: {
+    talk: [["A", "すみません、{今|いま}{何時|なんじ}ですか。", "Excuse me, what time is it?"],
+           ["B", "{三時|さんじ}です。", "It's three o'clock."],
+           ["A", "ありがとうございます。", "Thank you."]],
+    built: { parts: [["{今|いま}、", "now"], ["{三|さん}", "three"], ["{時|じ}", "o'clock"], ["{半|はん}", "half past"], ["です", "is"]],
+             hl: [2, 3], en: "It's half past three now." },
+    rule: "A number, then {時|じ}; add {半|はん} for half past. Watch two: {四時|よじ} is yoji and {九時|くじ} is kuji.",
+    tiles: [[["{午後|ごご}", "{三時|さんじ}", "{半|はん}", "です。"], "It's half past three in the afternoon.", ["{分|ふん}"]]],
+    change: [{ from: "{三時|さんじ}です。", do: "Make it half past", to: "{三時半|さんじはん}です。",
+               wrong: ["{半|はん}{三時|さんじ}です。", "{三時|さんじ}{分|ふん}です。", "{三時|さんじ}ですか。"] }],
+  },
+  "wa-desu": {
+    talk: [["A", "はじめまして。{私|わたし}はスミスです。", "Nice to meet you. I'm Smith."],
+           ["B", "はじめまして。{私|わたし}はキムです。{学生|がくせい}です。", "Nice to meet you. I'm Kim. I'm a student."],
+           ["A", "よろしくおねがいします。", "Pleased to meet you."]],
+    built: { parts: [["{私|わたし}", "I"], ["は", "the topic: as for me"], ["{学生|がくせい}", "a student"], ["です", "am — always last"]],
+             hl: [1, 3], en: "I'm a student." },
+    rule: "は (said wa) marks what you're talking about; です closes the sentence, and the verb always comes last.",
+    vs: { a: ["{私|わたし}は{学生|がくせい}です。", "I'm a student."], b: ["{学生|がくせい}は{私|わたし}です。", "The student is me."],
+          why: "Whatever comes before は is what the sentence is about. Swap the two sides and you've said something else." },
+    tiles: [[["スミスさん", "は", "{先生|せんせい}", "です。"], "Mr Smith is a teacher.", ["か"]],
+            [["{私|わたし}", "は", "{会社員|かいしゃいん}", "です。"], "I'm an office worker.", ["の"]]],
+  },
+  janai: {
+    talk: [["A", "{先生|せんせい}ですか。", "Are you a teacher?"],
+           ["B", "いいえ、{先生|せんせい}じゃないです。{学生|がくせい}です。", "No, I'm not a teacher. I'm a student."]],
+    built: { parts: [["これ", "this"], ["は", "the topic"], ["ペン", "a pen"], ["じゃないです", "is not"]],
+             hl: [3], en: "This isn't a pen." },
+    rule: "Swap です for じゃないです to say it isn't. Nothing else moves.",
+    tiles: [[["{私|わたし}", "は", "{日本人|にほんじん}", "じゃないです。"], "I'm not Japanese.", ["です。"]]],
+    change: [{ from: "{私|わたし}は{先生|せんせい}です。", do: "Make it not", to: "{私|わたし}は{先生|せんせい}じゃないです。",
+               wrong: ["{私|わたし}は{先生|せんせい}ですか。", "{私|わたし}じゃない{先生|せんせい}です。", "{私|わたし}は{先生|せんせい}ないです。"] },
+             { from: "これはペンです。", do: "Make it not", to: "これはペンじゃないです。",
+               wrong: ["これはペンですか。", "これじゃないペンです。", "これはペンないです。"] }],
+  },
+  desuka: {
+    talk: [["A", "{日本人|にほんじん}ですか。", "Are you Japanese?"],
+           ["B", "いいえ、{日本人|にほんじん}じゃないです。", "No, I'm not Japanese."],
+           ["A", "{学生|がくせい}ですか。", "Are you a student?"],
+           ["B", "はい、{学生|がくせい}です。", "Yes, I'm a student."]],
+    built: { parts: [["あの", "that"], ["{人|ひと}", "person"], ["は", "the topic"], ["だれ", "who"], ["です", "is"], ["か", "makes it a question"]],
+             hl: [5], en: "Who is that person?" },
+    rule: "か on the end makes a question, and the word order stays the same. A question word like だれ or {何|なん} sits where the answer will go.",
+    vs: { a: ["{学生|がくせい}です。", "I'm a student."], b: ["{学生|がくせい}ですか。", "Are you a student?"],
+          why: "One か is all the difference. Said aloud, the voice rises at the end too." },
+    tiles: [[["あなた", "は", "{学生|がくせい}", "ですか。"], "Are you a student?"],
+            [["{名前|なまえ}", "は", "{何|なん}", "ですか。"], "What's your name?", ["だれ"]]],
+    change: [{ from: "スミスさんは{先生|せんせい}です。", do: "Make it a question", to: "スミスさんは{先生|せんせい}ですか。",
+               wrong: ["スミスさんは{先生|せんせい}じゃないです。", "かスミスさんは{先生|せんせい}です。", "スミスさんか{先生|せんせい}です。"] }],
+  },
+  no: {
+    talk: [["A", "これはだれのペンですか。", "Whose pen is this?"],
+           ["B", "{私|わたし}のペンです。", "It's my pen."],
+           ["A", "どうぞ。", "Here you are."]],
+    built: { parts: [["{日本語|にほんご}", "Japanese"], ["の", "joins two nouns"], ["{先生|せんせい}", "teacher"], ["です", "is"]],
+             hl: [1], en: "I'm a Japanese teacher." },
+    rule: "AのB: B is the thing itself; A says whose it is or what kind.",
+    vs: { a: ["{日本語|にほんご}の{先生|せんせい}です。", "I'm a Japanese teacher (I teach Japanese)."], b: ["{日本人|にほんじん}の{先生|せんせい}です。", "I'm a teacher who's Japanese."],
+          why: "After の is what it is — a teacher, both times. Before の says which kind." },
+    tiles: [[["{私|わたし}", "の", "{友達|ともだち}", "です。"], "This is my friend.", ["は"]],
+            [["{私|わたし}", "の", "{名前|なまえ}", "は", "スミス", "です。"], "My name is Smith.", ["が"]]],
+  },
+  kono: {
+    talk: [["A", "この{人|ひと}はだれですか。", "Who is this person?"],
+           ["B", "{私|わたし}の{友達|ともだち}です。", "My friend."],
+           ["A", "あの{人|ひと}は？", "And that person over there?"],
+           ["B", "{私|わたし}の{先生|せんせい}です。", "My teacher."]],
+    built: { parts: [["この", "this — leads into a noun"], ["{人|ひと}", "person"], ["は", "the topic"], ["{友達|ともだち}", "a friend"], ["です", "is"]],
+             hl: [0], en: "This person is my friend." },
+    rule: "この, その and あの always lead into a noun. Standing alone, it's これ, それ and あれ.",
+    vs: { a: ["この{人|ひと}は{先生|せんせい}です。", "This person is a teacher."], b: ["これは{先生|せんせい}のペンです。", "This is the teacher's pen."],
+          why: "この needs a noun after it — この{人|ひと}. これ stands on its own — これは… その/それ and あの/あれ work the same way." },
+    tiles: [[["あの", "{人|ひと}", "は", "だれ", "ですか。"], "Who is that person over there?", ["あれ"]],
+            [["この", "ペン", "は", "{私|わたし}", "の", "です。"], "This pen is mine.", ["これ"]]],
+  },
+  mo: {
+    talk: [["A", "{私|わたし}は{学生|がくせい}です。", "I'm a student."],
+           ["B", "{私|わたし}も{学生|がくせい}です。", "I'm a student too."]],
+    built: { parts: [["{私|わたし}", "I"], ["も", "too — in は's place"], ["{学生|がくせい}", "a student"], ["です", "am"]],
+             hl: [1], en: "I'm a student too." },
+    rule: "も takes the place of は — never both.",
+    vs: { a: ["{私|わたし}は{学生|がくせい}です。", "I'm a student."], b: ["{私|わたし}も{学生|がくせい}です。", "I'm a student too."],
+          why: "The same sentence, except も says it's true of you as well as whoever was just mentioned." },
+    tiles: [[["スミスさん", "も", "{先生|せんせい}", "です。"], "Mr Smith is a teacher too.", ["は"]]],
+    change: [{ from: "{私|わたし}は{日本人|にほんじん}です。", do: "Say it's true of you too", to: "{私|わたし}も{日本人|にほんじん}です。",
+               wrong: ["{私|わたし}はも{日本人|にほんじん}です。", "{私|わたし}は{日本人|にほんじん}もです。", "{私|わたし}の{日本人|にほんじん}です。"] }],
+  },
+  suki: {
+    talk: [["A", "{日本語|にほんご}が{好|す}きですか。", "Do you like Japanese?"],
+           ["B", "はい、{好|す}きです。", "Yes, I do."]],
+    built: { parts: [["ねこ", "cats"], ["が", "the thing that's liked"], ["{好|す}き", "liked"], ["です", "is"]],
+             hl: [1, 2], en: "I like cats." },
+    rule: "Japanese says the thing is liked: it takes が — not を — and {好|す}き is closed with です.",
+    vs: { a: ["ねこが{好|す}きです。", "I like cats."], b: ["ねこは{好|す}きです。", "Cats, I like (others maybe not)."],
+          why: "が is the plain way to say what you like. は makes it the topic — often to set it against something else." },
+    tiles: [[["{日本語|にほんご}", "が", "{好|す}き", "です。"], "I like Japanese.", ["を"]]],
+    change: [{ from: "ねこが{好|す}きです。", do: "Make it a question", to: "ねこが{好|す}きですか。",
+               wrong: ["ねこを{好|す}きですか。", "ねこが{好|す}きじゃないです。", "ねこか{好|す}きです。"] }],
+  },
+};
+
 /* ---- derived ---- */
 
 const dropGap = s => s.replace(/[«»]/g, "");
@@ -194,6 +322,23 @@ PATTERNS.forEach(p => {
 });
 const PATTERN_BY = {};
 PATTERNS.forEach(p => { PATTERN_BY[p.key] = p; });
+PATTERNS.forEach(p => { if (PATTERN_TEACH[p.id]) p.teach = PATTERN_TEACH[p.id]; });
+
+/* Every sentence a pattern can say — its examples and its teaching — as
+   the text its recording is under (tools/make-audio.mjs records them all). */
+function patternSay(p) {
+  const out = p.ex.map(e => e.kana);
+  const t = p.teach;
+  if (t) {
+    t.talk.forEach(([, jp]) => out.push(furiKana(jp)));
+    out.push(furiKana(t.built.parts.map(x => x[0]).join("") + "。"));
+    t.built.parts.forEach(x => out.push(furiKana(x[0])));      /* each part is tappable too */
+    if (t.vs) out.push(furiKana(t.vs.a[0]), furiKana(t.vs.b[0]));
+    (t.tiles || []).forEach(([tiles]) => out.push(furiKana(tiles.join(""))));
+    (t.change || []).forEach(x => out.push(furiKana(x.from), furiKana(x.to)));
+  }
+  return [...new Set(out)];
+}
 
 /* Pattern lessons go in after the last word lesson of their stage. */
 (function placePatternLessons() {
@@ -201,10 +346,12 @@ PATTERNS.forEach(p => { PATTERN_BY[p.key] = p; });
     const ps = PATTERNS.filter(p => p.st === S.st);
     if (!ps.length) return;
     const lessons = [];
-    for (let i = 0; i < ps.length; i += 4) {
-      const n = i / 4 + 1;
+    /* a guided lesson is longer, so three to a lesson rather than four */
+    const size = ps.every(p => PATTERN_TEACH[p.id]) ? 3 : 4;
+    for (let i = 0; i < ps.length; i += size) {
+      const n = i / size + 1;
       lessons.push({ id: `g${S.st}-${n}`, set: "w", st: S.st, kind: "patterns",
-        title: `文型 · ${S.jp}${ps.length > 4 ? " " + n : ""}`, items: ps.slice(i, i + 4).map(p => p.key) });
+        title: `文型 · ${S.jp}${ps.length > size ? " " + n : ""}`, items: ps.slice(i, i + size).map(p => p.key) });
     }
     let at = -1;
     WORD_LESSONS.forEach((L, i) => { if (L.st === S.st) at = i; });

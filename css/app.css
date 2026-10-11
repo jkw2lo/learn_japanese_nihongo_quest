@@ -2482,19 +2482,29 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 .mt-lines .tmp { stroke: var(--ai); stroke-dasharray: 6 6; }
 .mt-lines .h0 { stroke: var(--c-hira); } .mt-lines .h1 { stroke: var(--jade); } .mt-lines .h2 { stroke: var(--gold); }
 .mt-lines .h3 { stroke: var(--c-kata); } .mt-lines .h4 { stroke: var(--blush); }
-/* one at a time: the word to drag, and four places to put it */
+/* one at a time: the word in the middle, a meaning each way round it */
 .mt-one { text-align: center; }
-.mt-drag-home { display: grid; place-items: center; min-height: 8rem; }
+.mt-compass {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; align-items: center;
+  max-width: 36rem; margin: 1.4rem auto 0;
+}
+.mt-t.d0 { grid-column: 1 / -1; grid-row: 1; justify-self: center; width: min(100%, 20rem); }
+.mt-t.d3 { grid-column: 1; grid-row: 2; }
+.mt-centre { grid-column: 2; grid-row: 2; display: grid; place-items: center; padding: 1.4rem .4rem; }
+.mt-t.d1 { grid-column: 3; grid-row: 2; }
+.mt-t.d2 { grid-column: 1 / -1; grid-row: 3; justify-self: center; width: min(100%, 20rem); }
+.mt-arrow { position: absolute; top: 5px; left: 8px; font-size: .8rem; color: var(--ink-3); }
 .mt-drag {
   font-size: 2.4rem; padding: 12px 28px; background: var(--sheet); border: 2px solid var(--ai); border-radius: 16px;
   box-shadow: var(--shadow-lift); cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
   transition: transform .2s; position: relative; z-index: 5;
 }
 .mt-drag.lift { transition: none; cursor: grabbing; transform-origin: center; }
-.mt-targets { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 34rem; margin: 1rem auto 0; }
+/* far enough that letting go will answer */
+.mt-drag.sure { border-color: var(--jade); }
+.mt-drag.fly { transition: transform .22s ease-in, opacity .22s; opacity: .6; }
 .mt-t { position: relative; min-height: 86px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 1.02rem; }
 .mt-m { font-size: 1.02rem; }
-.mt-t kbd { position: absolute; top: 6px; left: 8px; }
 .mt-t.over { border-color: var(--ai); background: color-mix(in srgb, var(--ai) 10%, var(--sheet)); }
 .mt-t:disabled:not(.got) { opacity: .45; }
 .mt-in { font-size: 1.35rem; font-weight: 500; }
@@ -2518,6 +2528,50 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 .sb-opts { margin-top: 1.1rem; }
 /* hidden till the line goes, but holding its place so nothing jumps */
 .sb-opts[hidden] { display: grid; visibility: hidden; }
+
+/* ---------- teaching a pattern ---------- */
+
+.pat-big.small { font-size: 1.6rem; margin-bottom: .1rem; }
+/* the conversation: A on the left, B on the right, like a chat */
+.tc-lines { display: flex; flex-direction: column; gap: .6rem; margin: 1rem 0 .4rem; text-align: left; }
+.tc-line { display: flex; align-items: flex-start; gap: .5rem; max-width: 88%; }
+.tc-line.b { align-self: flex-end; flex-direction: row-reverse; }
+.tc-line .ex-sent { margin: 0; }
+.tc-line.b .ex-sent { background: var(--ai-wash); }
+.tc-who { flex: none; width: 1.9rem; height: 1.9rem; border-radius: 50%; display: grid; place-items: center; font-weight: 600; font-size: .85rem; background: var(--gold-soft); color: var(--ink); margin-top: .35rem; }
+.tc-line.b .tc-who { background: var(--ai-wash); color: var(--ai); }
+/* how it's built: the pattern's own parts lit */
+.tc-parts { justify-content: center; margin: 1rem 0 .4rem; }
+.g-chunk.hl { border-color: var(--seal); background: color-mix(in srgb, var(--seal) 10%, var(--paper)); }
+.g-chunk.hl .g-role { color: var(--seal); }
+.tc-pair { display: grid; gap: .5rem; margin: 1rem 0 .4rem; }
+/* the same teaching, as reference on the Grammar tab */
+.g-teach { margin: .4rem 0; }
+.g-teach .tc-parts { justify-content: flex-start; margin: .4rem 0; }
+.g-vs { margin: .6rem 0; padding: .5rem .7rem; border-left: 3px solid var(--seal); background: color-mix(in srgb, var(--seal) 5%, transparent); border-radius: 0 10px 10px 0; }
+.g-talk { display: flex; gap: .5rem; align-items: flex-start; }
+.g-talk .tc-who { margin-top: .5rem; }
+.g-talk .ex-sent { flex: 1; }
+.g-teach .ex-sent { margin-left: 0; margin-right: 0; max-width: 34rem; }
+/* build it: the line you're making, and the tray of pieces */
+.bd-line {
+  min-height: 3.6rem; margin: 1rem auto .8rem; width: 100%; max-width: 36rem; padding: 8px; border-radius: 14px;
+  border: 1.5px dashed var(--rule); display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center;
+}
+.bd-line.ok { border-style: solid; border-color: var(--jade); background: var(--jade-wash); }
+.bd-line.miss { border-style: solid; border-color: var(--amber); background: var(--amber-wash); }
+.bd-tray { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 36rem; margin: 0 auto; }
+.bd-tile {
+  font: inherit; font-size: 1.35rem; color: var(--ink); background: var(--sheet); border: 1.5px solid var(--rule);
+  border-radius: 12px; padding: 8px 14px; cursor: pointer; min-width: 3rem;
+}
+.bd-tile:hover { border-color: var(--ai); }
+.bd-tile.used { visibility: hidden; }
+.bd-tile.in { background: color-mix(in srgb, var(--ai) 10%, var(--sheet)); border-color: var(--ai); }
+.bd-tile:disabled { cursor: default; }
+/* change it: four whole sentences, one to a row */
+.opts.sents { grid-template-columns: 1fr; max-width: 30rem; }
+.opts.sents .opt { font-size: 1.3rem; justify-content: flex-start; text-align: left; padding: 12px 16px 12px 2.4rem; }
 
 /* ============================================================
    PHONE LAYER
@@ -2999,12 +3053,18 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
   .mt-w { font-size: 1.3rem; }
   .mt-card { padding: 8px 10px; font-size: .95rem; }
   .mt-w.mt-card { font-size: 1.3rem; }
-  .mt-drag-home { min-height: 11rem; }
+  /* the compass in the lower half, in reach of the thumb */
   .mt-one { display: flex; flex-direction: column; min-height: 100%; }
-  .mt-targets { margin-top: auto; margin-bottom: 10px; width: 100%; }
+  .mt-compass { margin-top: auto; margin-bottom: 14px; width: 100%; gap: 10px; }
+  .mt-t { min-height: 74px; padding: 8px; font-size: .95rem; }
+  .mt-drag { font-size: 2rem; padding: 10px 18px; }
+  .mt-centre { padding: 1.6rem .2rem; }
 
   /* subtitles: the screen at the top, the answers down where the thumb is */
   .sb-play { display: flex; flex-direction: column; min-height: 100%; }
   .sb-play > .verdict { order: 2; min-height: 2.6rem; margin: .8rem 0 .4rem; }
   .sb-opts { order: 3; margin-top: auto; margin-bottom: 10px; }
+
+  .opts.sents { grid-template-columns: 1fr; }
+  .opts.sents .opt { min-height: 56px; font-size: 1.2rem; }
 }

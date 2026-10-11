@@ -50,8 +50,9 @@ const CONTRACT = {
     'KANA_CONCEPT', 'ROMAJI_ALT', 'kanaUnits', 'toRomaji', 'toHira', 'toKata', 'romajiToKana', 'kanaSame'],
   'js/data/words.js': ['WORDS', 'WORD_BY', 'WORD_STAGES', 'WORD_LESSONS'],
   'js/conj.js': ['conj', 'isVerb', 'stems', 'CONJ_FORMS', 'CONJ_TAUGHT'],
-  'js/data/patterns.js': ['PATTERNS', 'PATTERN_BY', 'PARTICLES', 'PARTICLE_CONFUSIONS'],
-  'js/patterns-ui.js': ['patternLessonCards', 'qPatFill', 'qPatMean', 'patPrompt', 'patVerdict', 'patIntroHtml', 'gapHtml', 'hasGaps', 'learnedPatterns'],
+  'js/data/patterns.js': ['PATTERNS', 'PATTERN_BY', 'PARTICLES', 'PARTICLE_CONFUSIONS', 'PATTERN_TEACH', 'patternSay'],
+  'js/patterns-ui.js': ['patternLessonCards', 'qPatFill', 'qPatMean', 'patPrompt', 'patVerdict', 'patIntroHtml', 'gapHtml', 'hasGaps', 'learnedPatterns',
+    'patTeachHtml', 'teachSound', 'qPatBuild', 'showBuild', 'buildCheck', 'buildTap', 'qPatChange'],
   'js/data/grammar.js': ['SENTENCE_SHAPE', 'PARTICLE_GUIDE', 'ENDINGS', 'GRAMMAR_SAY', 'SHAPE_SENTENCE'],
   'js/grammar-ui.js': ['renderGrammar'],
   'js/data/scenes.js': ['SCENES', 'SCENE_BY', 'receiptSums'],
@@ -438,6 +439,10 @@ section('menu');
 
 section('read');
 {
+  /* a phone pins a screen's .cta bottom-left; the Read tab has a start
+     button per activity, so none of them may be one (0.34.0: all five sat
+     in one spot and only Match could be reached) */
+  ok(!/\bcta\b/.test(read('js/read-ui.js')), 'the Read tab uses .cta — on a phone its buttons would pile up in one place');
   /* Word chains: a chain splits into the words it was made of, and only that
      way; kanji you know show as kanji, the rest as kana (README → Read). */
   const s = sandbox();
@@ -649,6 +654,26 @@ section('patterns');
   const kanjiBy = run('(() => { const m = {}; WORDS.forEach(w => furiKanji(w.w).forEach(c => { m[c] = Math.min(m[c] || 99, w.st); })); return m; })()');
   P.forEach(p => p.ex.forEach(e => run(`furiKanji(${JSON.stringify(e.jp)})`).forEach(c =>
     ok(kanjiBy[c] && kanjiBy[c] <= p.st, `${p.key}: 「${c}」 in ${e.jp} isn't in any word by stage ${p.st}`))));
+  /* teaching (README → Patterns → Teaching a pattern): the same rule for every
+     sentence in it, and each part well formed */
+  const T = run(`PATTERNS.filter(p => p.teach).map(p => ({ key: p.key, st: p.st, t: p.teach,
+    strings: [...p.teach.talk.map(l => l[1]), ...p.teach.built.parts.map(x => x[0]), ...(p.teach.vs ? [p.teach.vs.a[0], p.teach.vs.b[0]] : []),
+      ...(p.teach.tiles || []).flatMap(([t, , d]) => [...t, ...(d || [])]), ...(p.teach.change || []).flatMap(x => [x.from, x.to, ...x.wrong])] }))`);
+  ok(T.length >= 9, `only ${T.length} patterns are taught in full — stages 3 and 4 should be`);
+  T.forEach(({ key, st, t, strings }) => {
+    strings.forEach(str => run(`furiKanji(${JSON.stringify(str)})`).forEach(c =>
+      ok(kanjiBy[c] && kanjiBy[c] <= st, `${key} teaching: 「${c}」 in ${str} isn't in any word by stage ${st}`)));
+    ok(t.talk.length >= 2 && t.rule && t.built.parts.length >= 2, `${key}: teaching needs a conversation, a rule and a sentence in parts`);
+    ok(t.built.hl.length && t.built.hl.every(i => i >= 0 && i < t.built.parts.length), `${key}: the lit parts aren't parts`);
+    (t.tiles || []).forEach(([tiles, en, decoys = []]) => {
+      ok(tiles.length >= 3 && en, `${key}: a tile sentence needs three pieces or more and its english`);
+      decoys.forEach(d => ok(!tiles.includes(d), `${key}: the decoy ${d} is in the sentence`));
+    });
+    (t.change || []).forEach(x => {
+      ok(x.wrong.length === 3 && !x.wrong.includes(x.to) && new Set(x.wrong).size === 3, `${key}: change "${x.do}" needs three different wrong answers, none of them right`);
+      ok(x.from !== x.to, `${key}: change "${x.do}" changes nothing`);
+    });
+  });
   /* each pattern lesson sits after its stage's last word lesson */
   const order = run('WORD_LESSONS.map(L => [L.id, L.kind, L.st])');
   order.forEach(([id, kind, st], i) => {
@@ -886,7 +911,9 @@ section('furigana');
   /* and every string in the data that exists so far */
   const strings = [];
   f.WORDS.forEach(w => { strings.push(w.w); if (w.note) strings.push(w.note); (w.ex || []).forEach(x => strings.push(x[0])); });
-  f.PATTERNS.forEach(p => { strings.push(p.pat, p.note); p.ex.forEach(x => strings.push(x.jp)); });
+  f.PATTERNS.forEach(p => { strings.push(p.pat, p.note); p.ex.forEach(x => strings.push(x.jp));
+    const t = p.teach; if (t) { t.talk.forEach(l => strings.push(l[1])); t.built.parts.forEach(x => strings.push(x[0])); strings.push(t.rule);
+      if (t.vs) strings.push(t.vs.a[0], t.vs.b[0], t.vs.why); (t.tiles || []).forEach(([x]) => strings.push(...x)); (t.change || []).forEach(x => strings.push(x.from, x.to, ...x.wrong)); } });
   vm.runInContext('globalThis.STAGES = WORD_STAGES', f);
   f.STAGES.forEach(S => strings.push(S.about));
   /* out and about: every sign, line and bubble */

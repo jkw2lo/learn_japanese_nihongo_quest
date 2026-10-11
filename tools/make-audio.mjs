@@ -34,9 +34,9 @@ const BITRATE = '24000';     /* speech is clear at 24k; 32k was a quarter bigger
 const MIN_SECONDS = 0.06;
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const { KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS, GRAMMAR_SAY, SCENES, KONBINI } = new Function(
+const { KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS, patternSay, GRAMMAR_SAY, SCENES, KONBINI } = new Function(
   ['js/data/kana.js', 'js/furi.js', 'js/conj.js', 'js/data/words.js', 'js/data/patterns.js', 'js/data/menu.js', 'js/data/grammar.js', 'js/data/scenes.js', 'js/data/konbini.js'].map(f => readFileSync(join(root, f), 'utf8')).join('\n') +
-  '\nreturn {KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS, GRAMMAR_SAY, SCENES, KONBINI};')();
+  '\nreturn {KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS, patternSay, GRAMMAR_SAY, SCENES, KONBINI};')();
 
 /* The text actually handed to `say` for a clip key, for any key the voice
    misreads on its own. A lone は or へ could be taken as the particles "wa"
@@ -76,7 +76,8 @@ function stageClips(st) {
     w.ex.forEach(([jp]) => out.add(furiKana(jp)));
     if (isConjugable(w.pos)) [...formsFor(w.pos), ...(isVerb(w.pos) ? ['te', 'ta', 'nai'] : [])].forEach(f => out.add(furiKana(conj(w.w, w.pos, f))));
   });
-  PATTERNS.filter(p => p.st === st).forEach(p => p.ex.forEach(e => out.add(e.kana)));
+  /* every pattern's examples, and its teaching: conversation, parts, mix-up, tiles */
+  PATTERNS.filter(p => p.st === st).forEach(p => patternSay(p).forEach(t => out.add(t)));
   if (st === 5) {
     menuItems(MENUS[1]).forEach(it => out.add(it.kana));
     MENU_PHRASES.forEach(([jp]) => out.add(furiKana(jp).replace('〜', '')));
@@ -98,7 +99,7 @@ function stageBundles() {
      than leave them silent until that stage is reached. Until 0.33.0 it
      left out anything a stage bundle had, and the tab was nearly mute. */
   const kanaOnly = new Set(speakableKana());
-  out['js/audio-grammar.js'] = [...new Set([...GRAMMAR_SAY.map(s => furiKana(s)), ...PATTERNS.flatMap(p => p.ex.map(e => e.kana))])].filter(t => !kanaOnly.has(t));
+  out['js/audio-grammar.js'] = [...new Set([...GRAMMAR_SAY.map(s => furiKana(s)), ...PATTERNS.flatMap(patternSay)])].filter(t => !kanaOnly.has(t));
   /* Out and about: one bundle per place, fetched when you go there, so a
      visit downloads that place's sound and not every place's. Each loads
      only itself (and the kana one, which is always there), so they repeat

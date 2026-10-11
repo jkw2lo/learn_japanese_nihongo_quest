@@ -533,7 +533,8 @@ function qWrite(k, mode, trace = false) {
 
 function qFor(k, kind, mode) {
   if (isKanjiKey(k)) return kind === "m" ? qKanjiMean(k, mode) : kind === "y" ? qKanjiRead(k, mode) : kind === "w" ? qWrite(k, mode) : null;
-  if (isPatternKey(k)) return kind === "f" ? qPatFill(k, mode) : kind === "r" ? qPatMean(k, mode) : null;
+  if (isPatternKey(k)) return kind === "f" ? qPatFill(k, mode) : kind === "r" ? qPatMean(k, mode)
+    : kind === "o" ? qPatBuild(k, mode) : kind === "t" ? qPatChange(k, mode) : null;
   if (isWordKey(k)) {
     if (kind === "r") return qWordRead(k, mode);
     if (kind === "p") return qWordHear(k, mode);
@@ -895,6 +896,14 @@ function showCard() {
     return;
   }
 
+  if (c.t === "gteach") {
+    body.innerHTML = patTeachHtml(c);
+    foot.innerHTML = `<button class="btn btn-ghost" data-act="replay">${icon("speaker")} Hear it <kbd>R</kbd></button>
+      <button class="btn" data-act="next" id="nextBtn">Next <kbd>␣</kbd></button>`;
+    if (state.settings.autoplay) say(teachSound(c));
+    return;
+  }
+
   if (c.t === "gintro") {
     learn(c.k); save();
     if (!S.learned.includes(c.k)) S.learned.push(c.k);
@@ -917,6 +926,7 @@ function showCard() {
 
   if (c.kind === "w") return showWrite(c);
   if (c.kind === "c" || c.kind === "j") return showType(c);
+  if (c.kind === "o") return showBuild(c);
 
   /* a question */
   const prompts = {
@@ -930,15 +940,16 @@ function showCard() {
   const n = c.opts.length;
   body.innerHTML = `<div class="q q-${c.kind}">
     ${c.kind === "sc" ? scenePrompt(c) : c.kk ? kanjiPrompt(c) : c.gk ? patPrompt(c) : c.wk ? wordPrompt(c) : prompts[c.kind]()}
-    <div class="opts n${n} ${c.wk ? "words" : ""}">${c.opts.map((o, i) => `
+    <div class="opts n${n} ${c.wk ? "words" : ""} ${c.kind === "t" ? "sents" : ""}">${c.opts.map((o, i) => `
       <button class="opt ${o.jp ? "jp" : ""} ${o.furi ? "furi" : ""}" data-act="opt" data-i="${i}" ${o.jp ? 'lang="ja"' : ""}><kbd>${i + 1}</kbd><span>${o.furi ? wordHtml(o.label) : esc(o.label)}</span></button>`).join("")}
     </div>
     <div class="verdict" id="verdict" aria-live="polite"></div>
   </div>`;
   /* a fill-the-gap sentence can't be played before it's answered — the sound gives the gap away */
-  foot.innerHTML = `${c.sound && c.kind !== "f" && !c.kk ? `<button class="btn btn-ghost" data-act="replay">${icon("speaker")} Again <kbd>R</kbd></button>` : "<span></span>"}
+  /* a fill-the-gap or change-it question can't be played first: the sound gives the answer away */
+  foot.innerHTML = `${c.sound && c.kind !== "f" && c.kind !== "t" && !c.kk ? `<button class="btn btn-ghost" data-act="replay">${icon("speaker")} Again <kbd>R</kbd></button>` : "<span></span>"}
     <button class="btn" data-act="next" id="nextBtn" disabled>Next <kbd>␣</kbd></button>`;
-  if (c.kind !== "r" && c.kind !== "word" && c.kind !== "f" && c.kind !== "sc" && !c.kk && c.sound) say(c.sound);
+  if (c.kind !== "r" && c.kind !== "word" && c.kind !== "f" && c.kind !== "t" && c.kind !== "sc" && !c.kk && c.sound) say(c.sound);
   S.t0 = performance.now();
   startTimer(quickMs(c));
 }
@@ -1103,7 +1114,9 @@ function settle(c, ok, ms, credit = true) {
   /* a kana word has no item of its own, but Today's word task still needs the evidence */
   if (c.kind === "word" && ok && credit) { const d = day(), l = d.ok.word || (d.ok.word = []); if (!l.includes(c.word.w)) l.push(c.word.w); }
   if (c.kind === "sc") sceneAnswered(c, ok);
-  else if (!helped) grade(c.k, c.kind, ok, ms, c.mode);
+  /* a drill can count towards another skill: building a sentence and
+     changing one are both producing it, which is what fill-the-gap counts */
+  else if (!helped) grade(c.k, c.sk || c.kind, ok, ms, c.mode);
   if (!ok && c.k) S.missed.add(c.k);
   /* a miss comes back at the end of the session, freshly shuffled */
   if (!ok && tries < 3) S.queue.push(rebuild(c));
@@ -1167,7 +1180,7 @@ function answer(idx) {
     v.className = "verdict miss";
     v.innerHTML = `It was ${verdictDetail(c)}`;
   }
-  if (state.settings.autoplay && c.sound && (c.kind === "r" || c.kind === "word" || c.kind === "f" || c.kind === "sc" || c.kk)) say(c.sound);
+  if (state.settings.autoplay && c.sound && (c.kind === "r" || c.kind === "word" || c.kind === "f" || c.kind === "t" || c.kind === "sc" || c.kk)) say(c.sound);
   else if (c.kind === "r" && state.settings.autoplay && !c.wk) sayKana(c.k);
   afterAnswer(ok);
 }
@@ -1201,7 +1214,8 @@ function replay() {
   if (c.t === "intro") return sayKana(c.k);
   if (c.t === "wintro") return sayWord(WORD_BY[c.k]);
   if (c.t === "gintro") return say(PATTERN_BY[c.k].ex[0].kana);
-  if ((c.kind === "f" || c.kk) && !S.answered) return;
+  if (c.t === "gteach") return say(teachSound(c));
+  if ((c.kind === "f" || c.kind === "t" || c.kind === "o" || c.kk) && !S.answered) return;
   if (c.t === "kintro") return say(kanjiSay(c.k.slice(2)));
   if (c.sound) say(c.sound);
 }
@@ -1840,6 +1854,17 @@ document.addEventListener("keydown", guard(e => {
   if (typeof cardsKey === "function" && cardsKey(e)) return;
   if (typeof bookKey === "function" && bookKey(e)) return;
   if (typeof walkKey === "function" && !S && walkKey(e)) return;
+  /* building a sentence: Enter checks (then goes on), Backspace takes the
+     last piece back, a number picks that piece from the tray */
+  if (S && S.card?.kind === "o" && !S.finished && S.card.t === "q") {
+    if (e.key === "Enter") { e.preventDefault(); S.answered ? ACTS.next() : buildCheck(); return; }
+    if (e.key === " " && S.answered) { e.preventDefault(); ACTS.next(); return; }
+    if (e.key === "Backspace") { e.preventDefault(); ACTS["bd-back"](); return; }
+    if (/^[1-9]$/.test(e.key)) { const b = $$("#bdTray .bd-tile")[+e.key - 1]; if (b) buildTap(+b.dataset.i); return; }
+    if (e.key === "Escape") { closeSession(); return; }
+    if (e.key === "r" || e.key === "R") { replay(); return; }
+    return;
+  }
   if (S && (S.card?.kind === "c" || S.card?.kind === "j") && !S.finished) {
     if (e.key === "Enter") { e.preventDefault(); S.answered ? ACTS.next() : checkType(); return; }
     if (e.key === " " && S.answered) { e.preventDefault(); ACTS.next(); return; }

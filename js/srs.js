@@ -12,7 +12,7 @@ const QUICK_MS = { r: 3000, p: 4000, a: 4000, w: 5000 };
 /* Words are longer than a kana, and typing one takes a while. */
 const QUICK_WORD_MS = { r: 5000, p: 5000, c: 12000, j: 15000 };
 /* A pattern question is a whole sentence to read. */
-const QUICK_PATTERN_MS = { f: 8000, r: 9000 };
+const QUICK_PATTERN_MS = { f: 8000, r: 9000, t: 9000, o: 15000 };
 const QUICK_KANJI_MS = { m: 4000, y: 6000 };
 /* The consolidation gate between hiragana and katakana: this many separate
    days, each after the last hiragana was learned, on which a full hiragana

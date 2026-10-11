@@ -176,12 +176,12 @@ function renderRead() {
     </section>
     ${rung(READ_RUNGS[0], `<div class="rd-stat">Your pace: <b>${cpsText(r.flash.cps)}</b>${r.flash.best ? ` · best ${r.flash.best.toFixed(1)}` : ""}
         <small class="muted">${r.flash.cps >= SUBTITLE_CPS ? "— subtitle speed" : `— subtitles run at about ${SUBTITLE_CPS}`}</small></div>
-      <button class="btn cta" data-act="rd-start" data-r="flash">Flash ${FLASH_N} words</button>`)}
+      <button class="btn rd-go" data-act="rd-start" data-r="flash">Flash ${FLASH_N} words</button>`)}
     ${rung(READ_RUNGS[1], `<div class="rd-stat">${r.chains.rounds ? `Best: <b>${cpsText(r.chains.best)}</b> · up to ${r.chains.n} words a chain` : "Starts with two words a chain."}</div>
-      <button class="btn cta" data-act="rd-start" data-r="chains">Find the words in ${CHAIN_N} chains</button>`)}
+      <button class="btn rd-go" data-act="rd-start" data-r="chains">Find the words in ${CHAIN_N} chains</button>`)}
     ${rung(READ_RUNGS[2], `<div class="rd-stat">${r.subs.rounds ? `Pace <b>${cpsText(r.subs.cps)}</b> · lines up to ${r.subs.len} characters${r.subs.best ? ` · best ${r.subs.best.toFixed(1)}` : ""}` : "Starts with short words, slowly."}
         <small class="muted">${subsPool().filter(x => x.kind === "sentence").length ? `${subsPool().filter(x => x.kind === "sentence").length} sentences you can read are in it` : "— sentences join once you've learned some patterns"}</small></div>
-      <button class="btn cta" data-act="rd-start" data-r="subs">Watch ${SUBS_N} lines</button>`)}
+      <button class="btn rd-go" data-act="rd-start" data-r="subs">Watch ${SUBS_N} lines</button>`)}
     ${searchCard(pool)}
     ${matchCard(pool)}
     <section class="card rd-later">
@@ -517,7 +517,7 @@ function searchCard(pool) {
       <div class="pick"><span class="pick-l">Clues</span>${seg("clue", SEARCH_CLUES, o => SEARCH_CLUES[o])}</div>
       <p class="muted small">${s.clue === "m" ? "You get the meanings, and find the Japanese." : s.clue === "w" ? "You get the words, and find them." : "You only get how many — finding them is the reading."}
         ${best ? ` Best on ${s.size}×${s.size}: <b>${fmtTime(best)}</b>.` : ""}</p>
-      <button class="btn cta" data-act="rd-start" data-r="search">Find ${Math.min(SEARCH_SIZES[s.size], words.length)} words</button>`
+      <button class="btn rd-go" data-act="rd-start" data-r="search">Find ${Math.min(SEARCH_SIZES[s.size], words.length)} words</button>`
       : `<p class="muted small">Learn a few more words first — this needs six you can read.</p>`}
   </section>`;
 }
@@ -696,7 +696,7 @@ function matchCard(pool) {
     ${open ? `<div class="pick"><span class="pick-l">Layout</span><div class="seg">${Object.keys(MATCH_LAYOUTS).map(o => `<button class="${layout === o ? "on" : ""}" data-act="mt-pick" data-v="${o}">${MATCH_LAYOUTS[o]}</button>`).join("")}</div></div>
       <p class="muted small">${layout === "four" ? "Four meanings beside four words: tap one and then its partner, or draw a line between them." : "One word and four meanings: drag the word onto its meaning, or tap the meaning."}
         ${best ? ` Best without a slip: <b>${fmtTime(best)}</b>.` : ""}</p>
-      <button class="btn cta" data-act="rd-start" data-r="match">${layout === "four" ? `Match ${MATCH_SETS * 4} words` : `Match ${MATCH_ONE} words`}</button>`
+      <button class="btn rd-go" data-act="rd-start" data-r="match">${layout === "four" ? `Match ${MATCH_SETS * 4} words` : `Match ${MATCH_ONE} words`}</button>`
       : `<p class="muted small">Learn a few more words first — this needs eight you can read.</p>`}
   </section>`;
 }
@@ -817,55 +817,65 @@ function matchPair(a, b) {
 
 /* --- one at a time --- */
 
+/* One at a time: the word in the middle, its four meanings round it — above,
+   right, below, left. A short swipe toward a meaning answers (no need to
+   carry it all the way there, so no dropping it early on the way); the
+   meaning it's heading for lights up first, and a swipe too short to be
+   sure of springs back. A tap on a meaning, an arrow key or 1–4 answers
+   too. */
+const MATCH_DIRS = ["↑", "→", "↓", "←"];
+const SWIPE_AT = 40;           /* px: past this, letting go answers */
+
 function matchOneShow() {
   if (RD.i >= RD.n) return matchDone();
   const w = RD.words[RD.i];
   const opts = shuffle([w, ...otherMeanings(w, RD.pool, 3)]);
   RD.one = { w, opts, tried: false, t0: performance.now() };
+  const target = i => `<button class="mt-card mt-t d${i}" data-act="mt-tap" data-i="${i}"><span class="mt-arrow" aria-hidden="true">${MATCH_DIRS[i]}</span>${esc(opts[i].m)}</button>`;
   $("#rdBody").innerHTML = `<div class="mt-one">
-    <div class="q-ask">Drag the word onto what it means — or tap the meaning.</div>
-    <div class="mt-drag-home"><div class="mt-drag" id="mtDrag" lang="ja">${esc(w.text)}</div></div>
-    <div class="mt-targets">${opts.map((o, i) => `<button class="mt-card mt-t" data-act="mt-tap" data-i="${i}"><kbd>${i + 1}</kbd>${esc(o.m)}</button>`).join("")}</div>
+    <div class="q-ask">Swipe the word toward what it means — or tap the meaning.</div>
+    <div class="mt-compass">
+      ${target(0)}${target(3)}
+      <div class="mt-centre"><div class="mt-drag" id="mtDrag" lang="ja">${esc(w.text)}</div></div>
+      ${target(1)}${target(2)}
+    </div>
   </div>`;
   bindOne();
 }
 
 function bindOne() {
   const card = $("#mtDrag");
-  let start = null;
+  let start = null, dir = null;
+  const aim = d => $$(".mt-t").forEach(t => t.classList.toggle("over", +t.dataset.i === d));
   card.addEventListener("pointerdown", e => {
     if (!RD?.one) return;
     e.preventDefault();
     try { card.setPointerCapture(e.pointerId); } catch {}
-    start = [e.clientX, e.clientY];
+    start = [e.clientX, e.clientY]; dir = null;
     card.classList.add("lift");
   });
   card.addEventListener("pointermove", e => {
     if (!start) return;
-    card.style.transform = `translate(${e.clientX - start[0]}px, ${e.clientY - start[1]}px)`;
-    const over = matchTargetAt(e.clientX, e.clientY);
-    $$(".mt-t").forEach(t => t.classList.toggle("over", t === over));
+    const dx = e.clientX - start[0], dy = e.clientY - start[1], far = Math.hypot(dx, dy);
+    dir = far < 16 ? null : Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0);
+    if (dir != null && $(`.mt-t[data-i="${dir}"]`).disabled) dir = null;
+    /* the word leans the way it's going, a little, not all the way */
+    const k = Math.min(1, 56 / (far || 1));
+    card.style.transform = `translate(${dx * k}px, ${dy * k}px)`;
+    card.classList.toggle("sure", far >= SWIPE_AT && dir != null);
+    aim(dir);
   });
-  const drop = e => {
+  const done = e => {
     if (!start) return;
+    const far = Math.hypot(e.clientX - start[0], e.clientY - start[1]);
     start = null;
-    card.classList.remove("lift");
-    $$(".mt-t").forEach(t => t.classList.remove("over"));
-    const t = matchTargetAt(e.clientX, e.clientY);
-    if (t) matchOne(+t.dataset.i, card);
+    card.classList.remove("lift", "sure");
+    aim(null);
+    if (far >= SWIPE_AT && dir != null) matchOne(dir, card);
     else card.style.transform = "";
   };
-  card.addEventListener("pointerup", drop);
-  card.addEventListener("pointercancel", () => { start = null; card.style.transform = ""; card.classList.remove("lift"); });
-}
-
-/* the meaning under the pointer, looking past the card being dragged */
-function matchTargetAt(x, y) {
-  const card = $("#mtDrag");
-  card.style.pointerEvents = "none";
-  const t = document.elementFromPoint(x, y)?.closest?.(".mt-t");
-  card.style.pointerEvents = "";
-  return t && !t.disabled ? t : null;
+  card.addEventListener("pointerup", done);
+  card.addEventListener("pointercancel", () => { start = null; card.style.transform = ""; card.classList.remove("lift", "sure"); aim(null); });
 }
 
 function matchOne(i, card = $("#mtDrag")) {
@@ -877,10 +887,10 @@ function matchOne(i, card = $("#mtDrag")) {
     /* right first time is a mark; after a slip, the slip already is one */
     if (!O.tried) { RD.res[RD.i] = "ok"; grade(O.w.key, "r", true, performance.now() - O.t0, "speed"); }
     t.classList.add("got", "h1");
-    card.classList.add("home");
-    card.style.transform = "";
-    t.insertAdjacentHTML("beforeend", `<b class="mt-in" lang="ja">${esc(O.w.text)}</b>`);
-    card.style.visibility = "hidden";
+    const cr = card.getBoundingClientRect(), tr = t.getBoundingClientRect();
+    card.classList.add("fly");
+    card.style.transform = `translate(${tr.left + tr.width / 2 - cr.left - cr.width / 2}px, ${tr.top + tr.height / 2 - cr.top - cr.height / 2}px) scale(.5)`;
+    setTimeout(() => { card.style.visibility = "hidden"; t.insertAdjacentHTML("beforeend", `<b class="mt-in" lang="ja">${esc(O.w.text)}</b>`); }, 220);
     if (state.settings.sound) say(O.w.say);
     RD.one = null;
     RD.i++;
@@ -965,7 +975,10 @@ function readKey(e) {
   if (!RD) return false;
   if (e.key === "Escape") { e.preventDefault(); closeRead(); return true; }
   if (RD.done) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); ACTS["rd-again"](); } return true; }
-  if (RD.rung === "match" && RD.one && /^[1-4]$/.test(e.key)) { e.preventDefault(); matchOne(+e.key - 1); }
+  if (RD.rung === "match" && RD.one) {
+    const d = { ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3 }[e.key] ?? (/^[1-4]$/.test(e.key) ? +e.key - 1 : null);
+    if (d != null && !$(`.mt-t[data-i="${d}"]`)?.disabled) { e.preventDefault(); matchOne(d); }
+  }
   if (RD.rung === "subs") {
     if (/^[1-4]$/.test(e.key)) { e.preventDefault(); subsAnswer(+e.key - 1); }
     else if ((e.key === "Enter" || e.key === " ") && $("#rdNext")) { e.preventDefault(); ACTS["rd-next"](); }

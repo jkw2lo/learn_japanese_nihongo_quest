@@ -8,6 +8,22 @@
    {漢字|かな} runs are converted — the rest is ours, and trusted. */
 const richHtml = s => s.replace(/\{[^|}]+\|[^}]+\}/g, m => wordHtml(m));
 
+/* A taught pattern's lesson, as reference: its parts, the rule, the mix-up
+   and the conversation, each line tappable. */
+function patTeachRef(p) {
+  const t = p.teach;
+  const sentence = (jp, en) => `<button class="ex-sent" data-act="say" data-say="${esc(furiKana(jp))}"><span lang="ja">${wordHtml(jp)}</span><small>${esc(en)}</small></button>`;
+  return `<div class="g-teach">
+    <div class="g-chunks tc-parts" lang="ja">${t.built.parts.map(([jp, job], i) => `<button class="g-chunk ${t.built.hl.includes(i) ? "hl" : ""}" data-act="say" data-say="${esc(furiKana(jp))}">
+      <span class="g-jp">${wordHtml(jp)}</span><span class="g-role">${esc(job)}</span></button>`).join("")}</div>
+    <p class="small"><b>${richHtml(t.rule)}</b></p>
+    ${t.vs ? `<div class="g-vs"><div class="tiny muted">Don't mix it up</div>${sentence(...t.vs.a)}${sentence(...t.vs.b)}<p class="small">${richHtml(t.vs.why)}</p></div>` : ""}
+    <div class="tiny muted">In a conversation</div>
+    ${t.talk.map(([who, jp, en]) => `<div class="g-talk"><span class="tc-who">${esc(who)}</span>${sentence(jp, en)}</div>`).join("")}
+    <div class="tiny muted">More examples</div>
+  </div>`;
+}
+
 function renderGrammar() {
   loadBundle("grammar");
   const el = $("#v-grammar");
@@ -48,6 +64,7 @@ function renderGrammar() {
     return `<details class="pat-item ${on ? "" : "ahead"}">
       <summary><span class="pat-name" lang="ja">${on ? "" : icon("lock")}${wordHtml(p.pat)}</span><span class="pat-m">${esc(p.m)}</span></summary>
       <p class="small">${wordHtml(p.note)}</p>
+      ${p.teach ? patTeachRef(p) : ""}
       ${p.ex.map(e => `<button class="ex-sent" data-act="say" data-say="${esc(e.kana)}"><span lang="ja">${e.gap ? gapHtml(e, e.gap) : wordHtml(e.jp)}</span><small>${esc(e.en)}</small></button>`).join("")}
       ${on ? "" : `<p class="muted tiny">Taught in stage ${p.st}.</p>`}
     </details>`;
