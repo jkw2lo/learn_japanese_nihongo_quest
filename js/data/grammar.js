@@ -39,13 +39,20 @@ const PARTICLE_GUIDE = [
 ];
 
 /* The polite endings on one table: [kind, now, not, past, past-not, example word]. */
+/* kind, the four endings, an example word, and that word in each of the
+   four — the forms are what you tap to hear */
 const ENDINGS = [
-  ["Verbs", "〜ます", "〜ません", "〜ました", "〜ませんでした", "{行|い}きます"],
-  ["い-adjectives", "〜いです", "〜くないです", "〜かったです", "〜くなかったです", "{高|たか}いです"],
-  ["な-adjectives", "〜です", "〜じゃないです", "〜でした", "〜じゃなかったです", "きれいです"],
-  ["Nouns", "〜です", "〜じゃないです", "〜でした", "〜じゃなかったです", "{学生|がくせい}です"],
+  ["Verbs", "〜ます", "〜ません", "〜ました", "〜ませんでした", "{行|い}きます",
+    ["{行|い}きます", "{行|い}きません", "{行|い}きました", "{行|い}きませんでした"]],
+  ["い-adjectives", "〜いです", "〜くないです", "〜かったです", "〜くなかったです", "{高|たか}いです",
+    ["{高|たか}いです", "{高|たか}くないです", "{高|たか}かったです", "{高|たか}くなかったです"]],
+  ["な-adjectives", "〜です", "〜じゃないです", "〜でした", "〜じゃなかったです", "きれいです",
+    ["きれいです", "きれいじゃないです", "きれいでした", "きれいじゃなかったです"]],
+  ["Nouns", "〜です", "〜じゃないです", "〜でした", "〜じゃなかったです", "{学生|がくせい}です",
+    ["{学生|がくせい}です", "{学生|がくせい}じゃないです", "{学生|がくせい}でした", "{学生|がくせい}じゃなかったです"]],
 ];
 
 /* Every sentence the tab can play, as markup. */
 const SHAPE_SENTENCE = SENTENCE_SHAPE.chunks.map(c => c[0]).join("") + "。";
-const GRAMMAR_SAY = [SHAPE_SENTENCE, ...PARTICLE_GUIDE.map(p => p[3])];
+const GRAMMAR_SAY = [SHAPE_SENTENCE, ...PARTICLE_GUIDE.map(p => p[3]),
+  ...SENTENCE_SHAPE.chunks.map(c => c[0]), ...ENDINGS.flatMap(e => e[6])];

@@ -754,7 +754,12 @@ ul.lib { list-style: none; margin: 0; padding: 0; grid-template-columns: repeat(
 .g-head .lede { max-width: 44rem; margin: 0; }
 .g-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 16px; align-items: start; }
 .g-chunks { display: flex; flex-wrap: wrap; gap: 6px; margin: .3rem 0 .4rem; }
-.g-chunk { display: flex; flex-direction: column; align-items: center; padding: 8px 10px; border-radius: 12px; background: var(--paper); border: 1px solid var(--rule-2); }
+.g-chunk { display: flex; flex-direction: column; align-items: center; padding: 8px 10px; border-radius: 12px; background: var(--paper); border: 1px solid var(--rule-2); font: inherit; color: inherit; cursor: pointer; }
+.g-chunk:hover, .g-form:hover { border-color: var(--ai); }
+/* an ending, and the example word in it — tap to hear */
+.g-form { font: inherit; color: inherit; background: none; border: 1px solid transparent; border-radius: 8px; padding: 4px 6px; cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; text-align: left; }
+.g-form small { font-size: .82rem; color: var(--ink-2); }
+.g-form span, .g-form small { white-space: nowrap; }
 .g-chunk.verb { border-color: var(--c-hira); background: var(--ai-wash); }
 .g-jp { font-size: 1.25rem; line-height: 1.8; }
 .g-role { font: 600 .72rem var(--f-body); text-transform: uppercase; letter-spacing: .06em; color: var(--c-hira); }

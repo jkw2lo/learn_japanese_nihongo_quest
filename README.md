@@ -1003,6 +1003,13 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.33.1: tap any word on the Grammar tab
+
+- Every part of *How a sentence is built* plays when tapped, and the
+  endings table shows a real word in each form (行きます, 行きません, 行きました,
+  行きませんでした; 高い, きれい, 学生 likewise), each tappable. The table now
+  runs the full width so nothing breaks mid-word. Seven new clips.
+
 ### 0.33.0: subtitles, matching, and the Grammar tab heard
 
 - **Read → 字幕 Subtitles**, rung 3: a line at the foot of a screen, said

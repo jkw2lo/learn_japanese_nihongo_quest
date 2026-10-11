@@ -15,11 +15,11 @@ function renderGrammar() {
   const learnedN = learnedPatterns().length;
 
   const shapeHtml = `<section class="card g-shape">
-    <div class="card-head"><h2>How a sentence is built</h2>
+    <div class="card-head"><h2>How a sentence is built</h2><span class="count">tap a part to hear it</span>
       <button class="link" data-act="say" data-say="${esc(furiKana(SHAPE_SENTENCE))}">${icon("speaker")} Hear it</button></div>
     <div class="g-chunks" lang="ja">${shape.chunks.map(([jp, role, note], i) => `
-      <div class="g-chunk ${i === shape.chunks.length - 1 ? "verb" : ""}"><span class="g-jp">${wordHtml(jp)}</span>
-        <span class="g-role">${esc(role)}</span>${note ? `<small>${esc(note)}</small>` : ""}</div>`).join("")}</div>
+      <button class="g-chunk ${i === shape.chunks.length - 1 ? "verb" : ""}" data-act="say" data-say="${esc(furiKana(jp))}"><span class="g-jp">${wordHtml(jp)}</span>
+        <span class="g-role">${esc(role)}</span>${note ? `<small>${esc(note)}</small>` : ""}</button>`).join("")}</div>
     <p class="g-en">${esc(shape.en)}</p>
     <ul class="g-points">${shape.points.map(p => `<li>${richHtml(p)}</li>`).join("")}</ul>
   </section>`;
@@ -35,10 +35,10 @@ function renderGrammar() {
   </section>`;
 
   const endingsHtml = `<section class="card">
-    <div class="card-head"><h2>Endings at a glance</h2><span class="count">polite forms — what you'd say to a stranger</span></div>
+    <div class="card-head"><h2>Endings at a glance</h2><span class="count">polite forms — what you'd say to a stranger · tap to hear</span></div>
     <div class="g-table-wrap"><table class="g-table">
       <thead><tr><th></th><th>now</th><th>not</th><th>past</th><th>past, not</th></tr></thead>
-      <tbody>${ENDINGS.map(([kind, a, b, c, d, ex]) => `<tr><th>${esc(kind)}<small lang="ja">${wordHtml(ex)}</small></th>${[a, b, c, d].map(x => `<td lang="ja">${esc(x)}</td>`).join("")}</tr>`).join("")}</tbody>
+      <tbody>${ENDINGS.map(([kind, a, b, c, d, ex, forms]) => `<tr><th>${esc(kind)}<small lang="ja">${wordHtml(ex)}</small></th>${[a, b, c, d].map((x, i) => `<td lang="ja"><button class="g-form" data-act="say" data-say="${esc(furiKana(forms[i]))}"><span class="g-end">${esc(x)}</span><small>${wordHtml(forms[i])}</small></button></td>`).join("")}</tr>`).join("")}</tbody>
     </table></div>
     <p class="muted small">The casual forms friends use — <span lang="ja">${wordHtml("{行|い}く, {行|い}かない, {行|い}った")}</span> — come in stage 10.</p>
   </section>`;
@@ -67,9 +67,10 @@ function renderGrammar() {
       ${learnedN ? `<button class="btn cta" data-act="deeper" data-kind="g">Practise the patterns you know</button>` : ""}
     </div>
     <div class="g-grid">
-      <div>${shapeHtml}${endingsHtml}</div>
+      <div>${shapeHtml}</div>
       <div>${particlesHtml}</div>
     </div>
+    ${endingsHtml}
     <h2 class="g-sub">All the patterns</h2>
     ${patternsHtml}`;
 }
