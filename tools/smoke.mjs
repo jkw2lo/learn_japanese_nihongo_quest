@@ -664,6 +664,7 @@ section('patterns');
     strings.forEach(str => run(`furiKanji(${JSON.stringify(str)})`).forEach(c =>
       ok(kanjiBy[c] && kanjiBy[c] <= st, `${key} teaching: 「${c}」 in ${str} isn't in any word by stage ${st}`)));
     ok(t.talk.length >= 2 && t.rule && t.built.parts.length >= 2, `${key}: teaching needs a conversation, a rule and a sentence in parts`);
+    ok(P.find(p => p.key === key).ex.length >= 4, `${key}: a taught pattern should have four examples or more`);
     ok(t.built.hl.length && t.built.hl.every(i => i >= 0 && i < t.built.parts.length), `${key}: the lit parts aren't parts`);
     (t.tiles || []).forEach(([tiles, en, decoys = []]) => {
       ok(tiles.length >= 3 && en, `${key}: a tile sentence needs three pieces or more and its english`);

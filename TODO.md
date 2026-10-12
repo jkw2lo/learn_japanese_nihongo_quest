@@ -98,9 +98,8 @@ Build order. Each step should run end to end before the next one starts.
    Subtitles; and a Today that leads with reading once there's enough of it.
    ~~Word search~~ (0.32.0). ~~Subtitles~~, ~~Match~~ (0.33.0). Next: Phrases
    (chains with particles), Short texts, and more sentences to read.
-10c. **Teaching grammar** (0.34.0): stages 3–4 taught in full (conversation,
-   parts, mix-up, Build it, Change it). Next: stages 5–10 (31 patterns), then
-   more examples per pattern so Subtitles has more to read.
+10c. **Teaching grammar**: stages 3–4 (0.34.0) and 5–6 (0.37.0) taught in
+   full, with four or more examples each. Next: stages 7–10 (21 patterns).
 11. **N4**: on hold. Staying at N5 for now.
 
 ## Smaller, from 0.4.0

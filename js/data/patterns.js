@@ -196,6 +196,8 @@ const PATTERNS = [
              that belong nowhere in it
      change  turn one sentence into another:
              { from, do, to, wrong: [three that look close] }
+     ex      more examples, added to the pattern's own (same shape), so a
+             taught pattern has four or more — and Subtitles more to read
    Every sentence uses only words from the pattern's stage or before (and
    kana words), and smoke.mjs checks every kanji. Stages 3 and 4 first. */
 const PATTERN_TEACH = {
@@ -208,6 +210,7 @@ const PATTERN_TEACH = {
     rule: "Say the thing first, then はいくらですか.",
     tiles: [[["コーヒー", "は", "いくら", "ですか。"], "How much is the coffee?", ["が"]],
             [["これ", "は", "いくら", "ですか。"], "How much is this?", ["を"]]],
+    ex: [["ビール«は»いくらですか。", "How much is the beer?"], ["ラーメン«は»いくらですか。", "How much is the ramen?"]],
   },
   ji: {
     talk: [["A", "すみません、{今|いま}{何時|なんじ}ですか。", "Excuse me, what time is it?"],
@@ -219,6 +222,7 @@ const PATTERN_TEACH = {
     tiles: [[["{午後|ごご}", "{三時|さんじ}", "{半|はん}", "です。"], "It's half past three in the afternoon.", ["{分|ふん}"]]],
     change: [{ from: "{三時|さんじ}です。", do: "Make it half past", to: "{三時半|さんじはん}です。",
                wrong: ["{半|はん}{三時|さんじ}です。", "{三時|さんじ}{分|ふん}です。", "{三時|さんじ}ですか。"] }],
+    ex: [["{午後|ごご}{一時|いちじ}です。", "It's one in the afternoon."], ["{今|いま}、{九時|くじ}です。", "It's nine o'clock now."]],
   },
   "wa-desu": {
     talk: [["A", "はじめまして。{私|わたし}はスミスです。", "Nice to meet you. I'm Smith."],
@@ -231,6 +235,7 @@ const PATTERN_TEACH = {
           why: "Whatever comes before は is what the sentence is about. Swap the two sides and you've said something else." },
     tiles: [[["スミスさん", "は", "{先生|せんせい}", "です。"], "Mr Smith is a teacher.", ["か"]],
             [["{私|わたし}", "は", "{会社員|かいしゃいん}", "です。"], "I'm an office worker.", ["の"]]],
+    ex: [["{私|わたし}«は»{会社員|かいしゃいん}です。", "I'm an office worker."]],
   },
   janai: {
     talk: [["A", "{先生|せんせい}ですか。", "Are you a teacher?"],
@@ -243,6 +248,7 @@ const PATTERN_TEACH = {
                wrong: ["{私|わたし}は{先生|せんせい}ですか。", "{私|わたし}じゃない{先生|せんせい}です。", "{私|わたし}は{先生|せんせい}ないです。"] },
              { from: "これはペンです。", do: "Make it not", to: "これはペンじゃないです。",
                wrong: ["これはペンですか。", "これじゃないペンです。", "これはペンないです。"] }],
+    ex: [["{私|わたし}は{日本人|にほんじん}«じゃないです»。", "I'm not Japanese."], ["あの{人|ひと}は{先生|せんせい}«じゃないです»。", "That person isn't a teacher."]],
   },
   desuka: {
     talk: [["A", "{日本人|にほんじん}ですか。", "Are you Japanese?"],
@@ -258,6 +264,7 @@ const PATTERN_TEACH = {
             [["{名前|なまえ}", "は", "{何|なん}", "ですか。"], "What's your name?", ["だれ"]]],
     change: [{ from: "スミスさんは{先生|せんせい}です。", do: "Make it a question", to: "スミスさんは{先生|せんせい}ですか。",
                wrong: ["スミスさんは{先生|せんせい}じゃないです。", "かスミスさんは{先生|せんせい}です。", "スミスさんか{先生|せんせい}です。"] }],
+    ex: [["{日本人|にほんじん}です«か»。", "Are you Japanese?"], ["{名前|なまえ}は{何|なん}です«か»。", "What's your name?"]],
   },
   no: {
     talk: [["A", "これはだれのペンですか。", "Whose pen is this?"],
@@ -270,6 +277,7 @@ const PATTERN_TEACH = {
           why: "After の is what it is — a teacher, both times. Before の says which kind." },
     tiles: [[["{私|わたし}", "の", "{友達|ともだち}", "です。"], "This is my friend.", ["は"]],
             [["{私|わたし}", "の", "{名前|なまえ}", "は", "スミス", "です。"], "My name is Smith.", ["が"]]],
+    ex: [["{私|わたし}«の»{名前|なまえ}はキムです。", "My name is Kim."], ["{英語|えいご}«の»{先生|せんせい}です。", "I'm an English teacher."]],
   },
   kono: {
     talk: [["A", "この{人|ひと}はだれですか。", "Who is this person?"],
@@ -283,6 +291,7 @@ const PATTERN_TEACH = {
           why: "この needs a noun after it — この{人|ひと}. これ stands on its own — これは… その/それ and あの/あれ work the same way." },
     tiles: [[["あの", "{人|ひと}", "は", "だれ", "ですか。"], "Who is that person over there?", ["あれ"]],
             [["この", "ペン", "は", "{私|わたし}", "の", "です。"], "This pen is mine.", ["これ"]]],
+    ex: [["«その»ペンは{私|わたし}のです。", "That pen is mine."], ["«この»{人|ひと}は{先生|せんせい}です。", "This person is a teacher."]],
   },
   mo: {
     talk: [["A", "{私|わたし}は{学生|がくせい}です。", "I'm a student."],
@@ -295,6 +304,7 @@ const PATTERN_TEACH = {
     tiles: [[["スミスさん", "も", "{先生|せんせい}", "です。"], "Mr Smith is a teacher too.", ["は"]]],
     change: [{ from: "{私|わたし}は{日本人|にほんじん}です。", do: "Say it's true of you too", to: "{私|わたし}も{日本人|にほんじん}です。",
                wrong: ["{私|わたし}はも{日本人|にほんじん}です。", "{私|わたし}は{日本人|にほんじん}もです。", "{私|わたし}の{日本人|にほんじん}です。"] }],
+    ex: [["キムさん«も»{学生|がくせい}です。", "Kim is a student too."], ["これ«も»{日本|にほん}のペンです。", "This is a Japanese pen too."]],
   },
   suki: {
     talk: [["A", "{日本語|にほんご}が{好|す}きですか。", "Do you like Japanese?"],
@@ -307,6 +317,155 @@ const PATTERN_TEACH = {
     tiles: [[["{日本語|にほんご}", "が", "{好|す}き", "です。"], "I like Japanese.", ["を"]]],
     change: [{ from: "ねこが{好|す}きです。", do: "Make it a question", to: "ねこが{好|す}きですか。",
                wrong: ["ねこを{好|す}きですか。", "ねこが{好|す}きじゃないです。", "ねこか{好|す}きです。"] }],
+    ex: [["コーヒー«が»{好|す}きです。", "I like coffee."], ["あなたはねこ«が»{好|す}きですか。", "Do you like cats?"]],
+  },
+  /* ---- stage 5: food and ordering ---- */
+  "o-kudasai": {
+    talk: [["A", "すみません、お{水|みず}をください。", "Excuse me, some water, please."],
+           ["B", "はい、どうぞ。", "Here you are."],
+           ["A", "ありがとうございます。", "Thank you."]],
+    built: { parts: [["コーヒー", "what you want"], ["を", "marks what you're asking for"], ["ください", "please give me"]],
+             hl: [1, 2], en: "A coffee, please." },
+    rule: "The thing, を, ください. For how many, the number goes after を, right before ください: ビールを{二|ふた}つください.",
+    vs: { a: ["コーヒーをください。", "A coffee, please."], b: ["コーヒーを{二|ふた}つください。", "Two coffees, please."],
+          why: "The number doesn't go in front of the thing, as in English — it sits between を and ください." },
+    tiles: [[["お{茶|ちゃ}", "を", "ください。"], "Tea, please.", ["は"]],
+            [["ラーメン", "を", "{一|ひと}つ", "ください。"], "One ramen, please.", ["が"]]],
+    change: [{ from: "コーヒーをください。", do: "Ask for two", to: "コーヒーを{二|ふた}つください。",
+               wrong: ["コーヒーをください{二|ふた}つ。", "コーヒーを{二|に}ください。", "コーヒーの{二|ふた}つください。"] }],
+    ex: [["ジュース«を»ください。", "Juice, please."], ["サラダ«を»{一|ひと}つください。", "One salad, please."]],
+  },
+  "o-masu": {
+    talk: [["A", "{朝|あさ}ご{飯|はん}、なにを{食|た}べますか。", "What do you have for breakfast?"],
+           ["B", "パンを{食|た}べます。コーヒーも{飲|の}みます。", "I eat bread. I drink coffee too."]],
+    built: { parts: [["パン", "bread"], ["を", "marks what's eaten"], ["{食|た}べます", "eat"]],
+             hl: [1], en: "I eat bread." },
+    rule: "を marks the thing a verb is done to, and the verb comes last, in its ます form.",
+    vs: { a: ["お{茶|ちゃ}を{飲|の}みます。", "I drink tea."], b: ["お{茶|ちゃ}が{好|す}きです。", "I like tea."],
+          why: "A verb you do to something takes を. {好|す}き isn't something you do to the tea — it takes が." },
+    tiles: [[["{水|みず}", "を", "{飲|の}みます。"], "I drink water.", ["が"]],
+            [["{私|わたし}", "は", "{魚|さかな}", "を", "{食|た}べます。"], "I eat fish.", ["が"]]],
+    change: [{ from: "パンを{食|た}べます。", do: "Make it a question", to: "パンを{食|た}べますか。",
+               wrong: ["パンを{食|た}べか。", "パンか{食|た}べます。", "かパンを{食|た}べます。"] }],
+    ex: [["{野菜|やさい}«を»{食|た}べます。", "I eat vegetables."], ["ジュース«を»{飲|の}みます。", "I drink juice."]],
+  },
+  masen: {
+    talk: [["A", "{肉|にく}を{食|た}べますか。", "Do you eat meat?"],
+           ["B", "いいえ、{肉|にく}は{食|た}べません。{魚|さかな}を{食|た}べます。", "No, I don't eat meat. I eat fish."]],
+    built: { parts: [["ビール", "beer"], ["を", "the thing"], ["{飲|の}み", "drink"], ["ません", "don't"]],
+             hl: [3], en: "I don't drink beer." },
+    rule: "Swap ます for ません to say you don't. Nothing else changes.",
+    vs: { a: ["{学生|がくせい}じゃないです。", "I'm not a student."], b: ["{肉|にく}を{食|た}べません。", "I don't eat meat."],
+          why: "じゃないです is for nouns and です. A verb makes its own not: ます becomes ません." },
+    tiles: [[["{私|わたし}", "は", "{卵|たまご}", "を", "{食|た}べません。"], "I don't eat eggs.", ["{食|た}べます。"]]],
+    change: [{ from: "{肉|にく}を{食|た}べます。", do: "Make it not", to: "{肉|にく}を{食|た}べません。",
+               wrong: ["{肉|にく}を{食|た}べじゃないです。", "{肉|にく}を{食|た}べますん。", "{肉|にく}じゃない{食|た}べます。"] }],
+    ex: [["コーヒーを{飲|の}み«ません»。", "I don't drink coffee."], ["{朝|あさ}ご{飯|はん}を{食|た}べ«ません»。", "I don't eat breakfast."]],
+  },
+  mashita: {
+    talk: [["A", "{昨日|きのう}、なにを{食|た}べましたか。", "What did you eat yesterday?"],
+           ["B", "すしを{食|た}べました。", "I ate sushi."],
+           ["A", "{私|わたし}もすしを{食|た}べました。", "I ate sushi too."]],
+    built: { parts: [["{昨日|きのう}、", "yesterday"], ["{魚|さかな}", "fish"], ["を", "the thing"], ["{食|た}べ", "eat"], ["ました", "did"]],
+             hl: [4], en: "I ate fish yesterday." },
+    rule: "ます becomes ました for the past; ません becomes ませんでした for didn't.",
+    vs: { a: ["{食|た}べました。", "I ate."], b: ["{食|た}べませんでした。", "I didn't eat."],
+          why: "The past of ません isn't ませんました — it's ませんでした." },
+    tiles: [[["{昨日|きのう}", "ビール", "を", "{飲|の}みました。"], "I drank beer yesterday.", ["{飲|の}みます。"]]],
+    change: [{ from: "コーヒーを{飲|の}みます。", do: "Make it the past", to: "コーヒーを{飲|の}みました。",
+               wrong: ["コーヒーを{飲|の}みますでした。", "コーヒーを{飲|の}みでした。", "コーヒーを{飲|の}みましだ。"] },
+             { from: "{朝|あさ}ご{飯|はん}を{食|た}べません。", do: "Make it the past", to: "{朝|あさ}ご{飯|はん}を{食|た}べませんでした。",
+               wrong: ["{朝|あさ}ご{飯|はん}を{食|た}べませんました。", "{朝|あさ}ご{飯|はん}を{食|た}べましたん。", "{朝|あさ}ご{飯|はん}を{食|た}べないでした。"] }],
+    ex: [["{今日|きょう}、{野菜|やさい}を{食|た}べ«ました»。", "I ate vegetables today."], ["お{茶|ちゃ}を{飲|の}み«ませんでした»。", "I didn't drink tea."]],
+  },
+
+  /* ---- stage 6: getting around ---- */
+  "ni-iku": {
+    talk: [["A", "どこに{行|い}きますか。", "Where are you going?"],
+           ["B", "{駅|えき}に{行|い}きます。", "To the station."],
+           ["A", "{私|わたし}も{駅|えき}に{行|い}きます。", "I'm going to the station too."]],
+    built: { parts: [["{駅|えき}", "the station"], ["に", "to — where you're heading"], ["{行|い}きます", "go"]],
+             hl: [1], en: "I'm going to the station." },
+    rule: "Where you're going, に, then a verb of going: {行|い}きます, {来|き}ます, {帰|かえ}ります.",
+    vs: { a: ["{駅|えき}に{行|い}きます。", "I'm going to the station."], b: ["{駅|えき}で{待|ま}ちます。", "I'll wait at the station."],
+          why: "に is where you're heading. で is where something happens." },
+    tiles: [[["{明日|あした}", "{日本|にほん}", "に", "{行|い}きます。"], "I'm going to Japan tomorrow.", ["で"]],
+            [["ホテル", "に", "{帰|かえ}ります。"], "I'm going back to the hotel.", ["を"]]],
+    change: [{ from: "{駅|えき}に{行|い}きます。", do: "Make it the past", to: "{駅|えき}に{行|い}きました。",
+               wrong: ["{駅|えき}に{行|い}きでした。", "{駅|えき}を{行|い}きました。", "{駅|えき}に{行|い}きませんでした。"] }],
+    ex: [["スーパー«に»{行|い}きます。", "I'm going to the supermarket."], ["{日本|にほん}«に»{来|き}ました。", "I came to Japan."]],
+  },
+  "de-means": {
+    talk: [["A", "{何|なん}で{行|い}きますか。", "How are you going?"],
+           ["B", "{地下鉄|ちかてつ}で{行|い}きます。", "By subway."],
+           ["A", "{私|わたし}はバスで{行|い}きます。", "I'm going by bus."]],
+    built: { parts: [["{電車|でんしゃ}", "the train"], ["で", "by — how"], ["{行|い}きます", "go"]],
+             hl: [1], en: "I'll go by train." },
+    rule: "で after something says how: by train, by bus, in English — {英語|えいご}で.",
+    vs: { a: ["{電車|でんしゃ}で{行|い}きます。", "I'll go by train."], b: ["{電車|でんしゃ}に{乗|の}ります。", "I'll get on the train."],
+          why: "で is how you go. With {乗|の}ります, the thing you get on takes に." },
+    tiles: [[["{地下鉄|ちかてつ}", "で", "{帰|かえ}ります。"], "I'll go home by subway.", ["に"]],
+            [["タクシー", "で", "ホテル", "に", "{行|い}きます。"], "I'll go to the hotel by taxi.", ["を"]]],
+    ex: [["{英語|えいご}«で»おねがいします。", "In English, please."], ["{地下鉄|ちかてつ}«で»{来|き}ました。", "I came by subway."]],
+  },
+  "de-place": {
+    talk: [["A", "どこで{待|ま}ちますか。", "Where shall we wait?"],
+           ["B", "{駅|えき}の{出口|でぐち}で{待|ま}ちます。", "At the station exit."],
+           ["A", "わかりました。", "OK."]],
+    built: { parts: [["{店|みせ}", "the restaurant"], ["で", "at — where it happens"], ["ご{飯|はん}", "a meal"], ["を", "the thing"], ["{食|た}べます", "eat"]],
+             hl: [1], en: "I'll eat at the restaurant." },
+    rule: "で marks where something is done. Going there is に; doing something there is で.",
+    vs: { a: ["レストランに{行|い}きます。", "I'm going to the restaurant."], b: ["レストランで{食|た}べます。", "I'll eat at the restaurant."],
+          why: "The same place takes に when you go there and で when you do something there." },
+    tiles: [[["{駅|えき}", "で", "{待|ま}ちます。"], "I'll wait at the station.", ["に"]],
+            [["カフェ", "で", "コーヒー", "を", "{飲|の}みます。"], "I drink coffee at a café.", ["に"]]],
+    change: [{ from: "{駅|えき}で{待|ま}ちます。", do: "Make it a question", to: "{駅|えき}で{待|ま}ちますか。",
+               wrong: ["{駅|えき}か{待|ま}ちます。", "{駅|えき}で{待|ま}ちか。", "{駅|えき}に{待|ま}ちますか。"] }],
+    ex: [["ホテル«で»{朝|あさ}ご{飯|はん}を{食|た}べます。", "I eat breakfast at the hotel."], ["{店|みせ}«で»{待|ま}ちます。", "I'll wait at the shop."]],
+  },
+  doko: {
+    talk: [["A", "すみません、{駅|えき}はどこですか。", "Excuse me, where's the station?"],
+           ["B", "あそこです。まっすぐです。", "Over there. Straight ahead."],
+           ["A", "ありがとうございます。", "Thank you."]],
+    built: { parts: [["トイレ", "the toilet"], ["は", "what you're asking about"], ["どこ", "where"], ["です", "is"], ["か", "makes it a question"]],
+             hl: [1, 2, 3, 4], en: "Where's the toilet?" },
+    rule: "The place, はどこですか. The answer puts the place where どこ was: ここです, あそこです, {右|みぎ}です.",
+    vs: { a: ["{出口|でぐち}はどこですか。", "Where's the exit?"], b: ["ここはどこですか。", "Where am I? (Where is here?)"],
+          why: "Whatever comes before は is what you want the place of." },
+    tiles: [[["{入口|いりぐち}", "は", "どこ", "ですか。"], "Where's the entrance?", ["だれ"]],
+            [["{切符|きっぷ}", "は", "どこ", "ですか。"], "Where are the tickets?", ["が"]]],
+    change: [{ from: "{駅|えき}はどこですか。", do: "Answer: it's over there", to: "{駅|えき}はあそこです。",
+               wrong: ["{駅|えき}はどこあそこです。", "{駅|えき}はあそこですか。", "あそこは{駅|えき}どこです。"] }],
+    ex: [["{地下鉄|ちかてつ}の{駅|えき}«は»どこですか。", "Where's the subway station?"], ["{出口|でぐち}«は»{右|みぎ}です。", "The exit is on the right."]],
+  },
+  "ni-noru": {
+    talk: [["A", "この{電車|でんしゃ}に{乗|の}りますか。", "Are you getting on this train?"],
+           ["B", "いいえ、あの{電車|でんしゃ}に{乗|の}ります。", "No, I'm getting on that one."],
+           ["A", "わかりました。", "I see."]],
+    built: { parts: [["{電車|でんしゃ}", "the train"], ["に", "onto"], ["{乗|の}ります", "get on; ride"]],
+             hl: [1], en: "I get on the train." },
+    rule: "What you ride takes に, not を: {電車|でんしゃ}に{乗|の}ります. Getting off is {降|お}ります, and what you leave takes を.",
+    vs: { a: ["バスに{乗|の}ります。", "I get on the bus."], b: ["バスを{降|お}ります。", "I get off the bus."],
+          why: "On is に. Off is を — the bus is what you leave." },
+    tiles: [[["{地下鉄|ちかてつ}", "に", "{乗|の}ります。"], "I take the subway.", ["を"]],
+            [["{駅|えき}", "で", "{電車|でんしゃ}", "を", "{降|お}ります。"], "I get off the train at the station.", ["に"]]],
+    change: [{ from: "タクシーに{乗|の}ります。", do: "Make it the past", to: "タクシーに{乗|の}りました。",
+               wrong: ["タクシーを{乗|の}りました。", "タクシーに{乗|の}りましだ。", "タクシーに{乗|の}りませんでした。"] }],
+    ex: [["バス«に»{乗|の}ります。", "I'll take the bus."], ["{電車|でんしゃ}«を»{降|お}ります。", "I get off the train."]],
+  },
+  "ni-time": {
+    talk: [["A", "{何時|なんじ}に{行|い}きますか。", "What time are you going?"],
+           ["B", "{三時|さんじ}に{行|い}きます。", "At three."],
+           ["A", "わかりました。{駅|えき}で{待|ま}ちます。", "OK. I'll wait at the station."]],
+    built: { parts: [["{七時|しちじ}", "seven o'clock"], ["に", "at — a time"], ["{帰|かえ}ります", "go home"]],
+             hl: [1], en: "I'll go home at seven." },
+    rule: "A clock time takes に. {今日|きょう}, {明日|あした} and {毎日|まいにち} don't: {明日|あした}{行|い}きます.",
+    vs: { a: ["{三時|さんじ}に{行|い}きます。", "I'll go at three."], b: ["{明日|あした}{行|い}きます。", "I'll go tomorrow."],
+          why: "に goes after a clock time, but not after today, tomorrow or every day." },
+    tiles: [[["{午後|ごご}", "{四時|よじ}", "に", "{来|き}ます。"], "I'll come at four in the afternoon.", ["で"]]],
+    change: [{ from: "{明日|あした}{来|き}ます。", do: "Say nine o'clock instead", to: "{九時|くじ}に{来|き}ます。",
+               wrong: ["{九時|きゅうじ}に{来|き}ます。", "{九時|くじ}で{来|き}ます。", "{九時|くじ}を{来|き}ます。"] }],
+    ex: [["{十時|じゅうじ}«に»{駅|えき}に{行|い}きます。", "I'll go to the station at ten."], ["{毎日|まいにち}{六時|ろくじ}«に»{帰|かえ}ります。", "I go home at six every day."]],
   },
 };
 
@@ -315,6 +474,7 @@ const PATTERN_TEACH = {
 const dropGap = s => s.replace(/[«»]/g, "");
 PATTERNS.forEach(p => {
   p.key = "g:" + p.id;
+  if (PATTERN_TEACH[p.id]?.ex) p.ex = [...p.ex, ...PATTERN_TEACH[p.id].ex];
   p.ex = p.ex.map(([jp, en, alts]) => {
     const gap = (jp.match(/«([^»]+)»/) || [])[1] || null;
     return { jp: dropGap(jp), en, gap, gapped: jp, kana: furiKana(dropGap(jp)), alts: alts || null };
