@@ -6,7 +6,7 @@ holding a simple conversation. It starts from nothing and runs to JLPT N5,
 then on towards N4. Writing is there if you want it and never in the way if
 you don't.
 
-> **Status: all of N5 is built (0.13.0).** The kana stage, then 456 words
+> **Status: all of N5 is built (0.13.0).** The kana stage, then 580 words
 > in nine stages (phrases, numbers and money, me and you, food, getting
 > around, shopping, daily life, the て-form, and an N5 wrap-up), 40 grammar
 > patterns, 131 kanji (74 N5, 57 N4) taught through the words, verbs and
@@ -267,7 +267,7 @@ a note, and example sentences for many.
   but the kana stage is gated the whole way through (hiragana cemented
   before katakana), so words wait for the last kana too.
 - **Five a day**, under the same **New kana a day** allowance, which counts
-  words once kana are done. There are 456 words in nine stages, in lessons of five:
+  words once kana are done. There are 580 words in nine stages, in lessons of five:
   - **2 · あいさつ** survival phrases (24)
   - **3 · 数** numbers, time and money (84): counting, the clock, the days
     of the week, months and dates (the irregular ついたち to とおか, and
@@ -279,8 +279,11 @@ a note, and example sentences for many.
   - **6 · 行く** getting around (80): trains, platforms and lines, places
     in town, on/under/behind/next to, the compass, sixteen verbs, and the
     particles に, で and へ
-  - **7 · 買う** shopping (26): い- and な-adjectives, colours, ある and いる
-  - **8 · 毎日** daily life (26): everyday verbs, how often, と, から, まで
+  - **7 · 買う** shopping (89): い- and な-adjectives, colours, ある and いる;
+    clothes and the verb each one takes, stationery, shops, counters for
+    flat and small things
+  - **8 · 毎日** daily life (87): everyday verbs, how often, と, から, まで;
+    the home, chores, school and free time, もう and まだ
   - **9 · て形** the て-form (20): the verbs you ask people to do
   - **10 · まとめ** wrapping up N5 (20): weather, feelings, the calendar
 
@@ -1068,6 +1071,16 @@ the konbini's does, and the smoke test checks both.
   wide layout: the timetable's destinations wrapped a character at a time
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
+
+### 0.45.0: More words — shopping and the everyday
+
+- **124 new words** in stages 7 and 8 (580 in all), the third of four
+  batches. Shopping: paying, looking for and choosing; clothes, each with
+  its own verb for wearing (着る, 履く, かぶる); 貸す and 借りる; shops,
+  prices, sales and discounts; 枚 and 個; more colours and describing
+  words. Then the day: washing, cleaning and laundry; starting and
+  finishing; the rooms and things of a home; school and free time; and
+  the little words of time — もう, まだ, すぐ, また, 初めて.
 
 ### 0.44.0: More words — eating out and getting around
 
@@ -2061,7 +2074,7 @@ you like.
     js/audio-kana.js        generated clips — do not hand-edit
     js/strokes.js           generated stroke data — do not hand-edit
     js/furi.js              furigana markup: parse, check, render, derive kana
-    js/data/words.js        stages 2–10: 456 words, their stages, lessons of five
+    js/data/words.js        stages 2–10: 580 words, their stages, lessons of five
     js/data/patterns.js     40 grammar patterns, placed after their stage's words
     js/data/grammar.js      the Grammar tab's reference: sentence shape, particles, endings
     js/grammar-ui.js        the Grammar tab

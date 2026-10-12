@@ -22,11 +22,11 @@ const ASSET_HASH = {
   "audio-s2":["e5e1947d74",83947],
   "audio-s3":["418a3f073e",373364],
   "audio-s4":["bb8873ec33",601434],
-  "audio-s5":["a1f9bf2ed1",736882],
-  "audio-s6":["f6a0ba52bd",951162],
-  "audio-s7":["ae7bb38f98",779928],
-  "audio-s8":["fbcb159b02",655537],
-  "audio-s9":["9a6a55a466",706704],
+  "audio-s5":["d727f8b9f1",736739],
+  "audio-s6":["a92507b8ba",951146],
+  "audio-s7":["bac1c3fef8",1406379],
+  "audio-s8":["9323e259db",1325557],
+  "audio-s9":["7b85ccbd15",685815],
   "strokes":["e1a2aa900d",187975]
 };
 const assetUrl = name => `js/${name}.js?h=${ASSET_HASH[name] ? ASSET_HASH[name][0] : APP_VERSION}`;
