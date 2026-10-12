@@ -394,6 +394,9 @@ function handIn(finished) {
   const total = SP.qs.length;
   const res = { right, total, ms: Math.round(ms), finished };
   const newBest = recordSprint(SP.key, res);
+  /* coins (遊ぶ Games): half a coin a right answer (up to 30), three for
+     finishing in time and three for a best */
+  const paid = earnCoins(Math.min(30, right / 2) + (finished ? 3 : 0) + (newBest ? 3 : 0));
   save();
   crumb(`sprint done ${right}/${total}${finished ? "" : " timeout"}`);
 
@@ -410,6 +413,7 @@ function handIn(finished) {
     <div class="finish-big">${right}<small>/${total}</small></div>
     ${SP.ans.some(a => a?.near) ? `<div class="muted small sp-near-n">${icon("tri", "v-ico sp-pop-tri")} ${SP.ans.filter(a => a?.near).length} nearly — not counted right, and not mistakes</div>` : ""}
     ${newBest ? `<div class="badge-best">New best on this sheet</div>` : ""}
+    ${paid}
     <div class="sp-review ${isWordMode(SP.mode) ? "words" : ""}">${SP.qs.map((q, i) => {
       const a = SP.ans[i];
       const cls = ansCls(a);

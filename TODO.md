@@ -104,10 +104,9 @@ Build order. Each step should run end to end before the next one starts.
    stages 3–4 (0.43.0, 341 words), 5–6 (0.44.0, 456), 7–8 (0.45.0, 580),
    9–10 (0.46.0, 692); texts and phrases that use them (0.47.0).
 10e. ~~**遊ぶ Games and the capsule machine**~~ (0.48.0): coins from every
-   game, 60 toys in three sets. Next games: **忍者 Ninja slice** (kana fly
-   up; slice the targets, spare the look-alike bombs) and a **swipe deck**
-   (a word in the middle, a looping deck of eight meanings: left/right to
-   pass, up to answer). More sets when the three are done.
+   game, 60 toys in three sets. ~~Ninja slice~~ and ~~the Swipe deck~~
+   (0.49.0); Read rounds and sprints pay too. Next: more sets when the
+   three are done; more games (かなWordle, a ramen shop, bingo).
 11. **N4**: on hold. Staying at N5 for now.
 
 ## Smaller, from 0.4.0

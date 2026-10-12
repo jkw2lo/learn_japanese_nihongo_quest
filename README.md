@@ -1076,6 +1076,17 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.49.0: Ninja slice, the Swipe deck, and coins everywhere
+
+- **忍者 Ninja slice**: kana fly up; slice what each wave asks for — a
+  sound, a row, a script or a meaning — and spare the look-alike bombs.
+  Three lives, combos, waves that speed up.
+- **めくる Swipe deck**: a word on top, a looping deck of eight answers
+  underneath; swipe left or right to pass, up for “this one”. A wrong one
+  burns. Word → meaning, meaning → word, or kana → sound.
+- **Every Read round and every sprint pays coins** too, a little less than
+  the games.
+
 ### 0.48.0: 遊ぶ Games, and a capsule machine
 
 - **A Games tab**, beside Read, with Word search and Match moved into it.
@@ -1598,15 +1609,47 @@ faster time). Record shows them beside the sprints.
 
 ## 遊ぶ Games
 
-Its own tab (0.48.0), beside Read: **Word search** and **Match** (above),
-with more to come, and the reason to play them — **coins** and a
-**capsule machine** (ガチャガチャ, the toy vending machines outside every
-Japanese shop).
+Its own tab (0.48.0), beside Read: **忍者 Ninja slice** and the **めくる
+Swipe deck** (0.49.0, `js/arcade-ui.js`), **Word search** and **Match**
+(above) — and the reason to play them, **coins** and a **capsule
+machine** (ガチャガチャ, the toy vending machines outside every Japanese
+shop).
+
+**忍者 Ninja slice.** Kana — and words, once there are words — fly up a
+dark field in arcs, and a drag is a blade. Five waves, each with its own
+target: **a sound** (*slice every ka*, said aloud, the kana never shown),
+**a row** (*the か row*), **a script** (*only katakana*) or, past the
+kana, **a meaning** (*slice delicious*). About two in five of what flies
+are targets; the rest are the bombs, and for a sound they're its
+look-alikes (`KANA_ALIKE`: さ for ち, ソ for ン) twice over. Slicing a bomb
+costs one of three lives; a target missed costs nothing but the points.
+Several targets in one stroke is a combo. Waves come faster as the round
+goes. The end lists what was sliced by mistake, and for what (いえ *not*
+みせ). Nothing is graded — it's an arcade — but the best score is kept.
+The waves are pure (`ninjaWave`), and smoke checks a bomb is never a target.
+
+**めくる Swipe deck.** A word in the middle, a deck of answers underneath —
+eight cards, one right, looping, so there's never a hundred to go
+through. Swipe the top card left or right to pass (left goes back one,
+right on one: both pass), up for *this one* (or ← → ↑ / ↵, or the
+buttons). A wrong one is burned out of the loop (an amber ring in the
+dots) and the deck goes on; points are ten less a point a swipe, so
+knowing it fast pays. Three decks: **word → meaning**, **meaning →
+word** (a deck of Japanese) and **kana → sound** (for the kana stage;
+decoys from its row and its look-alikes). Ten a round; the first *this
+one* on each is graded like a sprint answer. Every deck holds its answer
+exactly once — smoke deals hundreds to be sure.
 
 - **Every game pays.** Word search: two coins a word, four more without a
   hint, four for a best, one per bonus word — about twenty for an 8×8.
   Match: a coin a word right first time, five for no slips, four for a
-  best. The end screen says so, with a way to the machine (`earnCoins`).
+  best. Ninja slice: most of a coin a slice, five for keeping every life,
+  four for a best. Swipe deck: two for each found at the first try, four
+  for a best. **The Read tab and Sprint pay too**, a little less: a coin a
+  line right (one and a half for texts and phrases), three for a best; a
+  sprint, half a coin a right answer (up to 30), three for finishing in
+  time, three for a best. The end screen says so, with a way to the
+  machine (`earnCoins`).
 - **A turn costs 20** (`SPIN_COST`); the first is free, so the machine
   shows what it does before it asks. The handle turns, the dome jiggles,
   a capsule drops; it opens in the middle of the screen with a tap — its
@@ -2161,6 +2204,7 @@ you like.
     js/sprint.js            the Sprint tab
     js/read-ui.js           the Read tab: Subtitles, Word chains, Phrases, Short texts; and Match and Word search, played from Games
     js/games-ui.js          the Games tab: coins, the capsule machine, the shelves
+    js/arcade-ui.js         Ninja slice and the Swipe deck
     js/data/toys.js         the capsule toys: sets, names, the machine's odds
     js/toys-art.js          the toys drawn, the machine, a capsule, a coin
     design/toys.html        every toy on one page, for drawing more

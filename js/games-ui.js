@@ -1,8 +1,10 @@
 /* Nihongo Quest — 遊ぶ Games: the games, the coins they pay, and the
    capsule machine those coins turn (README → Games).
 
-   Word search and Match are played in the Read tab's overlay (read-ui.js);
-   they only live here. Each pays coins as it ends (earnCoins); a turn of the
+   The games — Ninja slice and the Swipe deck (arcade-ui.js), Word search
+   and Match (read-ui.js) — play in the Read tab's overlay; they only live
+   here. Each pays coins as it ends (earnCoins), and so do the Read tab's
+   rounds and every sprint, a little less; a turn of the
    machine costs SPIN_COST and drops a capsule from the set being collected
    (js/data/toys.js); the toy goes on the shelf, under its name. A full shelf
    opens the next set. state.gacha:
@@ -49,6 +51,8 @@ function renderGames() {
       <button class="btn gm-turn" data-act="ga-spin" ${canSpin() && !gaBusy ? "" : "disabled"}>${spinFree() ? "Turn the handle — the first one's free" : `Turn the handle · ${coinArt()} ${SPIN_COST}`}</button>
       ${!canSpin() ? `<p class="muted small">${SPIN_COST - coins()} more coins for a turn — a game pays about twenty.</p>` : ""}
     </section>
+    ${ninjaCard()}
+    ${deckCard()}
     ${searchCard(pool)}
     ${matchCard(pool)}
     ${shelfHtml()}
@@ -187,5 +191,5 @@ Object.assign(ACTS, {
   "ga-hear": el => { const t = TOY_BY[el.dataset.t]; if (t) { say(furiKana(t.w)); el.classList.remove("bounce"); void el.offsetWidth; el.classList.add("bounce"); } },
   "ga-shelf": el => { gaShelf = el.dataset.s; const s = $("#gmShelves"); if (s) s.outerHTML = shelfHtml(); },
   "ga-done-close": () => { $("#gaDone")?.remove(); gaShelf = null; render(); },
-  "ga-go": () => { closeRead(); go("games"); },
+  "ga-go": () => { closeRead(); if (typeof SP !== "undefined" && SP) ACTS["sp-close"](); go("games"); },
 });

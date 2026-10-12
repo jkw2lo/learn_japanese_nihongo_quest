@@ -201,13 +201,17 @@ let RD = null;           /* the round being played */
 
 function openRead(rung) {
   const pool = readPool();
-  if (pool.length < 6) return;
+  /* the arcade games bring their own (kana, before there are words) */
+  if (pool.length < 6 && rung !== "ninja" && rung !== "deck") return;
   RD = { rung, pool, i: 0, res: [], t0: performance.now(), done: false };
   crumb(`read ${rung}`);
+  $("#rdPace").textContent = "";
   $("#read").classList.add("on");
   document.body.style.overflow = "hidden";
   if (rung === "search") return searchOpen();
   if (rung === "match") return matchOpen();
+  if (rung === "ninja") return ninjaOpen();
+  if (rung === "deck") return deckOpen();
   if (rung === "subs") {
     const s = state.read.subs;
     Object.assign(RD, { cps: s.cps, cps0: s.cps, len: s.len, n: SUBS_N, streak: 0, lines: subsPool(), seen: new Set() });
@@ -250,6 +254,7 @@ function rdStep() {
 function closeRead() {
   if (!RD) return;
   clearTimeout(RD.hide); clearTimeout(RD.next); clearInterval(RD.timer);
+  RD.stop?.();
   RD = null;
   $("#read").classList.remove("on");
   $("#rdBody").innerHTML = ""; $("#rdFoot").innerHTML = "";
@@ -1096,6 +1101,9 @@ function rdFinish() {
     if (cps > (r.best || 0) && RD.clean >= total / 2) { r.best = cps; best = true; }
     line = `Read at <b>${cpsText(cps)}</b> · ${RD.clean} of ${total} found clean · next time ${RD.len} words a chain`;
   }
+  /* coins (遊ぶ Games): a coin a line right — more for texts and phrases,
+     which take longer — and three for a best */
+  const paid = earnCoins(right * (RD.rung === "texts" || RD.rung === "phrases" ? 1.5 : 1) + (best ? 3 : 0));
   save();
   crumb(`read done ${RD.rung} ${right}/${total}`);
   rdStrip();
@@ -1104,6 +1112,7 @@ function rdFinish() {
     <div class="finish-big">${right}<small>/${total}</small></div>
     <p>${line}</p>
     ${best ? `<div class="badge-best">New best</div>` : ""}
+    ${paid}
   </div>`;
   if (best) petals($("#read"), 24);
   $("#rdFoot").innerHTML = `<button class="btn btn-ghost" data-act="rd-close">Done <kbd>Esc</kbd></button>
@@ -1115,6 +1124,7 @@ function readKey(e) {
   if (!RD) return false;
   if (e.key === "Escape") { e.preventDefault(); closeRead(); return true; }
   if (RD.done) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); ACTS["rd-again"](); } return true; }
+  if (typeof arcadeKey === "function" && arcadeKey(e)) return true;
   if (RD.rung === "match" && RD.one) {
     const d = { ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3 }[e.key] ?? (/^[1-4]$/.test(e.key) ? +e.key - 1 : null);
     if (d != null && !$(`.mt-t[data-i="${d}"]`)?.disabled) { e.preventDefault(); matchOne(d); }

@@ -2656,7 +2656,7 @@ button.tx-line:hover { background: color-mix(in srgb, var(--ai) 8%, transparent)
 .gm-turn { min-width: 15rem; justify-content: center; }
 .gm-turn .coin { margin: 0 2px; }
 
-.coin-gain { display: inline-flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; margin: .8rem auto 0;
+.coin-gain { display: flex; width: fit-content; max-width: 100%; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; margin: .8rem auto 0;
   padding: 6px 14px; border-radius: 999px; background: var(--gold-soft); color: var(--ink); font-size: .95rem; animation: coin-in .5s ease-out; }
 .coin-gain b { font-size: 1.1rem; }
 .coin-gain .link { font-size: .85rem; }
@@ -2709,6 +2709,77 @@ button.tx-line:hover { background: color-mix(in srgb, var(--ai) 8%, transparent)
 .ga-m { color: var(--ink-2); margin-bottom: 1rem; }
 .ga-acts { display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; }
 .ga-complete h2 { margin-top: .4rem; }
+
+/* 忍者 Ninja slice: things fly up a field; a drag is a blade */
+.nj-play { display: flex; flex-direction: column; gap: .6rem; height: 100%; min-height: calc(100dvh - 160px); }
+.nj-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.nj-prompt { font-size: 1.15rem; }
+.nj-show { font-size: 1.5rem; margin-left: .3rem; }
+.nj-lives { display: flex; gap: 6px; }
+.nj-lives i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--seal); }
+.nj-lives i.on { background: var(--seal); }
+.nj-field { position: relative; flex: 1; min-height: 340px; border-radius: 18px; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none;
+  background: linear-gradient(180deg, #2B3550, #1C2236); cursor: crosshair; }
+.nj-field.shake { animation: nj-shake .35s; }
+@keyframes nj-shake { 20% { transform: translateX(-6px) } 40% { transform: translateX(6px) } 60% { transform: translateX(-4px) } 80% { transform: translateX(3px) } }
+.nj-trail { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
+.nj-trail path { fill: none; stroke: #FFFDF8; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 6px rgba(185, 221, 240, .9)); }
+.nj-it { position: absolute; left: 0; top: 0; border-radius: 50%; display: grid; place-items: center; background: #FFFDF8; color: #1E1D1A;
+  border: 3px solid #3B342D; box-shadow: 0 4px 0 rgba(0, 0, 0, .25); font-weight: 600; line-height: 1; will-change: transform; z-index: 2; }
+.nj-it.word { border-radius: 999px; }
+.nj-it.hit, .nj-it.slip { background: none; border-color: transparent; box-shadow: none; }
+.nj-half { position: absolute; inset: 0; display: grid; place-items: center; border-radius: inherit; border: 3px solid #3B342D; background: #FFFDF8; }
+.nj-it.hit .nj-half { background: #DDF1E3; border-color: #3D7A57; }
+.nj-it.slip .nj-half { background: #F7E2BF; border-color: #A86A12; }
+.nj-half.a { clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%); transform-origin: center; animation: nj-a .6s ease-in forwards; }
+.nj-half.b { clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%); animation: nj-b .6s ease-in forwards; }
+.nj-it.hit, .nj-it.slip { rotate: var(--a); }
+@keyframes nj-a { to { transform: translateY(-26px) rotate(-18deg); opacity: 0 } }
+@keyframes nj-b { to { transform: translateY(30px) rotate(16deg); opacity: 0 } }
+.nj-banner { position: absolute; left: 50%; top: 38%; transform: translate(-50%, -50%); text-align: center; color: #FFFDF8; font-size: 1.5rem;
+  opacity: 0; pointer-events: none; z-index: 4; text-shadow: 0 2px 8px rgba(0, 0, 0, .5); white-space: nowrap; }
+.nj-banner small { display: block; font-size: .8rem; opacity: .75; letter-spacing: .08em; text-transform: uppercase; }
+.nj-banner.on { animation: nj-banner 1.6s ease-out; }
+@keyframes nj-banner { 0% { opacity: 0; transform: translate(-50%, -40%) scale(.9) } 15%, 70% { opacity: 1; transform: translate(-50%, -50%) scale(1) } 100% { opacity: 0 } }
+.nj-combo { position: absolute; z-index: 4; transform: translate(-50%, -50%); color: #F5CF52; font: 700 1.1rem var(--f-body); pointer-events: none;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, .6); animation: nj-combo .8s ease-out forwards; }
+@keyframes nj-combo { to { transform: translate(-50%, -150%); opacity: 0 } }
+.nj-score { font: 600 1.2rem var(--f-body); font-variant-numeric: tabular-nums; }
+.nj-slips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; margin: .4rem 0; }
+.nj-slips small.muted { flex-basis: 100%; }
+.nj-slips b { font-size: 1.3rem; }
+
+/* めくる Swipe deck: a word on top, a looping deck underneath */
+.dk-play { display: flex; flex-direction: column; align-items: center; gap: .6rem; padding-top: 1rem; }
+.dk-prompt { font-size: clamp(2.2rem, 9vw, 3.4rem); line-height: 1.2; text-align: center; }
+.dk-prompt.en { font: 600 clamp(1.5rem, 6vw, 2.2rem) var(--f-display); }
+.dk-hear { display: inline-flex; align-items: center; gap: 4px; font-size: .9rem; }
+.dk-deck { position: relative; width: min(300px, 82vw); height: 170px; margin: 1.6rem 0 .4rem; }
+.dk-card { position: absolute; inset: 0; border-radius: 18px; background: var(--sheet); border: 1px solid var(--rule); box-shadow: var(--shadow);
+  display: grid; place-items: center; padding: 12px 18px; text-align: center; font-size: 1.3rem; user-select: none; -webkit-user-select: none; }
+.dk-card[lang="ja"] { font-size: 2rem; }
+.dk-card.top { z-index: 3; touch-action: none; cursor: grab; transition: transform .17s ease-out, opacity .17s, background .2s, border-color .2s; box-shadow: var(--shadow-lift); }
+.dk-card.top.drag { transition: none; cursor: grabbing; }
+.dk-card.top.up { border-color: var(--jade); background: var(--jade-wash); }
+.dk-card.back1 { z-index: 2; transform: translateY(-16px) scale(.94); background: var(--sunken); }
+.dk-card.back2 { z-index: 1; transform: translateY(-30px) scale(.88); background: var(--sunken); opacity: .6; }
+.dk-card.back1 span, .dk-card.back2 span { visibility: hidden; }
+.dk-card.off-r { transform: translate(140%, 10px) rotate(18deg); opacity: 0; }
+.dk-card.off-l { transform: translate(-140%, 10px) rotate(-18deg); opacity: 0; }
+.dk-card.off-u { transform: translateY(-160%) scale(.9); opacity: 0; }
+.dk-card.good { background: var(--jade-wash); border-color: var(--jade); }
+.dk-card.burn { background: var(--amber-wash); border-color: var(--amber); animation: dk-burn .38s; }
+@keyframes dk-burn { 30% { transform: translateX(-8px) rotate(-2deg) } 60% { transform: translateX(8px) rotate(2deg) } 100% { transform: scale(.8); opacity: 0 } }
+.dk-card.in-r { animation: dk-in-r .2s ease-out; }
+.dk-card.in-l { animation: dk-in-l .2s ease-out; }
+@keyframes dk-in-r { from { transform: translateX(40px); opacity: 0 } }
+@keyframes dk-in-l { from { transform: translateX(-40px); opacity: 0 } }
+.dk-dots { display: flex; gap: 6px; }
+.dk-dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--rule); }
+.dk-dots i.on { background: var(--ink); }
+.dk-dots i.burnt { background: none; border: 1.5px solid var(--amber); }
+.dk-btns { display: flex; align-items: center; gap: 1rem; margin-top: .4rem; }
+.dk-b .ico { width: 22px; height: 22px; }
 
 /* ============================================================
    PHONE LAYER
@@ -3221,4 +3292,11 @@ button.tx-line:hover { background: color-mix(in srgb, var(--ai) 8%, transparent)
   .gm-name { font-size: .82rem; }
   .gm-slot small { display: none; }
   .ga-name { font-size: 1.7rem; }
+
+  /* the arcade: the ninja's field fills the screen; the deck sits low, by the thumb */
+  .nj-play { min-height: calc(100dvh - 150px); }
+  .nj-prompt { font-size: 1rem; }
+  .dk-play { min-height: 100%; }
+  .dk-deck { margin-top: auto; }
+  .dk-btns { margin-bottom: 10px; }
 }

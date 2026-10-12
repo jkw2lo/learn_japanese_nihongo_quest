@@ -100,6 +100,7 @@ const CONTRACT = {
   'js/data/texts.js': ['TEXTS', 'TEXT_BY', 'textSay', 'READ_PHRASES', 'PHRASE_BITS', 'phraseWord'],
   'js/data/toys.js': ['TOY_SETS', 'TOY_BY', 'SPIN_COST', 'DUP_BACK', 'PITY', 'gachaPick', 'setDone', 'currentSet'],
   'js/toys-art.js': ['TOY_ART', 'toyArt', 'gachaMachine', 'capsuleArt', 'coinArt', 'GACHA_HUES'],
+  'js/arcade-ui.js': ['ninjaWave', 'ninjaKinds', 'ninjaCard', 'ninjaOpen', 'deckRound', 'deckModesOpen', 'deckCard', 'deckOpen', 'arcadeKey', 'knownKana'],
   'js/games-ui.js': ['renderGames', 'earnCoins', 'coins', 'gachaKey', 'shelfHtml'],
   'js/phone.js': ['isPhone', 'openDrawer', 'closeDrawer', 'initDrawerLoop', 'centerDrawer', 'drawerTick', 'phoneAfterRender', 'drawerOpen'],
 };
@@ -490,7 +491,35 @@ section('games');
     b.gacha = { earned: 80, spent: 60, owned: { daruma: 1, fuji: 1 }, dry: 0 }; b.updated = 2;
     return mergeState(a, b).gacha; })()`);
   ok(m.earned === 100 && m.spent === 60 && m.owned.daruma === 2 && m.owned.fuji === 1 && m.owned.maneki === 1, `gacha merge: ${JSON.stringify(m)}`);
-  ok(!/\bcta\b/.test(read('js/games-ui.js')), 'the Games tab uses .cta — on a phone its buttons would pile up');
+  ok(!/\bcta\b/.test(read('js/games-ui.js') + read('js/arcade-ui.js')), 'the Games tab uses .cta — on a phone its buttons would pile up');
+  /* the arcade (arcade-ui.js): a wave's targets are what it asks for and
+     its bombs never are; a deck holds its answer exactly once */
+  const a = {};
+  vm.createContext(a);
+  vm.runInContext(['js/data/kana.js'].map(read).join('\n') + `;var ACTS = {};
+    var esc = t => String(t); var shuffle = x => { for (let i = x.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [x[i], x[j]] = [x[j], x[i]]; } return x; };
+    var sample = (x, n) => shuffle([...x]).slice(0, n);
+    var otherMeanings = (x, pool, n) => shuffle(pool.filter(y => y.m !== x.m && y.kana !== x.kana)).filter((y, i, l) => l.findIndex(z => z.m === y.m || z.kana === y.kana) === i).slice(0, n);
+    ` + read('js/arcade-ui.js') + `;globalThis.A = { ninjaWave, deckRound, KANA, KANA_ALIKE, LESSONS, kanaAsked };`, a);
+  const A = a.A;
+  const known = A.KANA.filter(e => !e.concept);
+  const pool = ['ねこ', 'いぬ', 'すし', 'かさ', 'はな', 'やま', 'うみ', 'そら', 'くつ', 'みず'].map((w, i) => ({ key: 'kw:' + w, text: w, kana: w, m: 'm' + i, say: w }));
+  for (const kind of ['sound', 'row', 'script', 'meaning']) for (let t = 0; t < 30; t++) {
+    const W = A.ninjaWave(known, pool, kind, 12);
+    if (!W) { ok(false, `ninja: no ${kind} wave with every kana known`); break; }
+    ok(W.items.length === 12 && W.items.some(x => x.target) && W.items.some(x => !x.target), `ninja ${kind}: a wave needs targets and bombs`);
+    const tgt = new Set(W.items.filter(x => x.target).map(x => x.text));
+    ok(!W.items.some(x => !x.target && tgt.has(x.text)), `ninja ${kind}: a bomb is also a target (${[...tgt]})`);
+  }
+  ok(A.ninjaWave(known.slice(0, 3), [], 'row', 12) === null, 'ninja: a row wave needs a whole row learned');
+  for (const mode of ['k', 'm', 'w']) for (let t = 0; t < 10; t++) {
+    const R = A.deckRound(mode, pool, known, 10);
+    ok(R.length === 10, `deck ${mode}: ${R.length} prompts, not 10`);
+    R.forEach(q => {
+      ok(q.cards.filter(c => c === q.answer).length === 1, `deck ${mode}: ${q.show}'s deck holds its answer ${q.cards.filter(c => c === q.answer).length} times`);
+      ok(new Set(q.cards).size === q.cards.length && q.cards.length <= 8 && q.cards.length >= 4, `deck ${mode}: ${q.show}'s cards repeat or number ${q.cards.length}`);
+    });
+  }
 }
 
 section('read');
