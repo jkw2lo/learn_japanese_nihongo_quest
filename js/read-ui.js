@@ -7,16 +7,15 @@
    enough for it, and every rung built only from words you already know
    (README → Read):
 
-   1. 一瞬 Flash — a word you know shows for a moment; pick its meaning. The
-      moment shrinks as you get them right, and the pace is kept, in
-      characters a second (subtitles run at about four).
+   1. 字幕 Subtitles — a line shows at the foot of a screen, with its sound,
+      for as long as your pace allows; then say what it meant. Single words
+      first; longer phrases and whole sentences join as you learn them, and
+      the lines grow as you keep up. The pace is kept, in characters a
+      second (subtitles run at about four). (Until 0.36.0 a separate rung,
+      一瞬 Flash, did the single words; it was the same thing, smaller.)
    2. 区切り Word chains — two to five words you know run together with no
       spaces; drag across each word to find it. The chains grow as you find
       them cleanly.
-   3. 字幕 Subtitles — a line shows at the foot of a screen, with its sound,
-      for as long as your pace allows; then say what it meant. Words first;
-      longer phrases and whole sentences join as you learn them, and the
-      lines grow as you keep up.
    Later: phrases with particles, and short texts read in one go.
 
    And beside the ladder, a game: 探す Word search, a grid of kana you know
@@ -139,16 +138,14 @@ function makeSearch(words, size, n, filler) {
 /* ---------- the rungs ---------- */
 
 const READ_RUNGS = [
-  { id: "flash", jp: "一瞬", en: "Flash", what: "A word you know shows for a moment. Pick what it means before it's gone — the moment shrinks as you get them right.", min: 6 },
-  { id: "chains", jp: "区切り", en: "Word chains", what: "Words you know, run together with no spaces, the way Japanese is written. Drag across each word to find it.", min: 6 },
   { id: "subs", jp: "字幕", en: "Subtitles", what: "A line flashes up at the foot of a screen with its sound, like a subtitle, and goes. Read it in time, then say what it meant. Words first — phrases and whole sentences join as you learn them, and the lines grow as you keep up.", min: 6 },
+  { id: "chains", jp: "区切り", en: "Word chains", what: "Words you know, run together with no spaces, the way Japanese is written. Drag across each word to find it.", min: 6 },
 ];
 const READ_LATER = [
   { jp: "句", en: "Phrases", what: "Word chains joined by particles — わたしのかさ, えきはどこ — once you've learned は and の (stage 4)." },
   { jp: "文章", en: "Short texts", what: "A message, a sign, a menu: a few lines read in one go, then a question or two." },
 ];
-const FLASH_N = 12, CHAIN_N = 8;
-const FLASH_CPS = [0.8, 8];        /* the pace stays in here, characters a second */
+const CHAIN_N = 8;
 const SUBTITLE_CPS = 4;
 
 const cpsText = c => `${c.toFixed(1)} characters a second`;
@@ -174,19 +171,16 @@ function renderRead() {
         sounds — and finding the words in a line with no spaces between them. Everything here is made of words you
         already know: ${pool.length} so far.</p>
     </section>
-    ${rung(READ_RUNGS[0], `<div class="rd-stat">Your pace: <b>${cpsText(r.flash.cps)}</b>${r.flash.best ? ` · best ${r.flash.best.toFixed(1)}` : ""}
-        <small class="muted">${r.flash.cps >= SUBTITLE_CPS ? "— subtitle speed" : `— subtitles run at about ${SUBTITLE_CPS}`}</small></div>
-      <button class="btn rd-go" data-act="rd-start" data-r="flash">Flash ${FLASH_N} words</button>`)}
+    ${rung(READ_RUNGS[0], `<div class="rd-stat">${r.subs.rounds ? `Pace <b>${cpsText(r.subs.cps)}</b> · lines up to ${r.subs.len} characters${r.subs.best ? ` · best ${r.subs.best.toFixed(1)}` : ""}` : `Starts with single words at ${cpsText(r.subs.cps)}.`}
+        <small class="muted">${r.subs.cps >= SUBTITLE_CPS ? "— subtitle speed" : `— subtitles run at about ${SUBTITLE_CPS}`}${subsPool().some(x => x.kind === "sentence") ? ` · ${subsPool().filter(x => x.kind === "sentence").length} sentences you can read are in it` : " · sentences join once you've learned some patterns"}</small></div>
+      <button class="btn rd-go" data-act="rd-start" data-r="subs">Watch ${SUBS_N} lines</button>`)}
     ${rung(READ_RUNGS[1], `<div class="rd-stat">${r.chains.rounds ? `Best: <b>${cpsText(r.chains.best)}</b> · up to ${r.chains.n} words a chain` : "Starts with two words a chain."}</div>
       <button class="btn rd-go" data-act="rd-start" data-r="chains">Find the words in ${CHAIN_N} chains</button>`)}
-    ${rung(READ_RUNGS[2], `<div class="rd-stat">${r.subs.rounds ? `Pace <b>${cpsText(r.subs.cps)}</b> · lines up to ${r.subs.len} characters${r.subs.best ? ` · best ${r.subs.best.toFixed(1)}` : ""}` : "Starts with short words, slowly."}
-        <small class="muted">${subsPool().filter(x => x.kind === "sentence").length ? `${subsPool().filter(x => x.kind === "sentence").length} sentences you can read are in it` : "— sentences join once you've learned some patterns"}</small></div>
-      <button class="btn rd-go" data-act="rd-start" data-r="subs">Watch ${SUBS_N} lines</button>`)}
     ${searchCard(pool)}
     ${matchCard(pool)}
     <section class="card rd-later">
       <div class="card-head"><h2>Further up</h2><span class="count">as you learn more</span></div>
-      <ol class="rd-later-list" start="4">${READ_LATER.map(x => `<li><b><span lang="ja">${x.jp}</span> ${x.en}</b><br><span class="muted small">${esc(x.what)}</span></li>`).join("")}</ol>
+      <ol class="rd-later-list" start="3">${READ_LATER.map(x => `<li><b><span lang="ja">${x.jp}</span> ${x.en}</b><br><span class="muted small">${esc(x.what)}</span></li>`).join("")}</ol>
     </section>
   </div>`;
 }
@@ -204,13 +198,7 @@ function openRead(rung) {
   document.body.style.overflow = "hidden";
   if (rung === "search") return searchOpen();
   if (rung === "match") return matchOpen();
-  if (rung === "flash") {
-    RD.cps = state.read.flash.cps;
-    RD.cps0 = RD.cps;
-    RD.words = sample(pool, Math.min(FLASH_N, pool.length));
-    while (RD.words.length < FLASH_N) RD.words.push(sample(pool, 1)[0]);
-    RD.n = FLASH_N;
-  } else if (rung === "subs") {
+  if (rung === "subs") {
     const s = state.read.subs;
     Object.assign(RD, { cps: s.cps, cps0: s.cps, len: s.len, n: SUBS_N, streak: 0, lines: subsPool(), seen: new Set() });
     /* the sound for every line it can show: each stage you have words from,
@@ -234,7 +222,7 @@ function rdStep() {
   rdStrip();
   $("#rdFoot").innerHTML = "";
   if (RD.i >= RD.n) return rdFinish();
-  if (RD.rung === "flash") flashShow(); else if (RD.rung === "subs") subsShow(); else chainShow();
+  if (RD.rung === "subs") subsShow(); else chainShow();
 }
 
 function closeRead() {
@@ -248,49 +236,7 @@ function closeRead() {
   milestoneCheckpoint();
 }
 
-/* ---------- 1 · Flash ---------- */
-
-function flashShow() {
-  const x = RD.words[RD.i];
-  const opts = shuffle([x, ...otherMeanings(x, RD.pool, 3)]);
-  RD.q = { x, opts, answered: false, t0: performance.now() };
-  const ms = Math.max(300, [...x.text].length * 1000 / RD.cps);
-  $("#rdPace").textContent = `${RD.cps.toFixed(1)}/s`;
-  $("#rdBody").innerHTML = `<div class="q rd-flash">
-    <div class="rd-word-wrap"><div class="glyph-l word rd-word" lang="ja" id="rdWord">${esc(x.text)}</div></div>
-    <div class="opts n4 words">${opts.map((o, i) => `<button class="opt" data-act="rd-opt" data-i="${i}"><kbd>${i + 1}</kbd><span>${esc(o.m)}</span></button>`).join("")}</div>
-    <div class="verdict" id="rdVerdict" aria-live="polite"></div>
-  </div>`;
-  RD.hide = setTimeout(() => { const w = $("#rdWord"); if (w && !RD.q.answered) w.classList.add("gone"); }, ms);
-}
-
-function flashAnswer(i) {
-  const q = RD?.q;
-  if (!q || q.answered) return;
-  q.answered = true;
-  clearTimeout(RD.hide);
-  const ok = q.opts[i] === q.x;
-  const ms = performance.now() - q.t0;
-  RD.res[RD.i] = ok ? "ok" : "miss";
-  /* a lesson word is graded like a sprint answer; a kana word has no record */
-  grade(q.x.key, "r", ok, ms, "speed");
-  RD.cps = Math.min(FLASH_CPS[1], Math.max(FLASH_CPS[0], RD.cps * (ok ? 1.08 : 0.88)));
-  $$("#rdBody .opt").forEach((b, j) => {
-    b.disabled = true;
-    if (q.opts[j] === q.x) b.classList.add("right");
-    else if (j === i) b.classList.add("wrong");
-  });
-  $("#rdWord").classList.remove("gone");
-  const v = $("#rdVerdict");
-  v.className = "verdict " + (ok ? "ok" : "miss");
-  v.innerHTML = `${icon(ok ? "check" : "close", "v-ico")} <span lang="ja">${esc(q.x.text)}</span> <span class="rom-always">${esc(q.x.m)}</span>`;
-  if (state.settings.autoplay) say(q.x.say);
-  rdStrip();
-  if (ok) RD.next = setTimeout(() => { RD.i++; rdStep(); }, 650);
-  else $("#rdFoot").innerHTML = `<span></span><button class="btn" data-act="rd-next" id="rdNext">Next <kbd>↵</kbd></button>`;
-}
-
-/* ---------- 3 · Subtitles ---------- */
+/* ---------- 1 · Subtitles ---------- */
 
 const SUBS_N = 10;
 const SUBS_CPS = [0.8, 10];
@@ -944,12 +890,6 @@ function rdFinish() {
     r.cps = RD.cps; r.len = RD.len;
     if (right / total >= 0.7 && RD.cps > (r.best || 0)) { r.best = RD.cps; best = true; }
     line = `Pace now <b>${cpsText(RD.cps)}</b>, lines up to ${RD.len} characters <small class="muted">— subtitles run at about ${SUBTITLE_CPS}</small>`;
-  } else if (RD.rung === "flash") {
-    /* the pace carries over; a round of nine in twelve or better can set a best */
-    r.cps = RD.cps;
-    if (right / total >= 0.75 && RD.cps > (r.best || 0)) { r.best = RD.cps; best = true; }
-    const d = RD.cps - RD.cps0;
-    line = `Pace now <b>${cpsText(RD.cps)}</b> <small class="muted">(${d >= 0 ? "+" : ""}${d.toFixed(1)} this round)</small>`;
   } else {
     const cps = RD.ms ? RD.chars / (RD.ms / 1000) : 0;
     r.n = RD.len;
@@ -983,16 +923,11 @@ function readKey(e) {
     if (/^[1-4]$/.test(e.key)) { e.preventDefault(); subsAnswer(+e.key - 1); }
     else if ((e.key === "Enter" || e.key === " ") && $("#rdNext")) { e.preventDefault(); ACTS["rd-next"](); }
   }
-  if (RD.rung === "flash") {
-    if (/^[1-4]$/.test(e.key)) { e.preventDefault(); flashAnswer(+e.key - 1); }
-    else if ((e.key === "Enter" || e.key === " ") && $("#rdNext")) { e.preventDefault(); ACTS["rd-next"](); }
-  }
   return true;
 }
 
 Object.assign(ACTS, {
   "rd-start": el => openRead(el.dataset.r),
-  "rd-opt": el => flashAnswer(+el.dataset.i),
   "rd-next": () => { if (RD && !RD.done) { RD.i++; rdStep(); } },
   "rd-help": () => chainHelp(),
   "srch-hint": () => searchHint(),

@@ -1053,6 +1053,17 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.36.0: one reading rung, not two
+
+- **Read:** Flash folded into Subtitles, now rung 1. Subtitles already
+  started with single words and did what Flash did, then grows into
+  sentences; two rungs for one skill was one too many. A Flash pace carries
+  over to a Subtitles not yet played. The ladder: Subtitles, Word chains,
+  then Phrases and Short texts to come.
+- **Fixed:** Today's *Write from memory* flashed locked ("Nothing today has
+  a shape to write") until the stroke shapes arrived a moment after the
+  first screen.
+
 ### 0.35.0: hiragana and katakana side by side
 
 - **Kana → あ⇄ア**: every hiragana with its katakana beside it, look-alikes
@@ -1329,8 +1340,9 @@ lessons and every word spelled in kana you've learned). Kanji you know are
 shown as kanji, the rest in kana, with no furigana — there's none on a sign
 (`readText`).
 
-1. **一瞬 Flash.** A word shows for a moment and goes; pick what it meant,
-   from four. The moment is set by your **pace** in characters a second:
+1. ~~**一瞬 Flash.**~~ Folded into Subtitles in 0.36.0, which starts with
+   single words and does the same, then grows into sentences. What it was:
+   a word shows for a moment and goes; pick what it meant, from four. The moment is set by your **pace** in characters a second:
    right answers raise it 8%, wrong ones lower it 12% (0.8 to 8). The pace
    carries over between rounds of twelve, and a round of nine right or
    better can set a best. A wrong answer brings the word back and waits.

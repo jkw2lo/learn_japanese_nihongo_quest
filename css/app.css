@@ -2381,10 +2381,6 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 .rd-later-list { margin: .2rem 0 0; padding-left: 1.3rem; display: grid; gap: .6rem; }
 .rd-pace { font: 600 .95rem var(--f-body); font-variant-numeric: tabular-nums; color: var(--ink-2); min-width: 4.5rem; text-align: right; }
 
-/* Flash: the word holds its place when it's gone, so nothing jumps */
-.rd-word-wrap { min-height: 7rem; display: grid; place-items: center; }
-.rd-word { transition: opacity .12s; }
-.rd-word.gone { opacity: 0; }
 
 /* Word chains: big characters you drag across; a found word keeps its colour */
 .rd-chains { text-align: center; }

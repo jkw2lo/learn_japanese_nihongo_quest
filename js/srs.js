@@ -110,9 +110,13 @@ function normalise(s) {
   });
   out.sprint = { best: {}, ...(s.sprint || {}) };
   const fr = freshRead(), sr = s.read && typeof s.read === "object" ? s.read : {};
+  /* flash: the old rung 1, folded into Subtitles in 0.36.0 — kept so a
+     sync with an older device still merges; its pace carries over to a
+     Subtitles not yet played */
   out.read = { flash: { ...fr.flash, ...(sr.flash || {}) }, chains: { ...fr.chains, ...(sr.chains || {}) }, search: { ...fr.search, ...(sr.search || {}) }, match: { ...fr.match, ...(sr.match || {}) }, subs: { ...fr.subs, ...(sr.subs || {}) } };
   out.read.match.best = out.read.match.best && typeof out.read.match.best === "object" ? out.read.match.best : {};
   out.read.search.best = out.read.search.best && typeof out.read.search.best === "object" ? out.read.search.best : {};
+  if (!out.read.subs.rounds && out.read.flash.rounds && out.read.flash.cps > out.read.subs.cps) out.read.subs.cps = out.read.flash.cps;
   out.sprint.recent = asList(out.sprint.recent);
   out.mistakes = s.mistakes && typeof s.mistakes === "object" ? s.mistakes : {};
   out.spelled = asList(s.spelled);          /* kana words already sounded out in a lesson */
