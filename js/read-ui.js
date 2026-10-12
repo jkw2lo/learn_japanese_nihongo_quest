@@ -16,6 +16,10 @@
    2. 区切り Word chains — two to five words you know run together with no
       spaces; drag across each word to find it. The chains grow as you find
       them cleanly.
+   3. 句 Phrases — word chains with the grammar in: a sentence you've
+      learned, run together, to find every piece of — words, particles,
+      endings. Its pieces are the Build-it tiles of each pattern you know
+      (phrasePool), so it grows as the grammar does.
    Later: phrases with particles, and short texts read in one go.
 
    And beside the ladder, a game: 探す Word search, a grid of kana you know
@@ -140,9 +144,9 @@ function makeSearch(words, size, n, filler) {
 const READ_RUNGS = [
   { id: "subs", jp: "字幕", en: "Subtitles", what: "A line flashes up at the foot of a screen with its sound, like a subtitle, and goes. Read it in time, then say what it meant. Words first — phrases and whole sentences join as you learn them, and the lines grow as you keep up.", min: 6 },
   { id: "chains", jp: "区切り", en: "Word chains", what: "Words you know, run together with no spaces, the way Japanese is written. Drag across each word to find it.", min: 6 },
+  { id: "phrases", jp: "句", en: "Phrases", what: "A sentence you've learned, run together. Find every piece — the words and the little words between them: は, を, に, です. It grows with the grammar you learn.", min: 3 },
 ];
 const READ_LATER = [
-  { jp: "句", en: "Phrases", what: "Word chains joined by particles — わたしのかさ, えきはどこ — once you've learned は and の (stage 4)." },
   { jp: "文章", en: "Short texts", what: "A message, a sign, a menu: a few lines read in one go, then a question or two." },
 ];
 const CHAIN_N = 8;
@@ -176,11 +180,12 @@ function renderRead() {
       <button class="btn rd-go" data-act="rd-start" data-r="subs">Watch ${SUBS_N} lines</button>`)}
     ${rung(READ_RUNGS[1], `<div class="rd-stat">${r.chains.rounds ? `Best: <b>${cpsText(r.chains.best)}</b> · up to ${r.chains.n} words a chain` : "Starts with two words a chain."}</div>
       <button class="btn rd-go" data-act="rd-start" data-r="chains">Find the words in ${CHAIN_N} chains</button>`)}
+    ${phraseCard()}
     ${searchCard(pool)}
     ${matchCard(pool)}
     <section class="card rd-later">
       <div class="card-head"><h2>Further up</h2><span class="count">as you learn more</span></div>
-      <ol class="rd-later-list" start="3">${READ_LATER.map(x => `<li><b><span lang="ja">${x.jp}</span> ${x.en}</b><br><span class="muted small">${esc(x.what)}</span></li>`).join("")}</ol>
+      <ol class="rd-later-list" start="4">${READ_LATER.map(x => `<li><b><span lang="ja">${x.jp}</span> ${x.en}</b><br><span class="muted small">${esc(x.what)}</span></li>`).join("")}</ol>
     </section>
   </div>`;
 }
@@ -205,6 +210,11 @@ function openRead(rung) {
        and the grammar bundle, which holds every pattern's examples */
     new Set(learnedWords().map(x => x.st)).forEach(st => loadBundle("s" + st));
     loadBundle("grammar");
+  } else if (rung === "phrases") {
+    RD.lines = shuffle(phrasePool());
+    RD.n = Math.min(PHRASE_N, RD.lines.length);
+    RD.ms = 0; RD.chars = 0; RD.clean = 0; RD.streak = 0; RD.len = 0;
+    new Set(learnedWords().map(x => x.st)).forEach(st => loadBundle("s" + st));
   } else {
     RD.len = state.read.chains.n;
     RD.n = CHAIN_N;
@@ -222,7 +232,7 @@ function rdStep() {
   rdStrip();
   $("#rdFoot").innerHTML = "";
   if (RD.i >= RD.n) return rdFinish();
-  if (RD.rung === "subs") subsShow(); else chainShow();
+  if (RD.rung === "subs") subsShow(); else if (RD.rung === "phrases") phraseShow(); else chainShow();
 }
 
 function closeRead() {
@@ -234,6 +244,55 @@ function closeRead() {
   document.body.style.overflow = "";
   render();
   milestoneCheckpoint();
+}
+
+/* ---------- 3 · Phrases ---------- */
+
+const PHRASE_N = 6;
+
+/* A word's meaning, if a piece is a word — a particle is too ("(marks the
+   topic)"); a form like {食|た}べます isn't, and goes without. */
+function pieceMeaning(text) {
+  const w = WORDS.find(x => readText(x.w) === text || x.kana === text) || KANA_WORDS.find(x => x.w === text);
+  return w ? w.m : "";
+}
+
+/* Every sentence learned in pieces: each known pattern's Build-it tiles and
+   its sentence in parts, as { words: [{ text, m, say }], text, spans, en,
+   say } — the shape a word chain has, so the chain game plays it. */
+function phrasePool() {
+  const out = new Map();
+  const add = (raw, en) => {
+    const pieces = raw.map(u => u.replace(/[。、？！]/g, "")).filter(Boolean);
+    if (pieces.length < 3) return;
+    const words = pieces.map(u => { const text = readText(u); return { text, m: pieceMeaning(text), say: furiKana(u) }; });
+    const text = words.map(w => w.text).join("");
+    if (out.has(text)) return;
+    let at = 0;
+    const spans = words.map(w => { const n = [...w.text].length; const sp = [at, at + n]; at += n; return sp; });
+    out.set(text, { words, text, spans, en, say: furiKana(pieces.join("")) });
+  };
+  PATTERNS.filter(p => p.teach && isLearned(p.key)).forEach(p => {
+    (p.teach.tiles || []).forEach(([tiles, en]) => add(tiles, en));
+    add(p.teach.built.parts.map(x => x[0]), p.teach.built.en);
+  });
+  return [...out.values()];
+}
+
+function phraseCard() {
+  const R = READ_RUNGS.find(x => x.id === "phrases"), r = state.read.phrases, n = phrasePool().length;
+  return `<section class="card rd-rung ${n >= R.min ? "" : "locked"}">
+    <div class="rd-rung-head"><span class="rd-n">${READ_RUNGS.indexOf(R) + 1}</span><h2><span lang="ja">${R.jp}</span> ${R.en}</h2></div>
+    <p>${esc(R.what)}</p>
+    ${n >= R.min ? `<div class="rd-stat">${r.rounds ? `Best: <b>${cpsText(r.best)}</b>` : `${n} sentences to split so far.`}</div>
+      <button class="btn rd-go" data-act="rd-start" data-r="phrases">Split ${Math.min(PHRASE_N, n)} sentences</button>`
+      : `<p class="muted small">Opens with the first grammar lessons (stage 3) — every pattern you learn adds its sentences.</p>`}
+  </section>`;
+}
+
+function phraseShow() {
+  const x = RD.lines[RD.i % RD.lines.length];
+  chainShow({ ...x, words: x.words });
 }
 
 /* ---------- 1 · Subtitles ---------- */
@@ -322,15 +381,16 @@ function subsAnswer(i) {
 
 const CHAIN_MAX = 5;
 
-function chainShow() {
-  let ch = null;
+function chainShow(given = null) {
+  let ch = given;
   for (let n = RD.len; n >= 2 && !ch; n--) ch = makeChain(RD.pool, n);
   if (!ch) { RD.n = RD.i; return rdFinish(); }
   RD.ch = { ...ch, found: new Set(), wrong: 0, helped: false, t0: performance.now() };
   const chars = [...ch.text];
-  $("#rdPace").textContent = `${ch.words.length} words`;
+  const what = given ? "pieces" : "words";
+  $("#rdPace").textContent = `${ch.words.length} ${what}`;
   $("#rdBody").innerHTML = `<div class="rd-chains">
-    <div class="q-ask">Find the ${ch.words.length} words. Drag across each one.</div>
+    <div class="q-ask">${given ? `Find the ${ch.words.length} pieces — words, and the little words between them.` : `Find the ${ch.words.length} words. Drag across each one.`}</div>
     <div class="rd-chain" id="rdChain" lang="ja">${chars.map((c, i) => `<span class="rd-ch" data-i="${i}">${esc(c)}</span>`).join("")}</div>
     <div class="rd-found" id="rdFound"></div>
   </div>`;
@@ -411,7 +471,7 @@ function chainFound(w) {
     setTimeout(() => el.remove(), 260);
   });
   const x = ch.words[w];
-  const chip = `<span class="rd-chip h${hue}" data-s="${s}"><b lang="ja">${esc(x.text)}</b> ${esc(x.m)}</span>`;
+  const chip = `<span class="rd-chip h${hue}" data-s="${s}"><b lang="ja">${esc(x.text)}</b>${x.m ? " " + esc(x.m) : ""}</span>`;
   const after = $$("#rdFound .rd-chip").find(c => +c.dataset.s > s);
   if (after) after.insertAdjacentHTML("beforebegin", chip); else $("#rdFound").insertAdjacentHTML("beforeend", chip);
   if (state.settings.sound) say(x.say);
@@ -430,9 +490,13 @@ function chainDone() {
   if (RD.streak >= 2 && RD.len < CHAIN_MAX) { RD.len++; RD.streak = 0; }
   else if (ch.wrong >= 2 && RD.len > 2) RD.len--;
   $("#rdFound").classList.add("done");
+  if (ch.en) {
+    $("#rdFound").insertAdjacentHTML("afterend", `<p class="rd-en">${esc(ch.en)}</p>`);
+    if (state.settings.sound) setTimeout(() => say(ch.say), 350);
+  }
   RD.ch = null;
   rdStrip();
-  RD.next = setTimeout(() => { RD.i++; rdStep(); }, 700);
+  RD.next = setTimeout(() => { RD.i++; rdStep(); }, ch.en ? 2200 : 700);
 }
 
 function chainHelp() {
@@ -886,7 +950,11 @@ function rdFinish() {
   const right = RD.res.filter(x => x === "ok").length;
   let line, best = false;
   r.rounds = (r.rounds || 0) + 1;
-  if (RD.rung === "subs") {
+  if (RD.rung === "phrases") {
+    const cps = RD.ms ? RD.chars / (RD.ms / 1000) : 0;
+    if (cps > (r.best || 0) && RD.clean >= total / 2) { r.best = cps; best = true; }
+    line = `Read at <b>${cpsText(cps)}</b> · ${RD.clean} of ${total} split clean`;
+  } else if (RD.rung === "subs") {
     r.cps = RD.cps; r.len = RD.len;
     if (right / total >= 0.7 && RD.cps > (r.best || 0)) { r.best = RD.cps; best = true; }
     line = `Pace now <b>${cpsText(RD.cps)}</b>, lines up to ${RD.len} characters <small class="muted">— subtitles run at about ${SUBTITLE_CPS}</small>`;

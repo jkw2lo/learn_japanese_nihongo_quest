@@ -2419,6 +2419,8 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 .rd-found { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; min-height: 2.2rem; margin-top: .4rem; }
 .rd-chip { padding: 4px 12px; border-radius: 999px; font-size: .9rem; background: color-mix(in srgb, var(--hue) 18%, transparent); animation: fade .2s; }
 .rd-chip b { font-weight: 500; margin-right: .3rem; font-size: 1.05rem; }
+/* phrases: the sentence's english once it's split */
+.rd-en { text-align: center; color: var(--ink-2); margin-top: .8rem; font-size: 1.05rem; animation: fade .3s; }
 
 /* ---------- 探す Word search ---------- */
 

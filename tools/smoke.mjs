@@ -96,7 +96,7 @@ const CONTRACT = {
     'todaysWords', 'wordDay', 'wordTasks', 'allTasksDone', 'stagesFinished', 'lessonNames'],
   'js/sprint.js': ['renderSprint', 'sprintKey', 'sprintLabel', 'sprintWords', 'otherMeanings'],
   'js/read-ui.js': ['renderRead', 'readKey', 'readText', 'readPool', 'splits', 'makeChain', 'chainable', 'READ_RUNGS', 'openRead', 'closeRead',
-    'makeSearch', 'searchPlaces', 'searchSnap', 'SEARCH_DIRS', 'SEARCH_SIZES', 'searchCard'],
+    'makeSearch', 'searchPlaces', 'searchSnap', 'SEARCH_DIRS', 'SEARCH_SIZES', 'searchCard', 'phrasePool', 'phraseCard', 'pieceMeaning', 'subsPool'],
   'js/phone.js': ['isPhone', 'openDrawer', 'closeDrawer', 'initDrawerLoop', 'centerDrawer', 'drawerTick', 'phoneAfterRender', 'drawerOpen'],
 };
 const declares = (src, name) => {

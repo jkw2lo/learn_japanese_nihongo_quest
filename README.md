@@ -1053,6 +1053,13 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.40.0: 句 Phrases
+
+- **Read → 句 Phrases**, rung 3: Word chains for real sentences. A sentence
+  you've learned, run together; find each piece — the words, the
+  particles, the endings — then hear it whole with its English. Built from
+  the grammar lessons' own pieces, so it grows as you learn.
+
 ### 0.39.0: all of N5's grammar taught
 
 - Stage 9 (てください, ています, てもいいですか, てから, ないでください) and
@@ -1403,8 +1410,14 @@ shown as kanji, the rest in kana, with no furigana — there's none on a sign
    a long line doesn't give itself away. A wrong answer brings the line
    back and waits (*Again* plays it). Ten lines a round; pace, line length
    and best are kept.
-4. **句 Phrases** (later): word chains joined by particles, わたしのかさ, once
-   は and の are learned (stage 4).
+4. **句 Phrases** (0.40.0): word chains with the grammar in. A sentence
+   you've learned runs together and you find every piece — words, the
+   particles between them, even a verb's stem and its ending (たべ · ました).
+   The pieces are the Build-it tiles and the sentence-in-parts of every
+   pattern you know (`phrasePool`), so it opens with the first grammar
+   lesson and grows with each one; a piece that's a word or a particle
+   shows its meaning as it's found, and the whole sentence is said and
+   given in English at the end. Six a round, best speed kept.
 5. **文章 Short texts** (later): a message, a sign, a menu, read in one go.
 
 Beside the ladder, two games. **結ぶ Match**: meanings and words you know,
