@@ -71,8 +71,8 @@ function go(v) {
    being learned, the chart is the second thing you want; once they're all
    learned, reading is, and the chart becomes something to look things up
    in — so it moves to the end, beside Record. */
-const NAV_KANA = ["today", "kana", "words", "grammar", "read", "cards", "book", "menu", "sprint", "record"];
-const NAV_PAST = ["today", "read", "words", "grammar", "menu", "sprint", "cards", "book", "kana", "record"];
+const NAV_KANA = ["today", "kana", "words", "grammar", "read", "games", "cards", "book", "menu", "sprint", "record"];
+const NAV_PAST = ["today", "read", "games", "words", "grammar", "menu", "sprint", "cards", "book", "kana", "record"];
 const navOrder = () => wordsOpen() ? NAV_PAST : NAV_KANA;
 
 function orderNav() {
@@ -123,6 +123,7 @@ function render() {
   else if (view === "menu") renderMenu();
   else if (view === "grammar") renderGrammar();
   else if (view === "read") renderRead();
+  else if (view === "games") renderGames();
   else if (view === "cards") renderCards();
   else if (view === "book") renderBook();
   else if (view === "sprint") renderSprint();
@@ -1963,6 +1964,7 @@ document.addEventListener("keydown", guard(e => {
   const inField = /INPUT|TEXTAREA|SELECT/.test(e.target.tagName);
   if (askDone) { if (e.key === "Escape") closeAsk(false); return; }
   if ($(".ms-pop")) { if (e.key === "Escape" || e.key === "Enter" || e.key === " ") { e.preventDefault(); ACTS["ms-close"](); } return; }
+  if (typeof gachaKey === "function" && gachaKey(e)) return;
   if (typeof readKey === "function" && readKey(e)) return;
   if (typeof sprintKey === "function" && sprintKey(e)) return;
   if (typeof cardsKey === "function" && cardsKey(e)) return;

@@ -96,8 +96,11 @@ const CONTRACT = {
     'todaysWords', 'wordDay', 'wordTasks', 'allTasksDone', 'stagesFinished', 'lessonNames', 'navOrder', 'orderNav', 'todaysRead', 'todaysReadHtml'],
   'js/sprint.js': ['renderSprint', 'sprintKey', 'sprintLabel', 'sprintWords', 'otherMeanings'],
   'js/read-ui.js': ['renderRead', 'readKey', 'readText', 'readPool', 'splits', 'makeChain', 'chainable', 'READ_RUNGS', 'openRead', 'closeRead',
-    'makeSearch', 'searchPlaces', 'searchSnap', 'SEARCH_DIRS', 'SEARCH_SIZES', 'searchCard', 'phrasePool', 'phraseCard', 'pieceMeaning', 'subsPool', 'textCard', 'textShow', 'textOpen', 'textAnswer'],
+    'makeSearch', 'searchPlaces', 'searchSnap', 'SEARCH_DIRS', 'SEARCH_SIZES', 'searchCard', 'matchCard', 'phrasePool', 'phraseCard', 'pieceMeaning', 'subsPool', 'textCard', 'textShow', 'textOpen', 'textAnswer'],
   'js/data/texts.js': ['TEXTS', 'TEXT_BY', 'textSay', 'READ_PHRASES', 'PHRASE_BITS', 'phraseWord'],
+  'js/data/toys.js': ['TOY_SETS', 'TOY_BY', 'SPIN_COST', 'DUP_BACK', 'PITY', 'gachaPick', 'setDone', 'currentSet'],
+  'js/toys-art.js': ['TOY_ART', 'toyArt', 'gachaMachine', 'capsuleArt', 'coinArt', 'GACHA_HUES'],
+  'js/games-ui.js': ['renderGames', 'earnCoins', 'coins', 'gachaKey', 'shelfHtml'],
   'js/phone.js': ['isPhone', 'openDrawer', 'closeDrawer', 'initDrawerLoop', 'centerDrawer', 'drawerTick', 'phoneAfterRender', 'drawerOpen'],
 };
 const declares = (src, name) => {
@@ -436,6 +439,58 @@ section('menu');
   const N = { 400: 'よんひゃく', 1100: 'せんひゃく', 1250: 'せんにひゃくごじゅう', 300: 'さんびゃく', 600: 'ろっぴゃく',
     800: 'はっぴゃく', 3000: 'さんぜん', 8000: 'はっせん', 2980: 'にせんきゅうひゃくはちじゅう', 10500: 'いちまんごひゃく', 15: 'じゅうご' };
   Object.entries(N).forEach(([n, want]) => ok(numberKana(+n) === want, `numberKana(${n}) = ${numberKana(+n)}, want ${want}`));
+}
+
+section('games');
+{
+  /* the capsule toys (README → Games): twenty a set, each drawn and named
+     in kana that's taught, and a machine that fills a set in fair time */
+  const g = {};
+  vm.createContext(g);
+  vm.runInContext(['js/data/kana.js', 'js/furi.js', 'js/data/toys.js', 'js/toys-art.js'].map(read).join('\n') +
+    ';globalThis.G = { TOY_SETS, TOY_BY, TOY_ART, gachaPick, setDone, currentSet, PITY, furiProblems, furiKana, kanaUnits, KANA_BY };', g);
+  const { TOY_SETS, TOY_BY, TOY_ART, gachaPick, setDone, currentSet, PITY } = g.G;
+  ok(TOY_SETS.length >= 2, 'expected more than one set of toys, so finishing one opens another');
+  const all = TOY_SETS.flatMap(S => S.toys);
+  ok(new Set(all.map(t => t.id)).size === all.length, 'two toys share an id');
+  TOY_SETS.forEach(S => {
+    ok(S.toys.length === 20, `${S.id} has ${S.toys.length} toys, not twenty`);
+    ok(S.toys.filter(t => t.rare).length >= 1, `${S.id} has no rare toy`);
+    g.G.furiProblems(S.jp).forEach(p => ok(false, p));
+  });
+  all.forEach(t => {
+    ok(!!TOY_ART[t.id], `${t.id} has no drawing`);
+    ok(!/\bid="|href="#/.test(TOY_ART[t.id] || ''), `${t.id}'s drawing uses an id — two on one shelf would clash`);
+    ok(!!t.m, `${t.id} has no English`);
+    g.G.furiProblems(t.w).forEach(p => ok(false, p));
+    g.G.kanaUnits(g.G.furiKana(t.w)).forEach(u => ok(!!g.G.KANA_BY[u], `${t.id}: ${u} isn't a kana that's taught`));
+  });
+  /* the machine: a toy you lack is likelier; after PITY repeats, a new one; a set
+     takes a fair number of turns */
+  const S = TOY_SETS[0];
+  const owned = Object.fromEntries(S.toys.slice(1).map(t => [t.id, 1]));
+  let fresh = 0;
+  for (let i = 0; i < 2000; i++) if (gachaPick(S, owned, 0).id === S.toys[0].id) fresh++;
+  ok(fresh > 2000 * 0.08 && fresh < 2000 * 0.3, `the one toy missing came up ${fresh} times in 2000 — expected four times the others' share`);
+  ok([...Array(50)].every(() => gachaPick(S, owned, PITY).id === S.toys[0].id), 'after PITY repeats in a row the next toy should be new');
+  let turns = 0;
+  for (let run = 0; run < 200; run++) {
+    const own = {}; let dry = 0;
+    while (!setDone(S, own)) { const t = gachaPick(S, own, dry); dry = own[t.id] ? dry + 1 : 0; own[t.id] = (own[t.id] || 0) + 1; turns++; }
+  }
+  ok(turns / 200 > 25 && turns / 200 < 45, `a set took ${(turns / 200).toFixed(1)} turns on average — aiming for about 35`);
+  ok(currentSet({}).id === TOY_SETS[0].id, 'the first set comes first');
+  ok(currentSet(Object.fromEntries(TOY_SETS[0].toys.map(t => [t.id, 1]))).id === TOY_SETS[1].id, 'a full set opens the next');
+  /* coins and toys survive a sync: the larger total each way, the larger count */
+  const sb = sandbox();
+  const r = code => vm.runInContext(code, sb);
+  ok(r('(o => !Array.isArray(o) && typeof o === "object")(normalise({ gacha: { owned: [], earned: 5 } }).gacha.owned)'), 'a junk owned list should normalise to a map');
+  const m = r(`(() => { const a = freshState(), b = freshState();
+    a.gacha = { earned: 100, spent: 40, owned: { daruma: 2, maneki: 1 }, dry: 1 }; a.updated = 1;
+    b.gacha = { earned: 80, spent: 60, owned: { daruma: 1, fuji: 1 }, dry: 0 }; b.updated = 2;
+    return mergeState(a, b).gacha; })()`);
+  ok(m.earned === 100 && m.spent === 60 && m.owned.daruma === 2 && m.owned.fuji === 1 && m.owned.maneki === 1, `gacha merge: ${JSON.stringify(m)}`);
+  ok(!/\bcta\b/.test(read('js/games-ui.js')), 'the Games tab uses .cta — on a phone its buttons would pile up');
 }
 
 section('read');

@@ -183,8 +183,11 @@ function renderRead() {
       <button class="btn rd-go" data-act="rd-start" data-r="chains">Find the words in ${CHAIN_N} chains</button>`)}
     ${phraseCard()}
     ${textCard()}
-    ${searchCard(pool)}
-    ${matchCard(pool)}
+    <section class="card rd-games">
+      <div class="rd-rung-head"><span class="rd-n rd-game" lang="ja">遊</span><h2><span lang="ja">遊ぶ</span> Games</h2></div>
+      <p>Word search and Match have moved to the Games tab — where every game pays coins for the capsule machine.</p>
+      <button class="btn btn-ghost" data-act="nav" data-nav="games">To the games ›</button>
+    </section>
     ${READ_LATER.length ? `<section class="card rd-later">
       <div class="card-head"><h2>Further up</h2><span class="count">as you learn more</span></div>
       <ol class="rd-later-list" start="5">${READ_LATER.map(x => `<li><b><span lang="ja">${x.jp}</span> ${x.en}</b><br><span class="muted small">${esc(x.what)}</span></li>`).join("")}</ol>
@@ -788,6 +791,8 @@ function searchDone() {
   s.rounds = (s.rounds || 0) + 1;
   const best = !RD.helped && (!s.best[RD.size] || ms < s.best[RD.size]);
   if (best) s.best[RD.size] = Math.round(ms);
+  /* coins (遊ぶ Games): two a word, and more for no hint, a best, a bonus */
+  const paid = earnCoins(RD.n * 2 + (RD.helped ? 0 : 4) + (best ? 4 : 0) + RD.bonus.size);
   save();
   crumb(`read done search ${RD.size} ${fmtTime(ms)}`);
   $("#rdPace").textContent = fmtTime(ms);
@@ -796,7 +801,7 @@ function searchDone() {
     $("#rdFoot").innerHTML = `<button class="btn btn-ghost" data-act="rd-close">Done <kbd>Esc</kbd></button>
       <button class="btn" data-act="rd-again">Another grid <kbd>↵</kbd></button>`;
     $(".srch-side").insertAdjacentHTML("afterbegin", `<div class="srch-done">${neko(best ? "cheer" : "happy", "hop")}${best ? stamp("新記録") : ""}
-      <div><b>All ${RD.n} in ${fmtTime(ms)}</b>${RD.bonus.size ? ` · ${RD.bonus.size} bonus` : ""}${RD.helped ? ` <small class="muted">— with a hint</small>` : best ? ` <small class="muted">— a new best on ${RD.size}×${RD.size}</small>` : ""}</div></div>`);
+      <div><b>All ${RD.n} in ${fmtTime(ms)}</b>${RD.bonus.size ? ` · ${RD.bonus.size} bonus` : ""}${RD.helped ? ` <small class="muted">— with a hint</small>` : best ? ` <small class="muted">— a new best on ${RD.size}×${RD.size}</small>` : ""}</div></div>${paid}`);
     if (best) petals($("#read"), 24);
   }, 500);
 }
@@ -1042,15 +1047,18 @@ function matchDone() {
   m.rounds = (m.rounds || 0) + 1;
   const best = RD.slips === 0 && (!m.best[RD.layout] || ms < m.best[RD.layout]);
   if (best) m.best[RD.layout] = Math.round(ms);
+  const right = RD.res.filter(x => x === "ok").length;
+  /* coins (遊ぶ Games): one a word right first time, more for no slips and a best */
+  const paid = earnCoins(right + (RD.slips === 0 ? 5 : 0) + (best ? 4 : 0));
   save();
   crumb(`read done match ${RD.layout} ${RD.slips} slips`);
-  const right = RD.res.filter(x => x === "ok").length;
   $("#rdPace").textContent = fmtTime(ms);
   $("#rdBody").innerHTML = `<div class="finish">
     <div class="celebrate">${neko(best ? "cheer" : RD.slips <= 2 ? "happy" : "think", "hop")}${best ? stamp("新記録") : ""}</div>
     <div class="finish-big">${right}<small>/${RD.n}</small></div>
     <p>Right first time, in <b>${fmtTime(ms)}</b>${RD.slips ? ` · ${RD.slips} slip${RD.slips > 1 ? "s" : ""}` : " — not a slip"}</p>
     ${best ? `<div class="badge-best">New best</div>` : ""}
+    ${paid}
   </div>`;
   if (best) petals($("#read"), 24);
   $("#rdFoot").innerHTML = `<button class="btn btn-ghost" data-act="rd-close">Done <kbd>Esc</kbd></button>

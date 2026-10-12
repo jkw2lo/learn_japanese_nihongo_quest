@@ -2622,6 +2622,94 @@ button.tx-line:hover { background: color-mix(in srgb, var(--ai) 8%, transparent)
 .tr-what b { font-size: 1.15rem; font-weight: 600; }
 .tr-what small { color: var(--ink-2); }
 
+/* ---------- 遊ぶ Games: the capsule toys (js/toys-art.js) ----------
+   Little vinyl figures with their own light: the same colours in either
+   theme, like the painted places. */
+
+.toy { display: block; width: 100%; height: auto; overflow: visible; }
+.toy path, .toy circle, .toy ellipse, .toy rect { stroke: #3B342D; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+.toy .n { stroke: none; }
+.toy .l { fill: none; }
+.toy .w { fill: #FFFDF8; } .toy .c { fill: #F4E6C8; } .toy .r { fill: #D9483B; } .toy .r2 { fill: #A8362C; }
+.toy .g { fill: #E6B23E; } .toy .k { fill: #2E2B27; } .toy .p { fill: #F4A9B8; } .toy .b { fill: #4F7FC0; }
+.toy .nv { fill: #2F4B7C; } .toy .sk { fill: #B9DDF0; } .toy .gr { fill: #6BAF73; } .toy .dg { fill: #3F7D56; }
+.toy .br { fill: #9A6A3A; } .toy .wd { fill: #D3A26A; } .toy .o { fill: #EE8A3C; } .toy .y { fill: #F5CF52; }
+.toy .gy { fill: #A9A499; } .toy .pu { fill: #8E5A9A; } .toy .mt { fill: #8DB05A; } .toy .cr { fill: #B8732E; } .toy .sl { fill: #F49A6C; }
+
+/* the Games tab */
+.gm-intro { grid-column: 1 / -1; }
+.gm-machine { text-align: center; display: flex; flex-direction: column; align-items: center; gap: .5rem; }
+.gm-purse { align-self: flex-end; display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px 4px 6px; border-radius: 999px;
+  background: var(--gold-soft); color: var(--ink); font-variant-numeric: tabular-nums; }
+.gm-purse b { font-size: 1.15rem; }
+.gm-purse span { font-size: .85rem; color: var(--ink-2); }
+.coin { width: 1.3em; height: 1.3em; display: inline-block; vertical-align: -.28em; }
+.gm-stage { width: min(220px, 60vw); margin: -.4rem auto 0; }
+.gm-art .gm-knob { transform-box: fill-box; transform-origin: center; transition: transform 1s cubic-bezier(.3,.1,.3,1); }
+.gm-art .gm-drop { opacity: 0; }
+.gm-stage.turning .gm-knob { transform: rotate(360deg); }
+.gm-stage.turning .gm-caps { animation: gm-jiggle .3s 3 ease-in-out; transform-box: fill-box; transform-origin: center; }
+.gm-stage.turning .gm-drop { animation: gm-drop .5s .9s ease-in forwards; }
+@keyframes gm-jiggle { 0%, 100% { transform: translate(0, 0) } 25% { transform: translate(-2px, 2px) rotate(-2deg) } 75% { transform: translate(2px, -1px) rotate(2deg) } }
+@keyframes gm-drop { from { opacity: 0; transform: translateY(-12px) } to { opacity: 1; transform: translateY(0) } }
+.gm-set { font-size: .95rem; color: var(--ink-2); }
+.gm-turn { min-width: 15rem; justify-content: center; }
+.gm-turn .coin { margin: 0 2px; }
+
+.coin-gain { display: inline-flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; margin: .8rem auto 0;
+  padding: 6px 14px; border-radius: 999px; background: var(--gold-soft); color: var(--ink); font-size: .95rem; animation: coin-in .5s ease-out; }
+.coin-gain b { font-size: 1.1rem; }
+.coin-gain .link { font-size: .85rem; }
+@keyframes coin-in { from { transform: scale(.7); opacity: 0 } 60% { transform: scale(1.08) } to { transform: scale(1); opacity: 1 } }
+
+/* the shelves: five to a plank */
+.gm-shelves { grid-column: 1 / -1; }
+.gm-tabs { margin: .2rem 0 .6rem; }
+.gm-tabs button { display: inline-flex; align-items: center; gap: 4px; }
+.gm-tabs button:disabled { opacity: .5; }
+.gm-tabs .ico { width: 14px; height: 14px; }
+.gm-shelf { display: flex; flex-direction: column; gap: 6px; margin: .4rem auto 0; max-width: 40rem; }
+.gm-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; padding: 0 8px 10px; position: relative;
+  border-bottom: 9px solid #B98551; border-radius: 0 0 4px 4px; box-shadow: 0 6px 0 -2px rgba(80, 50, 20, .25); }
+.gm-slot { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 2px 0; text-align: center; min-width: 0; }
+.gm-fig { width: min(84px, 100%); aspect-ratio: 1; position: relative; display: block; transition: transform .2s; }
+.gm-slot:hover .gm-fig { transform: translateY(-3px); }
+.gm-slot.rare .gm-fig::before { content: ""; position: absolute; inset: 8%; border-radius: 50%; background: radial-gradient(circle, rgba(230, 178, 62, .45), transparent 70%); }
+.gm-slot .toy { position: relative; }
+.gm-x { position: absolute; right: -2px; top: -2px; font: 600 .7rem var(--f-body); font-style: normal; background: var(--ink); color: var(--paper); border-radius: 999px; padding: 0 5px; }
+.gm-box { width: min(64px, 80%); aspect-ratio: 1; margin: 10px 0 6px; border-radius: 10px; border: 2px dashed var(--rule); background: var(--sunken);
+  display: grid; place-items: center; font: 600 1.6rem var(--f-display); color: var(--ink-3); }
+.gm-name { font-size: .95rem; line-height: 1.2; color: var(--ink); max-width: 100%; overflow-wrap: anywhere; }
+.gm-slot.empty .gm-name { color: var(--ink-3); }
+.gm-slot small { font-size: .72rem; color: var(--ink-3); line-height: 1.15; }
+.gm-slot.bounce .gm-fig { animation: gm-bounce .45s; }
+.gm-slot.landed .gm-fig { animation: gm-land .7s; }
+@keyframes gm-bounce { 30% { transform: translateY(-8px) scale(1.06) } 60% { transform: translateY(0) scale(.97) } }
+@keyframes gm-land { 0% { transform: translateY(-30px) scale(.4); opacity: 0 } 60% { transform: translateY(2px) scale(1.1); opacity: 1 } 100% { transform: none } }
+
+/* a capsule, opened in the middle of the screen */
+.ga-open { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(20, 18, 15, .55);
+  opacity: 0; transition: opacity .2s; }
+.ga-open.on { opacity: 1; }
+.ga-card { background: var(--sheet); border-radius: 20px; box-shadow: var(--shadow-lift); padding: 1.4rem 1.4rem 1.2rem; width: min(360px, 100%); text-align: center; }
+.ga-cap { display: flex; flex-direction: column; align-items: center; gap: .6rem; margin: 0 auto; }
+.ga-cap[hidden], .ga-toy[hidden] { display: none; }
+.ga-cap .capsule { width: 170px; animation: ga-wobble 1.4s ease-in-out infinite; }
+.ga-hint { color: var(--ink-2); font-size: .95rem; }
+@keyframes ga-wobble { 0%, 100% { transform: rotate(0) } 20% { transform: rotate(-6deg) } 40% { transform: rotate(5deg) } 60% { transform: rotate(-2deg) } }
+.ga-open .cap-top, .ga-open .cap-bot { transition: transform .38s cubic-bezier(.3, 0, .4, 1), opacity .38s; transform-box: fill-box; }
+.ga-open.cracked .ga-cap .capsule { animation: none; }
+.ga-open.cracked .cap-top { transform: translate(-18px, -40px) rotate(-30deg); opacity: 0; }
+.ga-open.cracked .cap-bot { transform: translate(14px, 40px) rotate(20deg); opacity: 0; }
+.ga-fig { width: 150px; margin: 0 auto; animation: ga-pop .5s cubic-bezier(.3, 1.5, .5, 1); }
+@keyframes ga-pop { from { transform: scale(.2) rotate(-20deg); opacity: 0 } to { transform: none; opacity: 1 } }
+.ga-new { display: inline-block; margin: .4rem 0 .2rem; padding: 2px 12px; border-radius: 999px; background: var(--jade); color: var(--sheet); font-weight: 600; font-size: .85rem; }
+.ga-dup { margin: .4rem 0 .2rem; color: var(--ink-2); font-size: .9rem; }
+.ga-name { font-size: 2rem; line-height: 1.3; margin-top: .2rem; }
+.ga-m { color: var(--ink-2); margin-bottom: 1rem; }
+.ga-acts { display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; }
+.ga-complete h2 { margin-top: .4rem; }
+
 /* ============================================================
    PHONE LAYER
 
@@ -3125,4 +3213,12 @@ button.tx-line:hover { background: color-mix(in srgb, var(--ai) 8%, transparent)
   .tx-play.q { display: flex; flex-direction: column; min-height: 100%; }
   .tx-play.q > .opts { margin-top: auto; margin-bottom: 10px; }
   .tx-card { font-size: 1.25rem; padding: 14px 16px; }
+
+  /* games: the machine smaller, the shelves five across still */
+  .gm-stage { width: min(190px, 52vw); }
+  .gm-turn { min-width: 0; width: 100%; }
+  .gm-row { gap: 4px; padding: 0 2px 8px; }
+  .gm-name { font-size: .82rem; }
+  .gm-slot small { display: none; }
+  .ga-name { font-size: 1.7rem; }
 }

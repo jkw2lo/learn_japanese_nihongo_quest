@@ -1076,6 +1076,18 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.48.0: 遊ぶ Games, and a capsule machine
+
+- **A Games tab**, beside Read, with Word search and Match moved into it.
+- **Every game pays coins**, and coins turn a **capsule machine**: the
+  handle turns, a capsule drops, it opens with a tap and the toy inside
+  says its name. The first turn is free.
+- **Collect them all**: twenty toys a set, on shelves of ? boxes that fill
+  as you go, each with its name in Japanese. Three sets — Lucky charms,
+  Food, Around town — sixty toys, all drawn; finishing one opens the next.
+- Fair odds: a toy you lack is likelier, a double gives coins back, and
+  six doubles in a row guarantee a new one — about thirty games a set.
+
 ### 0.47.0: More to read; rotation lock respected
 
 - **16 new short texts** (29 in all) made of the new words: a shop's
@@ -1460,6 +1472,10 @@ line drawing.
 - **The stamps**, a teacher's red hanko: よくできました (well done) for new
   kana or words, 合格 (passed) for the hiragana check, 新記録 (new record) for
   a sprint best, ごちそうさま after a menu order, and 完 for a finished stage.
+- **The capsule toys** (`js/toys-art.js`, see 遊ぶ Games): sixty little
+  figures, and the machine they come out of. The one exception to the
+  colour tokens — like the painted places, they keep their own colours by
+  day and night.
 - **Sakura petals** drift down over the moments worth it: a lesson learned,
   a check passed (a shower when katakana opens), a stage finished, the
   day's whole list done (きょうは おわり！), a new best, a finished order.
@@ -1543,7 +1559,8 @@ shown as kanji, the rest in kana, with no furigana — there's none on a sign
    checks their kanji, patterns and answers, and every line is recorded
    (arrows and colons said as pauses, a sign's 〜 as から, `textSay`).
 
-Beside the ladder, two games. **結ぶ Match**: meanings and words you know,
+Two games, which live on the Games tab (see 遊ぶ Games, below) and play in
+the same overlay. **結ぶ Match**: meanings and words you know,
 paired — **four and four** (four meanings beside four words; tap one and
 then its partner, or draw a line between them; five sets) or **one at a
 time** (one word in the middle with a meaning above, right, below and
@@ -1576,6 +1593,51 @@ one place (`makeSearch`, `searchPlaces`). Best times are kept per size.
 The pace, the chain length and the word search's bests are kept in
 `state.read` and synced (the newer side's pace, the larger best, the
 faster time). Record shows them beside the sprints.
+
+---
+
+## 遊ぶ Games
+
+Its own tab (0.48.0), beside Read: **Word search** and **Match** (above),
+with more to come, and the reason to play them — **coins** and a
+**capsule machine** (ガチャガチャ, the toy vending machines outside every
+Japanese shop).
+
+- **Every game pays.** Word search: two coins a word, four more without a
+  hint, four for a best, one per bonus word — about twenty for an 8×8.
+  Match: a coin a word right first time, five for no slips, four for a
+  best. The end screen says so, with a way to the machine (`earnCoins`).
+- **A turn costs 20** (`SPIN_COST`); the first is free, so the machine
+  shows what it does before it asks. The handle turns, the dome jiggles,
+  a capsule drops; it opens in the middle of the screen with a tap — its
+  two halves fly apart — and the toy inside says its name. A rare toy
+  comes in a gold capsule, with petals.
+- **Twenty toys a set**, on four shelves of five (`TOY_SETS` in
+  `js/data/toys.js`): 縁起物 Lucky charms (招き猫, だるま, こけし,
+  鳥居, 富士山…), then 食べ物 Food (おにぎり, ラーメン, たいやき,
+  抹茶…), then 町 Around town (自販機, 新幹線, 踏切, 東京タワー…). A
+  toy not yet found is a ? box; a found one stands on the shelf with its
+  name in Japanese (furigana as the learner needs it) and English, and a
+  tap says it. Doubles are counted (×2). **A full set opens the next**, with
+  a 全部 stamp; earlier sets stay to look at, later ones are locked.
+- **The odds** (`gachaPick`): the machine only gives toys from the set
+  being collected; one you haven't got is four times as likely as one you
+  have, a rare one half as likely as the rest; a double gives 5 coins back
+  (`DUP_BACK`); and after six doubles in a row the next is new (`PITY`). A
+  set takes about 36 turns — nine in ten by 48, by simulation — so
+  about thirty games: a week or two of play, not a grind. Smoke runs the
+  machine 200 times to keep it there.
+- **The toys are drawn** (`js/toys-art.js`): little vinyl figures, flat
+  colour with a dark outline, each a 64×64 SVG. Like the painted places
+  they have their own light — the same colours in either theme — so the
+  palette is fixed (`.toy` in the stylesheet). `design/toys.html` shows
+  every one at a glance, for drawing more. Every name is recorded
+  (`js/audio-gacha.js`, fetched when the tab opens).
+
+`state.gacha` holds `earned` and `spent` (coins are the difference, so a
+sync takes the larger of each and never mints or loses a turn's worth),
+`owned` (toy → how many; merged by the larger count) and `dry` (the
+doubles in a row).
 
 ---
 
@@ -2097,7 +2159,11 @@ you like.
     js/app.js               Today, the kana chart, Record, sessions, settings, backup
     js/guide.js             the introduction and the new-kind cards
     js/sprint.js            the Sprint tab
-    js/read-ui.js           the Read tab: Subtitles, Word chains, Phrases, Short texts, Match, Word search
+    js/read-ui.js           the Read tab: Subtitles, Word chains, Phrases, Short texts; and Match and Word search, played from Games
+    js/games-ui.js          the Games tab: coins, the capsule machine, the shelves
+    js/data/toys.js         the capsule toys: sets, names, the machine's odds
+    js/toys-art.js          the toys drawn, the machine, a capsule, a coin
+    design/toys.html        every toy on one page, for drawing more
     js/data/texts.js        the short texts the Read tab reads (messages, signs, menus…), and its everyday sentences to split
     js/phone.js             the sections button and the rolodex (inert on a desktop)
     js/art.js               icons, the cat, the hanamaru, stamps, petals

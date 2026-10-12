@@ -67,6 +67,11 @@ const freshRead = () => ({ flash: { cps: 1.5, best: 0, rounds: 0 }, chains: { n:
   subs: { cps: 1.2, len: 4, best: 0, rounds: 0 }, phrases: { best: 0, rounds: 0 },
   texts: { best: 0, rounds: 0, read: [] } });
 
+/* Coins are kept as two running totals, earned and spent, so a merge can
+   take the larger of each; owned is toy id -> how many; dry, the turns in a
+   row with nothing new (the machine's pity, js/data/toys.js). */
+const freshGacha = () => ({ earned: 0, spent: 0, owned: {}, dry: 0 });
+
 const freshState = () => ({
   app: "nihongo-quest", v: 1,
   created: today(),
@@ -85,6 +90,7 @@ const freshState = () => ({
   scenes: {},         /* out and about: id -> { got: [item indices recognised] }; the
                          konbini adds copy and back: slogans and back labels read */
   menu: { orders: 0, days: {} },   /* the side quest: orders taken, per day */
+  gacha: freshGacha(),  /* 遊ぶ Games: coins and the capsule toys (games-ui.js) */
   backupAt: null,
 });
 
@@ -125,6 +131,8 @@ function normalise(s) {
   out.outSeen = asList(s.outSeen);          /* out-and-about places visited since they opened */
   out.outWord = s.outWord && typeof s.outWord === "object" ? s.outWord : null;   /* today's word from the street — shown only */
   out.menu = { orders: 0, days: {}, ...(s.menu || {}) };
+  const sg = s.gacha && typeof s.gacha === "object" ? s.gacha : {};
+  out.gacha = { ...freshGacha(), ...sg, owned: sg.owned && typeof sg.owned === "object" && !Array.isArray(sg.owned) ? sg.owned : {} };
   out.milestones = s.milestones && typeof s.milestones === "object" ? s.milestones : {};
   out.scenes = s.scenes && typeof s.scenes === "object" ? s.scenes : {};
   for (const [id, x] of Object.entries(out.scenes)) {
@@ -551,6 +559,9 @@ function mergeState(a, b) {
     return m;
   });
   out.menu = { orders: bigger(a.menu.orders, b.menu.orders), days: mergeBy(a.menu.days, b.menu.days, bigger) };
+  /* coins: the larger total earned and the larger spent; a toy, the larger count */
+  out.gacha = { earned: bigger(a.gacha.earned, b.gacha.earned), spent: bigger(a.gacha.spent, b.gacha.spent),
+    owned: mergeBy(a.gacha.owned, b.gacha.owned, bigger), dry: newer.gacha.dry || 0 };
   const betterRun = (x, y) => (y.right > x.right || (y.right === x.right && y.ms < x.ms) ? y : x);
   const seen = new Set();
   out.sprint = {

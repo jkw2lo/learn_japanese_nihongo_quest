@@ -1,0 +1,8 @@
+<!doctype html><meta charset="utf-8"><title>Toys</title>
+<link rel="stylesheet" href="../css/app.css">
+<style>body{padding:16px;background:#F3F0E8} .grid{display:grid;grid-template-columns:repeat(10,1fr);gap:10px} .cell{background:#fff;border-radius:10px;padding:6px;text-align:center;font:11px sans-serif} .big{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:20px}</style>
+<div id="out"></div>
+<script src="../js/furi.js"></script><script src="../js/data/toys.js"></script><script src="../js/toys-art.js"></script>
+<script>
+document.getElementById("out").innerHTML = TOY_SETS.map(S => `<h3>${S.en}</h3><div class="grid">${S.toys.map(t => `<div class="cell">${toyArt(t.id)}<div>${t.id}</div></div>`).join("")}</div>`).join("");
+</script>
