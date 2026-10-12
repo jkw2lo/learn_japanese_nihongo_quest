@@ -469,7 +469,7 @@ offers 待って / 待った / 待ちます.
   文型 fill the gaps and 文 understand them. Go deeper has a 文型 tile, and
   the **Grammar tab** lists every pattern.
 
-### Teaching a pattern (stages 3–4 in 0.34.0, 5–6 in 0.37.0)
+### Teaching a pattern (stages 3–4 in 0.34.0, 5–6 in 0.37.0, 7–8 in 0.38.0)
 
 One card and two drills told you what a pattern was; it didn't teach it.
 Now a pattern with a teaching entry (`PATTERN_TEACH` in
@@ -1052,6 +1052,16 @@ the konbini's does, and the smoke test checks both.
   wide layout: the timetable's destinations wrapped a character at a time
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
+
+### 0.38.0: stages 7 and 8 taught
+
+- Stage 7's six (はありますか, があります/います, な + noun, くないです,
+  かったです, にします) and stage 8's five (と, から〜まで, あまり〜ません,
+  ましょう, ませんか) get the guided lesson. The mix-ups: あります and います,
+  な and い adjectives, くないです and じゃないです, かったです and でした,
+  にします and をください, よく and あまり, ましょう and ませんか, まで and に.
+  The odd ones are drilled on purpose: いい → よくないです, よかったです.
+- Four or more examples each. 108 new clips.
 
 ### 0.37.0: stages 5 and 6 taught
 
