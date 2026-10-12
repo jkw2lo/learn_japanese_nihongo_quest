@@ -19,6 +19,7 @@ const isPhone = () => PHONE_MQ.matches;
 function initDrawerLoop() {
   const nav = $("#drawerNav");
   if (!nav || nav._len) return;
+  if (typeof orderNav === "function") orderNav();     /* the stage's order, before the copies are made */
   const original = [...nav.children];
   nav._len = original.length;
   original.forEach(el => nav.appendChild(el.cloneNode(true)));

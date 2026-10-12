@@ -95,7 +95,7 @@ Build order. Each step should run end to end before the next one starts.
 10b. **読む Read** (0.31.0): the ladder from kana to reading — ~~Flash~~,
    ~~Word chains~~; next, Phrases (words joined by particles, once は and の
    are learned), then timed Sentences on a graded sentence bank, then
-   Subtitles; and a Today that leads with reading once there's enough of it.
+   Subtitles; ~~a Today that leads with reading~~ (0.42.0).
    ~~Word search~~ (0.32.0). ~~Subtitles~~, ~~Match~~ (0.33.0). ~~Phrases~~
    (0.40.0). ~~Short texts~~ (0.41.0) — 13 so far; more to write as words grow.
 10c. ~~**Teaching grammar**~~: all 40 patterns taught in full (0.34.0–0.39.0),

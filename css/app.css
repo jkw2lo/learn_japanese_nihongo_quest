@@ -2610,6 +2610,18 @@ button.tx-line:hover { background: color-mix(in srgb, var(--ai) 8%, transparent)
 .tx-q { font-size: 1.15rem; margin: .8rem 0 1rem; color: var(--ink); }
 .tx-peek .tx-card { font-size: 1.1rem; margin-top: 0; }
 
+/* ---------- Today's read ---------- */
+
+.today-read { border-left: 4px solid var(--ai); }
+.today-read.done { border-left-color: var(--jade); }
+.tr-head { display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
+.tr-done { display: inline-flex; align-items: center; gap: 4px; color: var(--jade); font-size: .85rem; }
+.tr-done .ico { width: 16px; height: 16px; }
+.tr-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: .5rem 0 .3rem; }
+.tr-what { display: flex; flex-direction: column; }
+.tr-what b { font-size: 1.15rem; font-weight: 600; }
+.tr-what small { color: var(--ink-2); }
+
 /* ============================================================
    PHONE LAYER
 

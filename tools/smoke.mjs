@@ -93,7 +93,7 @@ const CONTRACT = {
   'js/app.js': ['ACTS', 'render', 'go', 'view', 'S', 'askConfirm', 'crumb', 'shuffle', 'esc', '$', '$$',
     'distractors', 'renderSoundBar', 'onAudioLoaded', 'toast', 'openSession', 'closeSheet', 'SET_NAME',
     'qWrite', 'stickyWrite', 'reviewKind', 'showWrite', 'checkWrite', 'showStrokes', 'loadStrokes', 'settle', 'settleNearly', 'afterAnswer', 'rebuild', 'quickMs',
-    'todaysWords', 'wordDay', 'wordTasks', 'allTasksDone', 'stagesFinished', 'lessonNames'],
+    'todaysWords', 'wordDay', 'wordTasks', 'allTasksDone', 'stagesFinished', 'lessonNames', 'navOrder', 'orderNav', 'todaysRead', 'todaysReadHtml'],
   'js/sprint.js': ['renderSprint', 'sprintKey', 'sprintLabel', 'sprintWords', 'otherMeanings'],
   'js/read-ui.js': ['renderRead', 'readKey', 'readText', 'readPool', 'splits', 'makeChain', 'chainable', 'READ_RUNGS', 'openRead', 'closeRead',
     'makeSearch', 'searchPlaces', 'searchSnap', 'SEARCH_DIRS', 'SEARCH_SIZES', 'searchCard', 'phrasePool', 'phraseCard', 'pieceMeaning', 'subsPool', 'textCard', 'textShow', 'textOpen', 'textAnswer'],

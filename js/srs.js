@@ -521,7 +521,7 @@ function mergeItem(x, y) {
 
 function mergeDay(x, y) {
   const out = { ...x, ...y };
-  ["n", "g", "right", "ms", "bk"].forEach(f => { if (x[f] != null || y[f] != null) out[f] = bigger(x[f], y[f]); });
+  ["n", "g", "right", "ms", "bk", "read"].forEach(f => { if (x[f] != null || y[f] != null) out[f] = bigger(x[f], y[f]); });
   out.learned = unionList(x.learned, y.learned);
   out.rev = unionList(x.rev, y.rev);
   out.ok = mergeBy(x.ok, y.ok, unionList);

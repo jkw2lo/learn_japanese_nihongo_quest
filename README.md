@@ -617,6 +617,17 @@ The daily loop, lifted almost whole from Hanzi Quest (*The blocks on Today*,
    forward (`grade(..., {practice: true})`).
 4. **Out and about**: the menus and the real-life scenes.
 
+**Past the kana** (`wordsOpen`), Today changes shape a little (0.42.0):
+
+- **今日の読み Today's read** sits right under the session: one reading
+  activity, started in one tap — a short text not read yet if one's open,
+  otherwise Subtitles or Phrases, turn about by the day. It ticks once a
+  reading round is finished that day (`day().read`).
+- **The sections reorder** (`navOrder`): Read moves up beside Today, and
+  the kana chart moves to the end, beside Record — a reference now, no
+  longer the second thing you want. Before then the order is as it was.
+  (The phone's wheel takes the order the first time it opens.)
+
 Every number on Today counts items, never answers, for the reason Hanzi
 Quest's *What the numbers count* gives.
 
@@ -1052,6 +1063,14 @@ the konbini's does, and the smoke test checks both.
   wide layout: the timetable's destinations wrapped a character at a time
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
+
+### 0.42.0: Today, past the kana
+
+- **Today's read**: once the kana are learned, Today leads with something
+  to read — a new short text, or Subtitles or Phrases — under the session,
+  ticking once a reading round is done.
+- **The sections reorder by stage**: past the kana, Read sits beside
+  Today and the kana chart moves to the end, beside Record.
 
 ### 0.41.0: 文章 Short texts
 

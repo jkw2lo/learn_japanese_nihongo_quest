@@ -771,6 +771,7 @@ function searchDone() {
   clearInterval(RD.timer);
   const ms = performance.now() - RD.t0;
   addStudyTime(ms);
+  day().read = (day().read || 0) + 1;
   const s = state.read.search;
   s.rounds = (s.rounds || 0) + 1;
   const best = !RD.helped && (!s.best[RD.size] || ms < s.best[RD.size]);
@@ -1024,6 +1025,7 @@ function matchDone() {
   clearInterval(RD.timer);
   const ms = performance.now() - RD.t0;
   addStudyTime(ms);
+  day().read = (day().read || 0) + 1;
   const m = state.read.match;
   m.rounds = (m.rounds || 0) + 1;
   const best = RD.slips === 0 && (!m.best[RD.layout] || ms < m.best[RD.layout]);
@@ -1050,6 +1052,7 @@ function rdFinish() {
   RD.done = true;
   clearTimeout(RD.hide); clearTimeout(RD.next);
   addStudyTime(performance.now() - RD.t0);
+  day().read = (day().read || 0) + 1;            /* Today's read ticks */
   const r = state.read[RD.rung];
   const total = RD.n;
   const right = RD.res.filter(x => x === "ok").length;

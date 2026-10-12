@@ -67,7 +67,56 @@ function go(v) {
   scrollTo(0, 0);
 }
 
+/* The sections in the order they matter at this stage. While the kana are
+   being learned, the chart is the second thing you want; once they're all
+   learned, reading is, and the chart becomes something to look things up
+   in — so it moves to the end, beside Record. */
+const NAV_KANA = ["today", "kana", "words", "grammar", "read", "cards", "book", "menu", "sprint", "record"];
+const NAV_PAST = ["today", "read", "words", "grammar", "menu", "sprint", "cards", "book", "kana", "record"];
+const navOrder = () => wordsOpen() ? NAV_PAST : NAV_KANA;
+
+function orderNav() {
+  const order = navOrder();
+  const sortIn = box => {
+    if (!box) return;
+    const btns = [...box.querySelectorAll(":scope > [data-nav]")];
+    if (btns.map(b => b.dataset.nav).join() === order.join()) return;
+    order.forEach(id => { const b = btns.find(x => x.dataset.nav === id); if (b) box.appendChild(b); });
+  };
+  sortIn($(".top-nav"));
+  /* the phone's wheel is cloned the first time it opens; only its first
+     copy can be put in order, so this runs until then (phone.js) */
+  const d = $("#drawerNav");
+  if (d && !d._len) sortIn(d);
+}
+
+/* Past the kana, Today leads with something to read: a short text not yet
+   read if one is open, otherwise splitting sentences or reading at subtitle
+   pace, turn about by the day. It ticks once a reading round is finished
+   today (day().read, counted by the Read tab). */
+function todaysRead() {
+  const unread = TEXTS.filter(t => textOpen(t) && !state.read.texts.read.includes(t.id));
+  if (unread.length) return { r: "texts", jp: "文章", head: "A new short text", sub: unread[0].title };
+  const alt = [{ r: "subs", jp: "字幕", head: "Subtitles", sub: "a line at a time, at your pace" }];
+  if (phrasePool().length >= 3) alt.push({ r: "phrases", jp: "句", head: "Phrases", sub: "sentences split into their pieces" });
+  return alt[Math.floor(Date.parse(today()) / 864e5) % alt.length];
+}
+
+function todaysReadHtml() {
+  if (!wordsOpen()) return "";
+  const x = todaysRead(), done = (day().read || 0) > 0;
+  return `<section class="card today-read ${done ? "done" : ""}">
+    <div class="tr-head"><span class="eyebrow">今日の読み · Today's read</span>${done ? `<span class="tr-done">${icon("check")} read today</span>` : ""}</div>
+    <div class="tr-row">
+      <div class="tr-what"><b><span lang="ja">${x.jp}</span> ${esc(x.head)}</b><small>${esc(x.sub)}</small></div>
+      <button class="btn ${done ? "btn-ghost" : ""}" data-act="rd-start" data-r="${x.r}">${done ? "Another" : "Read"}</button>
+    </div>
+    <p class="muted small">Or anything on the <button class="link" data-act="nav" data-nav="read">Read tab ›</button></p>
+  </section>`;
+}
+
 function render() {
+  orderNav();
   if (view === "today") renderToday();
   else if (view === "kana") renderKana();
   else if (view === "words") renderWords();
@@ -289,6 +338,7 @@ function renderToday() {
   el.innerHTML = `<div class="today-grid">
     <div class="col-main">
       ${hero}
+      ${first ? "" : todaysReadHtml()}
       ${taskHtml}
       ${first ? "" : deeperHtml()}
       ${first ? "" : menuCardHtml()}
