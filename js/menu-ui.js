@@ -14,7 +14,7 @@ const revealed = new Set();
 /* the same rule as every place: open once half of it can be sounded out */
 const menuOpen = M => placeOpen(M.id);
 const canReadItem = it => it.units.every(isLearned);
-const numbersKnown = () => WORDS.filter(x => x.st === 3).every(x => isLearned(x.key));
+const numbersKnown = () => WORDS.filter(x => x.st === 3 && x.pos === "num").every(x => isLearned(x.key));
 const yen = n => "¥" + n.toLocaleString("en-US");
 
 /* The shop curtain that hangs over a Japanese doorway, with the shop's

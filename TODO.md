@@ -100,6 +100,10 @@ Build order. Each step should run end to end before the next one starts.
    (0.40.0). ~~Short texts~~ (0.41.0) — 13 so far; more to write as words grow.
 10c. ~~**Teaching grammar**~~: all 40 patterns taught in full (0.34.0–0.39.0),
    163 examples.
+10d. **More words**, towards N5's ~700, in four batches by stage:
+   ~~stages 3–4~~ (0.43.0, 341 words); then 5–6 (food, places, transport),
+   7–8 (shopping, home, everyday verbs), 9–10 (more verbs, adjectives,
+   weather, feelings).
 11. **N4**: on hold. Staying at N5 for now.
 
 ## Smaller, from 0.4.0

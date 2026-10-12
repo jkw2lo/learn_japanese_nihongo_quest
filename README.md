@@ -6,7 +6,7 @@ holding a simple conversation. It starts from nothing and runs to JLPT N5,
 then on towards N4. Writing is there if you want it and never in the way if
 you don't.
 
-> **Status: all of N5 is built (0.13.0).** The kana stage, then 219 words
+> **Status: all of N5 is built (0.13.0).** The kana stage, then 341 words
 > in nine stages (phrases, numbers and money, me and you, food, getting
 > around, shopping, daily life, the て-form, and an N5 wrap-up), 40 grammar
 > patterns, 131 kanji (74 N5, 57 N4) taught through the words, verbs and
@@ -267,10 +267,13 @@ a note, and example sentences for many.
   but the kana stage is gated the whole way through (hiragana cemented
   before katakana), so words wait for the last kana too.
 - **Five a day**, under the same **New kana a day** allowance, which counts
-  words once kana are done. There are 219 words in nine stages, in lessons of five:
+  words once kana are done. There are 341 words in nine stages, in lessons of five:
   - **2 · あいさつ** survival phrases (24)
-  - **3 · 数** numbers, time and money (29)
-  - **4 · 私** me and you (25)
+  - **3 · 数** numbers, time and money (84): counting, the clock, the days
+    of the week, months and dates (the irregular ついたち to とおか, and
+    はつか)
+  - **4 · 私** me and you (92): this and that, question words, family (my
+    父 and your お父さん), jobs, countries, age and birthdays
   - **5 · 食べる** food and ordering (25)
   - **6 · 行く** getting around (24): trains, stations, directions, eight
     verbs, and the particles に, で and へ
@@ -1063,6 +1066,20 @@ the konbini's does, and the smoke test checks both.
   wide layout: the timetable's destinations wrapped a character at a time
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
+
+### 0.43.0: More words — the calendar, family and the world
+
+- **122 new words** in stages 3 and 4, towards N5's 700 or so (the first of
+  four batches): the days of the week, months, dates, this/next/last
+  week, month and year; これ・それ・あれ and the question words; family
+  both ways (父 for yours, お父さん for someone else's), jobs, countries,
+  age, birthdays and hobbies. 341 words in all, each recorded.
+- **New words come in after the old ones.** A stage's new words are added
+  at its end, so lessons already learned keep their words (the last
+  lesson of a stage may gain one or two) and someone already past a stage
+  meets its new words next.
+- **Out and about's prices** are said aloud once stage 3's *numbers* are
+  learned, not all of stage 3's words — the calendar doesn't hold them up.
 
 ### 0.42.0: Today, past the kana
 
@@ -2032,7 +2049,7 @@ you like.
     js/audio-kana.js        generated clips — do not hand-edit
     js/strokes.js           generated stroke data — do not hand-edit
     js/furi.js              furigana markup: parse, check, render, derive kana
-    js/data/words.js        stages 2–10: 219 words, their stages, lessons of five
+    js/data/words.js        stages 2–10: 341 words, their stages, lessons of five
     js/data/patterns.js     40 grammar patterns, placed after their stage's words
     js/data/grammar.js      the Grammar tab's reference: sentence shape, particles, endings
     js/grammar-ui.js        the Grammar tab
