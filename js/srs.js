@@ -64,7 +64,8 @@ const asList = v => Array.isArray(v) ? v : (v && typeof v === "object" ? Object.
    chains the words a chain you're up to; each keeps its best. */
 const freshRead = () => ({ flash: { cps: 1.5, best: 0, rounds: 0 }, chains: { n: 2, best: 0, rounds: 0 },
   search: { size: 8, clue: "m", best: {}, rounds: 0 }, match: { layout: null, best: {}, rounds: 0 },
-  subs: { cps: 1.2, len: 4, best: 0, rounds: 0 }, phrases: { best: 0, rounds: 0 } });
+  subs: { cps: 1.2, len: 4, best: 0, rounds: 0 }, phrases: { best: 0, rounds: 0 },
+  texts: { best: 0, rounds: 0, read: [] } });
 
 const freshState = () => ({
   app: "nihongo-quest", v: 1,
@@ -113,7 +114,8 @@ function normalise(s) {
   /* flash: the old rung 1, folded into Subtitles in 0.36.0 — kept so a
      sync with an older device still merges; its pace carries over to a
      Subtitles not yet played */
-  out.read = { flash: { ...fr.flash, ...(sr.flash || {}) }, chains: { ...fr.chains, ...(sr.chains || {}) }, search: { ...fr.search, ...(sr.search || {}) }, match: { ...fr.match, ...(sr.match || {}) }, subs: { ...fr.subs, ...(sr.subs || {}) }, phrases: { ...fr.phrases, ...(sr.phrases || {}) } };
+  out.read = { flash: { ...fr.flash, ...(sr.flash || {}) }, chains: { ...fr.chains, ...(sr.chains || {}) }, search: { ...fr.search, ...(sr.search || {}) }, match: { ...fr.match, ...(sr.match || {}) }, subs: { ...fr.subs, ...(sr.subs || {}) }, phrases: { ...fr.phrases, ...(sr.phrases || {}) }, texts: { ...fr.texts, ...(sr.texts || {}) } };
+  out.read.texts.read = asList(out.read.texts.read);
   out.read.match.best = out.read.match.best && typeof out.read.match.best === "object" ? out.read.match.best : {};
   out.read.search.best = out.read.search.best && typeof out.read.search.best === "object" ? out.read.search.best : {};
   if (!out.read.subs.rounds && out.read.flash.rounds && out.read.flash.cps > out.read.subs.cps) out.read.subs.cps = out.read.flash.cps;
@@ -562,6 +564,8 @@ function mergeState(a, b) {
   ["flash", "chains", "subs", "phrases"].forEach(r => {
     out.read[r] = { ...older.read[r], ...newer.read[r], best: bigger(a.read[r].best, b.read[r].best), rounds: bigger(a.read[r].rounds, b.read[r].rounds) };
   });
+  out.read.texts = { best: bigger(a.read.texts.best, b.read.texts.best), rounds: bigger(a.read.texts.rounds, b.read.texts.rounds),
+    read: unionList(a.read.texts.read, b.read.texts.read) };
   /* a word search's best is a time: the smaller, per grid size */
   out.read.search = { ...older.read.search, ...newer.read.search, rounds: bigger(a.read.search.rounds, b.read.search.rounds),
     best: mergeBy(a.read.search.best, b.read.search.best, (x, y) => Math.min(x || Infinity, y || Infinity)) };

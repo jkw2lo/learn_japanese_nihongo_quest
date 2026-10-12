@@ -1053,6 +1053,14 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.41.0: 文章 Short texts
+
+- **Read → 文章 Short texts**, rung 4: a message, a sign, a menu, a receipt
+  or a diary page, read in one go, then two questions with it out of
+  sight, then every line to hear with its English. 13 texts from stage 3
+  (a café receipt) to stage 10 (a casual text from a friend), each opening
+  as its words and grammar are learned.
+
 ### 0.40.0: 句 Phrases
 
 - **Read → 句 Phrases**, rung 3: Word chains for real sentences. A sentence
@@ -1418,7 +1426,18 @@ shown as kanji, the rest in kana, with no furigana — there's none on a sign
    lesson and grows with each one; a piece that's a word or a particle
    shows its meaning as it's found, and the whole sentence is said and
    given in English at the end. Six a round, best speed kept.
-5. **文章 Short texts** (later): a message, a sign, a menu, read in one go.
+5. **文章 Short texts** (0.41.0): the kind of thing you'd meet — a friend's
+   message, a sign, a menu board, a receipt, a page of a diary
+   (`js/data/texts.js`), each drawn as what it is (a chat bubble, a sign
+   with a heavy edge, chalk on a green board whatever the theme, a strip
+   of receipt paper, ruled diary lines). Read it through and say so; then
+   two questions with it out of sight — *Look again* brings it back, at
+   the cost of that question's mark. Afterwards every line can be tapped
+   to hear, with its English. A text opens once its stage's words and its
+   patterns are learned (`textOpen`); three a round, unread ones first,
+   and the reading speed is kept. 13 texts so far, stages 3 to 10; the
+   smoke test checks their kanji, patterns and answers, and every line is
+   recorded (arrows and colons said as pauses, `textSay`).
 
 Beside the ladder, two games. **結ぶ Match**: meanings and words you know,
 paired — **four and four** (four meanings beside four words; tap one and
@@ -1972,7 +1991,8 @@ you like.
     js/app.js               Today, the kana chart, Record, sessions, settings, backup
     js/guide.js             the introduction and the new-kind cards
     js/sprint.js            the Sprint tab
-    js/read-ui.js           the Read tab: Flash, Word chains, Subtitles, Match, Word search
+    js/read-ui.js           the Read tab: Subtitles, Word chains, Phrases, Short texts, Match, Word search
+    js/data/texts.js        the short texts the Read tab reads (messages, signs, menus…)
     js/phone.js             the sections button and the rolodex (inert on a desktop)
     js/art.js               icons, the cat, the hanamaru, stamps, petals
     js/conj.js              verb conjugation, generated, never stored

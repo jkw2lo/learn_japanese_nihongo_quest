@@ -20,6 +20,9 @@
       learned, run together, to find every piece of — words, particles,
       endings. Its pieces are the Build-it tiles of each pattern you know
       (phrasePool), so it grows as the grammar does.
+   4. 文章 Short texts — a message, a sign, a menu, a receipt, a diary page
+      (js/data/texts.js), read in one go; then two questions with the text
+      out of sight. Each opens when its words and patterns are learned.
    Later: phrases with particles, and short texts read in one go.
 
    And beside the ladder, a game: 探す Word search, a grid of kana you know
@@ -146,9 +149,7 @@ const READ_RUNGS = [
   { id: "chains", jp: "区切り", en: "Word chains", what: "Words you know, run together with no spaces, the way Japanese is written. Drag across each word to find it.", min: 6 },
   { id: "phrases", jp: "句", en: "Phrases", what: "A sentence you've learned, run together. Find every piece — the words and the little words between them: は, を, に, です. It grows with the grammar you learn.", min: 3 },
 ];
-const READ_LATER = [
-  { jp: "文章", en: "Short texts", what: "A message, a sign, a menu: a few lines read in one go, then a question or two." },
-];
+const READ_LATER = [];
 const CHAIN_N = 8;
 const SUBTITLE_CPS = 4;
 
@@ -181,12 +182,13 @@ function renderRead() {
     ${rung(READ_RUNGS[1], `<div class="rd-stat">${r.chains.rounds ? `Best: <b>${cpsText(r.chains.best)}</b> · up to ${r.chains.n} words a chain` : "Starts with two words a chain."}</div>
       <button class="btn rd-go" data-act="rd-start" data-r="chains">Find the words in ${CHAIN_N} chains</button>`)}
     ${phraseCard()}
+    ${textCard()}
     ${searchCard(pool)}
     ${matchCard(pool)}
-    <section class="card rd-later">
+    ${READ_LATER.length ? `<section class="card rd-later">
       <div class="card-head"><h2>Further up</h2><span class="count">as you learn more</span></div>
-      <ol class="rd-later-list" start="4">${READ_LATER.map(x => `<li><b><span lang="ja">${x.jp}</span> ${x.en}</b><br><span class="muted small">${esc(x.what)}</span></li>`).join("")}</ol>
-    </section>
+      <ol class="rd-later-list" start="5">${READ_LATER.map(x => `<li><b><span lang="ja">${x.jp}</span> ${x.en}</b><br><span class="muted small">${esc(x.what)}</span></li>`).join("")}</ol>
+    </section>` : ""}
   </div>`;
 }
 
@@ -210,6 +212,13 @@ function openRead(rung) {
        and the grammar bundle, which holds every pattern's examples */
     new Set(learnedWords().map(x => x.st)).forEach(st => loadBundle("s" + st));
     loadBundle("grammar");
+  } else if (rung === "texts") {
+    /* ones not read yet first */
+    const open = TEXTS.filter(textOpen), read = new Set(state.read.texts.read);
+    RD.lines = [...shuffle(open.filter(t => !read.has(t.id))), ...shuffle(open.filter(t => read.has(t.id)))].slice(0, TEXT_N);
+    RD.n = RD.lines.length * 2;
+    RD.ti = 0; RD.ms = 0; RD.chars = 0; RD.right = 0;
+    new Set(RD.lines.map(t => t.st)).forEach(st => loadBundle("s" + st));
   } else if (rung === "phrases") {
     RD.lines = shuffle(phrasePool());
     RD.n = Math.min(PHRASE_N, RD.lines.length);
@@ -232,7 +241,7 @@ function rdStep() {
   rdStrip();
   $("#rdFoot").innerHTML = "";
   if (RD.i >= RD.n) return rdFinish();
-  if (RD.rung === "subs") subsShow(); else if (RD.rung === "phrases") phraseShow(); else chainShow();
+  if (RD.rung === "subs") subsShow(); else if (RD.rung === "phrases") phraseShow(); else if (RD.rung === "texts") textShow(); else chainShow();
 }
 
 function closeRead() {
@@ -244,6 +253,102 @@ function closeRead() {
   document.body.style.overflow = "";
   render();
   milestoneCheckpoint();
+}
+
+/* ---------- 4 · Short texts ---------- */
+
+const TEXT_N = 3;
+/* open once its words' stage is reached and its patterns are learned */
+const textOpen = t => learnedWords().some(w => w.st >= t.st) && t.pats.every(id => isLearned("g:" + id));
+
+function textCard() {
+  const r = state.read.texts, open = TEXTS.filter(textOpen), next = TEXTS.find(t => !textOpen(t));
+  return `<section class="card rd-rung ${open.length ? "" : "locked"}">
+    <div class="rd-rung-head"><span class="rd-n">4</span><h2><span lang="ja">文章</span> Short texts</h2></div>
+    <p>A message, a sign, a menu, a receipt, a page of a diary — read it in one go, then answer two questions with it out of sight.</p>
+    ${open.length ? `<div class="rd-stat">${open.length} of ${TEXTS.length} open${r.read.length ? ` · ${r.read.length} read` : ""}${r.best ? ` · best ${cpsText(r.best)}` : ""}</div>
+      <button class="btn rd-go" data-act="rd-start" data-r="texts">Read ${Math.min(TEXT_N, open.length)} text${Math.min(TEXT_N, open.length) > 1 ? "s" : ""}</button>`
+      : `<p class="muted small">The first opens with stage 3's words (numbers and money).</p>`}
+    ${open.length && next ? `<p class="muted small">Next to open: ${esc(next.title.toLowerCase())}, with stage ${next.st}.</p>` : ""}
+  </section>`;
+}
+
+/* the text, drawn as what it is — the reading has no furigana, as a real
+   one wouldn't; after the questions it can show its English */
+function textHtml(t, after = false) {
+  return `<div class="tx-card tx-${t.kind}" lang="ja">${t.lines.map((l, i) => after
+    ? `<button class="tx-line" data-act="say" data-say="${esc(textSay(l))}"><span>${esc(readText(l))}</span><small lang="en">${esc(t.en[i])}</small></button>`
+    : `<div class="tx-line">${esc(readText(l))}</div>`).join("")}</div>`;
+}
+
+function textShow() {
+  const t = RD.lines[RD.ti];
+  RD.t = { t, qi: 0, t0: performance.now(), peeked: false };
+  $("#rdPace").textContent = `${RD.ti + 1} of ${RD.lines.length}`;
+  $("#rdBody").innerHTML = `<div class="tx-play">
+    <div class="eyebrow">${esc(t.title)}</div>
+    ${textHtml(t)}
+    <p class="muted small">Read it through — the questions come with it out of sight.</p>
+  </div>`;
+  $("#rdFoot").innerHTML = `<span></span><button class="btn" data-act="tx-read" id="rdNext">I've read it <kbd>↵</kbd></button>`;
+}
+
+function textRead() {
+  const T = RD.t;
+  if (!T || T.phase) return;
+  T.phase = "q";
+  RD.ms += performance.now() - T.t0;
+  RD.chars += T.t.lines.reduce((n, l) => n + [...readText(l)].length, 0);
+  textQuestion();
+}
+
+function textQuestion() {
+  const T = RD.t, [q, right, ...wrong] = T.t.q[T.qi];
+  T.opts = shuffle([right, ...wrong]);
+  T.right = right;
+  T.answered = false;
+  rdStrip();
+  $("#rdBody").innerHTML = `<div class="q tx-play">
+    <div class="eyebrow">${esc(T.t.title)} · question ${T.qi + 1} of ${T.t.q.length}</div>
+    <div class="q-ask tx-q">${esc(q)}</div>
+    <div class="tx-peek" id="txPeek" hidden>${textHtml(T.t)}</div>
+    <div class="opts n4 sents">${T.opts.map((o, i) => `<button class="opt" data-act="tx-opt" data-i="${i}"><kbd>${i + 1}</kbd><span>${esc(o)}</span></button>`).join("")}</div>
+    <div class="verdict" id="rdVerdict" aria-live="polite"></div>
+  </div>`;
+  $("#rdFoot").innerHTML = `<button class="btn btn-ghost" data-act="tx-peek">Look again</button><span></span>`;
+}
+
+function textAnswer(i) {
+  const T = RD?.t;
+  if (!T || T.answered || T.phase !== "q") return;
+  T.answered = true;
+  const ok = T.opts[i] === T.right;
+  /* a look back costs the mark, not the answer */
+  RD.res[RD.i] = ok ? (T.peeked ? "near" : "ok") : "miss";
+  if (ok && !T.peeked) RD.right++;
+  $$("#rdBody .opt").forEach((b, j) => { b.disabled = true; if (T.opts[j] === T.right) b.classList.add("right"); else if (j === i) b.classList.add("wrong"); });
+  const v = $("#rdVerdict");
+  v.className = "verdict " + (ok ? "ok" : "miss");
+  v.innerHTML = `${icon(ok ? "check" : "close", "v-ico")} ${esc(T.right)}`;
+  rdStrip();
+  const go = () => { RD.i++; T.qi++; if (T.qi < T.t.q.length) { T.peeked = false; textQuestion(); } else textAfter(); };
+  if (ok) RD.next = setTimeout(go, 900);
+  else $("#rdFoot").innerHTML = `<span></span><button class="btn" data-act="tx-go" id="rdNext">Next <kbd>↵</kbd></button>`;
+  RD.t.go = go;
+}
+
+/* afterwards: the text again, every line to tap and hear, with its English */
+function textAfter() {
+  const T = RD.t;
+  T.phase = "after";
+  if (!state.read.texts.read.includes(T.t.id)) state.read.texts.read.push(T.t.id);
+  save();
+  $("#rdBody").innerHTML = `<div class="tx-play">
+    <div class="eyebrow">${esc(T.t.title)} · tap a line to hear it</div>
+    ${textHtml(T.t, true)}
+  </div>`;
+  const last = RD.ti >= RD.lines.length - 1;
+  $("#rdFoot").innerHTML = `<span></span><button class="btn" data-act="tx-next" id="rdNext">${last ? "Finish" : "Next text"} <kbd>↵</kbd></button>`;
 }
 
 /* ---------- 3 · Phrases ---------- */
@@ -950,7 +1055,11 @@ function rdFinish() {
   const right = RD.res.filter(x => x === "ok").length;
   let line, best = false;
   r.rounds = (r.rounds || 0) + 1;
-  if (RD.rung === "phrases") {
+  if (RD.rung === "texts") {
+    const cps = RD.ms ? RD.chars / (RD.ms / 1000) : 0;
+    if (cps > (r.best || 0) && right / total >= 0.75) { r.best = cps; best = true; }
+    line = `${right} of ${total} answered right · read at <b>${cpsText(cps)}</b>`;
+  } else if (RD.rung === "phrases") {
     const cps = RD.ms ? RD.chars / (RD.ms / 1000) : 0;
     if (cps > (r.best || 0) && RD.clean >= total / 2) { r.best = cps; best = true; }
     line = `Read at <b>${cpsText(cps)}</b> · ${RD.clean} of ${total} split clean`;
@@ -987,6 +1096,11 @@ function readKey(e) {
     const d = { ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3 }[e.key] ?? (/^[1-4]$/.test(e.key) ? +e.key - 1 : null);
     if (d != null && !$(`.mt-t[data-i="${d}"]`)?.disabled) { e.preventDefault(); matchOne(d); }
   }
+  if (RD.rung === "texts") {
+    if (/^[1-4]$/.test(e.key)) { e.preventDefault(); textAnswer(+e.key - 1); }
+    else if ((e.key === "Enter" || e.key === " ") && $("#rdNext")) { e.preventDefault(); $("#rdNext").click(); }
+    return true;
+  }
   if (RD.rung === "subs") {
     if (/^[1-4]$/.test(e.key)) { e.preventDefault(); subsAnswer(+e.key - 1); }
     else if ((e.key === "Enter" || e.key === " ") && $("#rdNext")) { e.preventDefault(); ACTS["rd-next"](); }
@@ -998,6 +1112,11 @@ Object.assign(ACTS, {
   "rd-start": el => openRead(el.dataset.r),
   "rd-next": () => { if (RD && !RD.done) { RD.i++; rdStep(); } },
   "rd-help": () => chainHelp(),
+  "tx-read": () => textRead(),
+  "tx-opt": el => textAnswer(+el.dataset.i),
+  "tx-peek": () => { if (RD?.t && !RD.t.answered) { RD.t.peeked = true; $("#txPeek").hidden = false; } },
+  "tx-go": () => RD?.t?.go?.(),
+  "tx-next": () => { if (!RD) return; RD.ti++; if (RD.ti >= RD.lines.length) rdFinish(); else textShow(); },
   "srch-hint": () => searchHint(),
   "mt-pick": el => { state.read.match.layout = el.dataset.v; save(); renderRead(); },
   "mt-tap": el => matchOne(+el.dataset.i),

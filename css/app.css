@@ -2586,6 +2586,30 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 .pair-side { display: flex; flex-direction: column; align-items: center; gap: .2rem; }
 .pair-side small { color: var(--ink-3); font-size: .8rem; }
 
+/* ---------- 文章 Short texts: each drawn as what it is ---------- */
+
+.tx-play { text-align: center; width: 100%; }
+.tx-card { max-width: 26rem; margin: 1rem auto; text-align: left; font-size: 1.35rem; line-height: 1.75; padding: 16px 20px; }
+.tx-line { display: block; }
+button.tx-line { font: inherit; color: inherit; background: none; border: 0; padding: 2px 0; width: 100%; text-align: left; cursor: pointer; border-radius: 6px; }
+button.tx-line:hover { background: color-mix(in srgb, var(--ai) 8%, transparent); }
+.tx-line small { display: block; font-size: .8rem; color: var(--ink-3); line-height: 1.3; margin-bottom: .3rem; }
+/* a message: a chat bubble from a friend */
+.tx-message { background: var(--ai-wash); border-radius: 18px 18px 18px 4px; }
+/* a sign: a white board with a heavy edge */
+.tx-sign { background: var(--sheet); border: 3px solid var(--ink); border-radius: 6px; font-weight: 500; text-align: center; }
+.tx-sign button.tx-line { text-align: center; }
+/* a menu board: chalk on green, whatever the theme */
+.tx-menu { background: #2E3B32; color: #F4F1E6; border: 6px solid #6B4F35; border-radius: 6px; }
+.tx-menu .tx-line small { color: #BFC6B8; }
+/* a receipt: thin paper, a dashed rule top and bottom */
+.tx-receipt { background: #FBFAF6; color: #2A2724; border-top: 2px dashed #B9B2A3; border-bottom: 2px dashed #B9B2A3; font-size: 1.2rem; }
+.tx-receipt .tx-line small { color: #807868; }
+/* a diary: ruled lines */
+.tx-diary { background: var(--sheet) repeating-linear-gradient(transparent 0 calc(1.75em - 1px), var(--rule-2) calc(1.75em - 1px) 1.75em); border-left: 3px solid var(--blush); }
+.tx-q { font-size: 1.15rem; margin: .8rem 0 1rem; color: var(--ink); }
+.tx-peek .tx-card { font-size: 1.1rem; margin-top: 0; }
+
 /* ============================================================
    PHONE LAYER
 
@@ -3084,4 +3108,9 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
   /* side by side: a smaller pair, so five still fit across */
   .kc.pair .kp { font-size: 1.1rem; gap: .1em; }
   .pair-xl { gap: 1.2rem; }
+
+  /* short texts: the answers down where the thumb is */
+  .tx-play.q { display: flex; flex-direction: column; min-height: 100%; }
+  .tx-play.q > .opts { margin-top: auto; margin-bottom: 10px; }
+  .tx-card { font-size: 1.25rem; padding: 14px 16px; }
 }

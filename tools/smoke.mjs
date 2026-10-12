@@ -34,7 +34,7 @@ function sandbox() {
     },
   };
   vm.createContext(ctx);
-  vm.runInContext(['js/data/kana.js', 'js/furi.js', 'js/conj.js', 'js/data/words.js', 'js/data/patterns.js', 'js/data/kanji.js', 'js/data/kanji-lessons.js', 'js/srs.js'].map(read).join('\n') + `
+  vm.runInContext(['js/data/kana.js', 'js/furi.js', 'js/conj.js', 'js/data/words.js', 'js/data/patterns.js', 'js/data/kanji.js', 'js/data/kanji-lessons.js', 'js/data/texts.js', 'js/srs.js'].map(read).join('\n') + `
     ;globalThis.__ = { get state() { return state; }, set state(v) { state = v; },
        setShift: n => { clockShift = n; } };`, ctx);
   return ctx;
@@ -96,7 +96,8 @@ const CONTRACT = {
     'todaysWords', 'wordDay', 'wordTasks', 'allTasksDone', 'stagesFinished', 'lessonNames'],
   'js/sprint.js': ['renderSprint', 'sprintKey', 'sprintLabel', 'sprintWords', 'otherMeanings'],
   'js/read-ui.js': ['renderRead', 'readKey', 'readText', 'readPool', 'splits', 'makeChain', 'chainable', 'READ_RUNGS', 'openRead', 'closeRead',
-    'makeSearch', 'searchPlaces', 'searchSnap', 'SEARCH_DIRS', 'SEARCH_SIZES', 'searchCard', 'phrasePool', 'phraseCard', 'pieceMeaning', 'subsPool'],
+    'makeSearch', 'searchPlaces', 'searchSnap', 'SEARCH_DIRS', 'SEARCH_SIZES', 'searchCard', 'phrasePool', 'phraseCard', 'pieceMeaning', 'subsPool', 'textCard', 'textShow', 'textOpen', 'textAnswer'],
+  'js/data/texts.js': ['TEXTS', 'TEXT_BY', 'textSay'],
   'js/phone.js': ['isPhone', 'openDrawer', 'closeDrawer', 'initDrawerLoop', 'centerDrawer', 'drawerTick', 'phoneAfterRender', 'drawerOpen'],
 };
 const declares = (src, name) => {
@@ -674,6 +675,18 @@ section('patterns');
       ok(x.wrong.length === 3 && !x.wrong.includes(x.to) && new Set(x.wrong).size === 3, `${key}: change "${x.do}" needs three different wrong answers, none of them right`);
       ok(x.from !== x.to, `${key}: change "${x.do}" changes nothing`);
     });
+  });
+  /* short texts (Read → 文章): the same rule for their kanji, real patterns,
+     an English line each, and four different answers to each question */
+  const X = run('TEXTS');
+  ok(new Set(X.map(t => t.id)).size === X.length, 'two texts share an id');
+  X.forEach(t => {
+    t.lines.forEach(l => run(`furiKanji(${JSON.stringify(l)})`).forEach(c =>
+      ok(kanjiBy[c] && kanjiBy[c] <= t.st, `text ${t.id}: 「${c}」 in ${l} isn't in any word by stage ${t.st}`)));
+    ok(t.en.length === t.lines.length, `text ${t.id}: an English line for every line`);
+    t.pats.forEach(id => ok(P.some(p => p.key === 'g:' + id), `text ${t.id}: no pattern ${id}`));
+    t.pats.forEach(id => ok(P.find(p => p.key === 'g:' + id)?.st <= t.st, `text ${t.id}: pattern ${id} comes after stage ${t.st}`));
+    ok(t.q.length >= 2 && t.q.every(q => q.length === 5 && new Set(q.slice(1)).size === 4), `text ${t.id}: two questions or more, each with four different answers`);
   });
   /* each pattern lesson sits after its stage's last word lesson */
   const order = run('WORD_LESSONS.map(L => [L.id, L.kind, L.st])');

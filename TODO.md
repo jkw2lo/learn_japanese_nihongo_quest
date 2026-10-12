@@ -97,7 +97,7 @@ Build order. Each step should run end to end before the next one starts.
    are learned), then timed Sentences on a graded sentence bank, then
    Subtitles; and a Today that leads with reading once there's enough of it.
    ~~Word search~~ (0.32.0). ~~Subtitles~~, ~~Match~~ (0.33.0). ~~Phrases~~
-   (0.40.0). Next: Short texts.
+   (0.40.0). ~~Short texts~~ (0.41.0) — 13 so far; more to write as words grow.
 10c. ~~**Teaching grammar**~~: all 40 patterns taught in full (0.34.0–0.39.0),
    163 examples.
 11. **N4**: on hold. Staying at N5 for now.
