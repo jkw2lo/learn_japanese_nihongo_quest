@@ -469,7 +469,7 @@ offers 待って / 待った / 待ちます.
   文型 fill the gaps and 文 understand them. Go deeper has a 文型 tile, and
   the **Grammar tab** lists every pattern.
 
-### Teaching a pattern (stages 3–4 in 0.34.0, 5–6 in 0.37.0, 7–8 in 0.38.0)
+### Teaching a pattern (all 40, built up from 0.34.0 to 0.39.0)
 
 One card and two drills told you what a pattern was; it didn't teach it.
 Now a pattern with a teaching entry (`PATTERN_TEACH` in
@@ -1052,6 +1052,17 @@ the konbini's does, and the smoke test checks both.
   wide layout: the timetable's destinations wrapped a character at a time
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
+
+### 0.39.0: all of N5's grammar taught
+
+- Stage 9 (てください, ています, てもいいですか, てから, ないでください) and
+  stage 10 (たいです, から because, が but, ね/よ, the casual forms) get the
+  guided lesson, so **all 40 patterns are now taught**, not just shown — the
+  smoke test now fails if one isn't. The て-form's slips are the wrong
+  answers on purpose: 待ちてください, 書きてください, 待ったください.
+- **163 example sentences**, up from 84 before 0.34.0 — four or more per
+  pattern — all readable in Subtitles once their pattern is learned.
+- 101 new clips.
 
 ### 0.38.0: stages 7 and 8 taught
 

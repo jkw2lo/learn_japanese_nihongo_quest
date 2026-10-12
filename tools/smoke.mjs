@@ -659,7 +659,7 @@ section('patterns');
   const T = run(`PATTERNS.filter(p => p.teach).map(p => ({ key: p.key, st: p.st, t: p.teach,
     strings: [...p.teach.talk.map(l => l[1]), ...p.teach.built.parts.map(x => x[0]), ...(p.teach.vs ? [p.teach.vs.a[0], p.teach.vs.b[0]] : []),
       ...(p.teach.tiles || []).flatMap(([t, , d]) => [...t, ...(d || [])]), ...(p.teach.change || []).flatMap(x => [x.from, x.to, ...x.wrong])] }))`);
-  ok(T.length >= 9, `only ${T.length} patterns are taught in full — stages 3 and 4 should be`);
+  ok(T.length === P.length, `${P.length - T.length} patterns aren't taught in full: ${P.filter(p => !T.some(t => t.key === p.key)).map(p => p.key).join(' ')}`);
   T.forEach(({ key, st, t, strings }) => {
     strings.forEach(str => run(`furiKanji(${JSON.stringify(str)})`).forEach(c =>
       ok(kanjiBy[c] && kanjiBy[c] <= st, `${key} teaching: 「${c}」 in ${str} isn't in any word by stage ${st}`)));
