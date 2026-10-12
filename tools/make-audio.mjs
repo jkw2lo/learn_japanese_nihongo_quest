@@ -34,9 +34,9 @@ const BITRATE = '24000';     /* speech is clear at 24k; 32k was a quarter bigger
 const MIN_SECONDS = 0.06;
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const { KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS, patternSay, GRAMMAR_SAY, SCENES, KONBINI, TEXTS, textSay } = new Function(
+const { KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS, patternSay, GRAMMAR_SAY, SCENES, KONBINI, TEXTS, textSay, READ_PHRASES } = new Function(
   ['js/data/kana.js', 'js/furi.js', 'js/conj.js', 'js/data/words.js', 'js/data/patterns.js', 'js/data/menu.js', 'js/data/grammar.js', 'js/data/scenes.js', 'js/data/konbini.js', 'js/data/texts.js'].map(f => readFileSync(join(root, f), 'utf8')).join('\n') +
-  '\nreturn {KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS, patternSay, GRAMMAR_SAY, SCENES, KONBINI, TEXTS, textSay};')();
+  '\nreturn {KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS, patternSay, GRAMMAR_SAY, SCENES, KONBINI, TEXTS, textSay, READ_PHRASES};')();
 
 /* The text actually handed to `say` for a clip key, for any key the voice
    misreads on its own. A lone は or へ could be taken as the particles "wa"
@@ -80,6 +80,12 @@ function stageClips(st) {
   PATTERNS.filter(p => p.st === st).forEach(p => patternSay(p).forEach(t => out.add(t)));
   /* the short texts of the stage, a line at a time (Read → 文章) */
   TEXTS.filter(t => t.st === st).forEach(t => t.lines.forEach(l => out.add(textSay(l))));
+  /* the everyday sentences to split (Read → 句): whole, and each piece */
+  READ_PHRASES.filter(x => x.st === st).forEach(x => {
+    const pieces = x.parts.map(u => u.replace(/[。、？！]/g, ''));
+    out.add(furiKana(pieces.join('')));
+    pieces.forEach(u => out.add(furiKana(u)));
+  });
   if (st === 5) {
     menuItems(MENUS[1]).forEach(it => out.add(it.kana));
     MENU_PHRASES.forEach(([jp]) => out.add(furiKana(jp).replace('〜', '')));

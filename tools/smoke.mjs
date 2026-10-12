@@ -97,7 +97,7 @@ const CONTRACT = {
   'js/sprint.js': ['renderSprint', 'sprintKey', 'sprintLabel', 'sprintWords', 'otherMeanings'],
   'js/read-ui.js': ['renderRead', 'readKey', 'readText', 'readPool', 'splits', 'makeChain', 'chainable', 'READ_RUNGS', 'openRead', 'closeRead',
     'makeSearch', 'searchPlaces', 'searchSnap', 'SEARCH_DIRS', 'SEARCH_SIZES', 'searchCard', 'phrasePool', 'phraseCard', 'pieceMeaning', 'subsPool', 'textCard', 'textShow', 'textOpen', 'textAnswer'],
-  'js/data/texts.js': ['TEXTS', 'TEXT_BY', 'textSay'],
+  'js/data/texts.js': ['TEXTS', 'TEXT_BY', 'textSay', 'READ_PHRASES', 'PHRASE_BITS', 'phraseWord'],
   'js/phone.js': ['isPhone', 'openDrawer', 'closeDrawer', 'initDrawerLoop', 'centerDrawer', 'drawerTick', 'phoneAfterRender', 'drawerOpen'],
 };
 const declares = (src, name) => {
@@ -440,6 +440,9 @@ section('menu');
 
 section('read');
 {
+  /* a fixed orientation makes Android's installed app follow the sensor and
+     ignore the phone's rotation lock (0.47.0) — leave it to the system */
+  ok(!('orientation' in JSON.parse(read('manifest.webmanifest'))), 'the manifest sets an orientation — the installed app would ignore rotation lock');
   /* a phone pins a screen's .cta bottom-left; the Read tab has a start
      button per activity, so none of them may be one (0.34.0: all five sat
      in one spot and only Match could be reached) */
@@ -688,6 +691,22 @@ section('patterns');
     t.pats.forEach(id => ok(P.find(p => p.key === 'g:' + id)?.st <= t.st, `text ${t.id}: pattern ${id} comes after stage ${t.st}`));
     ok(t.q.length >= 2 && t.q.every(q => q.length === 5 && new Set(q.slice(1)).size === 4), `text ${t.id}: two questions or more, each with four different answers`);
   });
+  /* the everyday sentences to split (Read → 句): every piece a word, a form
+     of one, or a bit; real patterns; kanji no later than the sentence */
+  const RP = run('READ_PHRASES.map(x => ({ en: x.en, parts: x.parts, st: x.st, pats: x.pats, unknown: x.parts.filter((p, i) => x.words[i] === undefined) }))');
+  ok(RP.length >= 40, `expected a bank of everyday sentences, got ${RP.length}`);
+  ok(new Set(RP.map(x => x.parts.join(''))).size === RP.length, 'two everyday sentences are the same');
+  RP.forEach(x => {
+    ok(!x.unknown.length, `"${x.en}": ${x.unknown.join(' ')} is no word, form of one, or bit`);
+    ok(x.parts.length >= 3 && !!x.en, `"${x.en}": needs three pieces or more and its English`);
+    x.pats.forEach(id => ok(P.some(p => p.key === 'g:' + id), `"${x.en}": no pattern ${id}`));
+    x.parts.forEach(u => run(`furiProblems(${JSON.stringify(u)})`).forEach(p => ok(false, p)));
+    x.parts.forEach(u => run(`furiKanji(${JSON.stringify(u)})`).forEach(c =>
+      ok(kanjiBy[c] && kanjiBy[c] <= x.st, `"${x.en}": 「${c}」 isn't in any word by stage ${x.st}`)));
+  });
+  ok(run('phraseWord("{脱|ぬ}いで")?.key') === 'w:脱ぐ', 'a て-form piece should find its verb');
+  ok(run('phraseWord("{探|さが}しています")?.key') === 'w:探す', 'a form with a bit on the end should find its verb');
+  ok(run('phraseWord("ましょう")') === null, 'a bit is no word');
   /* each pattern lesson sits after its stage's last word lesson */
   const order = run('WORD_LESSONS.map(L => [L.id, L.kind, L.st])');
   order.forEach(([id, kind, st], i) => {

@@ -97,12 +97,12 @@ Build order. Each step should run end to end before the next one starts.
    are learned), then timed Sentences on a graded sentence bank, then
    Subtitles; ~~a Today that leads with reading~~ (0.42.0).
    ~~Word search~~ (0.32.0). ~~Subtitles~~, ~~Match~~ (0.33.0). ~~Phrases~~
-   (0.40.0). ~~Short texts~~ (0.41.0) — 13 so far; more to write as words grow.
+   (0.40.0). ~~Short texts~~ (0.41.0) — 29 (0.47.0), with 59 everyday sentences in Phrases.
 10c. ~~**Teaching grammar**~~: all 40 patterns taught in full (0.34.0–0.39.0),
    163 examples.
 10d. ~~**More words**~~, to N5's size, in four batches by stage:
    stages 3–4 (0.43.0, 341 words), 5–6 (0.44.0, 456), 7–8 (0.45.0, 580),
-   9–10 (0.46.0, 692). Next: short texts and phrases that use them.
+   9–10 (0.46.0, 692); texts and phrases that use them (0.47.0).
 11. **N4**: on hold. Staying at N5 for now.
 
 ## Smaller, from 0.4.0

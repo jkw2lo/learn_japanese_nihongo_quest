@@ -259,7 +259,13 @@ function closeRead() {
 
 const TEXT_N = 3;
 /* open once its words' stage is reached and its patterns are learned */
-const textOpen = t => learnedWords().some(w => w.st >= t.st) && t.pats.every(id => isLearned("g:" + id));
+/* A text opens once you've reached its stage and learned its patterns —
+   and the words of its own stage that it uses, since a stage's words now
+   run to eighty or more: a text with {曲|ま}がる waits for {曲|ま}がる. */
+const textStem = w => isVerb(w.pos) || w.pos === "adj-i" ? w.plain.slice(0, -1) : w.plain;   /* 曲が finds 曲がって */
+const textNeeds = t => t.needs || (t.needs = WORDS.filter(w => { const x = textStem(w);
+  return w.st === t.st && (KANJI_RE.test(x) || [...x].length >= 3) && t.lines.some(l => furiPlain(l).includes(x)); }));
+const textOpen = t => learnedWords().some(w => w.st >= t.st) && t.pats.every(id => isLearned("g:" + id)) && textNeeds(t).every(w => isLearned(w.key));
 
 function textCard() {
   const r = state.read.texts, open = TEXTS.filter(textOpen), next = TEXTS.find(t => !textOpen(t));
@@ -362,15 +368,17 @@ function pieceMeaning(text) {
   return w ? w.m : "";
 }
 
+const phraseOpen = x => x.pats.every(id => isLearned("g:" + id)) && x.words.every(w => !w || isLearned(w.key));
+
 /* Every sentence learned in pieces: each known pattern's Build-it tiles and
-   its sentence in parts, as { words: [{ text, m, say }], text, spans, en,
+   its sentence in parts, and the everyday sentences of READ_PHRASES, as { words: [{ text, m, say }], text, spans, en,
    say } — the shape a word chain has, so the chain game plays it. */
 function phrasePool() {
   const out = new Map();
-  const add = (raw, en) => {
+  const add = (raw, en, ws = []) => {
     const pieces = raw.map(u => u.replace(/[。、？！]/g, "")).filter(Boolean);
     if (pieces.length < 3) return;
-    const words = pieces.map(u => { const text = readText(u); return { text, m: pieceMeaning(text), say: furiKana(u) }; });
+    const words = pieces.map((u, i) => { const text = readText(u); return { text, m: ws[i]?.m || pieceMeaning(text), say: furiKana(u) }; });
     const text = words.map(w => w.text).join("");
     if (out.has(text)) return;
     let at = 0;
@@ -381,6 +389,8 @@ function phrasePool() {
     (p.teach.tiles || []).forEach(([tiles, en]) => add(tiles, en));
     add(p.teach.built.parts.map(x => x[0]), p.teach.built.en);
   });
+  /* and the bank of everyday sentences, each once its words are learned */
+  READ_PHRASES.filter(phraseOpen).forEach(x => add(x.parts, x.en, x.words));
   return [...out.values()];
 }
 
@@ -745,7 +755,9 @@ function searchFound(i) {
   p.cells.forEach(k => $(`.srch-c[data-r="${Math.floor(k / 100)}"][data-c="${k % 100}"]`).classList.add("got"));
   const chip = `<b lang="ja">${esc(p.w.text)}</b> ${esc(p.w.m)}`;
   const clue = $(`.srch-clue[data-i="${i}"]`);
-  if (clue) { clue.className = `srch-clue rd-chip h${hue} got`; clue.innerHTML = chip; }
+  /* a found word goes to the end of the list, so the ones still to find
+     stay at the top — on a phone the list sits under the grid */
+  if (clue) { clue.className = `srch-clue rd-chip h${hue} got`; clue.innerHTML = chip; $("#wsClues").append(clue); }
   else $("#wsClues").insertAdjacentHTML("beforeend", `<span class="srch-clue rd-chip h${hue} got">${chip}</span>`);
   $("#wsCount").textContent = `${RD.found.size} of ${RD.n}`;
   RD.res[RD.found.size - 1] = "ok";

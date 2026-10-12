@@ -1076,6 +1076,25 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.47.0: More to read; rotation lock respected
+
+- **16 new short texts** (29 in all) made of the new words: a shop's
+  hours, a birthday, Lisa introducing herself, a lunch board, a new diet,
+  where to meet, a platform board, a sale, a new coat, a week of chores,
+  a class notice, house rules, a call from Mum, the weather, a sick day
+  and a summer trip. A text now also waits for the words of its own
+  stage that it uses, not just for the stage to begin.
+- **59 everyday sentences in Phrases**, beside the patterns' own: family
+  and jobs, ordering, finding the way, shopping, the day, asking, the
+  weather. Each opens once its patterns and every word in it are learned,
+  and a conjugated piece shows its verb's meaning.
+- **Word search**: a found word moves to the end of the list, so the words
+  still to find stay at the top, right under the grid.
+- **The phone's rotation lock is respected.** The manifest asked for
+  `"orientation": "any"`, which on Android makes the installed app follow
+  the sensor even with auto-rotate off; it's gone, so the system decides.
+  (An installed app picks up the change when Chrome next refreshes it.)
+
 ### 0.46.0: More words — all of N5's vocabulary
 
 - **112 new words** in stages 9 and 10 (692 in all), the last of four
@@ -1499,8 +1518,15 @@ shown as kanji, the rest in kana, with no furigana — there's none on a sign
    particles between them, even a verb's stem and its ending (たべ · ました).
    The pieces are the Build-it tiles and the sentence-in-parts of every
    pattern you know (`phrasePool`), so it opens with the first grammar
-   lesson and grows with each one; a piece that's a word or a particle
-   shows its meaning as it's found, and the whole sentence is said and
+   lesson and grows with each one — and, from 0.47.0, a bank of 59
+   everyday sentences (`READ_PHRASES` in `js/data/texts.js`) made of the
+   wider vocabulary: {父|ちち}は{医者|いしゃ}です, {次|つぎ}の{角|かど}を{曲|ま}がります,
+   {靴|くつ}を{脱|ぬ}いでください. Each piece of those is a word as it's listed,
+   a form of one (its polite forms, て, た, ない, its stem) or a particle or
+   ending, and is matched to its word (`phraseWord`), so a sentence opens
+   only once its patterns *and every word in it* are learned, and a
+   piece shows its word's meaning — まがります, *to turn*. A piece that's
+   a word or a particle shows its meaning as it's found, and the whole sentence is said and
    given in English at the end. Six a round, best speed kept.
 5. **文章 Short texts** (0.41.0): the kind of thing you'd meet — a friend's
    message, a sign, a menu board, a receipt, a page of a diary
@@ -1509,11 +1535,13 @@ shown as kanji, the rest in kana, with no furigana — there's none on a sign
    of receipt paper, ruled diary lines). Read it through and say so; then
    two questions with it out of sight — *Look again* brings it back, at
    the cost of that question's mark. Afterwards every line can be tapped
-   to hear, with its English. A text opens once its stage's words and its
-   patterns are learned (`textOpen`); three a round, unread ones first,
-   and the reading speed is kept. 13 texts so far, stages 3 to 10; the
-   smoke test checks their kanji, patterns and answers, and every line is
-   recorded (arrows and colons said as pauses, `textSay`).
+   to hear, with its English. A text opens once you've reached its stage
+   and learned its patterns — and the words of its own stage that it
+   uses (`textNeeds`: stage 6 alone has eighty words now, so a text with
+   {曲|ま}がる waits for {曲|ま}がる). Three a round, unread ones first, and
+   the reading speed is kept. 29 texts, stages 3 to 10; the smoke test
+   checks their kanji, patterns and answers, and every line is recorded
+   (arrows and colons said as pauses, a sign's 〜 as から, `textSay`).
 
 Beside the ladder, two games. **結ぶ Match**: meanings and words you know,
 paired — **four and four** (four meanings beside four words; tap one and
@@ -1536,7 +1564,9 @@ drag from either end finds it. Drags snap to the nearest of the eight
 directions. Three kinds of clue: **Meanings** (find the Japanese for
 *cat*), **Words** (find ねこ) or **Just a number** (*find 8 words* — spotting
 them is the reading). A found word gets a coloured capsule, says itself and
-shows its meaning; a word you know that wasn't hidden on purpose is a
+shows its meaning, and moves to the end of the list, so the words still to
+find stay at the top — on a phone the list sits under the grid, and only
+its first row need show. A word you know that wasn't hidden on purpose is a
 **bonus**, noted but not counted. *Show me where* pulses a word's first
 character, and that grid's time can't be a best. The filler is kana you've
 learned, in the scripts the words use, mixed with the words' own
@@ -2068,7 +2098,7 @@ you like.
     js/guide.js             the introduction and the new-kind cards
     js/sprint.js            the Sprint tab
     js/read-ui.js           the Read tab: Subtitles, Word chains, Phrases, Short texts, Match, Word search
-    js/data/texts.js        the short texts the Read tab reads (messages, signs, menus…)
+    js/data/texts.js        the short texts the Read tab reads (messages, signs, menus…), and its everyday sentences to split
     js/phone.js             the sections button and the rolodex (inert on a desktop)
     js/art.js               icons, the cat, the hanamaru, stamps, petals
     js/conj.js              verb conjugation, generated, never stored
