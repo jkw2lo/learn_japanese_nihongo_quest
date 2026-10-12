@@ -191,7 +191,6 @@ const TEXTS = [
         ["Who did they go with?", "Their family", "Friends", "Nobody", "Their class"]] },
 ];
 
-const TEXT_BY = Object.fromEntries(TEXTS.map(t => [t.id, t]));
 
 /* What a line is said as (and recorded under): the arrows, colons and wide
    spaces of a sign or a menu become pauses, so the voice doesn't read them

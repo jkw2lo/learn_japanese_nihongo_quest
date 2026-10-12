@@ -18,15 +18,16 @@
       them cleanly.
    3. 句 Phrases — word chains with the grammar in: a sentence you've
       learned, run together, to find every piece of — words, particles,
-      endings. Its pieces are the Build-it tiles of each pattern you know
-      (phrasePool), so it grows as the grammar does.
+      endings. Its pieces are the Build-it tiles of each pattern you know and
+      the everyday sentences of READ_PHRASES (phrasePool), so it grows as
+      the grammar and the words do.
    4. 文章 Short texts — a message, a sign, a menu, a receipt, a diary page
       (js/data/texts.js), read in one go; then two questions with the text
       out of sight. Each opens when its words and patterns are learned.
-   Later: phrases with particles, and short texts read in one go.
 
-   And beside the ladder, a game: 探す Word search, a grid of kana you know
-   with words you know hidden in it, across, down and diagonally.
+   The games — 探す Word search and 結ぶ Match here, 忍者 Ninja slice and
+   めくる Swipe deck in arcade-ui.js — live on the Games tab (games-ui.js)
+   but play in this tab's overlay, RD.
 
    Words come from the same pool as the words sprint (sprintWords): every
    word learned in the word lessons and every word spelled only in kana
@@ -149,7 +150,6 @@ const READ_RUNGS = [
   { id: "chains", jp: "区切り", en: "Word chains", what: "Words you know, run together with no spaces, the way Japanese is written. Drag across each word to find it.", min: 6 },
   { id: "phrases", jp: "句", en: "Phrases", what: "A sentence you've learned, run together. Find every piece — the words and the little words between them: は, を, に, です. It grows with the grammar you learn.", min: 3 },
 ];
-const READ_LATER = [];
 const CHAIN_N = 8;
 const SUBTITLE_CPS = 4;
 
@@ -188,10 +188,6 @@ function renderRead() {
       <p>Word search and Match have moved to the Games tab — where every game pays coins for the capsule machine.</p>
       <button class="btn btn-ghost" data-act="nav" data-nav="games">To the games ›</button>
     </section>
-    ${READ_LATER.length ? `<section class="card rd-later">
-      <div class="card-head"><h2>Further up</h2><span class="count">as you learn more</span></div>
-      <ol class="rd-later-list" start="5">${READ_LATER.map(x => `<li><b><span lang="ja">${x.jp}</span> ${x.en}</b><br><span class="muted small">${esc(x.what)}</span></li>`).join("")}</ol>
-    </section>` : ""}
   </div>`;
 }
 

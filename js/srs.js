@@ -60,8 +60,11 @@ const asList = v => Array.isArray(v) ? v : (v && typeof v === "object" ? Object.
 
 /* ---------- state ---------- */
 
-/* Reading: Flash keeps the pace you've reached (characters a second), Word
-   chains the words a chain you're up to; each keeps its best. */
+/* Reading and the games (README → Read, Games): Subtitles keeps the pace
+   you've reached and the line length, Word chains the words a chain, Match
+   its layout and the deck its mode; each keeps its best and its rounds.
+   flash is the rung folded into Subtitles in 0.36.0, kept so a sync with
+   an older device still merges. */
 const freshRead = () => ({ flash: { cps: 1.5, best: 0, rounds: 0 }, chains: { n: 2, best: 0, rounds: 0 },
   search: { size: 8, clue: "m", best: {}, rounds: 0 }, match: { layout: null, best: {}, rounds: 0 },
   subs: { cps: 1.2, len: 4, best: 0, rounds: 0 }, phrases: { best: 0, rounds: 0 },

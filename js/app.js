@@ -1644,22 +1644,49 @@ function renderRecord() {
           `${rows.length > 1 ? `<div class="mist-l">${label}</div>` : ""}<div class="chips">${list.map(chip).join("")}</div>`).join("")
           : `<p class="muted small">Whatever you keep missing collects here — kana, words and kanji — from lessons, practice and sprints.</p>`}
       </section>
-      ${state.read.chains.rounds || state.read.search.rounds || state.read.subs.rounds || state.read.match.rounds ? `<section class="card">
-        <div class="card-head"><h2><span lang="ja">読む</span> Reading</h2><button class="link" data-act="nav" data-nav="read">Read ›</button></div>
-        <ul class="plain">
-          ${state.read.subs.rounds ? `<li><span lang="ja">字幕</span> Subtitles — pace <b>${state.read.subs.cps.toFixed(1)}</b> characters a second, lines up to ${state.read.subs.len} characters${state.read.subs.best ? `, best ${state.read.subs.best.toFixed(1)}` : ""} <small class="muted">${state.read.subs.rounds} round${state.read.subs.rounds > 1 ? "s" : ""}</small></li>` : ""}
-          ${state.read.match.rounds ? `<li><span lang="ja">結ぶ</span> Match — best without a slip ${Object.entries(state.read.match.best).map(([k, ms]) => `${k === "four" ? "four and four" : "one at a time"} <b>${fmtTime(ms)}</b>`).join(", ") || "not yet"} <small class="muted">${state.read.match.rounds} round${state.read.match.rounds > 1 ? "s" : ""}</small></li>` : ""}
-          ${state.read.search.rounds ? `<li><span lang="ja">探す</span> Word search — best ${Object.entries(state.read.search.best).sort((x, y) => x[0] - y[0]).map(([n, ms]) => `${n}×${n} <b>${fmtTime(ms)}</b>`).join(", ") || "none yet without a hint"} <small class="muted">${state.read.search.rounds} grid${state.read.search.rounds > 1 ? "s" : ""}</small></li>` : ""}
-          ${state.read.chains.rounds ? `<li><span lang="ja">区切り</span> Word chains — best <b>${state.read.chains.best.toFixed(1)}</b> characters a second, ${state.read.chains.n} words a chain <small class="muted">${state.read.chains.rounds} round${state.read.chains.rounds > 1 ? "s" : ""}</small></li>` : ""}
-        </ul>
-        <p class="muted small">Subtitles run at about four characters a second.</p>
-      </section>` : ""}
+      ${recordReadHtml()}
+      ${recordGamesHtml()}
       ${recent.length ? `<section class="card">
         <div class="card-head"><h2>Latest sprints</h2><button class="link" data-act="nav" data-nav="sprint">Sprint ›</button></div>
         <ul class="plain">${recent.map(r => `<li>${esc(sprintLabel(r.key))} — ${r.right}/${r.total} in ${(r.ms / 1000).toFixed(0)}s <small class="muted">${esc(r.at)}</small></li>`).join("")}</ul>
       </section>` : ""}
     </div>
     <p class="muted small foot-ver">Nihongo Quest ${esc(APP_VERSION)} · ${esc(APP_DATE)}</p>`;
+}
+
+/* Record's two cards for the Read tab and the Games tab: each thing played,
+   where you're up to and your best — shown once there's something to show. */
+const roundsTag = n => `<small class="muted">${n} round${n > 1 ? "s" : ""}</small>`;
+function recordReadHtml() {
+  const r = state.read;
+  const rows = [
+    r.subs.rounds && `<li><span lang="ja">字幕</span> Subtitles — pace <b>${r.subs.cps.toFixed(1)}</b> characters a second, lines up to ${r.subs.len} characters${r.subs.best ? `, best ${r.subs.best.toFixed(1)}` : ""} ${roundsTag(r.subs.rounds)}</li>`,
+    r.chains.rounds && `<li><span lang="ja">区切り</span> Word chains — best <b>${r.chains.best.toFixed(1)}</b> characters a second, ${r.chains.n} words a chain ${roundsTag(r.chains.rounds)}</li>`,
+    r.phrases.rounds && `<li><span lang="ja">句</span> Phrases — best <b>${r.phrases.best.toFixed(1)}</b> characters a second ${roundsTag(r.phrases.rounds)}</li>`,
+    r.texts.rounds && `<li><span lang="ja">文章</span> Short texts — ${r.texts.read.length} of ${TEXTS.length} read${r.texts.best ? `, best <b>${r.texts.best.toFixed(1)}</b> characters a second` : ""} ${roundsTag(r.texts.rounds)}</li>`,
+  ].filter(Boolean);
+  if (!rows.length) return "";
+  return `<section class="card">
+    <div class="card-head"><h2><span lang="ja">読む</span> Reading</h2><button class="link" data-act="nav" data-nav="read">Read ›</button></div>
+    <ul class="plain">${rows.join("")}</ul>
+    <p class="muted small">Subtitles run at about four characters a second.</p>
+  </section>`;
+}
+function recordGamesHtml() {
+  const r = state.read, g = state.gacha;
+  const toys = TOY_SETS.flatMap(S => S.toys).filter(t => g.owned[t.id]).length;
+  const rows = [
+    r.ninja.rounds && `<li><span lang="ja">忍者</span> Ninja slice — best <b>${r.ninja.best}</b> points ${roundsTag(r.ninja.rounds)}</li>`,
+    r.deck.rounds && `<li><span lang="ja">めくる</span> Swipe deck — best ${Object.entries(r.deck.best).map(([m, n]) => `${DECK_MODES[m].toLowerCase()} <b>${n}</b>`).join(", ") || "not yet"} ${roundsTag(r.deck.rounds)}</li>`,
+    r.search.rounds && `<li><span lang="ja">探す</span> Word search — best ${Object.entries(r.search.best).sort((x, y) => x[0] - y[0]).map(([n, ms]) => `${n}×${n} <b>${fmtTime(ms)}</b>`).join(", ") || "none yet without a hint"} <small class="muted">${r.search.rounds} grid${r.search.rounds > 1 ? "s" : ""}</small></li>`,
+    r.match.rounds && `<li><span lang="ja">結ぶ</span> Match — best without a slip ${Object.entries(r.match.best).map(([k, ms]) => `${k === "four" ? "four and four" : "one at a time"} <b>${fmtTime(ms)}</b>`).join(", ") || "not yet"} ${roundsTag(r.match.rounds)}</li>`,
+    (g.earned || toys) && `<li><span lang="ja">ガチャ</span> Capsule toys — <b>${toys}</b> of ${TOY_SETS.flatMap(S => S.toys).length} collected · ${coins()} coins to spend <small class="muted">${g.earned} earned in all</small></li>`,
+  ].filter(Boolean);
+  if (!rows.length) return "";
+  return `<section class="card">
+    <div class="card-head"><h2><span lang="ja">遊ぶ</span> Games</h2><button class="link" data-act="nav" data-nav="games">Games ›</button></div>
+    <ul class="plain">${rows.join("")}</ul>
+  </section>`;
 }
 
 /* ============================================================

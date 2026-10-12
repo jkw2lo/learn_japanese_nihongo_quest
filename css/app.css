@@ -2372,13 +2372,12 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 /* ---------- 読む Read ---------- */
 
 .rd-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
-.rd-intro, .rd-later { grid-column: 1 / -1; }
+.rd-intro { grid-column: 1 / -1; }
 .rd-rung-head { display: flex; align-items: center; gap: .6rem; margin-bottom: .3rem; }
 .rd-rung-head h2 { margin: 0; }
 .rd-n { width: 1.8rem; height: 1.8rem; border-radius: 50%; display: grid; place-items: center; background: var(--ai-wash); color: var(--ai); font-weight: 600; font-size: .9rem; flex: none; }
 .rd-rung.locked { opacity: .6; }
 .rd-stat { margin: .4rem 0 .8rem; font-size: .95rem; }
-.rd-later-list { margin: .2rem 0 0; padding-left: 1.3rem; display: grid; gap: .6rem; }
 .rd-pace { font: 600 .95rem var(--f-body); font-variant-numeric: tabular-nums; color: var(--ink-2); min-width: 4.5rem; text-align: right; }
 
 

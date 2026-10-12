@@ -301,5 +301,3 @@ WALKS.konbini = {
     find: "Find each one on the shelves.", foundTitle: "At the register", later: "The back opens once you can sound out its labels.",
   },
 };
-const renderKonbini = () => renderWalk("konbini");
-const konbiniKey = e => walkKey(e);

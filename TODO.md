@@ -1,124 +1,43 @@
 # Still to do
 
-Build order. Each step should run end to end before the next one starts.
+What's open, roughly in the order it'd be worth doing. The history of
+what's built is the changelog in README.md; a short version is at the end.
 
-## Done
+## Open
 
-1. ~~Settle the open questions~~: see **Decided** in README.md.
-2. ~~Shell~~: design system, diag.js, askConfirm, crash panel, top bar and
-   bottom nav, Settings → Version, backup, smoke.mjs with its CONTRACT list.
-3. ~~Kana stage~~: hiragana and katakana, recognition and listening,
-   look-alikes, っ/ッ/ー by word pairs, kana words, the hiragana check,
-   Sprint, the kana chart, Record, audio.
-   - ~~0.3.0~~: five new kana a day (lessons split to ≤ 5); the introduction
-     to the three scripts and the chart; cards before each new kind of
-     lesson; writing practice (trace → write from memory), marked on shape,
-     with stroke order as an opt-in; AnimCJK stroke data. は / へ / を
-     checked by ear.
-
-4. ~~Furigana~~: `js/furi.js` (parse, check, render, derive kana) and its
-   smoke checks, run over every string in the word and pattern data.
-
-5. ~~Words, stages 2–5~~ (0.4.0): 103 words in lessons of five,
-   read / hear / type drills, romaji→kana typing, furigana, the N5 audio
-   bundle, solid kana retiring from reviews. Plus the Words library tab, and
-   a–o / consonant labels on the kana charts.
-
-6. ~~Menu side quest~~ (0.5.0): カフェ さくら (katakana, opens with
-   katakana) and 食堂 まるや (kanji with furigana, after stage 5), the ordering
-   game, the receipt with the total said in Japanese.
-7. ~~Conjugation~~ (0.5.0): `js/conj.js` with fixtures for every class; the
-   polite forms taught; a conjugate skill and drill; stage 6 (getting
-   around) with eight verbs. Also 0.5.0: Today fits one desktop screen,
-   tap-to-hear words, SVG icons in place of emoji, and the cat, hanamaru,
-   stamps and petals.
-
-8a. ~~Mobile, one-handed~~ (0.6.0): the round sections button and looping
-   rolodex, the main button pinned bottom-left, answers at the foot, larger
-   type and targets. Desktop checked identical before and after.
-
-8b. ~~Patterns~~ (0.7.0) and ~~kanji~~ (0.8.0): 19 patterns with fill-the-gap
-   and understand drills; 79 N5/N4 kanji taught through known words, read
-   in a word, furigana dropping away as they're learned; the 漢字 chart;
-   KANJIDIC2 readings, AnimCJK strokes.
-
-8d. ~~Metrics and milestones~~ (0.10.0).
-
-8c. ~~The rest of N5~~ (0.9.0): stages 7 買う, 8 毎日, 9 て形, 10 まとめ (92
-   more words, 21 more patterns, 52 more kanji); adjectives conjugate; the
-   て-form and casual forms join the drill as their patterns are learned.
-   Also: the Grammar tab, flashcards, squarish word tiles on Today, audio
-   split per stage at 24 kbps, dead CSS and code removed.
-
-## Next
-
-9. ~~Sync~~ (0.11.0): Firebase, lifted from Hanzi Quest, with a merge that
-   loses nothing. ~~Out and about~~: nine real-life scenes beside the
-   menus.
-9b. ~~Notebook~~ (0.12.0): the 練習帳 writing workspace (box → Add to
-   page, dated pages, pens, nibs, guides, tracing with stroke order).
-   Pages could sync too (they're in IndexedDB, not the record).
-9c. ~~Out and about~~ (0.14.0, 0.15.0): a landing page, the half-its-words
-   rule, grey ink, three hiragana places, three levels a place, and a word
-   a day from the street.
-9d. ~~コンビニ, the convenience store~~ (0.16.0): 36 products in four aisles,
-   drawn packages in ink, Browse / Read / Errand, its own phone layout.
-   Next: the cat at the register, the hot case (おでん, 肉まん), bento.
-9e. ~~Walked: すし and 屋台~~ (0.17.0): the konbini's engine split out
-   (js/walk-ui.js); the sushi counter as a belt of plates, the festival as a
-   night street of stalls, on the scenes' own words and records.
-9f. ~~The street of signs~~ (0.18.0): 看板 walked, as a street of six
-   shopfronts; the sushi counter's entrance, kitchen and the cat as chef;
-   scene audio that doesn't depend on word stages; the place strip keeps its
-   scroll.
-9g. ~~Richer walks~~ (0.19.0): the sushi visit (door → hostess → counter
-   or table, with a menu), stalls of their own, shopfronts with names, the
-   station walked, a word list for every place.
-9h. ~~The trip, the stalls, the shops~~ (0.20.0): the station as a trip
-   (machine, ticket, timetable, gates, stairs, the right train); yatai built
-   like yatai; shopfronts at their own heights with names you can hear;
-   meanings that fade; readings asked in romaji with near misses.
-9i. ~~The ride~~ (0.21.0): stairs drawn in perspective; the route map; a
-   carriage with ads (random), seats, doors, a tunnel, and announcements.
-9j. ~~Round the loop~~ (0.22.0): a loop line with stops on the way, the
-   gates checking your ticket, overshooting and coming back; announcements
-   that wait to be read; a carriage, ads and stairs redrawn.
-9k. ~~Stairs and stalls~~ (0.23.0): stairs projected from a real camera;
-   a word on every stall's flag; banners that say their names.
-9l. ~~Tidying~~ (0.24.0): a sound bundle per place; the kana bundle can't be
-   skipped; dead and split CSS cleaned up.
-9m. ~~Night and fit~~ (0.25.0): the places keep their light in dark mode; a
-   place fits a desktop screen; a narrow station gets the compact layout.
-10. **More recognition practice at N5**: more scenes (a train ticket, a
+1. **More recognition practice at N5**: more scenes (a train ticket, a
    bento label, a konbini's shelf tags, a clinic), a "spot the kanji you
    know" mode over the scenes, and scenes in Sprint.
-10b. **読む Read** (0.31.0): the ladder from kana to reading — ~~Flash~~,
-   ~~Word chains~~; next, Phrases (words joined by particles, once は and の
-   are learned), then timed Sentences on a graded sentence bank, then
-   Subtitles; ~~a Today that leads with reading~~ (0.42.0).
-   ~~Word search~~ (0.32.0). ~~Subtitles~~, ~~Match~~ (0.33.0). ~~Phrases~~
-   (0.40.0). ~~Short texts~~ (0.41.0) — 29 (0.47.0), with 59 everyday sentences in Phrases.
-10c. ~~**Teaching grammar**~~: all 40 patterns taught in full (0.34.0–0.39.0),
-   163 examples.
-10d. ~~**More words**~~, to N5's size, in four batches by stage:
-   stages 3–4 (0.43.0, 341 words), 5–6 (0.44.0, 456), 7–8 (0.45.0, 580),
-   9–10 (0.46.0, 692); texts and phrases that use them (0.47.0).
-10e. ~~**遊ぶ Games and the capsule machine**~~ (0.48.0): coins from every
-   game, 60 toys in three sets. ~~Ninja slice~~ and ~~the Swipe deck~~
-   (0.49.0); Read rounds and sprints pay too. Next: more sets when the
-   three are done; more games (かなWordle, a ramen shop, bingo).
-11. **N4**: on hold. Staying at N5 for now.
-
-## Smaller, from 0.4.0
-
-- ~~Sprint modes for words~~ (0.30.0: 言葉 Words, 言葉を打つ Type words). Still
-  to do: 活用 conjugate (README → Sprint).
-- The menu's third tier: an izakaya board (本日のおすすめ).
-- ~~A missed word should drop a review onto the kana you got wrong~~ (0.30.0,
-  for typed words).
-- ~~Word mistakes in Record's mistake notebook~~ (0.30.0, kanji too).
+2. **More games** for 遊ぶ Games: かなWordle (a daily four-kana word in six
+   tries), a ラーメン屋 ramen shop (read the order, build the bowl), ビンゴ
+   bingo against the cat (listening).
+3. **More capsule toys**: a fourth set and on, once the three are done.
+4. **A conjugate sprint** (活用) beside 言葉 Words and Type words
+   (README → Sprint).
+5. **The konbini**, next: the cat at the register, the hot case (おでん,
+   肉まん), bento.
+6. **The menu's third tier**: an izakaya board (本日のおすすめ).
+7. **Notebook pages that sync**: they're in IndexedDB, not the record.
+8. **More short texts and phrases** as the words grow (29 texts and 59
+   everyday sentences so far).
 
 ## Later, maybe
 
-- Placement, for someone who already reads kana (README → Placement).
-- ~~Sticky writing drills~~ (0.30.0).
+- **Placement**, for someone who already reads kana (README → Placement).
+- **N4**: on hold. Staying at N5 for now.
+
+## Built, in short
+
+- 0.1–0.3: the shell, the kana stage (hiragana, katakana, look-alikes,
+  っ/ー, the hiragana check, Sprint, the chart, audio), writing practice.
+- 0.4–0.9: furigana, words (stages 2–10), the menus, conjugation, the phone
+  layout, patterns, kanji — all of N5.
+- 0.10–0.13: metrics and milestones, sync, the Notebook.
+- 0.14–0.25: Out and about — the konbini, sushi, the festival, the street of
+  signs, the station trip and ride.
+- 0.30: word sprints, word and kanji mistakes, sticky writing drills.
+- 0.31–0.42: 読む Read — Subtitles, Word chains, Phrases, Short texts — and
+  a Today that leads with reading; all 40 patterns taught in full.
+- 0.43–0.47: the words to N5's size (692), texts and phrases that use them.
+- 0.48–0.49: 遊ぶ Games — the capsule machine, Ninja slice, the Swipe deck,
+  coins from everything.

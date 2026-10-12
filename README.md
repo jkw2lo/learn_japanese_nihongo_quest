@@ -1076,6 +1076,15 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.49.1: Housekeeping
+
+- **Record** shows the Read tab and the Games tab in two cards: Phrases and
+  Short texts join Subtitles and Word chains; Ninja slice, the Swipe deck,
+  Word search and Match sit with the toys collected and the coins to spend.
+- Dead code out: the empty "further up" list on Read, two unused konbini
+  wrappers, an unused texts lookup. Stale comments brought up to date.
+- TODO.md rewritten: what's open, in order, and a short history.
+
 ### 0.49.0: Ninja slice, the Swipe deck, and coins everywhere
 
 - **忍者 Ninja slice**: kana fly up; slice what each wave asks for — a
@@ -1601,9 +1610,10 @@ learned, in the scripts the words use, mixed with the words' own
 characters so nothing stands out; every hidden word can be read in exactly
 one place (`makeSearch`, `searchPlaces`). Best times are kept per size.
 
-The pace, the chain length and the word search's bests are kept in
+The pace, the chain length and every best — the games' too — are kept in
 `state.read` and synced (the newer side's pace, the larger best, the
-faster time). Record shows them beside the sprints.
+faster time). Record shows them in two cards, 読む Reading and 遊ぶ Games
+(with the toys collected and the coins to spend), beside the sprints.
 
 ---
 
