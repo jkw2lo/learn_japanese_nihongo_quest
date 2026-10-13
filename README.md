@@ -6,7 +6,7 @@ holding a simple conversation. It starts from nothing and runs to JLPT N5,
 then on towards N4. Writing is there if you want it and never in the way if
 you don't.
 
-> **Status: all of N5 is built (0.13.0).** The kana stage, then 692 words
+> **Status: all of N5 is built (0.13.0).** The kana stage, then 863 words
 > in nine stages (phrases, numbers and money, me and you, food, getting
 > around, shopping, daily life, the て-form, and an N5 wrap-up), 40 grammar
 > patterns, 161 kanji (all 103 of N5, and 58 N4) taught through the words, verbs and
@@ -267,27 +267,27 @@ a note, and example sentences for many.
   but the kana stage is gated the whole way through (hiragana cemented
   before katakana), so words wait for the last kana too.
 - **Five a day**, under the same **New kana a day** allowance, which counts
-  words once kana are done. There are 692 words in nine stages, in lessons of five:
-  - **2 · あいさつ** survival phrases (24)
-  - **3 · 数** numbers, time and money (84): counting, the clock, the days
+  words once kana are done. There are 863 words in nine stages, in lessons of five:
+  - **2 · あいさつ** survival phrases (30)
+  - **3 · 数** numbers, time and money (103): counting, the clock, the days
     of the week, months and dates (the irregular ついたち to とおか, and
     はつか)
-  - **4 · 私** me and you (92): this and that, question words, family (my
+  - **4 · 私** me and you (110): this and that, question words, family (my
     父 and your お父さん), jobs, countries, age and birthdays
-  - **5 · 食べる** food and ordering (84): dishes, drinks, tableware,
-    hot and cold, eating in or taking away, counting to いつつ
-  - **6 · 行く** getting around (80): trains, platforms and lines, places
+  - **5 · 食べる** food and ordering (98): dishes, drinks, tableware,
+    hot and cold, eating in or taking away, counting to ここのつ
+  - **6 · 行く** getting around (104): trains, platforms and lines, places
     in town, on/under/behind/next to, the compass, sixteen verbs, and the
     particles に, で and へ
-  - **7 · 買う** shopping (89): い- and な-adjectives, colours, ある and いる;
+  - **7 · 買う** shopping (126): い- and な-adjectives, colours, ある and いる;
     clothes and the verb each one takes, stationery, shops, counters for
     flat and small things
-  - **8 · 毎日** daily life (87): everyday verbs, how often, と, から, まで;
+  - **8 · 毎日** daily life (120): everyday verbs, how often, と, から, まで;
     the home, chores, school and free time, もう and まだ
-  - **9 · て形** the て-form (54): the verbs you ask people to do —
+  - **9 · て形** the て-form (62): the verbs you ask people to do —
     show, send, switch on and off, push and pull, take your shoes off —
     and the phrases of coming and going (いってきます, ただいま)
-  - **10 · まとめ** wrapping up N5 (98): weather and seasons, feelings,
+  - **10 · まとめ** wrapping up N5 (110): weather and seasons, feelings,
     health and the body, nature and animals, でも・だから・それから, and
     casual うん, ううん and またね
 
@@ -1078,6 +1078,24 @@ the konbini's does, and the smoke test checks both.
   wide layout: the timetable's destinations wrapped a character at a time
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
+
+### 0.51.0: Every N5 word
+
+- **The words were checked against an N5 list** — Jonathan Waller's 718,
+  the community standard since the JLPT stopped publishing one — and
+  against every question in the official N5 sample test. 533 were in; now
+  every one is, but for seven gone out of daily life (tape recorders,
+  records, film…) and a few that are grammar rather than words (お〜,
+  〜中, 〜とき), which wait for the grammar.
+- **171 new words** (863 in all): counters (〜回, 〜階, 〜本, 〜匹, 〜冊, 〜台,
+  むっつ to ここのつ), the rest of the calendar (おととし, さ来年, 夕方,
+  ゆうべ), family and people (奥さん, おじさん, 自分, 生徒), こっち /
+  そっち / あっち / どっち, shapes and strengths (丸い, 太い, 細い, 薄い,
+  強い, 弱い), clothes and things (上着, 背広, ボタン, 封筒, 万年筆), the
+  home (玄関, 廊下, 本棚, テーブル), and verbs: なる, できる, 困る, 消える,
+  並べる, 渡す, 勤める, 生まれる, 弾く, もらう, くれる.
+- The sample test also asks もらう, 弾く (play an instrument), 〜本 and そば
+  (beside) — all in now. The noodle is written 蕎麦, still read そば.
 
 ### 0.50.0: Every N5 kanji
 
@@ -2197,7 +2215,8 @@ each device. Each device then reads and writes one Firestore document,
 | kanji readings and stroke counts | KANJIDIC2 (EDRDG) | CC BY-SA 4.0 | used, by `tools/fetch-kanji.mjs` → `js/data/kanji.js`; meanings written for the app |
 | stroke order | AnimCJK `graphicsJaKana.txt` and `graphicsJa.txt` | Arphic Public License | licence text in `licenses/animCJK/`; see **Writing → Stroke data** |
 | example sentences | Tatoeba | CC BY 2.0 FR | a starting point; most will be written for the app so they only use known words |
-| JLPT levels | community lists (e.g. Jonathan Waller's) | CC BY | there has been **no official JLPT list since 2010**; levels are a guide, not a spec |
+| JLPT levels | community lists (Jonathan Waller's, via open-anki-jlpt-decks) | CC BY / MIT | there has been **no official JLPT list since 2010**; levels are a guide, not a spec. The words were checked against Waller's N5 list in 0.51.0 (`src/n5.csv` of github.com/jamsinclair/open-anki-jlpt-decks, MIT) |
+| N5 sample test | the official JLPT sample book (The Japan Foundation) | © — reference only | kept beside the project (`N5-practice-book/`, gitignored): used to check coverage, never copied into the app |
 | romaji → kana | wanakana | MIT | |
 | speech | macOS `say` | Apple's terms | fine for personal study; same caveat as Hanzi Quest if it's published |
 
@@ -2252,7 +2271,7 @@ you like.
     js/audio-kana.js        generated clips — do not hand-edit
     js/strokes.js           generated stroke data — do not hand-edit
     js/furi.js              furigana markup: parse, check, render, derive kana
-    js/data/words.js        stages 2–10: 692 words, their stages, lessons of five
+    js/data/words.js        stages 2–10: 863 words, their stages, lessons of five
     js/data/patterns.js     40 grammar patterns, placed after their stage's words
     js/data/grammar.js      the Grammar tab's reference: sentence shape, particles, endings
     js/grammar-ui.js        the Grammar tab

@@ -12,13 +12,20 @@ what's built is the changelog in README.md; a short version is at the end.
    tries), a ラーメン屋 ramen shop (read the order, build the bowl), ビンゴ
    bingo against the cat (listening).
 3. **More capsule toys**: a fourth set and on, once the three are done.
-4. **A conjugate sprint** (活用) beside 言葉 Words and Type words
+4. **The rest of N5's grammar** (about 25 patterns), once the 40 there are
+   have been tried. The official sample test asks: より / のほうが (comparison),
+   〜まえに / 〜あとで, 〜に行く (見に行く), もらう / あげる / くれる, 何か / 何も
+   with a negative, 〜かた (作り方), あまり〜ませんでした, and ひとりで. Also
+   missing: 〜て、〜 and 〜くて／〜で (joining), 〜たり〜たり, 〜くなる／〜になる,
+   〜でしょう, 〜てはいけない, 〜なければならない, まだ〜ていません, 〜とき, 〜中,
+   〜や〜, 〜だけ, adverbs from adjectives (はやく, きれいに).
+5. **A conjugate sprint** (活用) beside 言葉 Words and Type words
    (README → Sprint).
-5. **The konbini**, next: the cat at the register, the hot case (おでん,
+6. **The konbini**, next: the cat at the register, the hot case (おでん,
    肉まん), bento.
-6. **The menu's third tier**: an izakaya board (本日のおすすめ).
-7. **Notebook pages that sync**: they're in IndexedDB, not the record.
-8. **More short texts and phrases** as the words grow (29 texts and 59
+7. **The menu's third tier**: an izakaya board (本日のおすすめ).
+8. **Notebook pages that sync**: they're in IndexedDB, not the record.
+9. **More short texts and phrases** as the words grow (29 texts and 59
    everyday sentences so far).
 
 ## Later, maybe
@@ -39,5 +46,6 @@ what's built is the changelog in README.md; a short version is at the end.
 - 0.31–0.42: 読む Read — Subtitles, Word chains, Phrases, Short texts — and
   a Today that leads with reading; all 40 patterns taught in full.
 - 0.43–0.47: the words to N5's size (692), texts and phrases that use them.
+- 0.50–0.51: every N5 kanji (103) and every N5 word (863 words in all).
 - 0.48–0.49: 遊ぶ Games — the capsule machine, Ninja slice, the Swipe deck,
   coins from everything.
