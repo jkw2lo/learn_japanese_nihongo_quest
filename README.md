@@ -6,7 +6,7 @@ holding a simple conversation. It starts from nothing and runs to JLPT N5,
 then on towards N4. Writing is there if you want it and never in the way if
 you don't.
 
-> **Status: all of N5 is built (0.13.0).** The kana stage, then 880 words
+> **Status: all of N5 is built (0.13.0).** The kana stage, then 1,127 words
 > in nine stages (phrases, numbers and money, me and you, food, getting
 > around, shopping, daily life, the て-form, and an N5 wrap-up), 40 grammar
 > patterns, 161 kanji (all 103 of N5, and 58 N4) taught through the words, verbs and
@@ -267,34 +267,37 @@ a note, and example sentences for many.
   but the kana stage is gated the whole way through (hiragana cemented
   before katakana), so words wait for the last kana too.
 - **Five a day**, under the same **New kana a day** allowance, which counts
-  words once kana are done. There are 880 words in nine stages and 80
+  words once kana are done. There are 1,127 words in nine stages and 83
   topics (0.52.0): a stage's lessons go topic by topic — numbers, then
   counting, then money; family, then jobs — and a topic of more than five
   is split evenly (sixteen numbers are four lessons of four), so a lesson
   is never a mix. Each is titled by its topic (数字 2, *Numbers 2*), and the
   Words tab lists what you know topic by topic. A few everyday words not on
   the N5 list round out thin topics — five fruits, six vegetables, six
-  animals — marked *beyond N5* (`x`). The stages:
+  animals — and 247 more are the everyday ones N5 leaves out (0.54.0):
+  futon and tatami, cash and change, temple and shrine, neck and finger,
+  typhoon and earthquake, find, drop, break, fix, laugh, cry, smartphone,
+  charger, Wi-Fi. All are marked *beyond N5* (`x`). The stages:
   - **2 · あいさつ** survival phrases (30)
-  - **3 · 数** numbers, time and money (103): counting, the clock, the days
+  - **3 · 数** numbers, time and money (110): counting, the clock, the days
     of the week, months and dates (the irregular ついたち to とおか, and
     はつか)
-  - **4 · 私** me and you (110): this and that, question words, family (my
+  - **4 · 私** me and you (127): this and that, question words, family (my
     父 and your お父さん), jobs, countries, age and birthdays
-  - **5 · 食べる** food and ordering (109): dishes, drinks, tableware,
+  - **5 · 食べる** food and ordering (130): dishes, drinks, tableware,
     hot and cold, eating in or taking away, counting to ここのつ
-  - **6 · 行く** getting around (104): trains, platforms and lines, places
+  - **6 · 行く** getting around (140): trains, platforms and lines, places
     in town, on/under/behind/next to, the compass, sixteen verbs, and the
     particles に, で and へ
-  - **7 · 買う** shopping (126): い- and な-adjectives, colours, ある and いる;
+  - **7 · 買う** shopping (161): い- and な-adjectives, colours, ある and いる;
     clothes and the verb each one takes, stationery, shops, counters for
     flat and small things
-  - **8 · 毎日** daily life (120): everyday verbs, how often, と, から, まで;
+  - **8 · 毎日** daily life (166): everyday verbs, how often, と, から, まで;
     the home, chores, school and free time, もう and まだ
-  - **9 · て形** the て-form (62): the verbs you ask people to do —
+  - **9 · て形** the て-form (92): the verbs you ask people to do —
     show, send, switch on and off, push and pull, take your shoes off —
     and the phrases of coming and going (いってきます, ただいま)
-  - **10 · まとめ** wrapping up N5 (116): weather and seasons, feelings,
+  - **10 · まとめ** wrapping up N5 (171): weather and seasons, feelings,
     health and the body, nature and animals, でも・だから・それから, and
     casual うん, ううん and またね
 
@@ -1085,6 +1088,21 @@ the konbini's does, and the smoke test checks both.
   wide layout: the timetable's destinations wrapped a character at a time
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
+
+### 0.54.0: Everyday words beyond N5
+
+- **247 everyday words** the N5 list leaves out, so a learner doesn't meet
+  a TV, a futon or a typhoon and go *huh?*: the concrete, daily ones from
+  the N4 list (checked against Waller's 668) and a sweep room by room —
+  home (布団, 畳, 鏡, ごみ, 洗濯機, 歯ブラシ), food (味, 焼く, 刺身,
+  定食, 割り箸), getting around (遅れる, 間に合う, 込む, 定期券, 終電, 寺,
+  神社), shopping (おつり, レジ, 現金, 着物), the body (首, 指, 髪, けが,
+  治る), nature (雲, 台風, 地震), getting things done (見つける, 落とす,
+  拾う, 壊れる, 直す), reactions (笑う, 泣く, 怒る, 謝る), little words
+  (もちろん, やっぱり, さっき, なるほど), and a new topic for phones (スマホ,
+  アプリ, 充電器, ワイファイ). All in their topics, marked *beyond N5*,
+  recorded, and checked against JMdict: every reading and verb class right.
+- 1,127 words in all; 田 joins the kanji (田舎), 162 in all.
 
 ### 0.53.0: 外来語 Loanwords
 
@@ -2333,7 +2351,7 @@ you like.
     js/audio-kana.js        generated clips — do not hand-edit
     js/strokes.js           generated stroke data — do not hand-edit
     js/furi.js              furigana markup: parse, check, render, derive kana
-    js/data/words.js        stages 2–10: 880 words, their stages and topics, lessons by topic
+    js/data/words.js        stages 2–10: 1,127 words, their stages and topics, lessons by topic
     js/data/patterns.js     40 grammar patterns, placed after their stage's words
     js/data/grammar.js      the Grammar tab's reference: sentence shape, particles, endings
     js/grammar-ui.js        the Grammar tab

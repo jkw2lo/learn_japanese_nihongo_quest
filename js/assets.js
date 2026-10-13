@@ -5,7 +5,7 @@ const ASSET_HASH = {
   "audio-grammar":["36fd2443bb",2583723],
   "audio-kana":["4ccb84edfa",628534],
   "audio-konbini":["eab985c187",251858],
-  "audio-loans":["42f1e82568",358598],
+  "audio-loans":["2787c57f54",358077],
   "audio-place-asking":["4dcff546b5",55612],
   "audio-place-cafe":["9014cd0d7d",10450],
   "audio-place-casual":["26924984d9",32226],
@@ -20,15 +20,15 @@ const ASSET_HASH = {
   "audio-place-signs":["9c55ab60e7",65207],
   "audio-place-station":["02056462d3",378399],
   "audio-place-sushi":["f5a400766f",115648],
-  "audio-s10":["a855031f0e",1216056],
+  "audio-s10":["3692250efa",1464237],
   "audio-s2":["8057720c14",109122],
-  "audio-s3":["26346e7840",426374],
-  "audio-s4":["cb559e6841",793521],
-  "audio-s5":["1004007ada",908716],
-  "audio-s6":["a9cbb1f320",1207675],
-  "audio-s7":["d6fc7befd0",1768389],
-  "audio-s8":["d2a38579bd",1793585],
-  "audio-s9":["896da1dae3",1430166],
-  "strokes":["73bee24f97",211422]
+  "audio-s3":["ccd7a4bd9e",442403],
+  "audio-s4":["fee7a9b5bf",836737],
+  "audio-s5":["c7f363226f",1062447],
+  "audio-s6":["c922741a02",1474119],
+  "audio-s7":["4e17d5329e",2095209],
+  "audio-s8":["87e58a8c65",2220208],
+  "audio-s9":["ed9996f663",2160726],
+  "strokes":["c532dba43c",212008]
 };
 const assetUrl = name => `js/${name}.js?h=${ASSET_HASH[name] ? ASSET_HASH[name][0] : APP_VERSION}`;

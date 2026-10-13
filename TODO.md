@@ -48,5 +48,6 @@ what's built is the changelog in README.md; a short version is at the end.
 - 0.43–0.47: the words to N5's size (692), texts and phrases that use them.
 - 0.50–0.52: every N5 kanji (103) and every N5 word; words taught by topic (880 words, 80 topics).
 - 0.53: 外来語 — the loanword rules and 200 loanwords to work out.
+- 0.54: 247 everyday words beyond N5 (1,127 in all).
 - 0.48–0.49: 遊ぶ Games — the capsule machine, Ninja slice, the Swipe deck,
   coins from everything.

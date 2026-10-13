@@ -35,6 +35,7 @@ export const ACCEPT = {
   "大変|meaning": "the な-adjective sense, JMdict's “serious; hard; terrible”",
   "下手|meaning": "JMdict's “unskillful; poor” — bad at",
   "ううん|meaning": "JMdict's “no; nuh-uh”",
+  "運転する|meaning": "JMdict's “driving (a vehicle)”",
 };
 
 const kata2hira = s => s.replace(/[ァ-ヶ]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
