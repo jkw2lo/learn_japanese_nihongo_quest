@@ -16,13 +16,13 @@
      cached js/app.js keeps serving it until the URL changes, so a push can be
      live and invisible at once. It lives here and nowhere else.
      Bump with: node tools/version.mjs patch -->
-<script>const APP_VERSION = "0.55.0", APP_DATE = "2026-10-13";</script>
+<script>const APP_VERSION = "0.56.0", APP_DATE = "2026-10-13";</script>
 <!-- First, before anything it could report on. -->
-<script src="js/diag.js?v=0.55.0"></script>
+<script src="js/diag.js?v=0.56.0"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@500;700&display=swap" crossorigin="anonymous">
-<link rel="stylesheet" href="css/app.css?v=0.55.0">
+<link rel="stylesheet" href="css/app.css?v=0.56.0">
 
 <body>
 <div class="app">
@@ -34,17 +34,17 @@
     </button>
     <span class="m-title" id="mTitle" aria-hidden="true"></span>
     <nav class="top-nav" aria-label="Sections">
-      <button data-act="nav" data-nav="today" class="on"><span class="nz" lang="ja">今日</span> Today</button>
-      <button data-act="nav" data-nav="kana"><span class="nz" lang="ja">かな</span> Kana</button>
-      <button data-act="nav" data-nav="words"><span class="nz" lang="ja">言葉</span> Words</button>
-      <button data-act="nav" data-nav="grammar"><span class="nz" lang="ja">文法</span> Grammar</button>
-      <button data-act="nav" data-nav="read"><span class="nz" lang="ja">読む</span> Read</button>
-      <button data-act="nav" data-nav="games"><span class="nz" lang="ja">遊ぶ</span> Games</button>
-      <button data-act="nav" data-nav="cards"><span class="nz" lang="ja">札</span> Cards</button>
-      <button data-act="nav" data-nav="book"><span class="nz" lang="ja">帳</span> Notebook</button>
-      <button data-act="nav" data-nav="menu"><span class="nz" lang="ja">街</span> Out<span class="nav-more">&nbsp;&amp;&nbsp;about</span></button>
-      <button data-act="nav" data-nav="sprint"><span class="nz" lang="ja">速</span> Sprint</button>
-      <button data-act="nav" data-nav="record"><span class="nz" lang="ja">記録</span> Record</button>
+      <button data-act="nav" data-nav="today" data-g="study" class="on"><span class="nz" lang="ja">今日</span> Today</button>
+      <button data-act="nav" data-nav="kana" data-g="study"><span class="nz" lang="ja">かな</span> Kana</button>
+      <button data-act="nav" data-nav="words" data-g="study"><span class="nz" lang="ja">言葉</span> Words</button>
+      <button data-act="nav" data-nav="grammar" data-g="study"><span class="nz" lang="ja">文法</span> Grammar</button>
+      <button data-act="nav" data-nav="read" data-g="practise"><span class="nz" lang="ja">読む</span> Read</button>
+      <button data-act="nav" data-nav="sprint" data-g="practise"><span class="nz" lang="ja">速</span> Sprint</button>
+      <button data-act="nav" data-nav="cards" data-g="practise"><span class="nz" lang="ja">札</span> Cards</button>
+      <button data-act="nav" data-nav="book" data-g="practise"><span class="nz" lang="ja">帳</span> Notebook</button>
+      <button data-act="nav" data-nav="games" data-g="play"><span class="nz" lang="ja">遊ぶ</span> Games</button>
+      <button data-act="nav" data-nav="menu" data-g="out"><span class="nz" lang="ja">街</span> Out<span class="nav-more">&nbsp;&amp;&nbsp;about</span></button>
+      <button data-act="nav" data-nav="record" data-g="you"><span class="nz" lang="ja">記録</span> Record</button>
     </nav>
     <div class="top-actions">
       <button class="icon-btn" id="saveBtn" data-act="backup" title="Save or load a backup" aria-label="Backup"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3.5v9"/><path d="M6.2 9l3.8 3.8L13.8 9"/><path d="M4 13.5v2.5h12v-2.5"/></svg></button>
@@ -82,23 +82,27 @@
   <div class="drawer-sheet" role="dialog" aria-modal="true" aria-label="Sections">
     <span class="drawer-grip" aria-hidden="true"></span>
     <!-- Settings and Backup aren't places to go, so they're not on the wheel:
-         two separate buttons above it, apart from the sections. -->
+         two separate buttons above it, apart from the sections. The group of
+         the section in the middle is named on the left; Games and Out & about
+         open a panel of squares in their place (phone.js). -->
+    <div class="drawer-group" id="drawerGroup" aria-hidden="true"></div>
+    <div class="drawer-sub" id="drawerSub" hidden></div>
     <div class="drawer-tools">
       <button class="d-tool" data-act="settings"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6h8M15 6h1M4 14h1M8 14h8"/><circle cx="13.5" cy="6" r="1.8"/><circle cx="6.5" cy="14" r="1.8"/></svg><span>Settings</span></button>
       <button class="d-tool d-save" data-act="backup"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3.5v9"/><path d="M6.2 9l3.8 3.8L13.8 9"/><path d="M4 13.5v2.5h12v-2.5"/></svg><span>Backup</span></button>
     </div>
     <nav class="drawer-nav" id="drawerNav" aria-label="Sections">
-      <button data-act="nav" data-nav="today"><span lang="ja">今日</span>Today</button>
-      <button data-act="nav" data-nav="kana"><span lang="ja">かな</span>Kana</button>
-      <button data-act="nav" data-nav="words"><span lang="ja">言葉</span>Words</button>
-      <button data-act="nav" data-nav="grammar"><span lang="ja">文法</span>Grammar</button>
-      <button data-act="nav" data-nav="read"><span lang="ja">読む</span>Read</button>
-      <button data-act="nav" data-nav="games"><span lang="ja">遊ぶ</span>Games</button>
-      <button data-act="nav" data-nav="cards"><span lang="ja">札</span>Cards</button>
-      <button data-act="nav" data-nav="book"><span lang="ja">帳</span>Notebook</button>
-      <button data-act="nav" data-nav="menu"><span lang="ja">街</span>Out</button>
-      <button data-act="nav" data-nav="sprint"><span lang="ja">速</span>Sprint</button>
-      <button data-act="nav" data-nav="record"><span lang="ja">記録</span>Record</button>
+      <button data-act="nav" data-nav="today" data-g="study"><span lang="ja">今日</span>Today</button>
+      <button data-act="nav" data-nav="kana" data-g="study"><span lang="ja">かな</span>Kana</button>
+      <button data-act="nav" data-nav="words" data-g="study"><span lang="ja">言葉</span>Words</button>
+      <button data-act="nav" data-nav="grammar" data-g="study"><span lang="ja">文法</span>Grammar</button>
+      <button data-act="nav" data-nav="read" data-g="practise"><span lang="ja">読む</span>Read</button>
+      <button data-act="nav" data-nav="sprint" data-g="practise"><span lang="ja">速</span>Sprint</button>
+      <button data-act="nav" data-nav="cards" data-g="practise"><span lang="ja">札</span>Cards</button>
+      <button data-act="nav" data-nav="book" data-g="practise"><span lang="ja">帳</span>Notebook</button>
+      <button data-act="drawer-sub" data-sub="games" data-nav="games" data-g="play"><span lang="ja">遊ぶ</span>Games</button>
+      <button data-act="drawer-sub" data-sub="menu" data-nav="menu" data-g="out"><span lang="ja">街</span>Out</button>
+      <button data-act="nav" data-nav="record" data-g="you"><span lang="ja">記録</span>Record</button>
     </nav>
   </div>
 </div>
@@ -173,49 +177,49 @@
 <button class="sound-bar" id="soundBar" data-act="sound-unblock"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 8h3l4.5-3.5v11L6.5 12h-3z"/><path d="M14.5 8l4 4M18.5 8l-4 4"/></svg> Sound was blocked — tap to allow</button>
 <div class="toast" id="toast" role="status"></div>
 
-<script src="js/data/kana.js?v=0.55.0"></script>
-<script src="js/furi.js?v=0.55.0"></script>
-<script src="js/conj.js?v=0.55.0"></script>
-<script src="js/data/words.js?v=0.55.0"></script>
-<script src="js/data/patterns.js?v=0.55.0"></script>
-<script src="js/data/kanji.js?v=0.55.0"></script>
-<script src="js/data/kanji-lessons.js?v=0.55.0"></script>
-<script src="js/data/menu.js?v=0.55.0"></script>
-<script src="js/data/grammar.js?v=0.55.0"></script>
-<script src="js/data/scenes.js?v=0.55.0"></script>
-<script src="js/data/konbini.js?v=0.55.0"></script>
-<script src="js/data/texts.js?v=0.55.0"></script>
-<script src="js/data/toys.js?v=0.55.0"></script>
-<script src="js/data/loans.js?v=0.55.0"></script>
-<script src="js/srs.js?v=0.55.0"></script>
-<script src="js/sync.js?v=0.55.0"></script>
-<script src="js/assets.js?v=0.55.0"></script>
-<script src="js/sound.js?v=0.55.0"></script>
-<script src="js/art.js?v=0.55.0"></script>
-<script src="js/write.js?v=0.55.0"></script>
-<script src="js/app.js?v=0.55.0"></script>
-<script src="js/offline.js?v=0.55.0"></script>
-<script src="js/guide.js?v=0.55.0"></script>
-<script src="js/words-ui.js?v=0.55.0"></script>
-<script src="js/menu-ui.js?v=0.55.0"></script>
-<script src="js/scenes-ui.js?v=0.55.0"></script>
-<script src="js/walk-ui.js?v=0.55.0"></script>
-<script src="js/konbini-ui.js?v=0.55.0"></script>
-<script src="js/stalls-ui.js?v=0.55.0"></script>
-<script src="js/street-ui.js?v=0.55.0"></script>
-<script src="js/station-ui.js?v=0.55.0"></script>
-<script src="js/patterns-ui.js?v=0.55.0"></script>
-<script src="js/kanji-ui.js?v=0.55.0"></script>
-<script src="js/grammar-ui.js?v=0.55.0"></script>
-<script src="js/cards-ui.js?v=0.55.0"></script>
-<script src="js/book-ui.js?v=0.55.0"></script>
-<script src="js/stats.js?v=0.55.0"></script>
-<script src="js/sprint.js?v=0.55.0"></script>
-<script src="js/read-ui.js?v=0.55.0"></script>
-<script src="js/loans-ui.js?v=0.55.0"></script>
-<script src="js/arcade-ui.js?v=0.55.0"></script>
-<script src="js/toys-art.js?v=0.55.0"></script>
-<script src="js/games-ui.js?v=0.55.0"></script>
-<script src="js/phone.js?v=0.55.0"></script>
+<script src="js/data/kana.js?v=0.56.0"></script>
+<script src="js/furi.js?v=0.56.0"></script>
+<script src="js/conj.js?v=0.56.0"></script>
+<script src="js/data/words.js?v=0.56.0"></script>
+<script src="js/data/patterns.js?v=0.56.0"></script>
+<script src="js/data/kanji.js?v=0.56.0"></script>
+<script src="js/data/kanji-lessons.js?v=0.56.0"></script>
+<script src="js/data/menu.js?v=0.56.0"></script>
+<script src="js/data/grammar.js?v=0.56.0"></script>
+<script src="js/data/scenes.js?v=0.56.0"></script>
+<script src="js/data/konbini.js?v=0.56.0"></script>
+<script src="js/data/texts.js?v=0.56.0"></script>
+<script src="js/data/toys.js?v=0.56.0"></script>
+<script src="js/data/loans.js?v=0.56.0"></script>
+<script src="js/srs.js?v=0.56.0"></script>
+<script src="js/sync.js?v=0.56.0"></script>
+<script src="js/assets.js?v=0.56.0"></script>
+<script src="js/sound.js?v=0.56.0"></script>
+<script src="js/art.js?v=0.56.0"></script>
+<script src="js/write.js?v=0.56.0"></script>
+<script src="js/app.js?v=0.56.0"></script>
+<script src="js/offline.js?v=0.56.0"></script>
+<script src="js/guide.js?v=0.56.0"></script>
+<script src="js/words-ui.js?v=0.56.0"></script>
+<script src="js/menu-ui.js?v=0.56.0"></script>
+<script src="js/scenes-ui.js?v=0.56.0"></script>
+<script src="js/walk-ui.js?v=0.56.0"></script>
+<script src="js/konbini-ui.js?v=0.56.0"></script>
+<script src="js/stalls-ui.js?v=0.56.0"></script>
+<script src="js/street-ui.js?v=0.56.0"></script>
+<script src="js/station-ui.js?v=0.56.0"></script>
+<script src="js/patterns-ui.js?v=0.56.0"></script>
+<script src="js/kanji-ui.js?v=0.56.0"></script>
+<script src="js/grammar-ui.js?v=0.56.0"></script>
+<script src="js/cards-ui.js?v=0.56.0"></script>
+<script src="js/book-ui.js?v=0.56.0"></script>
+<script src="js/stats.js?v=0.56.0"></script>
+<script src="js/sprint.js?v=0.56.0"></script>
+<script src="js/read-ui.js?v=0.56.0"></script>
+<script src="js/loans-ui.js?v=0.56.0"></script>
+<script src="js/arcade-ui.js?v=0.56.0"></script>
+<script src="js/toys-art.js?v=0.56.0"></script>
+<script src="js/games-ui.js?v=0.56.0"></script>
+<script src="js/phone.js?v=0.56.0"></script>
 </body>
 </html>

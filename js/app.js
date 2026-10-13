@@ -67,21 +67,27 @@ function go(v) {
   scrollTo(0, 0);
 }
 
-/* The sections in the order they matter at this stage. While the kana are
-   being learned, the chart is the second thing you want; once they're all
-   learned, reading is, and the chart becomes something to look things up
-   in — so it moves to the end, beside Record. */
-const NAV_KANA = ["today", "kana", "words", "grammar", "read", "games", "cards", "book", "menu", "sprint", "record"];
-const NAV_PAST = ["today", "read", "games", "words", "grammar", "menu", "sprint", "cards", "book", "kana", "record"];
+/* The sections, in five groups that each have a colour (data-g in
+   index.html): studying the course, practising it, playing, going out, and
+   your record. The groups stay together; within one, the order is what
+   matters at this stage. While the kana are being learned the chart is the
+   second thing you want; once they're all learned it's something to look
+   things up in, so it moves to the end of its group. */
+const NAV_KANA = ["today", "kana", "words", "grammar", "read", "sprint", "cards", "book", "games", "menu", "record"];
+const NAV_PAST = ["today", "words", "grammar", "kana", "read", "sprint", "cards", "book", "games", "menu", "record"];
+const NAV_GROUPS = { study: ["学ぶ", "Study"], practise: ["練習", "Practise"], play: ["遊ぶ", "Play"], out: ["出かける", "Out"], you: ["記録", "Your record"] };
 const navOrder = () => wordsOpen() ? NAV_PAST : NAV_KANA;
+
+/* the first of each group gets a little more room before it */
+const markGroups = box => [...box.children].forEach(b => b.classList.toggle("g-first", b.dataset.g !== b.previousElementSibling?.dataset.g));
 
 function orderNav() {
   const order = navOrder();
   const sortIn = box => {
     if (!box) return;
     const btns = [...box.querySelectorAll(":scope > [data-nav]")];
-    if (btns.map(b => b.dataset.nav).join() === order.join()) return;
-    order.forEach(id => { const b = btns.find(x => x.dataset.nav === id); if (b) box.appendChild(b); });
+    if (btns.map(b => b.dataset.nav).join() !== order.join()) order.forEach(id => { const b = btns.find(x => x.dataset.nav === id); if (b) box.appendChild(b); });
+    if (box._marked !== order.join()) { markGroups(box); box._marked = order.join(); }
   };
   sortIn($(".top-nav"));
   /* the phone's wheel is cloned the first time it opens; only its first

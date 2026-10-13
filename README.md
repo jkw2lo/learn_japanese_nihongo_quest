@@ -648,9 +648,9 @@ The daily loop, lifted almost whole from Hanzi Quest (*The blocks on Today*,
   activity, started in one tap — a short text not read yet if one's open,
   otherwise Subtitles or Phrases, turn about by the day. It ticks once a
   reading round is finished that day (`day().read`).
-- **The sections reorder** (`navOrder`): Read moves up beside Today, and
-  the kana chart moves to the end, beside Record — a reference now, no
-  longer the second thing you want. Before then the order is as it was.
+- **The kana chart moves** (`navOrder`) to the end of its group, Study —
+  a reference now, no longer the second thing you want. The sections stay
+  in their coloured groups (`NAV_GROUPS`, 0.56.0) either way.
   (The phone's wheel takes the order the first time it opens.)
 
 Every number on Today counts items, never answers, for the reason Hanzi
@@ -1088,6 +1088,35 @@ the konbini's does, and the smoke test checks both.
   wide layout: the timetable's destinations wrapped a character at a time
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
+
+### 0.56.0: The wheel in colours; the toys by the machine
+
+- **The sections come in five coloured groups**: 学ぶ Study (Today, Kana,
+  Words, Grammar) in indigo, 練習 Practise (Read, Sprint, Cards, Notebook)
+  in teal, 遊ぶ Play (Games) in gold, 出かける Out (Out & about) in plum,
+  and Record in grey. Each group stays together, on the desktop's tab row
+  (with a little space between groups) and on the phone's wheel, where the
+  group of the section in the middle is named above it.
+- **Games and Out & about open a panel of squares** on the phone's wheel
+  rather than going straight to their page: a square for the capsule
+  machine and each game, which starts it in one tap, and a square for each
+  of the fifteen places. The panel's heading still goes to the page.
+- **The wheel is smoother**: a flick can carry past several sections, not
+  one at a time. It no longer lands one section off after a long scroll.
+  The loop's jump back to the middle was measured as the scroll width over
+  three, which counts the padding at both ends, so every jump was out by
+  most of a chip. It's now measured chip to chip, over five copies, and
+  waits for `scrollend`, so it never fires mid-flick.
+- **The collection sits right under the capsule machine** (beside it on a
+  desktop), not under every game. On a phone it starts folded to a row of
+  dots, one per toy, coloured in as you find them. A new toy lands on its
+  dot, so there's no scrolling down to see it and back up for another
+  turn. Open or folded, the device remembers.
+- **The installed app stays upright on a phone.** Taking `orientation`
+  out of the manifest (0.47.0) only reaches an installed app once Chrome
+  refreshes it, so it kept turning sideways. It now locks itself to
+  portrait each time it comes to the front. A browser tab, and a tablet,
+  still turn with the system.
 
 ### 0.55.0: All the loanwords, to read down
 
@@ -1544,8 +1573,14 @@ reading, and for the rare Close, out of the way of a stray tap.
   backup reminder dot when it's due). It opens a **rolodex**: a rounded
   capsule of round section buttons above it, scrolling sideways, snapping to
   the centre, and **looping** so it never runs out. It's Hanzi Quest's loop
-  (porting.md C4): three copies back to back, with a silent jump back to
-  the middle once scrolling settles. Settings and Backup live there too, so
+  (porting.md C4), with five copies back to back rather than three, and a
+  silent jump of whole copies back to the middle once scrolling settles
+  (`scrollend`). A copy's width is measured chip to chip, never as the
+  scroll width over the copies, which counts the end padding. The chips
+  are tinted by their group, and the group of the one in the middle is
+  named above the wheel. **Games** and **Out & about** open a panel of
+  squares over the wheel instead of their page: one per game (and the
+  capsule machine) or place. Settings and Backup live there too, so
   the top bar is just the name and the section you're in. The button sits
   outside `.topbar` on purpose: the header's `backdrop-filter` would make it
   the containing block for a fixed child (porting.md C3).

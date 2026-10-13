@@ -30,6 +30,12 @@ function earnCoins(n) {
 let gaShelf = null;          /* which set the shelf shows; null: the one being collected */
 let gaBusy = false;          /* a capsule on its way */
 
+/* The collection sits right under the machine, so a toy lands where you can
+   see it. On a phone it starts folded to one line of dots, one per toy, so
+   the machine and the games stay close; open or shut, this device remembers. */
+let gaShelfOpen = (() => { try { const v = localStorage.getItem("nq-shelf"); return v === null ? null : v === "1"; } catch { return null; } })();
+const shelfOpen = () => gaShelfOpen ?? !(typeof isPhone === "function" && isPhone());
+
 function renderGames() {
   loadBundle("gacha");
   const el = $("#v-games");
@@ -51,11 +57,11 @@ function renderGames() {
       <button class="btn gm-turn" data-act="ga-spin" ${canSpin() && !gaBusy ? "" : "disabled"}>${spinFree() ? "Turn the handle — the first one's free" : `Turn the handle · ${coinArt()} ${SPIN_COST}`}</button>
       ${!canSpin() ? `<p class="muted small">${SPIN_COST - coins()} more coins for a turn — a game pays about twenty.</p>` : ""}
     </section>
+    ${shelfHtml()}
     ${ninjaCard()}
     ${deckCard()}
     ${searchCard(pool)}
     ${matchCard(pool)}
-    ${shelfHtml()}
   </div>`;
 }
 
@@ -67,10 +73,16 @@ function shelfHtml() {
   const S = TOY_SETS.find(x => x.id === gaShelf) || cur;
   const open = x => TOY_SETS.indexOf(x) <= TOY_SETS.indexOf(cur);
   const have = S.toys.filter(t => owned[t.id]).length;
+  const shown = shelfOpen();
+  const head = `<button class="gm-shelf-head" data-act="ga-shelf-fold" aria-expanded="${shown}">
+      <h2>Collection</h2><span class="count">${have} of ${S.toys.length}</span>${icon("chevron", "gm-fold")}</button>`;
+  if (!shown) return `<section class="card gm-shelves shut" id="gmShelves">${head}
+    <button class="gm-dots" data-act="ga-shelf-fold" aria-label="Show the collection">${S.toys.map((t, i) =>
+      `<i class="${owned[t.id] ? "on" : ""} ${t.rare ? "rare" : ""}" data-t="${t.id}" style="--h:${GACHA_HUES[i % GACHA_HUES.length]}"></i>`).join("")}</button>
+  </section>`;
   const rows = [];
   for (let i = 0; i < S.toys.length; i += 5) rows.push(S.toys.slice(i, i + 5));
-  return `<section class="card gm-shelves" id="gmShelves">
-    <div class="card-head"><h2>Collection</h2><span class="count">${have} of ${S.toys.length}</span></div>
+  return `<section class="card gm-shelves" id="gmShelves">${head}
     <div class="seg gm-tabs">${TOY_SETS.map((x, i) => `<button class="${x === S ? "on" : ""}" data-act="ga-shelf" data-s="${x.id}" ${open(x) ? "" : "disabled"}>
       ${open(x) ? "" : icon("lock")}<span lang="ja">${furiPlain(x.jp)}</span> ${i + 1}</button>`).join("")}</div>
     <p class="muted small">${setDone(S, owned) ? `<b>${esc(S.en)}</b> — complete. Tap a toy to hear its name.` : `<b>${esc(S.en)}</b> — ${S.toys.length - have} still to find. Tap a toy to hear its name.`}</p>
@@ -159,8 +171,9 @@ function gachaKeep() {
     showSetDone(S, next);
   }
   render();
-  const slot = $(`.gm-slot[data-t="${toy.id}"]`);
-  if (slot) { slot.classList.add("landed"); if (!done) slot.scrollIntoView({ behavior: "smooth", block: "center" }); }
+  /* it lands on the shelf, or on its dot when the shelf is folded */
+  const slot = $(`.gm-slot[data-t="${toy.id}"], .gm-dots [data-t="${toy.id}"]`);
+  if (slot) { slot.classList.add("landed"); if (!done) slot.scrollIntoView({ behavior: "smooth", block: "nearest" }); }
 }
 
 function showSetDone(S, next) {
@@ -189,6 +202,11 @@ Object.assign(ACTS, {
   "ga-crack": () => gachaCrack(),
   "ga-keep": () => gachaKeep(),
   "ga-hear": el => { const t = TOY_BY[el.dataset.t]; if (t) { say(furiKana(t.w)); el.classList.remove("bounce"); void el.offsetWidth; el.classList.add("bounce"); } },
+  "ga-shelf-fold": () => {
+    gaShelfOpen = !shelfOpen();
+    try { localStorage.setItem("nq-shelf", gaShelfOpen ? "1" : "0"); } catch {}
+    const s = $("#gmShelves"); if (s) s.outerHTML = shelfHtml();
+  },
   "ga-shelf": el => { gaShelf = el.dataset.s; const s = $("#gmShelves"); if (s) s.outerHTML = shelfHtml(); },
   "ga-done-close": () => { $("#gaDone")?.remove(); gaShelf = null; render(); },
   "ga-go": () => { closeRead(); if (typeof SP !== "undefined" && SP) ACTS["sp-close"](); go("games"); },
