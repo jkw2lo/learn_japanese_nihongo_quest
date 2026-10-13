@@ -1086,6 +1086,13 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.52.2: Notes proofread
+
+- The newest words' notes and examples read through: 零 is the formal zero
+  (零度), not the one in phone numbers; 二十歳 is still the age for drinking
+  and the coming-of-age ceremony, though adulthood moved to 18 in 2022;
+  vertical writing is how novels and newspapers are still printed.
+
 ### 0.52.1: Checked against the dictionary
 
 - **A new check, `tools/check-words.mjs`**, compares the words, every

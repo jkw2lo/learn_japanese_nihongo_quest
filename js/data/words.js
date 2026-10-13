@@ -1,4 +1,4 @@
-/* Nihongo Quest — words, stages 2 to 5.
+/* Nihongo Quest — words, stages 2 to 10, by topic.
 
    Each entry:
      w    the word as it's usually written, in furigana markup ({食|た}べる)
@@ -161,7 +161,7 @@ const WORDS = [
   { w: "{毎年|まいとし}", m: "every year", pos: "n", st: 3, note: "Also read まいねん." },
 
   /* counters, and more of the calendar (0.51.0) */
-  { w: "{零|れい}", m: "zero (formal)", pos: "num", st: 3, note: "In scores, temperatures and phone numbers. Day to day, ゼロ." },
+  { w: "{零|れい}", m: "zero (formal)", pos: "num", st: 3, note: "The formal word, as in {零度|れいど}, zero degrees. Day to day — scores, phone numbers — it's ゼロ." },
   { w: "{回|かい}", m: "times (〜回)", pos: "n", st: 3, note: "How often: {一回|いっかい}, {二回|にかい}, {三回|さんかい}." },
   { w: "{階|かい}", m: "floor; storey (〜階)", pos: "n", st: 3, note: "Ground floor is {一階|いっかい}; the third floor, {三階|さんがい}." },
   { w: "{度|ど}", m: "times; degrees (〜度)", pos: "n", st: 3, note: "{今日|きょう}は{三十度|さんじゅうど}です: it's 30 degrees today." },
@@ -176,7 +176,7 @@ const WORDS = [
   { w: "すぎ", m: "past; after (〜すぎ)", pos: "n", st: 3, ex: [["{三時|さんじ}すぎに{来|き}ます。", "I'll come a bit after three."]] },
   { w: "{初|はじ}め", m: "the beginning", pos: "n", st: 3 },
   { w: "{先|さき}", m: "ahead; earlier", pos: "n", st: 3, note: "お{先|さき}に, after you; {先|さき}に{行|い}ってください, go on ahead." },
-  { w: "{二十歳|はたち}", m: "twenty years old", pos: "n", st: 3, note: "Its own word — the age you come of age in Japan." },
+  { w: "{二十歳|はたち}", m: "twenty years old", pos: "n", st: 3, note: "Its own word — and still the age for drinking and for the coming-of-age ceremony, though adulthood starts at 18 since 2022." },
   { w: "{番|ばん}", m: "number (〜番)", pos: "n", st: 3, note: "A place in a list: {三番|さんばん}, number three; {何番|なんばん}ですか, what number?" },
   { w: "{一本|いっぽん}", m: "one (long thing)", pos: "n", st: 3, note: "〜{本|ほん} counts long things — pens, bottles, trains: いっぽん, にほん, さんぼん, ろっぽん.",
     ex: [["えんぴつが{六本|ろっぽん}あります。", "There are six pencils."]] },
@@ -666,7 +666,7 @@ const WORDS = [
   { w: "グラム", m: "gram", pos: "n", st: 7 },
   { w: "{渡|わた}す", m: "to hand over", pos: "v5s", st: 7 },
   { w: "ポスト", m: "postbox", pos: "n", st: 7 },
-  { w: "たて", m: "length; vertical", pos: "n", st: 7, note: "And よこ is the width — たて{書|が}き is writing in columns, the old way." },
+  { w: "たて", m: "length; vertical", pos: "n", st: 7, note: "And よこ is the width. たて{書|が}き, writing in columns, is still how novels and newspapers are printed." },
 
   /* ---- stage 8 · daily life ---- */
   { w: "{起|お}きる", m: "to get up; to wake up", pos: "v1", st: 8, ex: [["{毎朝|まいあさ}{七時|しちじ}に{起|お}きます。", "I get up at seven every morning."]] },
