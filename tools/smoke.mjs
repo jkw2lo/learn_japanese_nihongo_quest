@@ -100,6 +100,8 @@ const CONTRACT = {
   'js/data/texts.js': ['TEXTS', 'textSay', 'READ_PHRASES', 'PHRASE_BITS', 'phraseWord'],
   'js/data/toys.js': ['TOY_SETS', 'TOY_BY', 'SPIN_COST', 'DUP_BACK', 'PITY', 'gachaPick', 'setDone', 'currentSet'],
   'js/toys-art.js': ['TOY_ART', 'toyArt', 'gachaMachine', 'capsuleArt', 'coinArt', 'GACHA_HUES'],
+  'js/data/loans.js': ['LOAN_RULES', 'LOAN_WORDS', 'LOAN_BY', 'LOAN_RULE_BY'],
+  'js/loans-ui.js': ['loanCard', 'loanPool', 'loanOpen', 'loanShow', 'loanAnswer', 'loanDecoys', 'openLoanRules'],
   'js/arcade-ui.js': ['ninjaWave', 'ninjaKinds', 'ninjaCard', 'ninjaOpen', 'deckRound', 'deckModesOpen', 'deckCard', 'deckOpen', 'arcadeKey', 'knownKana'],
   'js/games-ui.js': ['renderGames', 'earnCoins', 'coins', 'gachaKey', 'shelfHtml'],
   'js/phone.js': ['isPhone', 'openDrawer', 'closeDrawer', 'initDrawerLoop', 'centerDrawer', 'drawerTick', 'phoneAfterRender', 'drawerOpen'],
@@ -526,6 +528,26 @@ section('games');
       ok(new Set(q.cards).size === q.cards.length && q.cards.length <= 8 && q.cards.length >= 4, `deck ${mode}: ${q.show}'s cards repeat or number ${q.cards.length}`);
     });
   }
+}
+
+section('loanwords');
+{
+  /* 外来語 (js/data/loans.js): every word in kana that's taught, a rule that
+     exists, a different English answer each; every rule's examples are words */
+  const l = {};
+  vm.createContext(l);
+  vm.runInContext(['js/data/kana.js', 'js/data/loans.js'].map(read).join('\n') + ';globalThis.L = { LOAN_RULES, LOAN_WORDS, kanaUnits, KANA_BY };', l);
+  const { LOAN_RULES, LOAN_WORDS, kanaUnits, KANA_BY } = l.L;
+  const ids = new Set(LOAN_RULES.map(r => r.id));
+  ok(LOAN_WORDS.length >= 150, `expected a good few loanwords, got ${LOAN_WORDS.length}`);
+  ok(new Set(LOAN_WORDS.map(x => x.k)).size === LOAN_WORDS.length, 'a loanword is listed twice');
+  ok(new Set(LOAN_WORDS.map(x => x.en)).size === LOAN_WORDS.length, 'two loanwords share an English answer');
+  LOAN_WORDS.forEach(x => {
+    ok(/^[゠-ヿ]+$/.test(x.k), `${x.k} isn't all katakana`);
+    kanaUnits(x.k).forEach(u => ok(!!KANA_BY[u], `${x.k} uses ${u}, which no lesson teaches`));
+    ok(x.rules.length && x.rules.every(r => ids.has(r)), `${x.k}: a rule that doesn't exist (${x.rules})`);
+  });
+  LOAN_RULES.forEach(R => R.ex.forEach(([k]) => ok(LOAN_WORDS.some(x => x.k === k), `rule ${R.id}: example ${k} isn't a loanword`)));
 }
 
 section('read');

@@ -183,6 +183,7 @@ function renderRead() {
       <button class="btn rd-go" data-act="rd-start" data-r="chains">Find the words in ${CHAIN_N} chains</button>`)}
     ${phraseCard()}
     ${textCard()}
+    ${loanCard()}
     <section class="card rd-games">
       <div class="rd-rung-head"><span class="rd-n rd-game" lang="ja">遊</span><h2><span lang="ja">遊ぶ</span> Games</h2></div>
       <p>Word search and Match have moved to the Games tab — where every game pays coins for the capsule machine.</p>
@@ -198,7 +199,7 @@ let RD = null;           /* the round being played */
 function openRead(rung) {
   const pool = readPool();
   /* the arcade games bring their own (kana, before there are words) */
-  if (pool.length < 6 && rung !== "ninja" && rung !== "deck") return;
+  if (pool.length < 6 && !["ninja", "deck", "loans"].includes(rung)) return;
   RD = { rung, pool, i: 0, res: [], t0: performance.now(), done: false };
   crumb(`read ${rung}`);
   $("#rdPace").textContent = "";
@@ -208,6 +209,7 @@ function openRead(rung) {
   if (rung === "match") return matchOpen();
   if (rung === "ninja") return ninjaOpen();
   if (rung === "deck") return deckOpen();
+  if (rung === "loans") return loanOpen();
   if (rung === "subs") {
     const s = state.read.subs;
     Object.assign(RD, { cps: s.cps, cps0: s.cps, len: s.len, n: SUBS_N, streak: 0, lines: subsPool(), seen: new Set() });
@@ -244,7 +246,7 @@ function rdStep() {
   rdStrip();
   $("#rdFoot").innerHTML = "";
   if (RD.i >= RD.n) return rdFinish();
-  if (RD.rung === "subs") subsShow(); else if (RD.rung === "phrases") phraseShow(); else if (RD.rung === "texts") textShow(); else chainShow();
+  if (RD.rung === "subs") subsShow(); else if (RD.rung === "phrases") phraseShow(); else if (RD.rung === "texts") textShow(); else if (RD.rung === "loans") loanShow(); else chainShow();
 }
 
 function closeRead() {
@@ -1079,7 +1081,10 @@ function rdFinish() {
   const right = RD.res.filter(x => x === "ok").length;
   let line, best = false;
   r.rounds = (r.rounds || 0) + 1;
-  if (RD.rung === "texts") {
+  if (RD.rung === "loans") {
+    if (right > (r.best || 0)) { r.best = right; best = true; }
+    line = `${right} of ${total} worked out from the sound alone`;
+  } else if (RD.rung === "texts") {
     const cps = RD.ms ? RD.chars / (RD.ms / 1000) : 0;
     if (cps > (r.best || 0) && right / total >= 0.75) { r.best = cps; best = true; }
     line = `${right} of ${total} answered right · read at <b>${cpsText(cps)}</b>`;
@@ -1124,6 +1129,11 @@ function readKey(e) {
   if (RD.rung === "match" && RD.one) {
     const d = { ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3 }[e.key] ?? (/^[1-4]$/.test(e.key) ? +e.key - 1 : null);
     if (d != null && !$(`.mt-t[data-i="${d}"]`)?.disabled) { e.preventDefault(); matchOne(d); }
+  }
+  if (RD.rung === "loans") {
+    if (/^[1-4]$/.test(e.key)) { e.preventDefault(); loanAnswer(+e.key - 1); }
+    else if ((e.key === "Enter" || e.key === " ") && $("#rdNext")) { e.preventDefault(); ACTS["rd-next"](); }
+    return true;
   }
   if (RD.rung === "texts") {
     if (/^[1-4]$/.test(e.key)) { e.preventDefault(); textAnswer(+e.key - 1); }

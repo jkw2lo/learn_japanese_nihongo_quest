@@ -68,7 +68,8 @@ const asList = v => Array.isArray(v) ? v : (v && typeof v === "object" ? Object.
 const freshRead = () => ({ flash: { cps: 1.5, best: 0, rounds: 0 }, chains: { n: 2, best: 0, rounds: 0 },
   search: { size: 8, clue: "m", best: {}, rounds: 0 }, match: { layout: null, best: {}, rounds: 0 },
   subs: { cps: 1.2, len: 4, best: 0, rounds: 0 }, phrases: { best: 0, rounds: 0 },
-  texts: { best: 0, rounds: 0, read: [] }, ninja: { best: 0, rounds: 0 }, deck: { mode: null, best: {}, rounds: 0 } });
+  texts: { best: 0, rounds: 0, read: [] }, ninja: { best: 0, rounds: 0 }, deck: { mode: null, best: {}, rounds: 0 },
+  loans: { best: 0, rounds: 0 } });
 
 /* Coins are kept as two running totals, earned and spent, so a merge can
    take the larger of each; owned is toy id -> how many; dry, the turns in a
@@ -124,7 +125,7 @@ function normalise(s) {
      sync with an older device still merges; its pace carries over to a
      Subtitles not yet played */
   out.read = { flash: { ...fr.flash, ...(sr.flash || {}) }, chains: { ...fr.chains, ...(sr.chains || {}) }, search: { ...fr.search, ...(sr.search || {}) }, match: { ...fr.match, ...(sr.match || {}) }, subs: { ...fr.subs, ...(sr.subs || {}) }, phrases: { ...fr.phrases, ...(sr.phrases || {}) }, texts: { ...fr.texts, ...(sr.texts || {}) },
-    ninja: { ...fr.ninja, ...(sr.ninja || {}) }, deck: { ...fr.deck, ...(sr.deck || {}) } };
+    ninja: { ...fr.ninja, ...(sr.ninja || {}) }, deck: { ...fr.deck, ...(sr.deck || {}) }, loans: { ...fr.loans, ...(sr.loans || {}) } };
   out.read.deck.best = out.read.deck.best && typeof out.read.deck.best === "object" ? out.read.deck.best : {};
   out.read.texts.read = asList(out.read.texts.read);
   out.read.match.best = out.read.match.best && typeof out.read.match.best === "object" ? out.read.match.best : {};
@@ -577,7 +578,7 @@ function mergeState(a, b) {
   };
   /* the pace and chain length are where you are, so the newer side's; bests and rounds only grow */
   out.read = {};
-  ["flash", "chains", "subs", "phrases", "ninja"].forEach(r => {
+  ["flash", "chains", "subs", "phrases", "ninja", "loans"].forEach(r => {
     out.read[r] = { ...older.read[r], ...newer.read[r], best: bigger(a.read[r].best, b.read[r].best), rounds: bigger(a.read[r].rounds, b.read[r].rounds) };
   });
   out.read.texts = { best: bigger(a.read.texts.best, b.read.texts.best), rounds: bigger(a.read.texts.rounds, b.read.texts.rounds),

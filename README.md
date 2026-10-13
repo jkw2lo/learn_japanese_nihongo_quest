@@ -1086,6 +1086,15 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.53.0: 外来語 Loanwords
+
+- **Read → 外来語 Loanwords**: the nine rules English follows into
+  katakana, each with examples to hear, and a round that gives you a
+  katakana word you were never taught and four English words to choose
+  from — sound it out, pick, and see the rule that explains it. 200
+  loanwords, from コーヒー and テレビ to パスワード, スマホ and マンション
+  (a block of flats). Opens with katakana; pays coins.
+
 ### 0.52.2: Notes proofread
 
 - The newest words' notes and examples read through: 零 is the formal zero
@@ -1645,6 +1654,21 @@ shown as kanji, the rest in kana, with no furigana — there's none on a sign
    the reading speed is kept. 29 texts, stages 3 to 10; the smoke test
    checks their kanji, patterns and answers, and every line is recorded
    (arrows and colons said as pauses, a sign's 〜 as から, `textSay`).
+
+**外来語 Loanwords** (0.53.0, `js/data/loans.js`, `js/loans-ui.js`). A lot
+of everyday katakana is English that changed to fit Japanese sounds, by a
+handful of regular rules — learn them and you can sound out words nobody
+taught you. A card on the Read tab has **the rules** (a sheet: a vowel on
+the end, long sounds become ー, L and R are one sound, V becomes B, TH
+becomes S or Z, small kana for new sounds, a short vowel doubles the next
+consonant with ッ, -tion becomes ション, and long words get shortened —
+スマホ, エアコン, マンション), each with examples to hear, and a round to
+**work them out**: 200 loanwords you weren't taught, one at a time, with four
+English words to choose from — the wrong three starting with the same kana
+where they can (ドーナツ: door, drama, drum, doughnut). After each, the rule
+that explains it. They open as their kana are learned (the round once twelve
+can be read, so in practice with katakana), aren't scheduled — they're
+worked out, not memorised — and pay coins like the other rounds.
 
 Two games, which live on the Games tab (see 遊ぶ Games, below) and play in
 the same overlay. **結ぶ Match**: meanings and words you know,
@@ -2286,6 +2310,8 @@ you like.
     js/data/toys.js         the capsule toys: sets, names, the machine's odds
     js/toys-art.js          the toys drawn, the machine, a capsule, a coin
     design/toys.html        every toy on one page, for drawing more
+    js/data/loans.js        外来語: the rules English follows into katakana, and 200 loanwords
+    js/loans-ui.js          the Read tab's loanwords: the rules sheet and the work-it-out round
     js/data/texts.js        the short texts the Read tab reads (messages, signs, menus…), and its everyday sentences to split
     js/phone.js             the sections button and the rolodex (inert on a desktop)
     js/art.js               icons, the cat, the hanamaru, stamps, petals

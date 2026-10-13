@@ -7,6 +7,7 @@
                           shop talk…) — loaded when that place opens
      js/audio-konbini.js  the convenience store: every name, slogan, tag and label
      js/audio-gacha.js    遊ぶ Games: every capsule toy's name
+     js/audio-loans.js    読む Read → 外来語: every loanword
    All add to window.NQ_AUDIO rather than replace it, so they load in any order.
 
    Why bundle at all: see js/sound.js. Why record words whole, from kana:
@@ -35,9 +36,9 @@ const BITRATE = '24000';     /* speech is clear at 24k; 32k was a quarter bigger
 const MIN_SECONDS = 0.06;
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const { KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS, patternSay, GRAMMAR_SAY, SCENES, KONBINI, TEXTS, textSay, READ_PHRASES, TOY_SETS } = new Function(
-  ['js/data/kana.js', 'js/furi.js', 'js/conj.js', 'js/data/words.js', 'js/data/patterns.js', 'js/data/menu.js', 'js/data/grammar.js', 'js/data/scenes.js', 'js/data/konbini.js', 'js/data/texts.js', 'js/data/toys.js'].map(f => readFileSync(join(root, f), 'utf8')).join('\n') +
-  '\nreturn {KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS, patternSay, GRAMMAR_SAY, SCENES, KONBINI, TEXTS, textSay, READ_PHRASES, TOY_SETS};')();
+const { KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS, patternSay, GRAMMAR_SAY, SCENES, KONBINI, TEXTS, textSay, READ_PHRASES, TOY_SETS, LOAN_WORDS } = new Function(
+  ['js/data/kana.js', 'js/furi.js', 'js/conj.js', 'js/data/words.js', 'js/data/patterns.js', 'js/data/menu.js', 'js/data/grammar.js', 'js/data/scenes.js', 'js/data/konbini.js', 'js/data/texts.js', 'js/data/toys.js', 'js/data/loans.js'].map(f => readFileSync(join(root, f), 'utf8')).join('\n') +
+  '\nreturn {KANA, KANA_WORDS, KANA_PAIRS_WORDS, KANA_CONCEPT, WORDS, furiKana, MENUS, MENU_PHRASES, menuItems, conj, isVerb, isConjugable, formsFor, CONJ_TAUGHT, PATTERNS, patternSay, GRAMMAR_SAY, SCENES, KONBINI, TEXTS, textSay, READ_PHRASES, TOY_SETS, LOAN_WORDS};')();
 
 /* The text actually handed to `say` for a clip key, for any key the voice
    misreads on its own. A lone は or へ could be taken as the particles "wa"
@@ -131,6 +132,8 @@ function stageBundles() {
   MENUS.forEach(M => { out[`js/audio-place-${M.id}.js`] = own([...menuItems(M).map(it => it.kana), ...MENU_PHRASES.map(([jp]) => furiKana(jp).replace('〜', ''))]); });
   SCENES.forEach(sc => { out[`js/audio-place-${sc.id}.js`] = own([...sc.all.map(x => x.kana), ...(sc.lines || []).map(([w]) => furiKana(w)), ...talk(sc)]); });
   /* 遊ぶ Games: every capsule toy's name, fetched when the tab opens */
+  /* 外来語: every loanword, fetched when the Read tab's loanwords open */
+  out['js/audio-loans.js'] = [...new Set(LOAN_WORDS.map(x => x.k))].filter(t => !kana.has(t));
   out['js/audio-gacha.js'] = [...new Set(TOY_SETS.flatMap(S => S.toys.map(t => furiKana(t.w))))].filter(t => !kana.has(t));
   out['js/audio-konbini.js'] = [...new Set(KONBINI.flatMap(p => [p.name, p.copy, ...p.tags, ...p.back.map(r => r[0])].map(furiKana)))].filter(t => !kana.has(t));
   return out;

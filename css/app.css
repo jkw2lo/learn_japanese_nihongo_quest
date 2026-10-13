@@ -2787,6 +2787,20 @@ button.tx-line:hover { background: color-mix(in srgb, var(--ai) 8%, transparent)
 .lib-topic h3 span { margin-right: .3rem; color: var(--ink); }
 h1 .h-en { font-size: .6em; color: var(--ink-2); font-weight: 500; }
 
+/* 外来語 Loanwords: a word to sound out, and the rules sheet */
+.rd-btns { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; }
+.ln-play { text-align: center; padding-top: 1rem; }
+.ln-word { font-size: clamp(2.4rem, 10vw, 3.6rem); line-height: 1.2; margin: .6rem 0 .2rem; }
+.ln-hear { display: inline-flex; align-items: center; gap: 4px; font-size: .9rem; margin-bottom: 1.2rem; }
+.ln-opts { max-width: 34rem; margin: 0 auto; }
+.ln-why { min-height: 3.6rem; margin-top: 1rem; }
+.ln-because { margin-top: .3rem; font-size: .9rem; color: var(--ink-2); }
+.ln-rules h2 { margin-top: .2rem; }
+.ln-rule { padding: .7rem 0; border-top: 1px solid var(--rule-2); }
+.ln-rule h3 { display: flex; align-items: baseline; gap: .5rem; margin-bottom: .3rem; }
+.ln-rule p { margin-bottom: .5rem; }
+.ln-n { width: 1.5rem; height: 1.5rem; border-radius: 50%; display: inline-grid; place-items: center; background: var(--ai-wash); color: var(--ai); font: 600 .8rem var(--f-body); flex: none; }
+
 /* ============================================================
    PHONE LAYER
 
