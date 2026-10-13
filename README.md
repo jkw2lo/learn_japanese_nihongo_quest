@@ -1086,6 +1086,14 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.52.1: Checked against the dictionary
+
+- **A new check, `tools/check-words.mjs`**, compares the words, every
+  furigana reading in the app and the kanji meanings with JMdict and
+  KANJIDIC. All 880 words' readings and every verb's and adjective's class
+  were right. Fixed: 切符売り場's furigana regrouped; 丈夫 is "sturdy;
+  healthy", 男 "man; male", 帰 "return home".
+
 ### 0.52.0: Words by topic
 
 - **Every word has a topic** — 80 of them, from 数字 *Numbers* and 曜日
@@ -2232,7 +2240,7 @@ each device. Each device then reads and writes one Firestore document,
 
 | what | source | licence | notes |
 |---|---|---|---|
-| word meanings, readings, parts of speech | JMdict (EDRDG) | CC BY-SA 4.0 | for checking and filling gaps; hand-edited glosses are shorter |
+| word meanings, readings, parts of speech | JMdict (EDRDG) | CC BY-SA 4.0 | checked against by `tools/check-words.mjs` (readings, verb classes, meanings, every furigana); hand-edited glosses are shorter |
 | kanji readings and stroke counts | KANJIDIC2 (EDRDG) | CC BY-SA 4.0 | used, by `tools/fetch-kanji.mjs` → `js/data/kanji.js`; meanings written for the app |
 | stroke order | AnimCJK `graphicsJaKana.txt` and `graphicsJa.txt` | Arphic Public License | licence text in `licenses/animCJK/`; see **Writing → Stroke data** |
 | example sentences | Tatoeba | CC BY 2.0 FR | a starting point; most will be written for the app so they only use known words |
@@ -2328,10 +2336,32 @@ still works, and the listening drills are hidden.
 ## Shipping a change
 
     node tools/smoke.mjs
+    node tools/check-words.mjs      # after changing words, kanji or any furigana
     node tools/version.mjs patch
     git add -A && git commit && git push
 
 Run the checks first, not last, and bump the version every time.
+
+**What smoke can't know, `check-words` asks a dictionary** (0.52.1). Smoke
+checks that the data is well formed; `tools/check-words.mjs` checks that
+it's *right*, against JMdict and KANJIDIC (EDRDG, CC BY-SA, cached in
+`tools/.cache/`, downloaded on first run):
+
+- **every word's reading** is one of its readings in JMdict;
+- **every verb's and adjective's class** is one JMdict gives it (帰る godan,
+  食べる ichidan…), so it conjugates right;
+- **every word's meaning** shares a word with JMdict's glosses — a hint,
+  since "where you're from" and "one's origin" agree; ones read and found
+  right are kept in `ACCEPT`, with why;
+- **every {kanji|reading} anywhere** in the data and the app is built from
+  the kanji's KANJIDIC readings, with the sound changes words make (さん +
+  ほん → さんぼん, いち + こ → いっこ), or is a whole JMdict word (今日 きょう,
+  大人 おとな); the right-but-special ones are in `FURI_OK`;
+- **every kanji's meaning** agrees with KANJIDIC's (`KANJI_OK` for the rest).
+
+It exits non-zero on a wrong reading, class or furigana, so it can gate a
+ship. First run (0.52.1): all 880 readings and every verb class matched;
+one furigana run was regrouped (切符売り場), three meanings sharpened.
 
 ---
 

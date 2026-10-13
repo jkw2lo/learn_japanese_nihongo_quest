@@ -624,7 +624,7 @@ const WORDS = [
   { w: "{暗|くら}い", m: "dark", pos: "adj-i", st: 7 },
   { w: "かわいい", m: "cute", pos: "adj-i", st: 7 },
   { w: "{便利|べんり}", m: "handy; convenient", pos: "adj-na", st: 7 },
-  { w: "{丈夫|じょうぶ}", m: "sturdy; tough", pos: "adj-na", st: 7 },
+  { w: "{丈夫|じょうぶ}", m: "sturdy; healthy", pos: "adj-na", st: 7 },
   { w: "{大切|たいせつ}", m: "precious; important", pos: "adj-na", st: 7 },
   { w: "{大好|だいす}き", m: "loved; to love", pos: "adj-na", st: 7, ex: [["この{色|いろ}が{大好|だいす}きです。", "I love this colour."]] },
   { w: "{嫌|きら}い", m: "disliked; to dislike", pos: "adj-na", st: 7, note: "Ends in い but it's a な-adjective, like きれい: {嫌|きら}いな{色|いろ}." },

@@ -550,7 +550,7 @@ Object.assign(ACTS, {
   },
   /* in through the gates: a ticket from here */
   "sn-gate": () => {
-    if (!trip.ticket) return snNote(`<p class="sn-msg">The gate beeps and its little doors stay shut. You need a ticket first: the machines are under <b lang="ja">${inkHtml("{切符売|きっぷう}り{場|ば}")}</b>.</p>`);
+    if (!trip.ticket) return snNote(`<p class="sn-msg">The gate beeps and its little doors stay shut. You need a ticket first: the machines are under <b lang="ja">${inkHtml("{切符|きっぷ}{売|う}り{場|ば}")}</b>.</p>`);
     snGo("paid", 0, "r"); noteActivity();
   },
   /* out through the gates: only where your ticket's for (or back out where you started) */

@@ -94,7 +94,7 @@ const SCENES = [
     intro: "The signs you'll follow and the announcements you'll hear on every train trip.",
     items: [
       ["{出口|でぐち}", "Exit"], ["{入口|いりぐち}", "Entrance"], ["{改札|かいさつ}", "Ticket gates"],
-      ["{乗|の}り{換|か}え", "Transfer (change trains)"], ["{切符売|きっぷう}り{場|ば}", "Ticket machines"],
+      ["{乗|の}り{換|か}え", "Transfer (change trains)"], ["{切符|きっぷ}{売|う}り{場|ば}", "Ticket machines"],
       ["{東口|ひがしぐち}", "East exit"], ["{西口|にしぐち}", "West exit"], ["{北口|きたぐち}", "North exit"], ["{南口|みなみぐち}", "South exit"],
       ["{三番線|さんばんせん}", "Platform 3"], ["{各駅停車|かくえきていしゃ}", "Local — stops at every station"],
       ["{快速|かいそく}", "Rapid"], ["{急行|きゅうこう}", "Express"], ["{女性専用車|じょせいせんようしゃ}", "Women-only carriage"],
