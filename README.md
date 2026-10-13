@@ -1089,6 +1089,18 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.55.0: All the loanwords, to read down
+
+- **Read → 外来語 → All 219**: every loanword in the app, in nine groups,
+  each with its romaji and English and a tap to hear it — and a switch to
+  hide the English and test yourself.
+- **Made in Japan**: a group of the tricky ones, which look like English and
+  aren't quite — マンション (a block of flats), コンセント (a power socket),
+  サラリーマン, ペットボトル, ホッチキス (a stapler), シャーペン, モーニングコール,
+  クレーム (a complaint), マイペース, ベビーカー, サイン (an autograph), トランプ
+  (playing cards), ゲームセンター, ジェットコースター, ワンピース — and a tenth
+  rule, *not all from English*: パン, アルバイト, エネルギー, ランドセル.
+
 ### 0.54.0: Everyday words beyond N5
 
 - **247 everyday words** the N5 list leaves out, so a learner doesn't meet
@@ -1676,11 +1688,17 @@ shown as kanji, the rest in kana, with no furigana — there's none on a sign
 **外来語 Loanwords** (0.53.0, `js/data/loans.js`, `js/loans-ui.js`). A lot
 of everyday katakana is English that changed to fit Japanese sounds, by a
 handful of regular rules — learn them and you can sound out words nobody
-taught you. A card on the Read tab has **the rules** (a sheet: a vowel on
+taught you. A card on the Read tab has **the rules** (a sheet of ten: a vowel on
 the end, long sounds become ー, L and R are one sound, V becomes B, TH
 becomes S or Z, small kana for new sounds, a short vowel doubles the next
 consonant with ッ, -tion becomes ション, and long words get shortened —
-スマホ, エアコン, マンション), each with examples to hear, and a round to
+スマホ, エアコン, マンション — and not all of them are English: パン is
+Portuguese, アルバイト German), each with examples to hear; **all of them**,
+219 in nine groups (food and drink, home, clothes, getting around, sport,
+school and work, everyday words, colours, and *Made in Japan* — the tricky
+ones: マンション a block of flats, コンセント a power socket, サラリーマン,
+ペットボトル, ベビーカー a pram), each with its romaji and English, a tap to
+hear, and the English hidden to test yourself; and a round to
 **work them out**: 200 loanwords you weren't taught, one at a time, with four
 English words to choose from — the wrong three starting with the same kana
 where they can (ドーナツ: door, drama, drum, doughnut). After each, the rule
@@ -2328,7 +2346,7 @@ you like.
     js/data/toys.js         the capsule toys: sets, names, the machine's odds
     js/toys-art.js          the toys drawn, the machine, a capsule, a coin
     design/toys.html        every toy on one page, for drawing more
-    js/data/loans.js        外来語: the rules English follows into katakana, and 200 loanwords
+    js/data/loans.js        外来語: the rules English follows into katakana, and 219 loanwords in groups
     js/loans-ui.js          the Read tab's loanwords: the rules sheet and the work-it-out round
     js/data/texts.js        the short texts the Read tab reads (messages, signs, menus…), and its everyday sentences to split
     js/phone.js             the sections button and the rolodex (inert on a desktop)

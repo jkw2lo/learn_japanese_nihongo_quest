@@ -6,8 +6,10 @@
    These aren't scheduled like the stage words; they're worked out.
 
    LOAN_RULES  the rules, each with a few examples (katakana, English)
-   LOAN_WORDS  "カタカナ|english|rule rule" — the rules it shows. All in
-               katakana the app teaches; every English answer different. */
+   LOAN_WORDS  "カタカナ|english|rule rule" — the rules it shows — under
+               "# Group" lines (food, home, … and Made in Japan: the ones
+               that look like English and aren't). All in katakana the app
+               teaches; every English answer different. */
 
 const LOAN_RULES = [
   { id: "vowel", jp: "母音", title: "A vowel on the end",
@@ -37,9 +39,13 @@ const LOAN_RULES = [
   { id: "short", jp: "略語", title: "Long words get shortened",
     say: "Long borrowings are cut to their first few sounds — スマホ is smart(phone), エアコン air con(ditioner) — and a few were made in Japan from English parts: マンション is a block of flats, not a mansion.",
     ex: [["スマホ", "smartphone"], ["エアコン", "air conditioner"], ["コンビニ", "convenience store"], ["パソコン", "personal computer"]] },
+  { id: "other", jp: "英語じゃない", title: "Not all from English",
+    say: "Some came from other languages, centuries ago or recently: パン, bread, from Portuguese; アルバイト, a part-time job, and エネルギー, energy, from German; ランドセル, a school backpack, from Dutch.",
+    ex: [["パン", "bread"], ["アルバイト", "part-time job"], ["エネルギー", "energy"], ["ランドセル", "school backpack"]] },
 ];
 
 const LOAN_WORDS = `
+# Food and drink
 コーヒー|coffee|long
 ジュース|juice|vowel long
 ミルク|milk|vowel
@@ -94,6 +100,7 @@ const LOAN_WORDS = `
 レシピ|recipe|lr
 ホットドッグ|hot dog|double
 フライドチキン|fried chicken|lr
+# Home and everyday things
 テレビ|television|v short
 ラジオ|radio|lr
 エアコン|air conditioner|short
@@ -114,7 +121,6 @@ const LOAN_WORDS = `
 ティッシュ|tissue|small double
 ペン|pen|vowel
 ボールペン|ballpoint pen|long lr short
-ノートパソコン|laptop|short
 キーボード|keyboard|long
 マウス|mouse|vowel
 メール|email|long lr
@@ -132,6 +138,7 @@ const LOAN_WORDS = `
 カード|card|long vowel
 ポイントカード|points card|vowel long
 レシート|receipt|lr long
+# Clothes and things
 バッグ|bag|double
 ポケット|pocket|double
 ハンカチ|handkerchief|short
@@ -149,6 +156,7 @@ const LOAN_WORDS = `
 ベルト|belt|lr vowel
 マスク|mask|vowel
 スーツケース|suitcase|long
+# Getting around
 バス|bus|vowel
 タクシー|taxi|long
 カー|car|long
@@ -156,10 +164,8 @@ const LOAN_WORDS = `
 デパート|department store|short long
 スーパー|supermarket|short long
 コンビニ|convenience store|short v
-ガソリンスタンド|petrol station|lr
 ビル|building|short lr
 アパート|apartment|long
-マンション|block of flats|short
 ステーション|station|tion
 ターミナル|terminal|long lr
 チケット|ticket|double
@@ -173,6 +179,7 @@ const LOAN_WORDS = `
 タワー|tower|long
 ビーチ|beach|long vowel
 プール|pool|long lr
+# Sport and fun
 スポーツ|sport|long vowel
 サッカー|soccer|double long
 テニス|tennis|vowel
@@ -190,6 +197,7 @@ const LOAN_WORDS = `
 ドラマ|drama|lr
 ニュース|news|long
 ビデオ|video|v
+# School and work
 インタビュー|interview|v long
 オフィス|office|small
 ミーティング|meeting|long small
@@ -207,6 +215,7 @@ const LOAN_WORDS = `
 スケジュール|schedule|lr
 ルール|rule|lr long
 チェック|check|small double
+# Everyday words
 スタート|start|long
 ゴール|goal|long lr
 チャンス|chance|vowel
@@ -217,6 +226,7 @@ const LOAN_WORDS = `
 セール|sale|long lr
 サービス|service|v long
 サイズ|size|vowel
+# Colours and numbers
 カラー|colour|long lr
 ピンク|pink|vowel
 グレー|grey|lr long
@@ -226,6 +236,7 @@ const LOAN_WORDS = `
 シルバー|silver|lr v long
 ナンバー|number|long
 ゼロ|zero|lr
+# Everyday words
 サンキュー|thank you|th long
 スリー|three|th lr long
 スムージー|smoothie|th long
@@ -239,8 +250,39 @@ const LOAN_WORDS = `
 インフォメーション|information|small tion
 アクション|action|tion
 ミッション|mission|tion
+# Made in Japan
+マンション|block of flats|short
+ガソリンスタンド|petrol station|lr short
+ノートパソコン|laptop|short
 テレビゲーム|video game|short long
-`.trim().split("\n").map(l => { const [k, en, rules] = l.split("|"); return { k, en, rules: rules.split(" ") }; });
+コンセント|power socket|short
+サラリーマン|office worker (salaryman)|short lr
+ペットボトル|plastic bottle|short double
+ホッチキス|stapler|short double
+シャーペン|mechanical pencil|short long
+フライドポテト|chips (fries)|short lr
+モーニングコール|wake-up call|short long
+クレーム|complaint|short long lr
+マイペース|at your own pace|short long
+ベビーカー|pram; pushchair|short v long
+サイン|signature; autograph|short
+トランプ|playing cards|short lr
+ゲームセンター|amusement arcade|short long
+ジェットコースター|rollercoaster|short small double
+ワンピース|one-piece dress|short long
+パン|bread|other
+アルバイト|part-time job|other
+エネルギー|energy|other long
+ランドセル|school backpack|other lr
+`.trim().split("\n").reduce((out, l) => {
+  if (l.startsWith("# ")) { out.group = l.slice(2); return out; }
+  const [k, en, rules] = l.split("|");
+  out.push({ k, en, rules: rules.split(" "), group: out.group });
+  return out;
+}, Object.assign([], { group: "" }));
+
+/* the groups, in order, for the list (Read → 外来語 → All of them) */
+const LOAN_GROUPS = [...new Set(LOAN_WORDS.map(x => x.group))];
 
 const LOAN_BY = Object.fromEntries(LOAN_WORDS.map(x => [x.k, x]));
 const LOAN_RULE_BY = Object.fromEntries(LOAN_RULES.map(r => [r.id, r]));

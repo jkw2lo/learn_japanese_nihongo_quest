@@ -100,8 +100,8 @@ const CONTRACT = {
   'js/data/texts.js': ['TEXTS', 'textSay', 'READ_PHRASES', 'PHRASE_BITS', 'phraseWord'],
   'js/data/toys.js': ['TOY_SETS', 'TOY_BY', 'SPIN_COST', 'DUP_BACK', 'PITY', 'gachaPick', 'setDone', 'currentSet'],
   'js/toys-art.js': ['TOY_ART', 'toyArt', 'gachaMachine', 'capsuleArt', 'coinArt', 'GACHA_HUES'],
-  'js/data/loans.js': ['LOAN_RULES', 'LOAN_WORDS', 'LOAN_BY', 'LOAN_RULE_BY'],
-  'js/loans-ui.js': ['loanCard', 'loanPool', 'loanOpen', 'loanShow', 'loanAnswer', 'loanDecoys', 'openLoanRules'],
+  'js/data/loans.js': ['LOAN_RULES', 'LOAN_WORDS', 'LOAN_GROUPS', 'LOAN_BY', 'LOAN_RULE_BY'],
+  'js/loans-ui.js': ['loanCard', 'loanPool', 'loanOpen', 'loanShow', 'loanAnswer', 'loanDecoys', 'openLoanRules', 'openLoanList'],
   'js/arcade-ui.js': ['ninjaWave', 'ninjaKinds', 'ninjaCard', 'ninjaOpen', 'deckRound', 'deckModesOpen', 'deckCard', 'deckOpen', 'arcadeKey', 'knownKana'],
   'js/games-ui.js': ['renderGames', 'earnCoins', 'coins', 'gachaKey', 'shelfHtml'],
   'js/phone.js': ['isPhone', 'openDrawer', 'closeDrawer', 'initDrawerLoop', 'centerDrawer', 'drawerTick', 'phoneAfterRender', 'drawerOpen'],
@@ -548,6 +548,7 @@ section('loanwords');
     ok(x.rules.length && x.rules.every(r => ids.has(r)), `${x.k}: a rule that doesn't exist (${x.rules})`);
   });
   LOAN_RULES.forEach(R => R.ex.forEach(([k]) => ok(LOAN_WORDS.some(x => x.k === k), `rule ${R.id}: example ${k} isn't a loanword`)));
+  ok(LOAN_WORDS.every(x => x.group), 'a loanword has no group in the list');
 }
 
 section('read');

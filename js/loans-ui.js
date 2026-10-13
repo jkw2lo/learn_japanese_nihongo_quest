@@ -17,10 +17,11 @@ function loanCard() {
   return `<section class="card rd-rung rd-loans ${open ? "" : "locked"}">
     <div class="rd-rung-head"><span class="rd-n rd-game" lang="ja">外</span><h2><span lang="ja">外来語</span> Loanwords</h2></div>
     <p>A lot of katakana is English in disguise — <span lang="ja">テレビ</span>, <span lang="ja">コンビニ</span>, <span lang="ja">パスワード</span>.
-      Nine rules turn it back into English, so you can sound out words nobody taught you.</p>
+      Ten rules turn it back into English, so you can sound out words nobody taught you.</p>
     ${open ? `<div class="rd-stat">${pool.length} of ${LOAN_WORDS.length} you can sound out${r.best ? ` · best <b>${r.best}</b> of ${LOAN_N}` : ""}</div>` : ""}
     <div class="rd-btns">
       <button class="btn btn-ghost" data-act="ln-rules">The rules</button>
+      <button class="btn btn-ghost" data-act="ln-list">All ${LOAN_WORDS.length}</button>
       ${open ? `<button class="btn rd-go" data-act="rd-start" data-r="loans">Work out ${LOAN_N}</button>` : ""}
     </div>
     ${open ? "" : `<p class="muted small">Opens with katakana — then any katakana word is yours to work out.</p>`}
@@ -33,11 +34,32 @@ function openLoanRules() {
   openSheet(`<div class="ln-rules">
     <div class="eyebrow">外来語 · Loanwords</div>
     <h2>How English becomes katakana</h2>
-    <p class="muted">Sound the word out, then think what English it could be. These nine rules are nearly all there is.</p>
+    <p class="muted">Sound the word out, then think what English it could be. These ten rules are nearly all there is.</p>
     ${LOAN_RULES.map((R, i) => `<section class="ln-rule">
       <h3><span class="ln-n">${i + 1}</span> ${esc(R.title)} <span lang="ja" class="muted">${esc(R.jp)}</span></h3>
       <p>${esc(R.say).replace(/([゠-ヿ]+|[぀-ゟ]+)/g, '<span lang="ja">$1</span>')}</p>
       <div class="chips">${R.ex.map(([k, en]) => `<button class="chip" data-act="say" data-say="${esc(k)}"><b lang="ja">${esc(k)}</b> <small>${esc(en)}</small></button>`).join("")}</div>
+    </section>`).join("")}
+  </div>`);
+}
+
+/* Every loanword, by group, to read down: katakana, romaji, the English (or
+   hidden, to test yourself — a tap says the word and shows it). The last
+   group is the tricky one: Made in Japan, and not from English at all. */
+let loanHide = false;
+function openLoanList() {
+  loadBundle("loans");
+  const item = x => `<button class="ln-item ${loanHide ? "hid" : ""}" data-act="ln-item" data-k="${esc(x.k)}">
+    <b lang="ja" ${[...x.k].length >= 7 ? 'class="lg"' : ""}>${esc(x.k)}</b><small class="ln-rom">${esc(toRomaji(x.k))}</small><span class="ln-en">${esc(x.en)}</span></button>`;
+  openSheet(`<div class="ln-list">
+    <div class="eyebrow">外来語 · Loanwords</div>
+    <h2>All ${LOAN_WORDS.length}</h2>
+    <p class="muted">Tap one to hear it. Hide the English to test yourself — sound each out, guess, then tap.</p>
+    <div class="seg ln-hide"><button class="${loanHide ? "" : "on"}" data-act="ln-hide" data-v="0">Show English</button><button class="${loanHide ? "on" : ""}" data-act="ln-hide" data-v="1">Hide English</button></div>
+    ${LOAN_GROUPS.map(g => `<section class="ln-group ${g === "Made in Japan" ? "tricky" : ""}">
+      <h3>${esc(g)} <small class="muted">${LOAN_WORDS.filter(x => x.group === g).length}</small></h3>
+      ${g === "Made in Japan" ? `<p class="muted small">The tricky ones: they look like English but mean something else, were put together in Japan, or came from another language.</p>` : ""}
+      <div class="ln-grid">${LOAN_WORDS.filter(x => x.group === g).map(item).join("")}</div>
     </section>`).join("")}
   </div>`);
 }
@@ -93,6 +115,9 @@ function loanAnswer(i) {
 
 Object.assign(ACTS, {
   "ln-rules": () => openLoanRules(),
+  "ln-list": () => openLoanList(),
+  "ln-hide": el => { loanHide = el.dataset.v === "1"; const y = $("#sheetBody")?.scrollTop || 0; openLoanList(); $("#sheetBody").scrollTop = y; },
+  "ln-item": el => { say(el.dataset.k); el.classList.remove("hid"); },
   "ln-opt": el => loanAnswer(+el.dataset.i),
   "ln-hear": () => { if (RD?.q) say(RD.q.x.k); },
 });
