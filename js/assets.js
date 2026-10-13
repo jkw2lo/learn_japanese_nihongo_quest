@@ -28,6 +28,6 @@ const ASSET_HASH = {
   "audio-s7":["7e83e82fe0",1488480],
   "audio-s8":["1f4fc50bcf",1421163],
   "audio-s9":["6721e8ab83",1295139],
-  "strokes":["e1a2aa900d",187975]
+  "strokes":["73bee24f97",211422]
 };
 const assetUrl = name => `js/${name}.js?h=${ASSET_HASH[name] ? ASSET_HASH[name][0] : APP_VERSION}`;

@@ -2,8 +2,10 @@
    and stroke counts from KANJIDIC2.
 
    Which kanji: every kanji in the stage words that KANJIDIC places at old
-   JLPT level 4 (≈ N5) or 3 (≈ N4). Rarer ones (丈夫, 全部, 卵…) keep their
-   furigana for good.
+   JLPT level 4 (≈ N5) — all 103 appear in the words since 0.46.0 — and the
+   N4 (level 3) ones chosen so far, which are the ones with a meaning
+   written below. The rest of N4 (曲, 渡, 洗…) and rarer kanji (丈夫, 全部,
+   卵…) keep their furigana.
 
    Order: by the stage whose words first use the kanji, then in the order
    those words are taught — so each is taught soon after a word that uses
@@ -52,7 +54,7 @@ const KANJI_MEANING = {
   真: "true", 画: "picture", 映: "reflect; project", 音: "sound", 楽: "fun; music", 暑: "hot", 寒: "cold",
   元: "origin", 旅: "trip", 閉: "close", 座: "sit", 晩: "evening", 末: "end", 週: "week", 窓: "window",
   忙: "busy", 難: "difficult", 変: "change; strange", 緒: "beginning; cord", 年: "year", 去: "go; past",
-  入: "enter", 休: "rest",
+  入: "enter", 休: "rest", 空: "sky; empty",
 };
 
 function parseKanjidic(xml) {
@@ -87,7 +89,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   WORDS.forEach((w, i) => furiKanji(w.w).forEach(k => {
     if (!(k in first) || w.st < first[k]) { first[k] = w.st; firstWord[k] = i; }
   }));
-  const taught = Object.keys(first).filter(k => [3, 4].includes(info[k]?.jlpt));
+  const taught = Object.keys(first).filter(k => info[k]?.jlpt === 4 || (info[k]?.jlpt === 3 && KANJI_MEANING[k]));
   taught.sort((a, b) => first[a] - first[b] || firstWord[a] - firstWord[b] || info[a].sc - info[b].sc);
 
   const missing = taught.filter(k => !KANJI_MEANING[k]);

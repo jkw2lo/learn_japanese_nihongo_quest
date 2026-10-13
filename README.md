@@ -9,7 +9,7 @@ you don't.
 > **Status: all of N5 is built (0.13.0).** The kana stage, then 692 words
 > in nine stages (phrases, numbers and money, me and you, food, getting
 > around, shopping, daily life, the て-form, and an N5 wrap-up), 40 grammar
-> patterns, 131 kanji (74 N5, 57 N4) taught through the words, verbs and
+> patterns, 161 kanji (all 103 of N5, and 58 N4) taught through the words, verbs and
 > adjectives conjugated, a Grammar reference tab, flashcards, Out and about
 > (menus, station signs and announcements, shop, door and road signs, a
 > receipt, shop talk, asking for things and the way, casual Japanese,
@@ -400,9 +400,12 @@ This depends on how readings are stored. See **Furigana markup** under Data.
 Kanji are a layer over words, never the way in. Built (`js/data/kanji.js`,
 generated; `js/data/kanji-lessons.js`; `js/kanji-ui.js`).
 
-- **Which kanji:** the 131 in the stage words that are N5 (74) or N4 (57).
-  KANJIDIC's `jlpt` field is the old four-level test, where 4 ≈ N5 and 3 ≈ N4.
-  Rarer ones (丈夫, 全部, 卵, 昨…) keep their furigana for good.
+- **Which kanji:** all 103 of N5, and 58 chosen from N4 — 161. Every N5
+  kanji appears in the stage words (since 0.46.0), so each has a word to be
+  taught through. KANJIDIC's `jlpt` field is the old four-level test, where
+  4 ≈ N5 and 3 ≈ N4; the N4 ones taught are those with a meaning written in
+  `tools/fetch-kanji.mjs`. The rest of N4 (曲, 渡, 洗…) and rarer ones (丈夫,
+  全部, 卵, 昨…) keep their furigana.
 - **Each is taught through a word you know.** A stage's kanji, the ones its
   words are first to use, get lessons of five placed after that stage's
   words and patterns, in the order those words are taught (so the numbers
@@ -1075,6 +1078,16 @@ the konbini's does, and the smoke test checks both.
   wide layout: the timetable's destinations wrapped a character at a time
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
+
+### 0.50.0: Every N5 kanji
+
+- **All 103 N5 kanji are taught** — 29 more: 月 火 木 金, 山 川 空 花 道,
+  上 中 外 東 西 南 北, 父 母 子 女 男, 国 長 間 多 言, 目 耳 足. They'd all
+  been in the words since the vocabulary grew (0.43–0.46), but the kanji
+  list hadn't been rebuilt from them. 161 kanji in all, with their strokes.
+- Some kanji come earlier now, with the words that first use them (月 with
+  the months in stage 3, 父 and 母 with the family in stage 4).
+- The official N5 sample book in the project folder is kept out of git.
 
 ### 0.49.1: Housekeeping
 
@@ -2246,7 +2259,7 @@ you like.
     js/cards-ui.js          flashcards
     js/book-ui.js           練習帳 the notebook: the box, the dated pages, pens and guides
     js/patterns-ui.js       pattern cards, fill-the-gap and understand drills
-    js/data/kanji.js        131 kanji with KANJIDIC readings — generated, do not hand-edit
+    js/data/kanji.js        161 kanji with KANJIDIC readings — generated, do not hand-edit
     js/data/kanji-lessons.js where the kanji lessons go
     js/kanji-ui.js          kanji cards, meaning and read-in-a-word drills, the 漢字 chart
     js/words-ui.js          word lessons and questions, typing, the Words library
