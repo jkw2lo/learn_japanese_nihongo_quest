@@ -394,6 +394,12 @@ section('words');
   ok(run('new Set(WORDS.map(x => x.key)).size === WORDS.length'), 'two words share a key');
   ok(run('WORD_LESSONS.every(L => L.items.length <= 5)'), 'a word lesson has more than five words');
   ok(run('WORD_STAGES.every(S => WORDS.some(x => x.st === S.st))'), 'a stage has no words');
+  /* topics (0.52.0): every word in exactly one, in its own stage; a lesson
+     never mixes topics, and none is a lone word */
+  ok(run('WORDS.every(x => x.topic && TOPIC_BY[x.topic].st === x.st)'), 'a word has no topic in its stage: ' + run('WORDS.filter(x => !x.topic).map(x => x.plain).join(" ")'));
+  ok(run('WORD_TOPICS.every(T => T.keys.every(k => WORD_BY[k]))'), 'a topic lists a word that does not exist: ' + run('WORD_TOPICS.flatMap(T => T.keys.filter(k => !WORD_BY[k])).join(" ")'));
+  ok(run('WORD_TOPICS.flatMap(T => T.keys).length === new Set(WORD_TOPICS.flatMap(T => T.keys)).size'), 'a word is listed under two topics');
+  ok(run('WORD_LESSONS.filter(L => L.kind === "words").every(L => L.items.every(k => WORD_BY[k].topic === L.topic) && L.items.length >= 2)'), 'a word lesson mixes topics or holds a single word');
   run('WORDS.forEach(x => x.units.forEach(u => { if (!KANA_BY[u]) throw new Error(x.w + " uses " + u) }))');
   ok(true, 'every word spells with taught kana');
   /* the gate: words wait for every kana */

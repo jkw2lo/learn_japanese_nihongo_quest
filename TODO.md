@@ -46,6 +46,6 @@ what's built is the changelog in README.md; a short version is at the end.
 - 0.31–0.42: 読む Read — Subtitles, Word chains, Phrases, Short texts — and
   a Today that leads with reading; all 40 patterns taught in full.
 - 0.43–0.47: the words to N5's size (692), texts and phrases that use them.
-- 0.50–0.51: every N5 kanji (103) and every N5 word (863 words in all).
+- 0.50–0.52: every N5 kanji (103) and every N5 word; words taught by topic (880 words, 80 topics).
 - 0.48–0.49: 遊ぶ Games — the capsule machine, Ninja slice, the Swipe deck,
   coins from everything.

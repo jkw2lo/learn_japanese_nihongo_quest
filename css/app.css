@@ -2780,6 +2780,13 @@ button.tx-line:hover { background: color-mix(in srgb, var(--ai) 8%, transparent)
 .dk-btns { display: flex; align-items: center; gap: 1rem; margin-top: .4rem; }
 .dk-b .ico { width: 22px; height: 22px; }
 
+/* a word's topic, and a word beyond N5 */
+.tag-x { display: inline-block; margin: .1rem auto .4rem; padding: 1px 10px; border-radius: 999px; font-size: .78rem; color: var(--ink-2); border: 1px dashed var(--rule); }
+.lib-topic + .lib-topic { margin-top: .9rem; }
+.lib-topic h3 { font: 600 .9rem var(--f-body); color: var(--ink-2); margin: .2rem 0 .5rem; }
+.lib-topic h3 span { margin-right: .3rem; color: var(--ink); }
+h1 .h-en { font-size: .6em; color: var(--ink-2); font-weight: 500; }
+
 /* ============================================================
    PHONE LAYER
 

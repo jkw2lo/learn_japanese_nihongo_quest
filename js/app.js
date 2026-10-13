@@ -290,7 +290,7 @@ function renderToday() {
         <div class="hero-row">
           <div>
             <div class="eyebrow">今日 · Today</div>
-            <h1>${p === "done" ? "Keep it fresh." : planned.length ? `Today: <span lang="ja">${esc(planned.map(L => L.title).join(" · "))}</span>` : "Reviews are waiting."}</h1>
+            <h1>${p === "done" ? "Keep it fresh." : planned.length ? `Today: ${planned.map(L => `<span lang="ja">${esc(L.title)}</span>${L.en ? ` <span class="h-en">${esc(L.en)}</span>` : ""}`).join(" · ")}` : "Reviews are waiting."}</h1>
             <p class="lede">${esc(bits.join(" · "))}</p>
             ${heroStatsHtml()}
           </div>

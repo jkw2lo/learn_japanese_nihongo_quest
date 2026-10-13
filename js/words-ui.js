@@ -32,20 +32,22 @@ function wordLessonCards(L) {
 function stageIntro(st) {
   const S = WORD_STAGES.find(x => x.st === st);
   const n = WORDS.filter(x => x.st === st).length;
+  const ts = WORD_TOPICS.filter(T => T.st === st);
   return {
     eyebrow: `Stage ${st} · ${S.jp}`,
     head: S.en + ".",
-    body: `<p>${wordHtml(S.about)}</p><p class="muted">${n} words, five at a time.</p>`,
+    body: `<p>${wordHtml(S.about)}</p><p class="muted">${n} words, a topic at a time: ${ts.map(T => esc(T.en.toLowerCase())).join(", ")}.</p>`,
   };
 }
 
 function wordIntroHtml(c) {
   const x = WORD_BY[c.k];
   return `<div class="intro word-intro">
-    <div class="eyebrow"><span lang="ja">${esc(c.L.title)}</span> · ${c.n} of ${c.L.items.length}</div>
+    <div class="eyebrow"><span lang="ja">${esc(c.L.title)}</span>${c.L.en ? ` ${esc(c.L.en)}` : ""} · ${c.n} of ${c.L.items.length}</div>
     <button class="word-xl" lang="ja" data-act="say" data-say="${esc(x.say)}" title="Hear it">${wordHtml(x.w)}</button>
     ${state.settings.showRomaji ? `<div class="intro-rom">${esc(x.r)}</div>` : ""}
     <div class="word-m">${esc(x.m)}</div>
+    ${x.x ? `<div class="tag-x" title="Not on the N5 list — an everyday word that rounds out its topic">beyond N5</div>` : ""}
     ${x.note ? `<p class="rule">${wordHtml(x.note)}</p>` : ""}
     ${isConjugable(x.pos) ? formsTable(x) : ""}
     ${x.ex.map(([jp, en]) => `<button class="ex-sent" data-act="say" data-say="${esc(furiKana(jp))}">
@@ -277,8 +279,11 @@ function renderWords() {
   const groups = [];
   WORD_STAGES.forEach(S => {
     const es = shown.filter(e => e.src === "stage" && e.st === S.st);
+    /* a stage's words, topic by topic, the way they're taught */
+    const byTopic = WORD_TOPICS.filter(T => T.st === S.st).map(T => [T, es.filter(e => e.x.topic === T.id)]).filter(([, l]) => l.length);
     if (es.length) groups.push(`<section class="card"><div class="card-head"><h2><span lang="ja">${S.jp}</span> ${esc(S.en)}</h2>
-      <span class="count">stage ${S.st} · ${es.length}</span></div><ul class="wgrid lib">${es.map(tile).join("")}</ul></section>`);
+      <span class="count">stage ${S.st} · ${es.length}</span></div>${byTopic.map(([T, l]) => `<div class="lib-topic"><h3><span lang="ja">${esc(T.jp)}</span> ${esc(T.en)}</h3>
+      <ul class="wgrid lib">${l.map(tile).join("")}</ul></div>`).join("")}</section>`);
   });
   const kanaEs = shown.filter(e => e.src === "kana");
   if (kanaEs.length) {

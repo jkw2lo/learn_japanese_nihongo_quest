@@ -19,14 +19,14 @@ const ASSET_HASH = {
   "audio-place-signs":["9c55ab60e7",65207],
   "audio-place-station":["02056462d3",378399],
   "audio-place-sushi":["f5a400766f",115648],
-  "audio-s10":["6ae7e055bb",1206398],
+  "audio-s10":["19f088d5bb",1216136],
   "audio-s2":["8057720c14",109122],
   "audio-s3":["26346e7840",426374],
   "audio-s4":["cb559e6841",793521],
-  "audio-s5":["bfc451914b",892433],
+  "audio-s5":["c3215ede5a",908943],
   "audio-s6":["a9cbb1f320",1207675],
   "audio-s7":["d6fc7befd0",1768389],
-  "audio-s8":["586808c05f",1793980],
+  "audio-s8":["d2a38579bd",1793585],
   "audio-s9":["896da1dae3",1430166],
   "strokes":["73bee24f97",211422]
 };

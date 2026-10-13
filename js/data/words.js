@@ -12,6 +12,8 @@
           は is said わ, and its spelling alone would play the kana は, "ha"
      note something worth knowing (furigana markup allowed)
      ex   example sentences: [markup, english]
+     x    beyond N5: an everyday word added to round out a topic (a fruit,
+          a vegetable, an animal) that isn't on the N5 list
 
    Kanji appear as they're really written, with furigana until the learner
    knows them (README → Reading never outruns you). Kanji aren't taught
@@ -403,6 +405,19 @@ const WORDS = [
   { w: "ちゃわん", m: "rice bowl", pos: "n", st: 5 },
   { w: "{夕飯|ゆうはん}", m: "evening meal", pos: "n", st: 5 },
   { w: "ぬるい", m: "lukewarm", pos: "adj-i", st: 5 },
+
+  /* fruit and vegetables beyond N5, to round out the topics (0.52.0) */
+  { w: "バナナ", m: "banana", pos: "n", st: 5, x: true },
+  { w: "いちご", m: "strawberry", pos: "n", st: 5, x: true },
+  { w: "ぶどう", m: "grapes", pos: "n", st: 5, x: true },
+  { w: "もも", m: "peach", pos: "n", st: 5, x: true },
+  { w: "すいか", m: "watermelon", pos: "n", st: 5, x: true },
+  { w: "にんじん", m: "carrot", pos: "n", st: 5, x: true },
+  { w: "たまねぎ", m: "onion", pos: "n", st: 5, x: true },
+  { w: "じゃがいも", m: "potato", pos: "n", st: 5, x: true },
+  { w: "キャベツ", m: "cabbage", pos: "n", st: 5, x: true },
+  { w: "トマト", m: "tomato", pos: "n", st: 5, x: true },
+  { w: "きゅうり", m: "cucumber", pos: "n", st: 5, x: true },
 
   /* ---- stage 6 · getting around ---- */
   { w: "{行|い}く", m: "to go", pos: "v5k-s", st: 6, note: "Its て-form is {行|い}って — the one exception among く verbs.",
@@ -964,9 +979,104 @@ const WORDS = [
   { w: "にぎやか", m: "lively; busy (a place)", pos: "adj-na", st: 10 },
   { w: "うるさい", m: "noisy; annoying", pos: "adj-i", st: 10 },
   { w: "ペット", m: "pet", pos: "n", st: 10 },
+
+  /* animals beyond N5, to round out the topic (0.52.0) */
+  { w: "{牛|うし}", m: "cow", pos: "n", st: 10, x: true },
+  { w: "{馬|うま}", m: "horse", pos: "n", st: 10, x: true },
+  { w: "{豚|ぶた}", m: "pig", pos: "n", st: 10, x: true },
+  { w: "{猿|さる}", m: "monkey", pos: "n", st: 10, x: true },
+  { w: "{熊|くま}", m: "bear", pos: "n", st: 10, x: true },
+  { w: "うさぎ", m: "rabbit", pos: "n", st: 10, x: true },
 ];
 
-/* ---- derived: keys, kana, lessons of five ---- */
+/* Topics (0.52.0): every word belongs to one, in its own stage, and a
+   stage's lessons are built topic by topic — a lesson is five fruits or five
+   counters, never a mix. A topic's words are listed by their plain written
+   form (smoke.mjs checks every word is in exactly one). */
+const WORD_TOPICS = [
+  { st: 2, id: "greet", jp: "あいさつ", en: "Greetings", words: "おはようございます こんにちは こんばんは さようなら おやすみなさい はじめまして よろしくおねがいします" },
+  { st: 2, id: "thanks", jp: "お礼", en: "Thanks and sorry", words: "ありがとうございます どうも すみません ごめんなさい いただきます ごちそうさまでした" },
+  { st: 2, id: "answers", jp: "返事", en: "Yes, no and OK", words: "はい いいえ ええ ああ さあ わかりました わかりません 大丈夫です 結構です" },
+  { st: 2, id: "asking", jp: "お願い", en: "Asking for things", words: "おねがいします どうぞ いかが もう一度おねがいします 英語でいいですか ちょっと待ってください トイレはどこですか お手洗い" },
+  { st: 3, id: "numbers", jp: "数字", en: "Numbers", words: "一 二 三 四 五 六 七 八 九 十 百 千 一万 ゼロ 零 二十" },
+  { st: 3, id: "counting", jp: "数え方", en: "Counting", words: "いくつ 番号 一番 番 回 階 度 一本 半分 全部" },
+  { st: 3, id: "money", jp: "お金", en: "Money", words: "円 いくら 全部で 高い 安い ちょうど お金 税込" },
+  { st: 3, id: "clock", jp: "時間", en: "Telling the time", words: "今 何時 時 半 分 何分 時間 ごろ すぎ 前 後 午前 午後" },
+  { st: 3, id: "dayparts", jp: "朝・昼・晩", en: "Times of day", words: "朝 昼 晩 夕方 今朝 ゆうべ" },
+  { st: 3, id: "days", jp: "日", en: "Days", words: "今日 明日 昨日 毎日 おととい あさって 初め 先" },
+  { st: 3, id: "week", jp: "曜日", en: "Days of the week", words: "月曜日 火曜日 水曜日 木曜日 金曜日 土曜日 日曜日 何曜日 今週 毎週 週間" },
+  { st: 3, id: "months", jp: "月", en: "Months", words: "月 四月 七月 九月 何月 今月 来月 先月 毎月 か月 一月" },
+  { st: 3, id: "dates", jp: "日付", en: "Dates", words: "日 一日 二日 三日 四日 五日 六日 七日 八日 九日 十日 二十日 何日" },
+  { st: 3, id: "years", jp: "年", en: "Years", words: "年 去年 来年 毎年 おととし さ来年 二十歳" },
+  { st: 4, id: "pieces", jp: "文の部品", en: "Sentence pieces", words: "です じゃないです は か の" },
+  { st: 4, id: "kosoado", jp: "こそあど", en: "This and that", words: "この その あの どの これ それ あれ こんな そんな あんな" },
+  { st: 4, id: "questions", jp: "質問", en: "Question words", words: "何 だれ どこ どう どんな いつ どちら どなた 誰か" },
+  { st: 4, id: "meyou", jp: "私とあなた", en: "Me and you", words: "私 あなた 僕 私たち 自分 彼 彼女 皆さん みんな さん 方 たち 名前 そうですか そうです 本当" },
+  { st: 4, id: "people", jp: "人", en: "People", words: "人 男の人 女の人 男 女 子ども 男の子 女の子 大人 若い 背 大勢" },
+  { st: 4, id: "family", jp: "家族", en: "Family", words: "家族 父 母 お父さん お母さん 両親 兄 姉 弟 妹 お兄さん お姉さん 兄弟 夫 妻 息子 娘 おじいさん おばあさん 奥さん おじさん おばさん 家庭" },
+  { st: 4, id: "jobs", jp: "仕事", en: "Jobs and school", words: "学生 先生 会社員 医者 会社 店員 大学 大学生 留学生 エンジニア 生徒 おまわりさん 警官" },
+  { st: 4, id: "countries", jp: "国", en: "Countries and languages", words: "日本 日本人 日本語 英語 国 外国 外国人 アメリカ イギリス カナダ オーストラリア フランス ドイツ 中国 韓国 出身" },
+  { st: 4, id: "aboutyou", jp: "自己紹介", en: "About you", words: "友達 好き 歳 何歳 誕生日 趣味" },
+  { st: 5, id: "eating", jp: "食べる", en: "Eating and drinking", words: "食べる 飲む を ください 頼む 入れる お腹がすきました のどがかわきました おいしい まずい 甘い 辛い 熱い 冷たい ぬるい" },
+  { st: 5, id: "meals", jp: "ご飯", en: "Meals", words: "ご飯 朝ご飯 昼ご飯 晩ご飯 夕飯 食べ物 飲み物 料理 お弁当 お菓子" },
+  { st: 5, id: "drinks", jp: "飲み物", en: "Drinks", words: "水 お茶 コーヒー 紅茶 牛乳 ジュース ビール お酒" },
+  { st: 5, id: "dishes", jp: "料理", en: "Dishes", words: "すし ラーメン うどん 蕎麦 カレー 天ぷら パン ケーキ 卵" },
+  { st: 5, id: "meat", jp: "肉と魚", en: "Meat and fish", words: "肉 魚 牛肉 豚肉 鶏肉" },
+  { st: 5, id: "fruit", jp: "果物", en: "Fruit", words: "果物 りんご みかん バナナ いちご ぶどう もも すいか" },
+  { st: 5, id: "veg", jp: "野菜", en: "Vegetables", words: "野菜 にんじん たまねぎ じゃがいも キャベツ トマト きゅうり" },
+  { st: 5, id: "seasoning", jp: "調味料", en: "In the kitchen", words: "塩 砂糖 しょうゆ お米 バター" },
+  { st: 5, id: "table", jp: "食器", en: "At the table", words: "箸 スプーン フォーク ナイフ お皿 コップ ちゃわん" },
+  { st: 5, id: "eatingout", jp: "外食", en: "Eating out", words: "いらっしゃいませ メニュー 予約 席 禁煙 店内 お持ち帰り おすすめ 注文 お会計 店 レストラン 喫茶店 食堂 コンビニ" },
+  { st: 5, id: "howmany", jp: "いくつ", en: "Counting things", words: "一つ 二つ 三つ 四つ 五つ 六つ 七つ 八つ 九つ 一人 二人 三人 何人 杯 たくさん 多い 少ない ぐらい ずつ だけ" },
+  { st: 6, id: "going", jp: "行く", en: "Coming and going", words: "行く 来る 帰る 出かける 歩く 走る 急ぐ 待つ わかる 着く かかる 飛ぶ 登る 上がる に で へ" },
+  { st: 6, id: "trains", jp: "電車", en: "Trains", words: "駅 電車 地下鉄 切符 新幹線 線 番線 行き 急行 改札 時刻表 次 乗る 降りる 乗り換える 止まる" },
+  { st: 6, id: "transport", jp: "乗り物", en: "Other ways to travel", words: "バス タクシー 車 自動車 自転車 飛行機 船 空港 台" },
+  { st: 6, id: "here", jp: "ここ・そこ", en: "Here and there", words: "ここ そこ あそこ こちら そちら あちら こっち そっち あっち どっち" },
+  { st: 6, id: "directions", jp: "道", en: "Finding the way", words: "右 左 まっすぐ 道 信号 角 橋 交差点 曲がる 渡る 地図 近い 遠い 近く キロ メートル" },
+  { st: 6, id: "position", jp: "位置", en: "Where things are", words: "上 下 後ろ 横 隣 中 外 間 向こう 側 そば 辺" },
+  { st: 6, id: "compass", jp: "方角", en: "The compass", words: "東 西 南 北" },
+  { st: 6, id: "places", jp: "町", en: "Places in town", words: "町 村 所 建物 門 出口 入口 ホテル 銀行 郵便局 病院 図書館 公園 交番 大使館 映画館 プール 東京 京都 大阪" },
+  { st: 7, id: "shopping", jp: "買い物", en: "Shopping", words: "買う 見る ある いる 物 払う 売る 探す 選ぶ 要る 違う 同じ 買い物 カード 値段 セール 割引 レシート これにします 見ているだけです もっと どれ 貸す 借りる 返す 渡す" },
+  { st: 7, id: "shops", jp: "店", en: "Shops", words: "デパート スーパー 本屋 薬局 八百屋 お土産 袋 箱 ポスト" },
+  { st: 7, id: "clothes", jp: "服", en: "Clothes", words: "服 洋服 靴 靴下 シャツ ワイシャツ ズボン スカート セーター コート 上着 背広 帽子 ネクタイ ボタン ポケット ハンカチ 着る 履く かぶる" },
+  { st: 7, id: "carry", jp: "持ち物", en: "Things you carry", words: "かばん 財布 眼鏡 時計 傘" },
+  { st: 7, id: "paper", jp: "文房具", en: "Paper and pens", words: "切手 はがき 新聞 雑誌 ノート ペン 鉛筆 ボールペン 万年筆 封筒 辞書 紙 ページ" },
+  { st: 7, id: "counters", jp: "数え方", en: "Counters", words: "枚 個 冊 匹 グラム" },
+  { st: 7, id: "colours", jp: "色", en: "Colours", words: "色 赤い 白い 黒い 青い 黄色い 茶色 緑 赤 白 黒 黄色" },
+  { st: 7, id: "shape", jp: "形", en: "Size and shape", words: "大きい 小さい 大きな 小さな 長い 短い 重い 軽い 広い 狭い 丸い 太い 細い 薄い 低い たて" },
+  { st: 7, id: "describe", jp: "様子", en: "What it's like", words: "新しい 古い いい 悪い きれい 有名 明るい 暗い かわいい 便利 丈夫 大切 強い 弱い 汚い 色々 りっぱ 大好き 嫌い 嫌" },
+  { st: 8, id: "myday", jp: "一日", en: "My day", words: "起きる 寝る 働く 休む 浴びる 磨く 洗う 毎朝 毎晩 週末 今晩 夜 昼休み と から まで" },
+  { st: 8, id: "suru", jp: "する", en: "Doing (〜する)", words: "する 勉強する 掃除する 洗濯する 散歩する 練習する 電話する 結婚する コピーする" },
+  { st: 8, id: "readwrite", jp: "読み書き", en: "Reading and writing", words: "読む 書く 聞く 話す 話 覚える 忘れる 答える 手紙 メール 作文 文章 片仮名 平仮名 字引" },
+  { st: 8, id: "school", jp: "学校", en: "School", words: "学校 教室 クラス 授業 宿題 テスト" },
+  { st: 8, id: "freetime", jp: "遊び", en: "Free time", words: "遊ぶ 泳ぐ 歌う 歌 絵 弾く スポーツ サッカー 野球 ゲーム ラジオ テレビ" },
+  { st: 8, id: "home", jp: "家", en: "Home", words: "家 うち アパート 部屋 台所 お風呂 シャワー トイレ 玄関 廊下 庭 階段 エレベーター ドア 鍵" },
+  { st: 8, id: "furniture", jp: "家具", en: "Things at home", words: "机 いす ベッド テーブル 本棚 冷蔵庫 ストーブ せっけん 花瓶 カレンダー" },
+  { st: 8, id: "giving", jp: "あげる・もらう", en: "Giving, getting, putting", words: "上げる もらう くれる やる 出す 置く 取る 並べる 掛ける かける 呼ぶ" },
+  { st: 8, id: "everyday", jp: "毎日", en: "Everyday ups and downs", words: "会う 仕事 勤める 生まれる 疲れる 困る 消える なくす 始まる 終わる" },
+  { st: 8, id: "howoften", jp: "いつも", en: "How often, how soon", words: "いつも よく 時々 たいてい あまり 全然 すぐ また もう まだ ちょっと 初めて 早い 遅い 早く 一人で" },
+  { st: 9, id: "openclose", jp: "開ける・閉める", en: "Open, close, on, off", words: "開ける 閉める 開く 閉まる 付ける 消す 押す 引く 入る 出る" },
+  { st: 9, id: "handson", jp: "手で", en: "Hands on", words: "使う 作る 持つ 撮る 触る 脱ぐ 差す 見せる 送る 吸う 並ぶ 座る 立つ 止める" },
+  { st: 9, id: "withpeople", jp: "人と", en: "With other people", words: "教える 習う 手伝う 言う 住む 知る 頑張る 死ぬ なる できる 練習" },
+  { st: 9, id: "naturev", jp: "天気", en: "Weather and nature", words: "咲く 鳴く 晴れる 曇る" },
+  { st: 9, id: "things", jp: "物", en: "Things", words: "写真 窓 電話 荷物 住所 電気 エアコン たばこ" },
+  { st: 9, id: "comings", jp: "あいさつ", en: "Coming and going", words: "もしもし 失礼します お先にどうぞ 気をつけて お大事に いってきます いってらっしゃい ただいま おかえりなさい" },
+  { st: 9, id: "manner", jp: "様子", en: "How", words: "少し ゆっくり もう一度 静か 危ない 大丈夫" },
+  { st: 10, id: "plans", jp: "予定", en: "Plans and fun", words: "映画 音楽 本 旅行 休み 夏休み お正月 パーティー プレゼント お祭り 約束 用事 一緒に" },
+  { st: 10, id: "weather", jp: "天気", en: "Weather", words: "天気 雨 晴れ 曇り 雪 風 降る 空 暑い 寒い 暖かい 涼しい" },
+  { st: 10, id: "seasons", jp: "季節", en: "Seasons and time", words: "季節 春 夏 秋 冬 来週 先週 今年 一週間 今度 昔" },
+  { st: 10, id: "feelings", jp: "気持ち", en: "Feelings", words: "楽しい 嬉しい 悲しい 寂しい 眠い 怖い 元気 残念 心配 欲しい 思う 大変" },
+  { st: 10, id: "opinions", jp: "どう？", en: "What's it like?", words: "おもしろい つまらない 優しい 忙しい 難しい 簡単 暇 上手 下手 にぎやか うるさい 結構" },
+  { st: 10, id: "body", jp: "体", en: "Health and the body", words: "病気 風邪 熱 薬 痛い 体 頭 顔 目 耳 口 歯 手 足 お腹" },
+  { st: 10, id: "nature", jp: "自然", en: "Nature", words: "海 山 川 花 木" },
+  { st: 10, id: "animals", jp: "動物", en: "Animals", words: "動物 犬 猫 鳥 ペット 牛 馬 豚 猿 熊 うさぎ" },
+  { st: 10, id: "words", jp: "言葉", en: "Words about words", words: "言葉 意味 質問 問題 漢字" },
+  { st: 10, id: "something", jp: "何か", en: "Something, nothing, why", words: "何か 何も どうして なぜ" },
+  { st: 10, id: "joining", jp: "つなぐ言葉", en: "Joining words", words: "でも だから そして それから しかし それでは など とても 多分 だんだん" },
+  { st: 10, id: "casual", jp: "友達と", en: "Casual talk", words: "じゃあ うん ううん ありがとう じゃあね またね" },
+];
+
+/* ---- derived: keys, kana, topics, lessons of five ---- */
 
 WORDS.forEach(x => {
   x.key = "w:" + furiPlain(x.w);
@@ -979,16 +1089,31 @@ WORDS.forEach(x => {
 });
 const WORD_BY = {};
 WORDS.forEach(x => { WORD_BY[x.key] = x; });
+const TOPIC_BY = {};
+WORD_TOPICS.forEach(T => {
+  TOPIC_BY[T.id] = T;
+  T.keys = T.words.split(" ").map(p => "w:" + p);
+  T.keys.forEach(k => { if (WORD_BY[k] && WORD_BY[k].st === T.st && !WORD_BY[k].topic) WORD_BY[k].topic = T.id; });
+});
 
+/* A stage's lessons, topic by topic, in the order WORD_TOPICS lists them; a
+   topic of more than five is split into even parts (sixteen numbers are four
+   lessons of four, not three of five and a one). Titled by topic: 数字 2. */
 const WORD_LESSON_SIZE = 5;
 const WORD_LESSONS = [];
 WORD_STAGES.forEach(S => {
-  const ws = WORDS.filter(x => x.st === S.st);
-  for (let i = 0; i < ws.length; i += WORD_LESSON_SIZE) {
-    const n = i / WORD_LESSON_SIZE + 1;
-    WORD_LESSONS.push({
-      id: `w${S.st}-${n}`, set: "w", st: S.st, kind: "words", title: `${S.jp} ${n}`,
-      items: ws.slice(i, i + WORD_LESSON_SIZE).map(x => x.key),
-    });
-  }
+  let n = 0;
+  WORD_TOPICS.filter(T => T.st === S.st).forEach(T => {
+    const ws = T.keys.map(k => WORD_BY[k]).filter(x => x && x.topic === T.id);
+    const parts = Math.ceil(ws.length / WORD_LESSON_SIZE);
+    for (let p = 0, at = 0; p < parts; p++) {
+      const size = Math.ceil((ws.length - at) / (parts - p));
+      WORD_LESSONS.push({
+        id: `w${S.st}-${++n}`, set: "w", st: S.st, kind: "words", topic: T.id,
+        title: T.jp + (parts > 1 ? ` ${p + 1}` : ""), en: T.en + (parts > 1 ? ` ${p + 1}` : ""),
+        items: ws.slice(at, at + size).map(x => x.key),
+      });
+      at += size;
+    }
+  });
 });
