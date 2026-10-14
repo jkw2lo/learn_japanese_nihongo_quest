@@ -169,6 +169,7 @@
   .app { font-size: 14px; font-weight: 600; text-decoration: none; color: #1E1D1A; background: var(--paper); padding: 8px 14px; border-radius: 999px; white-space: nowrap; }
 
   .render .ctl, .render .start { display: none !important; }
+  .render .go.sheet { display: none; }   /* a link can't be clicked in a video */
   @media (max-width: 600px) { .tick em { display: none; } .app { display: none; } }
   @media (prefers-reduced-motion: reduce) {
     .on .eye, .on .head, .on .sub, .on .media > *, .on .pair span, .on .tline, .on .seal, .on .wordmark, .on .strap, .on.act .jp, .on.act .en, .on .stat, .on .links, .on .url { animation-duration: .01s !important; animation-delay: 0s !important; }
@@ -257,6 +258,8 @@ const BEATS = [
 ];
 
 const RENDER = new URLSearchParams(location.search).has("render");
+/* trailer.html#t=35.5 starts there (the overview's "See it" links) */
+const START = parseFloat((location.hash.match(/t=([\d.]+)/) || [])[1]) || 0;
 const score = document.getElementById("score"), SCORE_VOL = 0.22;
 if (RENDER) document.documentElement.classList.add("render");
 const stage = document.getElementById("stage");
@@ -302,7 +305,8 @@ BEATS.forEach((b, i) => {
     el.classList.add("title");
     el.innerHTML = `<div class="logo"><div class="seal" lang="ja">日</div><div class="wordmark">Nihongo Quest</div>
       <div class="links"><a class="go" href="./" target="_blank" rel="noopener">Try it in your browser →</a>
-      <button class="go ghost" id="again">Watch again</button></div>
+      <button class="go ghost" id="again">Watch again</button>
+      <a class="go ghost sheet" href="overview.html">Everything in it, on one page</a></div>
       <div class="url">jkw2lo.github.io/learn_japanese_nihongo_quest</div></div>`;
   }
   stage.appendChild(el);
@@ -426,7 +430,7 @@ if (!RENDER) {
   $("start").addEventListener("click", () => {
     $("start").hidden = true; started = true;
     [...vids, score].forEach(v => { v.muted = true; v.play().then(() => v.pause()).catch(() => {}); });   /* unlock them all on the tap */
-    seekTo(0); play(); showCtl();
+    seekTo(START); play(); showCtl();
   });
   $("pp").addEventListener("click", () => playing ? pause() : play());
   $("mute").addEventListener("click", () => { muted = !muted; paintMute(); });

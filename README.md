@@ -19,6 +19,8 @@ you don't.
 **Live at:** https://jkw2lo.github.io/learn_japanese_nihongo_quest/
 **Trailer:** https://jkw2lo.github.io/learn_japanese_nihongo_quest/trailer.html
 (a minute and a half of the app, for anyone who'd rather watch than learn kana first)
+**At a glance:** https://jkw2lo.github.io/learn_japanese_nihongo_quest/overview.html
+(everything in it and how it's built, on one page, which prints on one sheet)
 
 [![Nihongo Quest — the trailer](trailer/poster.jpg)](https://jkw2lo.github.io/learn_japanese_nihongo_quest/trailer.html)
 **Repo:** https://github.com/jkw2lo/learn_japanese_nihongo_quest (`main`, over
@@ -1092,6 +1094,18 @@ the konbini's does, and the smoke test checks both.
   wide layout: the timetable's destinations wrapped a character at a time
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
+
+### 0.59.0: At a glance
+
+- **`overview.html`**, the companion to the trailer: the whole app on one
+  page. The numbers, then the five groups in their own colours (what's in
+  Study, Practise, Play, Out & about and Record), how it teaches (kana →
+  words → kanji → patterns, and the review ladder), what's under the hood,
+  and how long it took. It fits one laptop screen (1440×900), stacks on a
+  phone, follows light and dark, and prints on one landscape A4 page.
+- Each group's picture links into the trailer at that moment:
+  **`trailer.html#t=35.5`** starts the trailer there. The trailer's last
+  card links to the overview.
 
 ### 0.58.0: The trailer
 
@@ -2439,6 +2453,14 @@ Re-film a shot when the screen it shows changes; the trailer picks it up.
 If a clip's length or crop changes, check its `from`/`dur` (and `card` size)
 in `BEATS`.
 
+## The overview
+
+`overview.html` says everything on one page for someone deciding whether
+to look closer. It's static and hand-written, so **its numbers don't update
+themselves**: when the app grows (words, kanji, places, toys, clips, the
+smoke checks), change them there. Its pictures are frames from the trailer's
+clips, cropped into `overview/`.
+
 ## Files
 
     index.html              page shell; the only place the version lives
@@ -2502,6 +2524,8 @@ in `BEATS`.
 
     trailer.html            the trailer: a self-playing page (see The trailer)
     trailer/poster.jpg      a frame of it, for the README and link previews
+    overview.html           the whole app on one page (see The overview)
+    overview/               its pictures, frames from the trailer's clips
     trailer/clips/          its films of the app, each an .mp4 and a poster .jpg — made by tools/trailer/shoot.mjs
 
     tools/server.mjs        dev server, http://localhost:8732

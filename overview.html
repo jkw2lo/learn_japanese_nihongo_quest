@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Nihongo Quest — at a glance</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Nihongo Quest on one page: what it teaches, how, everything in it, and how it's built.">
+<meta property="og:title" content="Nihongo Quest — at a glance">
+<meta property="og:description" content="Japanese from the first kana to JLPT N5, then out into town. Everything in it, on one page.">
+<meta property="og:image" content="https://jkw2lo.github.io/learn_japanese_nihongo_quest/trailer/poster.jpg">
+<meta name="theme-color" content="#F3F0E8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#151513" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;1,6..72,500&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@700;900&display=swap" crossorigin="anonymous">
+<!-- One page that says what the app is, for someone deciding whether to look
+     closer. Every number here is counted from the app's data (README → The
+     overview); if the app grows, change them here too. -->
+<style>
+  :root {
+    --paper: #F3F0E8; --sheet: #FBFAF6; --sunken: #E8E4D9;
+    --ink: #1E1D1A; --ink-2: #4E4B44; --ink-3: #858074; --rule: #D6D0C2; --rule-2: #E6E1D5;
+    --seal: #C2402F; --jade: #3D7A57;
+    --g-study: #2F4B7C; --g-practise: #2A7472; --g-play: #A87B22; --g-out: #9A4870; --g-you: #6B675E;
+    --shadow: 0 1px 2px rgba(30, 29, 26, .06), 0 6px 18px rgba(30, 29, 26, .05);
+    --f-display: "Newsreader", Georgia, serif;
+    --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --f-ja: "Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif;
+    --f-ja-serif: "Hiragino Mincho ProN", "Noto Serif JP", "Yu Mincho", serif;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #151513; --sheet: #1F1E1B; --sunken: #0F0F0D;
+      --ink: #ECE8DF; --ink-2: #B4AEA2; --ink-3: #7F796E; --rule: #37342E; --rule-2: #2A2824;
+      --seal: #E26A56; --jade: #6CC195;
+      --g-study: #8CA7DA; --g-practise: #6CC0BC; --g-play: #DDB45E; --g-out: #DA8DB4; --g-you: #B4AEA2;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.3);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 14px/1.45 var(--f-body); -webkit-font-smoothing: antialiased; }
+  [lang="ja"] { font-family: var(--f-ja); }
+  a { color: inherit; }
+  b { font-weight: 600; }
+  .wrap { max-width: 1520px; margin: 0 auto; padding: 14px 28px 10px; }
+
+  /* ---------- the head ---------- */
+  header { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+  .seal { width: 52px; height: 52px; flex: none; border-radius: 12px; background: var(--seal); color: #fff; display: grid; place-items: center;
+    font: 900 34px var(--f-ja-serif); }
+  .name h1 { margin: 0; font: 600 34px/1 var(--f-display); letter-spacing: -.015em; }
+  .name p { margin: 5px 0 0; color: var(--ink-2); font-size: 15px; }
+  .acts { margin-left: auto; display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 999px; text-decoration: none;
+    font-weight: 600; font-size: 14px; background: var(--ink); color: var(--paper); white-space: nowrap; }
+  .btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--rule); }
+  .btn:focus-visible, .thumb:focus-visible { outline: 3px solid var(--g-study); outline-offset: 3px; }
+  .btn svg { width: 14px; height: 14px; fill: currentColor; }
+
+  /* ---------- the numbers ---------- */
+  .nums { margin: 16px 0 14px; display: grid; grid-template-columns: repeat(8, 1fr); background: var(--sheet); border-radius: 14px;
+    box-shadow: var(--shadow); }
+  .num { padding: 10px 16px 10px; border-left: 1px solid var(--rule-2); }
+  .num:first-child { border-left: 0; }
+  .num b { display: block; font: 500 30px/1 var(--f-display); letter-spacing: -.02em; }
+  .num span { display: block; margin-top: 4px; font-size: 12.5px; color: var(--ink-2); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ---------- the five groups, as the app colours them ---------- */
+  .groups { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+  .group { background: var(--sheet); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column;
+    border-top: 4px solid var(--c); }
+  .ghead { display: flex; align-items: baseline; gap: 9px; padding: 9px 14px 8px; white-space: nowrap; }
+  .ghead [lang="ja"] { font: 700 22px var(--f-ja-serif); color: var(--c); }
+  .ghead h2 { margin: 0; font: 600 13px var(--f-body); letter-spacing: .12em; text-transform: uppercase; color: var(--c); }
+  .ghead small { margin-left: auto; font-size: 11.5px; color: var(--ink-3); }
+  .thumb { position: relative; display: block; height: 106px; margin: 0 14px; border-radius: 9px; overflow: hidden; background: var(--sunken); }
+  .thumb::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--rule); pointer-events: none; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb span { position: absolute; right: 8px; top: 8px; display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px 4px 7px;
+    border-radius: 999px; background: rgba(20, 19, 17, .78); color: #fff; font-size: 11.5px; font-weight: 600; opacity: .92; transition: opacity .2s; }
+  .thumb span svg { width: 10px; height: 10px; fill: currentColor; }
+  .thumb:hover span { opacity: 1; }
+  ul.f { list-style: none; margin: 0; padding: 9px 14px 12px; display: grid; gap: 5px; }
+  ul.f li { padding-left: 11px; position: relative; color: var(--ink-2); font-size: 13.2px; line-height: 1.42; }
+  ul.f li::before { content: ""; position: absolute; left: 0; top: .62em; width: 4px; height: 4px; border-radius: 50%; background: var(--c); }
+  ul.f li b { color: var(--ink); }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .chips span { font-size: 11.5px; padding: 1px 7px; border-radius: 999px; background: var(--sunken); color: var(--ink-2); white-space: nowrap; }
+  .chips [lang="ja"] { font-size: 12px; }
+
+  /* ---------- how, and how it's built ---------- */
+  .lower { margin-top: 14px; display: grid; grid-template-columns: 1.1fr 1.5fr .62fr; gap: 14px; }
+  .panel { background: var(--sheet); border-radius: 14px; box-shadow: var(--shadow); padding: 13px 16px 14px; }
+  .panel h2 { margin: 0 0 9px; font: 600 19px var(--f-display); letter-spacing: -.01em; }
+  .panel h2 [lang="ja"] { font: 700 15px var(--f-ja-serif); color: var(--ink-3); margin-right: 6px; }
+  .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .step { position: relative; padding: 7px 9px 8px; border-radius: 9px; background: var(--sunken); }
+  .step [lang="ja"] { display: block; font: 700 17px var(--f-ja-serif); }
+  .step b { font-size: 12.5px; }
+  .step small { display: block; font-size: 11.5px; color: var(--ink-2); line-height: 1.3; margin-top: 2px; }
+  .step + .step::before { content: "→"; position: absolute; left: -9px; top: 9px; font-size: 12px; color: var(--ink-3); }
+  .rule { margin: 8px 0 0; font-size: 13px; color: var(--ink-2); line-height: 1.45; }
+  .rule b { color: var(--ink); }
+  .ladder { display: flex; gap: 3px; margin: 7px 0 0; align-items: flex-end; }
+  .ladder i { flex: 1; text-align: center; font: 600 11px var(--f-body); font-style: normal; color: var(--ink-2); }
+  .ladder i::before { content: ""; display: block; margin: 0 auto 3px; width: 100%; height: var(--h); border-radius: 3px 3px 0 0;
+    background: color-mix(in srgb, var(--g-study) calc(30% + var(--k) * 8%), transparent); }
+  .ladder-l { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--ink-3); margin-top: 2px; }
+  ul.hood { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 5px 18px; }
+  ul.hood li { font-size: 13px; color: var(--ink-2); line-height: 1.42; padding-left: 11px; position: relative; }
+  ul.hood li::before { content: ""; position: absolute; left: 0; top: .62em; width: 4px; height: 4px; border-radius: 50%; background: var(--ink-3); }
+  ul.hood li b { color: var(--ink); }
+  .built { display: flex; flex-direction: column; }
+  .built .big { font: 500 40px/1 var(--f-display); letter-spacing: -.02em; }
+  .built .big + span { display: block; color: var(--ink-2); font-size: 13px; margin: 3px 0 10px; }
+  .built p { margin: 0 0 8px; font-size: 13px; color: var(--ink-2); line-height: 1.45; }
+  
+  footer { margin-top: 9px; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12.5px; color: var(--ink-3); }
+  footer a { color: var(--ink-2); }
+
+  /* ---------- narrower ---------- */
+  @media (max-width: 1240px) {
+    .groups { grid-template-columns: repeat(3, 1fr); }
+    .lower { grid-template-columns: 1fr 1fr; }
+    .built { grid-column: 1 / -1; }
+    .nums { grid-template-columns: repeat(4, 1fr); }
+    .num:nth-child(5) { border-left: 0; }
+    .num:nth-child(n + 5) { border-top: 1px solid var(--rule-2); }
+  }
+  @media (max-width: 820px) {
+    .wrap { padding: 16px 16px 22px; }
+    .groups, .lower { grid-template-columns: 1fr; }
+    ul.hood { grid-template-columns: 1fr; }
+    .acts { margin-left: 0; width: 100%; }
+    .name h1 { font-size: 30px; }
+    .flow { grid-template-columns: 1fr 1fr; }
+    .step:nth-child(3)::before { content: none; }
+    .thumb { height: 150px; }
+  }
+  @media (max-width: 480px) {
+    .nums { grid-template-columns: repeat(2, 1fr); }
+    .num:nth-child(odd) { border-left: 0; }
+    .num:nth-child(n + 3) { border-top: 1px solid var(--rule-2); }
+  }
+
+  /* ---------- on paper: one landscape page ---------- */
+  @page { size: A4 landscape; margin: 8mm; }
+  @media print {
+    :root { --paper: #fff; --sheet: #fff; --shadow: none; }
+    body { font-size: 11px; }
+    .wrap { max-width: none; padding: 0; zoom: .68; }
+    /* a page is narrower than the screen it was designed on: keep the wide layout */
+    .groups { grid-template-columns: repeat(5, 1fr); }
+    .lower { grid-template-columns: 1.1fr 1.5fr .62fr; }
+    .built { grid-column: auto; }
+    .nums { grid-template-columns: repeat(8, 1fr); }
+    .num, .num:nth-child(n) { border-top: 0; border-left: 1px solid var(--rule-2); }
+    .num:first-child { border-left: 0; }
+    ul.hood { grid-template-columns: 1fr 1fr; }
+    .acts { margin-left: auto; width: auto; }
+    .group, .panel { break-inside: avoid; }
+    .group, .panel, .nums { box-shadow: none; border: 1px solid var(--rule); }
+    .group { border-top: 4px solid var(--c); }
+    .thumb span, .acts .ghost { display: none; }
+    a { text-decoration: none; }
+  }
+</style>
+
+<body>
+<div class="wrap">
+  <header>
+    <div class="seal" lang="ja" aria-hidden="true">日</div>
+    <div class="name">
+      <h1>Nihongo Quest</h1>
+      <p>Japanese for getting by: from the first kana to JLPT N5, then out into town to use it. Free, in the browser.</p>
+    </div>
+    <div class="acts">
+      <a class="btn" href="./">Open the app →</a>
+      <a class="btn ghost" href="trailer.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4l15 8-15 8z"/></svg>Watch the trailer · 1:34</a>
+      <a class="btn ghost" href="https://github.com/jkw2lo/learn_japanese_nihongo_quest">Source on GitHub</a>
+    </div>
+  </header>
+
+  <section class="nums" aria-label="In numbers">
+    <div class="num"><b>224</b><span>kana</span></div>
+    <div class="num"><b>1,127</b><span>words, in 83 topics</span></div>
+    <div class="num"><b>162</b><span>kanji, all of N5's</span></div>
+    <div class="num"><b>40</b><span>grammar patterns</span></div>
+    <div class="num"><b>15</b><span>places to go</span></div>
+    <div class="num"><b>4,679</b><span>recorded clips</span></div>
+    <div class="num"><b>4</b><span>games, 60 toys</span></div>
+    <div class="num"><b>0</b><span>frameworks or builds</span></div>
+  </section>
+
+  <section class="groups" aria-label="What's in it">
+    <article class="group" style="--c: var(--g-study)">
+      <div class="ghead"><span lang="ja">学ぶ</span><h2>Study</h2></div>
+      <a class="thumb" href="trailer.html#t=17.6" aria-label="See it in the trailer"><img src="overview/study.jpg" alt="The kana ね: a cat's tail curled round at the end, ねこ is cat" style="object-position: 50% 45%"><span><svg viewBox="0 0 24 24"><path d="M6 4l15 8-15 8z"/></svg>See it</span></a>
+      <ul class="f">
+        <li><b>Today</b>: one plan a day of new lessons, due reviews and a practice task.</li>
+        <li><b>Kana</b> a row a day, with picture stories and tracing. Look-alikes (<span lang="ja">シ ツ</span>) drilled on purpose.</li>
+        <li><b>Words</b> in 9 stages, <span lang="ja">あいさつ</span> to the <span lang="ja">て</span>-form; verbs conjugated.</li>
+        <li><b>Kanji</b> through words you know; the furigana goes once learned.</li>
+        <li><b>Grammar</b>: every N5 pattern, in sentences you tap to hear.</li>
+      </ul>
+    </article>
+
+    <article class="group" style="--c: var(--g-practise)">
+      <div class="ghead"><span lang="ja">練習</span><h2>Practise</h2></div>
+      <a class="thumb" href="trailer.html#t=22.2" aria-label="See it in the trailer"><img src="overview/practise.jpg" alt="A line flashing up like a subtitle: いまなんじですか。" style="object-position: 50% 80%"><span><svg viewBox="0 0 24 24"><path d="M6 4l15 8-15 8z"/></svg>See it</span></a>
+      <ul class="f">
+        <li><b>Read</b>: subtitles that flash and go, words with no spaces, 59 sentences, 29 short texts, 219 loanwords.</li>
+        <li><b>Sprint</b>: timed sheets in six modes, 20–100 questions.</li>
+        <li><b>Writing</b> checked stroke by stroke, or read whole like a phone keyboard; △ for <i>nearly</i>.</li>
+        <li><b>Cards</b>, and a free-writing <b>Notebook</b>.</li>
+      </ul>
+    </article>
+
+    <article class="group" style="--c: var(--g-play)">
+      <div class="ghead"><span lang="ja">遊ぶ</span><h2>Play</h2></div>
+      <a class="thumb" href="trailer.html#t=69" aria-label="See it in the trailer"><img src="overview/play.jpg" alt="A rare capsule toy: 鏡もち, New Year rice cakes" style="object-position: 50% 40%"><span><svg viewBox="0 0 24 24"><path d="M6 4l15 8-15 8z"/></svg>See it</span></a>
+      <ul class="f">
+        <li><b>Ninja slice</b>: slice what's asked; the look-alikes are bombs.</li>
+        <li><b>Swipe deck</b>: pass, pass, flick up the answer.</li>
+        <li><b>Word search</b> and <b>Match</b>.</li>
+        <li><b>Coins</b> from everything turn a <b>capsule machine</b>: 60 toys, each saying its name, rare ones in gold.</li>
+      </ul>
+    </article>
+
+    <article class="group" style="--c: var(--g-out)">
+      <div class="ghead"><span lang="ja">街</span><h2>Out &amp; about</h2></div>
+      <a class="thumb" href="trailer.html#t=35.5" aria-label="See it in the trailer"><img src="overview/out.jpg" alt="Festival stalls at night under lanterns spelling おまつり" style="object-position: 50% 35%"><span><svg viewBox="0 0 24 24"><path d="M6 4l15 8-15 8z"/></svg>See it</span></a>
+      <ul class="f">
+        <li><b>Walk round</b> a sushi bar, festival stalls, a konbini, a street of signs, and the subway, from the ticket machine to the ride.
+          <div class="chips"><span lang="ja">すし</span><span lang="ja">ゆ</span><span lang="ja">屋台</span><span lang="ja">看板</span><span lang="ja">レシート</span><span lang="ja">駅</span><span lang="ja">お店</span><span lang="ja">頼む</span><span lang="ja">道を聞く</span><span lang="ja">口語</span><span lang="ja">ほめる</span><span lang="ja">まるや</span><span lang="ja">道路</span><span lang="ja">コンビニ</span><span lang="ja">さくら</span></div></li>
+        <li><b>Three levels</b>: sound it out, know what it says, read it as written. Opens at half its words.</li>
+      </ul>
+    </article>
+
+    <article class="group" style="--c: var(--g-you)">
+      <div class="ghead"><span lang="ja">記録</span><h2>Record</h2></div>
+      <a class="thumb" href="trailer.html#t=80.2" aria-label="See it in the trailer"><img src="overview/you.jpg" alt="A milestone: the cat cheering and a medal for every kana" style="object-position: 50% 30%"><span><svg viewBox="0 0 24 24"><path d="M6 4l15 8-15 8z"/></svg>See it</span></a>
+      <ul class="f">
+        <li><b>Streak</b>, minutes a day, and how much of N5 is done and when it will be.</li>
+        <li><b>33 milestones</b>, each with a cat to cheer it.</li>
+        <li>A <b>mistakes</b> notebook: what you miss comes round again.</li>
+        <li><b>Backup</b>, and optional <b>sync</b> between devices.</li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="lower">
+    <div class="panel">
+      <h2><span lang="ja">教え方</span>How it teaches</h2>
+      <div class="flow">
+        <div class="step"><span lang="ja">かな</span><b>Kana</b><small>sound and shape, until it's automatic</small></div>
+        <div class="step"><span lang="ja">言葉</span><b>Words</b><small>the core, said and heard, in kana first</small></div>
+        <div class="step"><span lang="ja">漢字</span><b>Kanji</b><small>an upgrade to words you already know</small></div>
+        <div class="step"><span lang="ja">文型</span><b>Patterns</b><small>made only of words you know</small></div>
+      </div>
+      <p class="rule"><b>The word is the unit:</b> you never meet a kanji before a word that uses it.</p>
+      <div class="ladder" aria-label="Review intervals in days: 1, 2, 4, 7, 14, 30, 60, 120">
+        <i style="--h:4px;--k:0">1</i><i style="--h:6px;--k:1">2</i><i style="--h:8px;--k:2">4</i><i style="--h:11px;--k:3">7</i><i style="--h:12px;--k:4">14</i><i style="--h:16px;--k:5">30</i><i style="--h:21px;--k:6">60</i><i style="--h:26px;--k:7">120</i>
+      </div>
+      <div class="ladder-l"><span>Spaced reviews, in days</span><span>"solid" = right <i>and</i> quick, three times</span></div>
+    </div>
+
+    <div class="panel">
+      <h2><span lang="ja">仕組み</span>Under the hood</h2>
+      <ul class="hood">
+        <li><b>Plain JavaScript, HTML and CSS</b>: no framework, no build step. A push to GitHub Pages is a release.</li>
+        <li><b>Offline first</b>: a service worker keeps the app and its sound; audio is cached by content hash.</li>
+        <li><b>Every word spoken</b>: 4,679 recorded clips in 28 bundles, loaded when needed.</li>
+        <li><b>Handwriting</b> matched stroke by stroke, or read as a point cloud against every kana.</li>
+        <li><b>Drawn in code</b>: every scene, toy and character is SVG and CSS.</li>
+        <li><b>Made for a phone</b>: installable, a one-thumb wheel menu, light and dark.</li>
+        <li><b>Optional sync</b> through Firebase, merged so nothing learned is lost.</li>
+        <li><b>11,121 automated checks</b> run before every release.</li>
+      </ul>
+    </div>
+
+    <div class="panel built">
+      <h2><span lang="ja">記録</span>Built</h2>
+      <div class="big">20 days</div><span>0.1 to 0.58, in 71 commits</span>
+      <p>Every release is in the changelog; the README explains every decision, down to why the station stairs are drawn in true perspective.</p>
+    </div>
+  </section>
+
+  <footer>
+    <span>Nihongo Quest · <a href="./">jkw2lo.github.io/learn_japanese_nihongo_quest</a></span>
+    <span>Stroke data: AnimCJK · Kanji readings: KANJIDIC2</span>
+  </footer>
+</div>
+</body>
+</html>
