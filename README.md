@@ -17,6 +17,10 @@ you don't.
 > devices through Firebase.
 
 **Live at:** https://jkw2lo.github.io/learn_japanese_nihongo_quest/
+**Trailer:** https://jkw2lo.github.io/learn_japanese_nihongo_quest/trailer.html
+(a minute and a half of the app, for anyone who'd rather watch than learn kana first)
+
+[![Nihongo Quest — the trailer](trailer/poster.jpg)](https://jkw2lo.github.io/learn_japanese_nihongo_quest/trailer.html)
 **Repo:** https://github.com/jkw2lo/learn_japanese_nihongo_quest (`main`, over
 SSH). GitHub Pages serves `main` directly: there's no build step and no CI,
 so pushing is deploying. Bump the version on every push (see **Shipping a
@@ -1088,6 +1092,17 @@ the konbini's does, and the smoke test checks both.
   wide layout: the timetable's destinations wrapped a character at a time
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
+
+### 0.58.0: The trailer
+
+- **`trailer.html`**, beside the app: a self-playing trailer, about a
+  minute and a half, for someone looking at the app without using it. A
+  cold open (シ and ツ, written wrong and then right), then three acts in
+  the app's own colours (学ぶ the basics, 街 going out, 遊ぶ playing), the
+  numbers, and a way into the app. Every picture in it is the real app,
+  filmed, and the sound is the app's own recordings. See **The trailer**.
+- **The dev server answers byte ranges**, as GitHub Pages does; without
+  them a browser won't seek inside a video.
 
 ### 0.57.1: Rotation, settled
 
@@ -2391,6 +2406,39 @@ you like.
 
 ---
 
+## The trailer
+
+`trailer.html` plays a timeline (`BEATS`, at the top of its script) of title
+cards and clips on a 1920×1080 stage scaled to the window. A clip beat names
+a film in `trailer/clips/`, the moment to start from and how long to stay,
+and a caption; `cont` carries on the beat before with new words over the
+same picture. Nothing in it is mocked up: the clips are the app, filmed.
+
+**Filming** (`tools/trailer/shoot.mjs`, one function per shot) drives the app
+in a throwaway browser — never your own progress — seeded as a learner a few
+weeks in (`seed` in `tools/trailer/cam.mjs`), at phone size (390×844) or
+desktop (1440×900, cropped to the scene). Frames come from Chrome's
+screencast at 2×, with a dot where the finger goes down; every `say()` is
+logged and its recording laid under the clip, so the clips speak.
+
+**The MP4** (`tools/trailer/render.mjs`) opens `trailer.html?render`, which
+hands the clock over: each frame is `__seek(t)` (every animation paused at
+t, every video seeked to it) and a screenshot, so the film is exact however
+slow the machine. The soundtrack is cut from the clips by the same
+timeline. It needs Google Chrome, since Playwright's Chromium can't play
+H.264.
+
+    npm i --prefix tools/.cache/pw playwright      # once; tools/.cache is ignored
+    brew install ffmpeg                            # once
+    node tools/server.mjs &
+    node tools/trailer/shoot.mjs                   # every shot, or name some: ride gacha
+    node tools/trailer/render.mjs                  # → tools/.cache/nihongo-quest-trailer.mp4
+    node tools/trailer/render.mjs --stills 6,50    # just those moments, to check a layout
+
+Re-film a shot when the screen it shows changes; the trailer picks it up.
+If a clip's length or crop changes, check its `from`/`dur` (and `card` size)
+in `BEATS`.
+
 ## Files
 
     index.html              page shell; the only place the version lives
@@ -2452,7 +2500,14 @@ you like.
     js/audio-s<N>.js        generated clips, one bundle per word stage — do not hand-edit
     js/audio-grammar.js     generated clips for the Grammar tab
 
+    trailer.html            the trailer: a self-playing page (see The trailer)
+    trailer/poster.jpg      a frame of it, for the README and link previews
+    trailer/clips/          its films of the app, each an .mp4 and a poster .jpg — made by tools/trailer/shoot.mjs
+
     tools/server.mjs        dev server, http://localhost:8732
+    tools/trailer/cam.mjs   the trailer's camera: a seeded throwaway browser, the finger, filming with sound
+    tools/trailer/shoot.mjs films each of the trailer's clips
+    tools/trailer/render.mjs the trailer as an MP4, a frame at a time
     tools/version.mjs       bump the version and re-stamp every asset (and sw.js, and the hashes)
     tools/hashes.mjs        writes js/assets.js: a hash per audio bundle and strokes.js
     tools/make-icons.mjs    draws icons/ with headless Chrome (macOS)

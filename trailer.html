@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Nihongo Quest — the trailer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="A 90-second tour of Nihongo Quest: learn Japanese from the first kana to JLPT N5, then go out — a sushi bar, a festival, a konbini, the subway — and play.">
+<meta property="og:title" content="Nihongo Quest — the trailer">
+<meta property="og:description" content="Learn Japanese from the first kana to JLPT N5, then go out and use it.">
+<meta property="og:image" content="https://jkw2lo.github.io/learn_japanese_nihongo_quest/trailer/poster.jpg">
+<meta name="theme-color" content="#0d0d0c">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;1,6..72,500&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+JP:wght@500;700&family=Noto+Serif+JP:wght@600;900&display=swap" crossorigin="anonymous">
+<!--
+  The trailer: a self-playing page, 1920×1080 scaled to the window. Every
+  moving picture in it is the real app, filmed by tools/trailer/shoot.mjs;
+  the timeline is BEATS below. ?render hands the clock to
+  tools/trailer/render.mjs, which steps it a frame at a time into an MP4.
+-->
+<style>
+  :root {
+    --bg: #0d0d0c; --stage: #151513; --sheet: #1F1E1B;
+    --ink: #ECE8DF; --ink-2: #B4AEA2; --ink-3: #7F796E; --rule: #37342E;
+    --seal: #E26A56; --paper: #F3F0E8;
+    --g-study: #8CA7DA; --g-practise: #6CC0BC; --g-play: #DDB45E; --g-out: #DA8DB4; --g-you: #B4AEA2;
+    --f-display: "Newsreader", Georgia, serif;
+    --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --f-ja: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+    --f-ja-serif: "Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); overflow: hidden; }
+  body { font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
+  [lang="ja"] { font-family: var(--f-ja); }
+  button { font: inherit; color: inherit; cursor: pointer; }
+
+  /* ---------- the stage: 1920×1080, scaled to fit ---------- */
+  .frame { position: fixed; inset: 0; overflow: hidden; }
+  .stage { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; overflow: hidden; transform-origin: center;
+    background: radial-gradient(1200px 800px at 70% 45%, #22201c 0%, var(--stage) 55%, #0f0f0e 100%); }
+
+  .beat { position: absolute; inset: 0; visibility: hidden; }
+  .beat.on { visibility: visible; animation: beatOut .4s ease-in calc(var(--d) - .4s) both; }
+  .beat.lent .cap { visibility: hidden; }
+  /* a wide picture (the desktop's places) leaves less room for words */
+  .wide .cap { width: 520px; }
+  .wide.side-l .media { left: 120px; }
+  .wide.side-r .media { right: 120px; }
+  .wide .head { font-size: 70px; }
+  .wide .sub { font-size: 29px; }
+  @keyframes beatOut { from { opacity: 1; } to { opacity: 0; } }
+
+  /* ---------- a clip with its caption ---------- */
+  .cap { position: absolute; top: 50%; width: 640px; transform: translateY(-50%); }
+  .side-r .cap { left: 150px; }
+  .side-l .cap { right: 150px; }
+  .eye { display: flex; align-items: baseline; gap: 14px; font-size: 26px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--c, var(--ink-2)); font-weight: 600; }
+  .eye [lang="ja"] { font-size: 34px; letter-spacing: .02em; text-transform: none; font-weight: 700; }
+  .eye::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--c, var(--ink-2)); align-self: center; }
+  .head { font-family: var(--f-display); font-weight: 500; font-size: 84px; line-height: 1.04; letter-spacing: -.015em; margin: 26px 0 0; }
+  .head [lang="ja"] { font-family: var(--f-ja); font-weight: 700; font-size: .86em; letter-spacing: 0; }
+  .sub { font-size: 32px; line-height: 1.45; color: var(--ink-2); margin: 28px 0 0; max-width: 600px; }
+  .sub [lang="ja"] { color: var(--ink); }
+  .on:not(.cont) .eye { animation: rise .7s cubic-bezier(.2,.7,.2,1) .15s both; }
+  .on:not(.cont) .head { animation: rise .8s cubic-bezier(.2,.7,.2,1) .28s both; }
+  .on:not(.cont) .sub { animation: rise .8s cubic-bezier(.2,.7,.2,1) .48s both; }
+  .on.cont .head, .on.cont .sub { animation: swap .5s ease-out both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+  @keyframes swap { from { opacity: 0; } to { opacity: 1; } }
+
+  .media { position: absolute; top: 50%; display: flex; gap: 56px; align-items: center; transform: translateY(-50%); }
+  .side-r .media { right: 150px; }
+  .side-l .media { left: 150px; }
+  .on:not(.cont) .media > * { animation: lift .9s cubic-bezier(.16,.8,.24,1) both; }
+  .on:not(.cont) .media > :nth-child(2) { animation-delay: .14s; }
+  @keyframes lift { from { opacity: 0; transform: translateY(70px) scale(.96); } to { opacity: 1; transform: none; } }
+
+  /* a phone: a dark bezel round the clip */
+  .phone { position: relative; padding: 14px; border-radius: 58px; background: #050505;
+    box-shadow: 0 0 0 2px #2c2a26, 0 40px 90px rgba(0,0,0,.55), 0 10px 26px rgba(0,0,0,.4); }
+  .phone video { display: block; height: 880px; width: auto; aspect-ratio: 390 / 844; border-radius: 44px; background: var(--paper); }
+  .duo .phone video { height: 820px; }
+  /* a window: the desktop's painted places, framed close */
+  .card { border-radius: 22px; overflow: hidden; background: var(--paper);
+    box-shadow: 0 0 0 1px rgba(255,255,255,.07), 0 40px 90px rgba(0,0,0,.55), 0 10px 26px rgba(0,0,0,.4); }
+  .card video { display: block; }
+  .card .chrome { height: 40px; display: flex; align-items: center; gap: 9px; padding: 0 18px; background: #e6e1d5; }
+  .card .chrome i { width: 13px; height: 13px; border-radius: 50%; background: #cfc8b9; }
+  .card .chrome b { margin-left: 16px; font: 500 17px var(--f-body); color: #858074; letter-spacing: .01em; }
+
+  /* ---------- title cards ---------- */
+  .title { display: grid; place-items: center; text-align: center; }
+  .pair { display: flex; gap: 120px; font-family: var(--f-ja-serif); font-weight: 600; font-size: 420px; line-height: 1; }
+  .pair span { display: block; }
+  .on .pair span { animation: glyph 1.1s cubic-bezier(.2,.7,.2,1) both; }
+  .on .pair span + span { animation-delay: .35s; }
+  @keyframes glyph { from { opacity: 0; transform: translateY(30px) scale(.94); filter: blur(10px); } to { opacity: 1; transform: none; filter: none; } }
+  .tline { margin-top: 70px; font-family: var(--f-display); font-size: 64px; font-style: italic; color: var(--ink-2); }
+  .on .tline { animation: rise .8s cubic-bezier(.2,.7,.2,1) 1s both; }
+
+  .logo { display: grid; justify-items: center; }
+  .seal { width: 190px; height: 190px; border-radius: 34px; background: var(--seal); color: #fff; display: grid; place-items: center;
+    font-family: var(--f-ja-serif); font-weight: 900; font-size: 128px; box-shadow: 0 20px 60px rgba(226,106,86,.25); }
+  .on .seal { animation: stamp .7s cubic-bezier(.3,1.5,.5,1) both; }
+  @keyframes stamp { from { opacity: 0; transform: scale(1.6) rotate(-8deg); } to { opacity: 1; transform: none; } }
+  .wordmark { margin-top: 56px; font-family: var(--f-display); font-weight: 600; font-size: 150px; letter-spacing: -.02em; line-height: 1; }
+  .on .wordmark { animation: rise .9s cubic-bezier(.2,.7,.2,1) .35s both; }
+  .strap { margin-top: 34px; font-size: 40px; color: var(--ink-2); }
+  .on .strap { animation: rise .9s cubic-bezier(.2,.7,.2,1) .7s both; }
+
+  .act .jp { font-family: var(--f-ja-serif); font-weight: 900; font-size: 300px; line-height: 1; color: var(--c); }
+  .act .en { margin-top: 44px; font-family: var(--f-display); font-size: 86px; font-style: italic; }
+  .on.act .jp { animation: glyph 1s cubic-bezier(.2,.7,.2,1) both; }
+  .on.act .en { animation: rise .8s cubic-bezier(.2,.7,.2,1) .3s both; }
+
+  /* ---------- the numbers ---------- */
+  .nums { display: grid; grid-template-columns: repeat(4, 360px); gap: 64px 40px; }
+  .stat b { display: block; font-family: var(--f-display); font-weight: 500; font-size: 120px; line-height: 1; letter-spacing: -.02em; }
+  .stat span { display: block; margin-top: 14px; font-size: 30px; color: var(--ink-2); }
+  .stat.word b { font-size: 64px; line-height: 120px; font-style: italic; }
+  .on .stat { animation: rise .7s cubic-bezier(.2,.7,.2,1) calc(var(--i) * .12s + .1s) both; }
+
+  .end .logo { transform: translateY(-40px); }
+  .end .seal { width: 150px; height: 150px; font-size: 100px; border-radius: 28px; }
+  .end .wordmark { font-size: 120px; margin-top: 44px; }
+  .links { margin-top: 64px; display: flex; gap: 28px; justify-content: center; }
+  .on .links { animation: rise .9s cubic-bezier(.2,.7,.2,1) 1s both; }
+  .go { display: inline-flex; align-items: center; gap: 14px; padding: 26px 48px; border-radius: 999px; font-size: 34px; font-weight: 600;
+    text-decoration: none; background: var(--paper); color: #1E1D1A; border: 0; }
+  .go.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 2px var(--rule); }
+  .url { margin-top: 36px; font-size: 28px; color: var(--ink-3); letter-spacing: .01em; }
+  .on .url { animation: rise .9s cubic-bezier(.2,.7,.2,1) 1.2s both; }
+
+  /* ---------- the player around it (not in the render) ---------- */
+  .start { position: fixed; inset: 0; z-index: 5; display: grid; place-items: center; border: 0; padding: 0;
+    background: radial-gradient(900px 600px at 50% 45%, #22201c 0%, var(--bg) 70%); }
+  .start-in { display: grid; justify-items: center; gap: 22px; padding: 24px; text-align: center; }
+  .start .seal { width: 76px; height: 76px; font-size: 50px; border-radius: 16px; box-shadow: none; }
+  .start-w { font-family: var(--f-display); font-weight: 600; font-size: clamp(36px, 7vw, 72px); line-height: 1; letter-spacing: -.02em; }
+  .start-s2 { font-size: clamp(15px, 2vw, 19px); color: var(--ink-2); max-width: 34em; line-height: 1.5; margin-bottom: 18px; }
+  .play-big { width: 132px; height: 132px; border-radius: 50%; background: var(--paper); display: grid; place-items: center;
+    box-shadow: 0 16px 50px rgba(0,0,0,.5); transition: transform .2s; }
+  .start:hover .play-big { transform: scale(1.06); }
+  .play-big svg { width: 50px; height: 50px; margin-left: 8px; fill: #1E1D1A; }
+  .start-s { font-size: 16px; color: var(--ink-2); }
+  .start[hidden] { display: none; }
+
+  .ctl { position: fixed; left: 0; right: 0; bottom: 0; z-index: 4; padding: 30px 22px 18px; display: flex; align-items: center; gap: 14px;
+    background: linear-gradient(transparent, rgba(0,0,0,.72)); opacity: 0; transition: opacity .3s; }
+  .ctl.show, .ctl:focus-within { opacity: 1; }
+  .ctl button { background: none; border: 0; padding: 8px; border-radius: 8px; display: grid; place-items: center; }
+  .ctl button:focus-visible, .go:focus-visible, .start:focus-visible .play-big { outline: 3px solid var(--g-study); outline-offset: 3px; }
+  .ctl svg { width: 22px; height: 22px; fill: currentColor; }
+  .seek { flex: 1; }
+  .track { position: relative; height: 22px; display: flex; align-items: center; cursor: pointer; }
+  .track::before { content: ""; position: absolute; left: 0; right: 0; height: 4px; border-radius: 2px; background: rgba(255,255,255,.22); }
+  .fill { position: absolute; left: 0; height: 4px; border-radius: 2px; background: var(--paper); width: 0; }
+  .tick { position: absolute; top: 5px; width: 2px; height: 12px; margin-left: -1px; background: rgba(255,255,255,.5); }
+  .tick em { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); font: 600 11px var(--f-body); font-style: normal;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); white-space: nowrap; }
+  .track:focus { outline: none; }
+  .track:focus-visible { outline: 3px solid var(--g-study); outline-offset: 4px; border-radius: 4px; }
+  .turn { position: fixed; top: 18px; left: 0; right: 0; z-index: 3; text-align: center; font-size: 14px; color: var(--ink-3); display: none; }
+  @media (orientation: portrait) and (max-width: 700px) { .turn { display: block; } }
+  .render .turn { display: none !important; }
+  .time { font-size: 14px; font-variant-numeric: tabular-nums; color: var(--ink-2); min-width: 92px; text-align: right; }
+  .app { font-size: 14px; font-weight: 600; text-decoration: none; color: #1E1D1A; background: var(--paper); padding: 8px 14px; border-radius: 999px; white-space: nowrap; }
+
+  .render .ctl, .render .start { display: none !important; }
+  @media (max-width: 600px) { .tick em { display: none; } .app { display: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .on .eye, .on .head, .on .sub, .on .media > *, .on .pair span, .on .tline, .on .seal, .on .wordmark, .on .strap, .on.act .jp, .on.act .en, .on .stat, .on .links, .on .url { animation-duration: .01s !important; animation-delay: 0s !important; }
+  }
+</style>
+
+<body>
+<div class="frame"><div class="stage" id="stage"></div></div>
+<audio id="score" src="trailer/score.m4a" preload="auto"></audio>
+
+<button class="start" id="start" aria-label="Play the trailer, with sound">
+  <span class="start-in">
+    <span class="seal" lang="ja" aria-hidden="true">日</span>
+    <span class="start-w">Nihongo Quest</span>
+    <span class="start-s2">Japanese from the first kana to JLPT N5, then out into a sushi bar, a festival, a konbini and the subway. Every moment in this trailer is the real app.</span>
+    <span class="play-big"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4l15 8-15 8z"/></svg></span>
+    <span class="start-s" id="startLen">Play the trailer · sound on</span>
+  </span>
+</button>
+
+<div class="turn" aria-hidden="true">Turn your phone sideways for a bigger picture ↻</div>
+<div class="ctl" id="ctl">
+  <button id="pp" aria-label="Pause"><svg viewBox="0 0 24 24" id="ppIco"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg></button>
+  <div class="seek"><div class="track" id="track" role="slider" aria-label="Seek" tabindex="0" aria-valuemin="0"><div class="fill" id="fill"></div></div></div>
+  <span class="time" id="time">0:00 / 0:00</span>
+  <button id="mute" aria-label="Mute"><svg viewBox="0 0 24 24" id="muteIco"></svg></button>
+  <a class="app" href="./" target="_blank" rel="noopener">Open the app ↗</a>
+</div>
+
+<script>
+/* The timeline. Every clip beat names a film in trailer/clips/ and the part
+   of it to show (from, for dur seconds). side: which side the picture sits.
+   A beat marked cont carries on the one before it with no new entrance. */
+const C = { study: "var(--g-study)", practise: "var(--g-practise)", play: "var(--g-play)", out: "var(--g-out)", you: "var(--seal)" };
+const BEATS = [
+  { kind: "pair", dur: 2.8, a: "シ", b: "ツ", line: "They look the same." },
+  { kind: "clip", dur: 6.2, side: "r", media: [{ clip: "write", from: 0.4, card: [764, 1100], h: 860 }],
+    c: C.study, jp: "書く", en: "Write", head: "They're not.",
+    sub: "Asked for <span lang=ja>ツ</span>, this is <span lang=ja>シ</span>, and the app says so. It reads handwriting the way a phone keyboard does." },
+  { kind: "clip", dur: 3.9, side: "r", cont: true, media: [{ clip: "write", from: 8.6, card: [764, 1100], h: 860 }],
+    c: C.study, jp: "書く", en: "Write", head: "Again: <span lang=ja>ツ</span>.", sub: "Right this time. Every kana can be written, and checked stroke by stroke." },
+  { kind: "logo", dur: 3.0, strap: "Japanese for getting by: from the first kana to JLPT N5." },
+
+  { kind: "act", dur: 1.7, jp: "学ぶ", en: "First, the basics.", c: C.study, chapter: "Learn" },
+  { kind: "clip", dur: 4.6, side: "l", media: [{ clip: "kana", from: 0.5 }],
+    c: C.study, jp: "かな", en: "Kana", head: "Every kana has a story.",
+    sub: "<span lang=ja>ね</span> is a cat's tail, curled at the end, like <span lang=ja>ねこ</span>. Then its strokes are drawn for you." },
+  { kind: "clip", dur: 5.2, side: "r", media: [{ clip: "subs", from: 0.3 }],
+    c: C.practise, jp: "字幕", en: "Subtitles", head: "Read it before it's gone.",
+    sub: "A line flashes up like a subtitle, with its sound. What did it say? The pace climbs as you keep up." },
+
+  { kind: "act", dur: 1.7, jp: "街", en: "Then, go out.", c: C.out, chapter: "Go out" },
+  { kind: "clip", dur: 6.4, side: "r", media: [{ clip: "hostess", from: 0.6 }],
+    c: C.out, jp: "すし", en: "Sushi bar", head: "<span lang=ja style='font-size:.68em'>いらっしゃいませ！</span>",
+    sub: "Slide the door open, and a cat in a kimono asks how many you are. You answer in Japanese." },
+  { kind: "clip", dur: 5.6, side: "l", media: [{ clip: "festival", from: 0.6 }],
+    c: C.out, jp: "屋台", en: "Festival", head: "A summer night, stall by stall.",
+    sub: "Hand-painted banners to read, and a price for one: <span lang=ja>ひとつ</span>." },
+  { kind: "clip", dur: 5.8, side: "r", media: [{ clip: "konbini", from: 0.5, card: [2156, 1322], w: 1060 }],
+    c: C.out, jp: "コンビニ", en: "Konbini", head: "A whole convenience store.",
+    sub: "Pick anything up. Turn it over and read the back of the label." },
+  { kind: "clip", dur: 6.4, side: "l", media: [{ clip: "station", from: 0.5, card: [1484, 1004], w: 1060 }],
+    c: C.out, jp: "駅", en: "Station", head: "Down into the subway.",
+    sub: "Buy a ticket: pick a station, put the money in, take your change." },
+  { kind: "clip", dur: 7.6, side: "r", media: [{ clip: "ride", from: 0.4, card: [1484, 1124], w: 1060 }],
+    c: C.out, jp: "電車", en: "The train", head: "Find your train, and ride it.",
+    sub: "<span lang=ja>ドアが閉まります</span>: every announcement is heard, and read, and understood." },
+
+  { kind: "act", dur: 1.7, jp: "遊ぶ", en: "Then, play.", c: C.play, chapter: "Play" },
+  { kind: "clip", dur: 6.4, side: "r", duo: true, media: [{ clip: "ninja", from: 0.6 }, { clip: "deck", from: 0.8 }],
+    c: C.play, jp: "遊ぶ", en: "Games", head: "Slice it. Swipe it.",
+    sub: "Ninja slice, where the look-alikes are the bombs. A swipe deck: pass, pass, this one." },
+  { kind: "clip", dur: 6.0, side: "l", duo: true, media: [{ clip: "gacha", from: 0.3 }, { clip: "gachaAll", from: 0.3 }],
+    c: C.play, jp: "ガチャ", en: "Capsule machine", head: "Every game pays coins.",
+    sub: "Coins turn the capsule machine: 60 toys to collect, each saying its name. Rare ones come in gold." },
+
+  { kind: "clip", dur: 5.2, side: "r", media: [{ clip: "wheel", from: 0.4 }],
+    c: C.you, jp: "片手", en: "One thumb", head: "Made for a phone.",
+    sub: "A wheel of five groups at your thumb. It installs as an app, and works offline.", chapter: "And more" },
+  { kind: "clip", dur: 3.8, side: "l", media: [{ clip: "milestone", from: 0.3 }],
+    c: C.you, jp: "記念", en: "Milestones", head: "And it notices.",
+    sub: "33 milestones, and a cat to cheer each one." },
+  { kind: "stats", dur: 5.6, items: [["1,127", "words"], ["162", "kanji"], ["40", "grammar patterns"], ["15", "places to go"],
+    ["224", "kana"], ["Every", "word recorded"], ["Offline", "and installable"], ["Zero", "frameworks · no build step"]] },
+  { kind: "end", dur: 4.8, chapter: "" },
+];
+
+const RENDER = new URLSearchParams(location.search).has("render");
+const score = document.getElementById("score"), SCORE_VOL = 0.22;
+if (RENDER) document.documentElement.classList.add("render");
+const stage = document.getElementById("stage");
+let t0 = 0;
+BEATS.forEach(b => { b.start = t0; t0 += b.dur; });
+const TOTAL = t0;
+
+/* ---------- building the beats ---------- */
+const vids = [];
+function mediaHtml(m, duo) {
+  const v = `<video data-clip="${m.clip}" src="trailer/clips/${m.clip}.mp4" poster="trailer/clips/${m.clip}.jpg" playsinline muted preload="auto"></video>`;
+  if (!m.card) return `<div class="phone">${v}</div>`;
+  const [w, h] = m.card;
+  const W = m.w || Math.round((m.h || 860) * w / h), H = Math.round(W * h / w);
+  const bar = m.w ? `<div class="chrome"><i></i><i></i><i></i><b>jkw2lo.github.io · Nihongo Quest</b></div>` : "";
+  return `<div class="card">${bar}${v.replace("<video ", `<video style="width:${W}px;height:${H}px" `)}</div>`;
+}
+const capHtml = b => `<div class="cap" style="--c:${b.c}"><div class="eye"><span lang="ja">${b.jp}</span>${b.en}</div>
+  <h2 class="head">${b.head}</h2><p class="sub">${b.sub}</p></div>`;
+
+BEATS.forEach((b, i) => {
+  const el = document.createElement("section");
+  el.className = `beat ${b.kind} ${b.side ? "side-" + b.side : ""} ${b.cont ? "cont" : ""} ${(b.media || []).some(m => m.w) ? "wide" : ""}`;
+  /* a beat whose picture the next one carries on stays up through both */
+  el.style.setProperty("--d", (b.dur + (BEATS[i + 1]?.cont ? BEATS[i + 1].dur : 0)) + "s");
+  if (b.c) el.style.setProperty("--c", b.c);
+  if (b.kind === "clip") {
+    /* a carried-on beat reuses the picture of the one before */
+    el.innerHTML = capHtml(b) + (b.cont ? "" : `<div class="media ${b.duo ? "duo" : ""}">${b.media.map(m => mediaHtml(m, b.duo)).join("")}</div>`);
+  } else if (b.kind === "pair") {
+    el.classList.add("title");
+    el.innerHTML = `<div><div class="pair" lang="ja"><span>${b.a}</span><span>${b.b}</span></div><div class="tline">${b.line}</div></div>`;
+  } else if (b.kind === "logo") {
+    el.classList.add("title");
+    el.innerHTML = `<div class="logo"><div class="seal" lang="ja">日</div><div class="wordmark">Nihongo Quest</div><div class="strap">${b.strap}</div></div>`;
+  } else if (b.kind === "act") {
+    el.classList.add("title");
+    el.innerHTML = `<div><div class="jp" lang="ja">${b.jp}</div><div class="en">${b.en}</div></div>`;
+  } else if (b.kind === "stats") {
+    el.classList.add("title");
+    el.innerHTML = `<div class="nums">${b.items.map(([n, l], i) => `<div class="stat ${/^\d/.test(n) ? "" : "word"}" style="--i:${i}"><b>${n}</b><span>${l}</span></div>`).join("")}</div>`;
+  } else if (b.kind === "end") {
+    el.classList.add("title");
+    el.innerHTML = `<div class="logo"><div class="seal" lang="ja">日</div><div class="wordmark">Nihongo Quest</div>
+      <div class="links"><a class="go" href="./" target="_blank" rel="noopener">Try it in your browser →</a>
+      <button class="go ghost" id="again">Watch again</button></div>
+      <div class="url">jkw2lo.github.io/learn_japanese_nihongo_quest</div></div>`;
+  }
+  stage.appendChild(el);
+  b.el = el;
+  b.vids = [...el.querySelectorAll("video")];
+  if (b.cont) b.vids = BEATS[i - 1].vids, b.borrow = BEATS[i - 1];
+  vids.push(...el.querySelectorAll("video"));
+});
+
+/* ---------- scaling ---------- */
+function fit() {
+  const k = Math.min(innerWidth / 1920, innerHeight / 1080);
+  stage.style.transform = `translate(-50%, -50%) scale(${k})`;
+}
+addEventListener("resize", fit); fit();
+
+/* ---------- the clock ---------- */
+let cur = -1, T = 0, playing = false, last = 0, muted = false, started = false;
+const beatAt = t => { for (let i = BEATS.length - 1; i >= 0; i--) if (t >= BEATS[i].start) return i; return 0; };
+const mediaOf = b => b.cont ? b.borrow.media : b.media || [];
+
+const restart = el => { el.classList.remove("on", "lent"); void el.offsetWidth; el.classList.add("on"); };
+function show(i) {
+  if (i === cur) return;
+  const b = BEATS[i], prev = BEATS[cur];
+  /* carried on: the picture stays up, only the words change */
+  const carry = b.cont && prev === b.borrow;
+  if (prev && !carry) {
+    [prev.el, prev.borrow?.el].forEach(el => el && el.classList.remove("on", "lent"));
+    prev.vids.forEach(v => v.pause());
+  }
+  if (b.cont && !carry) restart(b.borrow.el);
+  if (b.cont) b.borrow.el.classList.add("lent");
+  restart(b.el);
+  cur = i;
+}
+
+/* where a beat's clips should be at time t */
+function want(b, t) {
+  const local = t - b.start;
+  return mediaOf(b).map((m, j) => (b.cont ? b.media[j].from : m.from) + local);
+}
+
+function tick(now) {
+  if (playing) T = Math.min(TOTAL, T + (now - last) / 1000);
+  last = now;
+  const i = beatAt(T);
+  const fresh = i !== cur;
+  show(i);
+  const b = BEATS[i];
+  if (b.vids.length) {
+    const w = want(b, T);
+    b.vids.forEach((v, j) => {
+      const target = Math.min(w[j], (v.duration || 99) - 0.05);
+      if (fresh || Math.abs(v.currentTime - target) > 0.3) { try { v.currentTime = target; } catch {} }
+      v.muted = muted || j > 0;       /* a pair of phones: one voice at a time */
+      if (playing && v.paused) v.play().catch(() => {});
+      if (!playing && !v.paused) v.pause();
+    });
+  }
+  /* the score, made to this timeline (tools/trailer/music.mjs), under the voices */
+  if (!RENDER) {
+    score.volume = SCORE_VOL; score.muted = muted;
+    if (playing && score.paused) { score.currentTime = T; score.play().catch(() => {}); }
+    else if (!playing && !score.paused) score.pause();
+    else if (playing && Math.abs(score.currentTime - T) > 0.25) score.currentTime = T;
+  }
+  paintBar();
+  if (T >= TOTAL && playing) { playing = false; paintPP(); showCtl(); }
+  if (!RENDER) requestAnimationFrame(tick);
+}
+
+/* ---------- the render's clock: one exact frame at a time ---------- */
+window.__timeline = () => BEATS.map(b => ({ start: b.start, dur: b.dur, media: b.kind === "clip" ? (b.cont ? b.media.map(m => ({ clip: b.borrow.media[0].clip, from: m.from })) : b.media.map(m => ({ clip: m.clip, from: m.from }))) : [] }));
+window.__total = TOTAL;
+window.__scoreVol = SCORE_VOL;
+window.__ready = () => Promise.all([document.fonts.ready, ...vids.map(v => v.readyState >= 2 ? 0 : new Promise(r => v.addEventListener("loadeddata", r, { once: true })))]);
+window.__seek = async t => {
+  T = t;
+  const i = beatAt(t);
+  show(i);
+  const b = BEATS[i];
+  const els = b.cont ? [b.el, b.borrow.el] : [b.el];
+  els.forEach(el => el.getAnimations({ subtree: true }).forEach(a => { a.pause(); a.currentTime = (b.cont && el !== b.el ? t - b.borrow.start : t - b.start) * 1000; }));
+  const w = want(b, t);
+  await Promise.all(b.vids.map((v, j) => new Promise(r => {
+    v.pause();
+    const target = Math.min(w[j], v.duration - 0.04);
+    if (Math.abs(v.currentTime - target) < 0.001) return r();
+    v.addEventListener("seeked", () => r(), { once: true });
+    v.currentTime = target;
+  })));
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+};
+
+/* ---------- the player ---------- */
+const $ = id => document.getElementById(id);
+const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+$("startLen").textContent = `Play the trailer · ${fmt(TOTAL)} · sound on`;
+const track = $("track");
+track.setAttribute("aria-valuemax", Math.round(TOTAL));
+BEATS.forEach(b => { if (b.chapter) track.insertAdjacentHTML("beforeend", `<i class="tick" style="left:${b.start / TOTAL * 100}%"><em>${b.chapter}</em></i>`); });
+function paintBar() {
+  $("fill").style.width = (T / TOTAL * 100) + "%";
+  $("time").textContent = `${fmt(T)} / ${fmt(TOTAL)}`;
+  track.setAttribute("aria-valuenow", Math.round(T));
+}
+const ICO = { play: '<path d="M7 4l13 8-13 8z"/>', pause: '<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>',
+  on: '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 010 7M18.5 6a8.5 8.5 0 010 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  off: '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>' };
+function paintPP() { $("ppIco").innerHTML = playing ? ICO.pause : ICO.play; $("pp").setAttribute("aria-label", playing ? "Pause" : "Play"); }
+function paintMute() { $("muteIco").innerHTML = muted ? ICO.off : ICO.on; $("mute").setAttribute("aria-label", muted ? "Unmute" : "Mute"); }
+function play() { if (T >= TOTAL) seekTo(0); playing = true; last = performance.now(); paintPP(); }
+function pause() { playing = false; paintPP(); }
+function seekTo(t) { T = Math.max(0, Math.min(TOTAL - 0.01, t)); cur = -1; BEATS.forEach(b => b.el.classList.remove("on", "lent")); vids.forEach(v => v.pause()); score.pause(); }
+
+let hideT = 0;
+function showCtl() { $("ctl").classList.add("show"); clearTimeout(hideT); hideT = setTimeout(() => { if (playing) $("ctl").classList.remove("show"); }, 2200); }
+
+if (!RENDER) {
+  $("start").addEventListener("click", () => {
+    $("start").hidden = true; started = true;
+    [...vids, score].forEach(v => { v.muted = true; v.play().then(() => v.pause()).catch(() => {}); });   /* unlock them all on the tap */
+    seekTo(0); play(); showCtl();
+  });
+  $("pp").addEventListener("click", () => playing ? pause() : play());
+  $("mute").addEventListener("click", () => { muted = !muted; paintMute(); });
+  const seekFromEvent = e => { const r = track.getBoundingClientRect(); seekTo((e.clientX - r.left) / r.width * TOTAL); if (!started) { $("start").hidden = true; started = true; play(); } };
+  let dragging = false;
+  track.addEventListener("pointerdown", e => { dragging = true; track.setPointerCapture(e.pointerId); seekFromEvent(e); });
+  track.addEventListener("pointermove", e => { if (dragging) seekFromEvent(e); });
+  track.addEventListener("pointerup", () => { dragging = false; });
+  addEventListener("pointermove", showCtl);
+  addEventListener("keydown", e => {
+    if (!started) { if (e.key === " " || e.key === "Enter") { e.preventDefault(); $("start").click(); } return; }
+    if (e.key === " " || e.key === "k") { e.preventDefault(); playing ? pause() : play(); showCtl(); }
+    else if (e.key === "ArrowRight") { seekTo(T + 5); showCtl(); }
+    else if (e.key === "ArrowLeft") { seekTo(T - 5); showCtl(); }
+    else if (e.key === "m") { muted = !muted; paintMute(); showCtl(); }
+  });
+  stage.addEventListener("click", e => {
+    if (e.target.closest("#again")) { seekTo(0); play(); return; }
+    if (e.target.closest("a")) return;
+    if (started) { playing ? pause() : play(); showCtl(); }
+  });
+  paintPP(); paintMute();
+  requestAnimationFrame(tick);
+} else {
+  T = 0; show(0);
+}
+</script>
+</body>
+</html>
