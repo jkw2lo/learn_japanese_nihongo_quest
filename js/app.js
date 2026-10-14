@@ -1750,8 +1750,7 @@ function openSettings() {
       <button class="btn btn-ghost btn-sm" data-act="report">Report a problem</button>
       <button class="btn btn-ghost btn-sm danger" data-act="reset">Reset everything</button>
     </div>
-    <p class="muted small">Version ${esc(APP_VERSION)} · ${esc(APP_DATE)}. If this doesn't match what was just published, you're looking at a cached copy.</p>
-    ${typeof portraitHeld !== "undefined" && portraitHeld && isPhone() ? `<p class="muted small">Screen: ${esc(portraitHeld)}.</p>` : ""}`);
+    <p class="muted small">Version ${esc(APP_VERSION)} · ${esc(APP_DATE)}. If this doesn't match what was just published, you're looking at a cached copy.</p>`);
   offlinePaint();
   syncWarm();
 }

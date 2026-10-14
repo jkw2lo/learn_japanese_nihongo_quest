@@ -142,7 +142,7 @@ function subGamesHtml() {
   return `
     ${subTile({ jp: "遊ぶ", en: "All games", on: view === "games", act: `data-act="nav" data-nav="games"` })}
     ${subTile({ jp: "ガチャ", en: "Capsule machine", act: `data-act="nav-card" data-nav="games" data-card="gm-machine"`,
-      note: spinFree() ? "a free turn" : `${coinArt()} ${coins()}` })}
+      note: spinFree() ? "a free turn" : "" })}
     ${game("忍者", "Ninja slice", "ninja", ninjaKinds().length > 0, "gm-ninja")}
     ${game("めくる", "Swipe deck", "deck", deckModesOpen().length > 0, "gm-deck")}
     ${game("探す", "Word search", "search", searchable(pool).length >= 6, "rd-search")}
@@ -188,28 +188,11 @@ document.addEventListener("click", e => {
 
 addEventListener("keydown", e => { if (e.key === "Escape" && drawerOpen()) { closeDrawer(); e.stopPropagation(); } }, true);
 
-/* Upright, always, on a phone. 0.47 took "orientation": "any" out of the
-   manifest so the system's rotation lock would decide, but an installed app
-   keeps the manifest it was installed with until Chrome gets round to
-   refreshing it, and it went on turning sideways. So the manifest now says
-   "portrait" (which reaches the installed app on that refresh, or at once
-   if it's installed again), and meanwhile the app locks itself every time
-   it comes back to the front. A browser tab can't lock (the promise
-   rejects) and needs nothing: it follows the system. Tablets, wider than
-   600px either way, are left to turn. How the last try went is kept for
-   Settings, since there's no other way to see it on the phone. */
-let portraitHeld = "";
-function holdPortrait() {
-  if (!matchMedia("(display-mode: standalone), (display-mode: fullscreen)").matches) { portraitHeld = "a browser tab: it turns with the phone"; return; }
-  if (Math.min(screen.width, screen.height) >= 600) { portraitHeld = "a tablet: left to turn"; return; }
-  if (!screen.orientation?.lock) { portraitHeld = "this browser can't lock the screen"; return; }
-  try {
-    screen.orientation.lock("portrait").then(() => { portraitHeld = "held upright"; crumb("portrait held"); },
-      e => { portraitHeld = `couldn't hold it upright (${e.name}: ${e.message})`; crumb("portrait refused " + e.name); });
-  } catch (e) { portraitHeld = `couldn't hold it upright (${e.name})`; }
-}
-holdPortrait();
-document.addEventListener("visibilitychange", () => { if (!document.hidden) holdPortrait(); });
+/* Upright on a phone: the manifest says "portrait" (0.57.0). An installed
+   app keeps the manifest it was installed with until Chrome refreshes it,
+   so a change there can take days to arrive, or a reinstall. Locking from
+   here was tried and can't work: Chrome only allows screen.orientation.lock()
+   in fullscreen, not in an installed app's standalone window. */
 
 /* The section's name in the top bar, since there's no tab row to show it. */
 const SECTION_NAME = { today: ["今日", "Today"], kana: ["かな", "Kana"], words: ["言葉", "Words"], grammar: ["文法", "Grammar"], read: ["読む", "Read"], games: ["遊ぶ", "Games"], cards: ["札", "Cards"], book: ["帳", "Notebook"], menu: ["街", "Out &amp; about"], sprint: ["速", "Sprint"], record: ["記録", "Record"] };

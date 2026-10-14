@@ -1089,6 +1089,16 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.57.1: Rotation, settled
+
+- **The app no longer tries to lock itself upright**: Chrome only allows
+  that in fullscreen, never in an installed app's own window, so it could
+  not work (Settings said so, and that line is gone too). The manifest's
+  `"orientation": "portrait"` is what holds it, and an installed app picks
+  that up when Chrome refreshes it, or at once if it's installed again.
+- The capsule machine's square in the menu no longer repeats the coin
+  count, which is already at the top of the panel.
+
 ### 0.57.0: Two-tier menu; turn them all
 
 - **The phone's menu is two tiers.** The wheel at the foot now holds the
