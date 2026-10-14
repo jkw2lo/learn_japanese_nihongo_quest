@@ -553,9 +553,9 @@ section('loanwords');
 
 section('read');
 {
-  /* a fixed orientation makes Android's installed app follow the sensor and
-     ignore the phone's rotation lock (0.47.0) — leave it to the system */
-  ok(!('orientation' in JSON.parse(read('manifest.webmanifest'))), 'the manifest sets an orientation — the installed app would ignore rotation lock');
+  /* "any" makes Android's installed app follow the sensor and ignore the
+     phone's rotation lock (0.47.0); the app is held upright (0.57.0) */
+  ok(JSON.parse(read('manifest.webmanifest')).orientation === 'portrait', "the manifest doesn't hold the installed app upright");
   /* a phone pins a screen's .cta bottom-left; the Read tab has a start
      button per activity, so none of them may be one (0.34.0: all five sat
      in one spot and only Match could be reached) */

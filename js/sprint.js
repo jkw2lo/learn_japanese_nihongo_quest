@@ -109,7 +109,7 @@ function renderSprint() {
   if (loading) loadStrokes();
   const pool = sprintPool(p.set);
   const seg = (field, opts, label = x => x, disabled = () => false) =>
-    `<div class="seg">${opts.map(o => `<button class="${p[field] === o ? "on" : ""}" data-act="sp-pick" data-f="${field}" data-v="${o}" ${disabled(o) ? "disabled" : ""}>${label(o)}</button>`).join("")}</div>`;
+    `<div class="seg seg-${field}">${opts.map(o => `<button class="${p[field] === o ? "on" : ""}" data-act="sp-pick" data-f="${field}" data-v="${o}" ${disabled(o) ? "disabled" : ""}>${label(o)}</button>`).join("")}</div>`;
   const best = state.sprint.best[sprintKeyOf(p)];
   const bests = Object.entries(state.sprint.best).sort((a, b) => b[1].at.localeCompare(a[1].at)).slice(0, 6);
   const recent = asList(state.sprint.recent).slice(0, 10);
@@ -131,8 +131,10 @@ function renderSprint() {
       <p class="muted small">${esc(SPRINT_MODES[p.mode].what)} Par is ${par}s a question.</p>
       ${wordy ? `<div class="pick"><span class="pick-l">Words</span><span class="muted small">every word you've learned or can read — ${pool.length} so far</span></div>`
         : `<div class="pick"><span class="pick-l">Kana</span>${seg("set", Object.keys(SPRINT_SETS), s => `<span lang="ja">${SPRINT_SETS[s]}</span>`, s => sprintPool(s).length < 4)}</div>`}
-      <div class="pick"><span class="pick-l">Questions</span>${seg("count", SPRINT_COUNTS, x => x, c => c > pool.length * SPRINT_MAX_LOOPS)}</div>
-      <div class="pick"><span class="pick-l">Minutes</span>${seg("mins", SPRINT_MINS)}</div>
+      <div class="pick-pair">
+        <div class="pick"><span class="pick-l">Questions</span>${seg("count", SPRINT_COUNTS, x => x, c => c > pool.length * SPRINT_MAX_LOOPS)}</div>
+        <div class="pick"><span class="pick-l">Minutes</span>${seg("mins", SPRINT_MINS)}</div>
+      </div>
       <div class="pick"><span class="pick-l">Marking</span>${seg("mark", Object.keys(SPRINT_MARKS), m => SPRINT_MARKS[m])}</div>
       ${loading ? `<p class="muted small">Loading the stroke shapes…</p>`
         : tooFew ? `<p class="warn">Learn a few more ${unit} first — a sheet needs at least four to choose from.</p>`

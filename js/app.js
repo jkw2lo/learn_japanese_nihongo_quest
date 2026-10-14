@@ -75,7 +75,8 @@ function go(v) {
    things up in, so it moves to the end of its group. */
 const NAV_KANA = ["today", "kana", "words", "grammar", "read", "sprint", "cards", "book", "games", "menu", "record"];
 const NAV_PAST = ["today", "words", "grammar", "kana", "read", "sprint", "cards", "book", "games", "menu", "record"];
-const NAV_GROUPS = { study: ["学ぶ", "Study"], practise: ["練習", "Practise"], play: ["遊ぶ", "Play"], out: ["出かける", "Out"], you: ["記録", "Your record"] };
+const NAV_GROUPS = { study: ["学ぶ", "Study"], practise: ["練習", "Practise"], play: ["遊ぶ", "Play"], out: ["街", "Out & about"], you: ["記録", "Record"] };
+const navGroup = v => document.querySelector(`.top-nav [data-nav="${v}"]`)?.dataset.g || "study";
 const navOrder = () => wordsOpen() ? NAV_PAST : NAV_KANA;
 
 /* the first of each group gets a little more room before it */
@@ -90,10 +91,6 @@ function orderNav() {
     if (box._marked !== order.join()) { markGroups(box); box._marked = order.join(); }
   };
   sortIn($(".top-nav"));
-  /* the phone's wheel is cloned the first time it opens; only its first
-     copy can be put in order, so this runs until then (phone.js) */
-  const d = $("#drawerNav");
-  if (d && !d._len) sortIn(d);
 }
 
 /* Past the kana, Today leads with something to read: a short text not yet
@@ -1753,7 +1750,8 @@ function openSettings() {
       <button class="btn btn-ghost btn-sm" data-act="report">Report a problem</button>
       <button class="btn btn-ghost btn-sm danger" data-act="reset">Reset everything</button>
     </div>
-    <p class="muted small">Version ${esc(APP_VERSION)} · ${esc(APP_DATE)}. If this doesn't match what was just published, you're looking at a cached copy.</p>`);
+    <p class="muted small">Version ${esc(APP_VERSION)} · ${esc(APP_DATE)}. If this doesn't match what was just published, you're looking at a cached copy.</p>
+    ${typeof portraitHeld !== "undefined" && portraitHeld && isPhone() ? `<p class="muted small">Screen: ${esc(portraitHeld)}.</p>` : ""}`);
   offlinePaint();
   syncWarm();
 }
@@ -1812,7 +1810,7 @@ function renderSaveDot() {
   const nudge = n >= 10 && stale;
   $("#saveBtn").classList.toggle("nudge", nudge);
   $("#burger")?.classList.toggle("nudge", nudge);
-  $$(".d-save").forEach(b => b.classList.toggle("nudge", nudge));
+  $$(".d-settings").forEach(b => b.classList.toggle("nudge", nudge));
 }
 
 function openBackup() {

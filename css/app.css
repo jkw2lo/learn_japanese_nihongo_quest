@@ -511,6 +511,7 @@ main { max-width: 72rem; margin: 0 auto; padding: 20px 16px; }
 .sprint-grid { display: grid; grid-template-columns: minmax(0, 1fr) 20rem; gap: 16px; align-items: start; }
 .pick { display: flex; align-items: center; gap: .8rem; margin: .7rem 0; flex-wrap: wrap; }
 .pick-l { width: 5.5rem; color: var(--ink-3); font-size: .86rem; }
+.pick-pair { display: contents; }
 
 /* ---------- overlays: session and sprint ---------- */
 
@@ -2734,6 +2735,22 @@ button.tx-line:hover { background: color-mix(in srgb, var(--ai) 8%, transparent)
 .ga-m { color: var(--ink-2); margin-bottom: 1rem; }
 .ga-acts { display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; }
 .ga-complete h2 { margin-top: .4rem; }
+/* every coin at once: a rainbow capsule, then everything that was in it */
+.gm-turn-all { min-width: 15rem; justify-content: center; }
+.gm-stage.many .gm-caps { animation: gm-jiggle .2s 7 ease-in-out; }
+.ga-card.ga-many { width: min(440px, 100%); }
+.ga-cap .capsule.big { width: 200px; filter: drop-shadow(0 0 18px rgba(245, 207, 82, .7)); animation: ga-wobble .9s ease-in-out infinite; }
+.ga-sum { color: var(--ink-2); margin-bottom: .8rem; }
+.ga-sum .coin { width: 1.1em; height: 1.1em; vertical-align: -.18em; }
+.ga-haul { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 6px; max-height: min(52vh, 26rem); overflow-y: auto; padding: 4px 2px; margin-bottom: .6rem; }
+.ga-got { display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 0; padding: 4px 2px; border-radius: 12px; animation: ga-pop .45s var(--d) cubic-bezier(.3, 1.5, .5, 1) both; }
+.ga-got.new { background: var(--jade-wash); }
+.ga-got.rare { background: var(--gold-soft); }
+.ga-got .gm-fig { width: min(64px, 100%); }
+.ga-got .gm-name { font-size: .82rem; }
+.ga-got em { font-style: normal; font-size: .68rem; font-weight: 600; color: var(--jade); }
+.ga-got.rare em { color: var(--amber); }
+.ga-got.bounce .gm-fig { animation: gm-bounce .45s; }
 
 /* 忍者 Ninja slice: things fly up a field; a drag is a blade */
 .nj-play { display: flex; flex-direction: column; gap: .6rem; height: 100%; min-height: calc(100dvh - 160px); }
@@ -2897,17 +2914,17 @@ h1 .h-en { font-size: .6em; color: var(--ink-2); font-weight: 500; }
   .burger-bars { display: grid; gap: 5px; width: 22px; }
   .burger-bars i { display: block; height: 2.2px; border-radius: 2px; background: currentColor; }
   .burger:active { transform: scale(.94); }
-  .burger.nudge::after, .d-save.nudge::after {
+  .burger.nudge::after, .d-settings.nudge::after {
     content: ""; position: absolute; top: 6px; right: 6px; width: 11px; height: 11px; border-radius: 50%;
     background: var(--amber); border: 2px solid var(--ink);
   }
-  .d-save.nudge::after { border-color: var(--sheet); top: 4px; right: 4px; }
+  .d-settings.nudge::after { border-color: var(--sheet); top: 2px; right: 2px; }
 
   .drawer { position: fixed; inset: 0; z-index: 44; }
   .drawer.on { display: block; }
   .drawer-veil { position: absolute; inset: 0; background: rgba(20, 19, 17, .42); animation: fade .12s both; }
-  /* a capsule floating above the button, rounded all round so it reads as a
-     wheel to spin rather than a panel */
+  /* the wheel of groups: a capsule floating above the button, rounded all
+     round so it reads as a wheel to spin rather than a panel */
   .drawer-sheet {
     position: absolute; left: 12px; right: 12px; bottom: calc(92px + env(safe-area-inset-bottom));
     background: var(--sheet); border: 1px solid var(--rule-2); border-radius: 999px;
@@ -2915,8 +2932,7 @@ h1 .h-en { font-size: .6em; color: var(--ink-2); font-weight: 500; }
     animation: rise .16s cubic-bezier(.2, .9, .3, 1.15) both;
   }
   @keyframes rise { from { transform: translateY(12px) scale(.97); opacity: 0; } }
-  .drawer-grip { display: none; }
-  /* a flick can carry past several sections and still come to rest on one */
+  /* a flick can carry past several groups and still come to rest on one */
   .drawer-nav {
     display: flex; gap: 18px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 0 calc(50% - 2.5rem);
     scrollbar-width: none; -webkit-overflow-scrolling: touch; position: relative;
@@ -2927,68 +2943,52 @@ h1 .h-en { font-size: .6em; color: var(--ink-2); font-weight: 500; }
     /* the scale and fade are set every frame of a scroll (phone.js); easing
        them as well made them trail the finger */
     transition: background .12s; will-change: transform, opacity;
-    background: color-mix(in srgb, var(--g) 9%, transparent);
+    background: color-mix(in srgb, var(--g) 10%, transparent);
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
     color: var(--ink-2); font-size: .8rem; font-weight: 500;
   }
   .drawer-nav button [lang="ja"] { font-size: 1.3rem; color: var(--g); line-height: 1.2; }
-  .drawer-nav button .ico { width: 24px; height: 24px; margin-bottom: 2px; }
-  .drawer-nav button.g-first { margin-left: 10px; }
-  .drawer-nav button.on { background: var(--g); color: var(--paper); }
-  .drawer-nav button.on [lang="ja"] { color: var(--paper); opacity: .85; }
-  .drawer-nav button.mid:not(.on) { background: color-mix(in srgb, var(--g) 20%, transparent); color: var(--ink); }
-  .drawer-nav button.sub { box-shadow: 0 0 0 3px var(--sheet), 0 0 0 5px var(--g); }
-  /* the group of the section in the middle, named above the wheel's left end */
-  .drawer-group {
-    position: absolute; left: 4px; bottom: calc(100% + 14px); display: flex; align-items: center; gap: 7px;
-    padding: 7px 14px 7px 12px; border-radius: 999px; background: var(--sheet); border: 1px solid var(--rule-2);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, .2); color: var(--g); font-size: .78rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
-    animation: rise .16s .04s cubic-bezier(.2, .9, .3, 1.15) both;
-  }
-  .drawer-group:empty { display: none; }
-  .drawer-group i { width: 9px; height: 9px; border-radius: 50%; background: var(--g); }
-  .drawer-group [lang="ja"] { font-size: .95rem; letter-spacing: 0; }
-  .drawer.sub-on .drawer-group, .drawer.sub-on .drawer-tools { display: none; }
-  /* Games and Out & about: a panel of squares above the wheel */
+  .drawer-nav button.mid { background: var(--g); color: var(--paper); }
+  .drawer-nav button.mid [lang="ja"] { color: var(--paper); opacity: .85; }
+  /* the group in the middle, its sections as squares above the wheel */
   .drawer-sub {
     position: absolute; left: 0; right: 0; bottom: calc(100% + 12px);
     max-height: calc(100dvh - 230px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain;
     background: var(--sheet); border: 1px solid var(--rule-2); border-top: 4px solid var(--g); border-radius: 22px;
-    box-shadow: 0 8px 28px rgba(0, 0, 0, .25); padding: 6px 12px 12px; animation: rise .16s cubic-bezier(.2, .9, .3, 1.15) both;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, .25); padding: 4px 10px 10px; animation: rise .16s cubic-bezier(.2, .9, .3, 1.15) both;
   }
-  .ds-head { display: flex; align-items: baseline; gap: .4rem; width: 100%; padding: 8px 4px 10px; font-size: 1.05rem; font-weight: 600; color: var(--ink); }
-  .ds-head [lang="ja"] { color: var(--g); }
-  .ds-go { margin-left: auto; font-size: .85rem; font-weight: 500; color: var(--ink-3); }
-  .ds-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .drawer-sub:empty { display: none; }
+  .ds-head { display: flex; align-items: center; gap: .45rem; padding: 8px 4px 9px; font-size: .8rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--g); }
+  .ds-head i { width: 9px; height: 9px; border-radius: 50%; background: var(--g); }
+  .ds-head [lang="ja"] { font-size: 1rem; letter-spacing: 0; }
+  .ds-go { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; font-size: .8rem; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--ink-3); }
+  .ds-go .coin { width: 1.1em; height: 1.1em; vertical-align: 0; }
+  .ds-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
   .ds-tile {
-    position: relative; aspect-ratio: 1; border-radius: 16px; padding: 6px 4px; text-align: center; min-width: 0;
+    position: relative; min-height: 78px; border-radius: 14px; padding: 7px 3px; text-align: center; min-width: 0;
     background: color-mix(in srgb, var(--g) 8%, var(--sheet)); border: 1px solid color-mix(in srgb, var(--g) 22%, transparent);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   }
   .ds-tile:active { transform: scale(.96); }
-  /* fifteen places: a little wider than tall, so the panel stays clear of the top */
-  .ds-places .ds-tile { aspect-ratio: 5 / 4; }
-  .ds-places .ds-jp { font-size: 1.15rem; }
-  .ds-jp { font-size: 1.3rem; line-height: 1.15; color: var(--g); max-width: 100%; overflow-wrap: anywhere; }
-  .ds-en { font-size: .76rem; line-height: 1.15; color: var(--ink-2); }
-  .ds-note { display: inline-flex; align-items: center; gap: 3px; font-size: .72rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .ds-jp { font-size: 1.15rem; line-height: 1.15; color: var(--g); max-width: 100%; overflow-wrap: anywhere; }
+  .ds-jp.long { font-size: .92rem; white-space: nowrap; letter-spacing: -.02em; }
+  .ds-en { font-size: .7rem; line-height: 1.15; color: var(--ink-2); }
+  .ds-note { display: inline-flex; align-items: center; gap: 3px; font-size: .68rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
   .ds-note .coin { width: 1.1em; height: 1.1em; vertical-align: 0; }
+  .ds-note .ico { width: 12px; height: 12px; }
   .ds-tile.shut { background: var(--sunken); border-color: transparent; }
   .ds-tile.shut .ds-jp, .ds-tile.shut .ds-en { color: var(--ink-3); }
   .ds-tile.on { background: var(--g); border-color: var(--g); }
   .ds-tile.on .ds-jp, .ds-tile.on .ds-en, .ds-tile.on .ds-note { color: var(--paper); }
-  .ds-note .ico { width: 13px; height: 13px; }
-  .ds-new { position: absolute; top: 6px; right: 6px; font-size: .62rem; font-weight: 600; line-height: 1.5; padding: 0 6px; border-radius: 999px; background: var(--seal); color: #fff; }
-  /* Settings and Backup: two separate round buttons above the wheel */
-  .drawer-tools {
-    position: absolute; right: 4px; bottom: calc(100% + 12px); display: flex; gap: 14px;
+  .ds-new { position: absolute; top: 4px; right: 4px; font-size: .6rem; font-weight: 600; line-height: 1.5; padding: 0 5px; border-radius: 999px; background: var(--seal); color: #fff; }
+  /* Settings: a round button beside the sections button, while the drawer is open */
+  .d-settings {
+    position: absolute; right: calc(88px + env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom));
+    width: 60px; height: 60px; border-radius: 50%; background: var(--sheet); border: 1px solid var(--rule-2);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+    font-size: .66rem; font-weight: 500; color: var(--ink-2); animation: rise .16s .04s cubic-bezier(.2, .9, .3, 1.15) both;
   }
-  .d-tool {
-    position: relative; width: 4.2rem; height: 4.2rem; border-radius: 50%; background: var(--sheet); border: 1px solid var(--rule-2);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, .2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-    font-size: .72rem; font-weight: 500; color: var(--ink-2); animation: rise .16s .04s cubic-bezier(.2, .9, .3, 1.15) both;
-  }
-  .d-tool .ico { width: 22px; height: 22px; }
+  .d-settings .ico { width: 22px; height: 22px; }
 
   /* ---------- the one main button of a screen: bottom-left, beside the sections button ---------- */
 
@@ -3144,6 +3144,17 @@ h1 .h-en { font-size: .6em; color: var(--ink-2); font-weight: 500; }
   .pick .seg button { min-height: 48px; line-height: 1.25; }
   .pick .seg button [lang="ja"] { display: block; font-size: 1.05rem; }
   .sprint-grid { gap: 0; }
+  /* Sprint's sheet on a phone: the six modes as a 3×2 block of tiles rather
+     than a pill that wraps unevenly; questions and minutes side by side */
+  .sprint-grid .seg { border-radius: 16px; gap: 3px; }
+  .sprint-grid .seg button { border-radius: 13px; padding: 6px 4px; }
+  .sprint-grid .seg-mode { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .sprint-grid .seg-mode button { min-height: 56px; }
+  .sprint-grid .seg-mode button [lang="ja"] { font-size: 1rem; }
+  .pick-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+  .pick-pair .pick { margin: .7rem 0 0; }
+  .pick-pair .seg button { font-size: .95rem; padding: 6px 2px; }
+  .sprint-grid .seg-mark button { font-size: .9rem; }
   .sp-strip { gap: 1px; }
   .sp-clock { font-size: 1.2rem; }
   .sp-input { font-size: 1.5rem; min-height: 56px; }
@@ -3390,7 +3401,7 @@ h1 .h-en { font-size: .6em; color: var(--ink-2); font-weight: 500; }
 
   /* games: the machine smaller, the shelves five across still */
   .gm-stage { width: min(190px, 52vw); }
-  .gm-turn { min-width: 0; width: 100%; }
+  .gm-turn, .gm-turn-all { min-width: 0; width: 100%; }
   .gm-row { gap: 4px; padding: 0 2px 8px; }
   .gm-name { font-size: .82rem; }
   .gm-slot small { display: none; }

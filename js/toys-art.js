@@ -340,10 +340,13 @@ function gachaMachine() {
 
 /* One capsule, closed — its two halves are .cap-top and .cap-bot, which
    come apart when it's opened. A rare toy comes in gold. */
-function capsuleArt(hue, rare) {
-  const top = rare ? "#E6B23E" : hue;
-  return `<svg class="toy capsule" viewBox="0 0 100 100" aria-hidden="true">
-    <g class="cap-bot"><path class="w" d="M10 52a40 40 0 0 0 80 0z" style="fill:${rare ? "#FBE7A8" : "#FFFDF8"}"/></g>
+/* hue "rainbow": the big one that holds every turn of "Turn them all" */
+function capsuleArt(hue, rare, cls = "") {
+  const rainbow = hue === "rainbow";
+  const top = rainbow ? "url(#capRainbow)" : rare ? "#E6B23E" : hue;
+  return `<svg class="toy capsule ${cls}" viewBox="0 0 100 100" aria-hidden="true">
+    ${rainbow ? `<defs><linearGradient id="capRainbow" x1="0" y1="0" x2="1" y2="0">${GACHA_HUES.slice(0, 7).map((c, i) => `<stop offset="${(i / 6).toFixed(3)}" stop-color="${c}"/>`).join("")}</linearGradient></defs>` : ""}
+    <g class="cap-bot"><path class="w" d="M10 52a40 40 0 0 0 80 0z" style="fill:${rare || rainbow ? "#FBE7A8" : "#FFFDF8"}"/></g>
     <g class="cap-top"><path class="n" d="M10 50a40 40 0 0 1 80 0z" style="fill:${top};stroke:#3B342D;stroke-width:2"/>
       <rect class="n" x="6" y="46" width="88" height="8" rx="3" style="fill:${top};stroke:#3B342D;stroke-width:2"/>
       <path class="n" d="M24 30q10-14 26-16" style="fill:none;stroke:#fff;stroke-width:5;opacity:.7;stroke-linecap:round"/></g>

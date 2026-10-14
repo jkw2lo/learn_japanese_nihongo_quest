@@ -16,6 +16,8 @@
 const coins = () => Math.max(0, (state.gacha.earned || 0) - (state.gacha.spent || 0));
 const spinFree = () => !(state.gacha.spent || 0) && !Object.keys(state.gacha.owned).length;
 const canSpin = () => spinFree() || coins() >= SPIN_COST;
+/* how many turns the purse buys at once (a free first turn isn't one of them) */
+const spinsAll = () => spinFree() ? 0 : Math.floor(coins() / SPIN_COST);
 
 /* Pay for a game. Returns the html that says so, for the game's last screen. */
 function earnCoins(n) {
@@ -56,6 +58,7 @@ function renderGames() {
       <div class="gm-set"><span lang="ja">${wordHtml(S.jp)}</span> ${esc(S.en)} · <b>${have}</b> of ${S.toys.length}${allDone ? " · every set complete" : ""}</div>
       <button class="btn gm-turn" data-act="ga-spin" ${canSpin() && !gaBusy ? "" : "disabled"}>${spinFree() ? "Turn the handle — the first one's free" : `Turn the handle · ${coinArt()} ${SPIN_COST}`}</button>
       ${!canSpin() ? `<p class="muted small">${SPIN_COST - coins()} more coins for a turn — a game pays about twenty.</p>` : ""}
+      ${spinsAll() >= 2 ? `<button class="btn btn-ghost gm-turn-all" data-act="ga-spin-all" ${gaBusy ? "disabled" : ""}>Turn them all · ${spinsAll()} capsules</button>` : ""}
     </section>
     ${shelfHtml()}
     ${ninjaCard()}
@@ -121,6 +124,64 @@ function gachaSpin() {
   setTimeout(() => { stage.classList.remove("turning"); gachaOpen(toy, isNew, done, S); }, 1300);
 }
 
+/* Every coin at once: as many turns as the purse buys, drawn one after
+   another exactly as single turns are (a set filling up mid-way moves the
+   rest on to the next set), and opened together from one big rainbow
+   capsule. Coins a double gives back stay in the purse for later. */
+function gachaSpinAll() {
+  const n = spinsAll();
+  if (gaBusy || n < 2) return;
+  const g = state.gacha, got = [], sets = [];
+  for (let i = 0; i < n; i++) {
+    const S = currentSet(g.owned);
+    const toy = gachaPick(S, g.owned, g.dry || 0);
+    const isNew = !g.owned[toy.id];
+    g.spent = (g.spent || 0) + SPIN_COST;
+    g.owned[toy.id] = (g.owned[toy.id] || 0) + 1;
+    g.dry = isNew ? 0 : (g.dry || 0) + 1;
+    if (!isNew) g.earned = (g.earned || 0) + DUP_BACK;
+    got.push({ toy, isNew });
+    if (isNew && setDone(S, g.owned)) sets.push(S);
+  }
+  save();
+  crumb(`gacha all ×${n}, ${got.filter(x => x.isNew).length} new`);
+  gaBusy = true;
+  const stage = $("#gmStage");
+  stage.classList.add("turning", "many");
+  $$(".gm-turn, .gm-turn-all").forEach(b => { b.disabled = true; });
+  if (state.settings.sound && navigator.vibrate) { try { navigator.vibrate([8, 40, 8, 40, 8, 40, 8, 40, 20]); } catch {} }
+  setTimeout(() => { stage.classList.remove("turning", "many"); gachaOpenAll(got, sets); }, 1500);
+}
+
+function gachaOpenAll(got, sets) {
+  /* one tile per toy, new ones first, then rare, then the doubles */
+  const by = new Map();
+  got.forEach(({ toy, isNew }) => {
+    const x = by.get(toy.id) || by.set(toy.id, { toy, isNew: false, n: 0 }).get(toy.id);
+    x.n++;
+    if (isNew) x.isNew = true;
+  });
+  const tiles = [...by.values()].sort((a, b) => b.isNew - a.isNew || !!b.toy.rare - !!a.toy.rare);
+  const fresh = got.filter(x => x.isNew).length, dups = got.length - fresh;
+  const box = document.createElement("div");
+  box.className = "ga-open";
+  box.id = "gaOpen";
+  box.innerHTML = `<div class="ga-card ga-many" role="dialog" aria-modal="true" aria-label="${got.length} capsules">
+    <button class="ga-cap" data-act="ga-crack" aria-label="Open the capsule">${capsuleArt("rainbow", false, "big")}<span class="ga-hint">${got.length} capsules in one — tap to open</span></button>
+    <div class="ga-toy" hidden>
+      <div class="ga-sum"><b>${got.length}</b> capsules · <b>${fresh}</b> new${dups ? ` · ${dups} double${dups > 1 ? "s" : ""}, ${coinArt()} +${dups * DUP_BACK} back` : ""}</div>
+      <div class="ga-haul">${tiles.map((x, i) => `<button class="ga-got ${x.isNew ? "new" : ""} ${x.toy.rare ? "rare" : ""}" data-act="ga-hear" data-t="${x.toy.id}" style="--d:${Math.min(i, 24) * 60}ms">
+        <span class="gm-fig">${toyArt(x.toy.id)}${x.n > 1 ? `<i class="gm-x">×${x.n}</i>` : ""}</span>
+        <span class="gm-name" lang="ja">${wordHtml(x.toy.w)}</span>${x.isNew ? `<em>${x.toy.rare ? "Rare!" : "New"}</em>` : ""}</button>`).join("")}</div>
+      <p class="muted small">Tap a toy to hear its name.</p>
+      <div class="ga-acts"><button class="btn" data-act="ga-keep">Put them on the shelf <kbd>↵</kbd></button></div>
+    </div>
+  </div>`;
+  box._many = got; box._sets = sets;
+  document.body.appendChild(box);
+  requestAnimationFrame(() => box.classList.add("on"));
+}
+
 /* The capsule, big, in the middle of the screen: tap it and it opens. */
 function gachaOpen(toy, isNew, done, S) {
   const hue = GACHA_HUES[Math.floor(Math.random() * GACHA_HUES.length)];
@@ -152,6 +213,7 @@ function gachaCrack() {
   setTimeout(() => {
     $(".ga-cap", box).hidden = true;
     $(".ga-toy", box).hidden = false;
+    if (box._many) { if (box._many.some(x => x.isNew)) petals(box, 30); return; }
     if (state.settings.sound) say(furiKana(box._toy.w));
     if (box._toy.rare || box._done) petals(box, 20);
   }, 380);
@@ -161,6 +223,18 @@ function gachaKeep() {
   const box = $("#gaOpen");
   if (!box) return;
   if (!box.classList.contains("cracked")) return gachaCrack();
+  if (box._many) {
+    const { _many: got, _sets: sets } = box;
+    box.remove();
+    gaBusy = false;
+    gaShelf = null;
+    gaDoneQueue = sets.map(S => [S, TOY_SETS[TOY_SETS.indexOf(S) + 1]]);
+    if (nextSetDone()) return;
+    render();
+    got.filter(x => x.isNew).forEach(x => $(`.gm-slot[data-t="${x.toy.id}"], .gm-dots [data-t="${x.toy.id}"]`)?.classList.add("landed"));
+    $("#gmShelves")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    return;
+  }
   const { _toy: toy, _done: done, _set: S } = box;
   box.remove();
   gaBusy = false;
@@ -174,6 +248,17 @@ function gachaKeep() {
   /* it lands on the shelf, or on its dot when the shelf is folded */
   const slot = $(`.gm-slot[data-t="${toy.id}"], .gm-dots [data-t="${toy.id}"]`);
   if (slot) { slot.classList.add("landed"); if (!done) slot.scrollIntoView({ behavior: "smooth", block: "nearest" }); }
+}
+
+/* sets finished by one turn of them all, shown one after another */
+let gaDoneQueue = [];
+function nextSetDone() {
+  const x = gaDoneQueue.shift();
+  if (!x) return false;
+  gaShelf = x[0].id;
+  render();
+  showSetDone(...x);
+  return true;
 }
 
 function showSetDone(S, next) {
@@ -208,6 +293,7 @@ Object.assign(ACTS, {
     const s = $("#gmShelves"); if (s) s.outerHTML = shelfHtml();
   },
   "ga-shelf": el => { gaShelf = el.dataset.s; const s = $("#gmShelves"); if (s) s.outerHTML = shelfHtml(); },
-  "ga-done-close": () => { $("#gaDone")?.remove(); gaShelf = null; render(); },
+  "ga-done-close": () => { $("#gaDone")?.remove(); if (nextSetDone()) return; gaShelf = null; render(); },
+  "ga-spin-all": () => gachaSpinAll(),
   "ga-go": () => { closeRead(); if (typeof SP !== "undefined" && SP) ACTS["sp-close"](); go("games"); },
 });

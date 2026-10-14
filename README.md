@@ -1089,6 +1089,30 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.57.0: Two-tier menu; turn them all
+
+- **The phone's menu is two tiers.** The wheel at the foot now holds the
+  five groups (学ぶ Study, 練習 Practise, 遊ぶ Play, 街 Out, 記録 Record).
+  The group in the middle shows everything in it above the wheel, as
+  squares, all at once: Study's and Practise's four sections, the games
+  and the capsule machine, the fifteen places, Record. Spin to a group,
+  tap a square.
+- **Settings sits beside the sections button** while the menu is open,
+  and the Backup button is gone from the menu: it's in Settings, which
+  carries the reminder dot when a backup is due.
+- **Turn them all**: with coins for two turns or more, one button spends
+  them all at once. It opens a single rainbow capsule holding every toy:
+  the new ones first, rare ones in gold, doubles marked. Sets that fill up
+  along the way are each celebrated in turn.
+- **Sprint on a phone**: the six modes sit in a 3×2 block instead of a
+  pill that wrapped unevenly, and Questions and Minutes share a row. The
+  desktop is unchanged.
+- **Rotation, again**: the manifest now asks for portrait, which reaches
+  the installed app when Chrome refreshes it (or at once if it's
+  installed again). The app also locks itself each time it opens, and
+  Settings now says whether that worked (*Screen: held upright*, or why
+  not).
+
 ### 0.56.0: The wheel in colours; the toys by the machine
 
 - **The sections come in five coloured groups**: 学ぶ Study (Today, Kana,
@@ -1570,18 +1594,18 @@ is where the thumb lives, so that's where the doing is. The top is for
 reading, and for the rare Close, out of the way of a stray tap.
 
 - **Sections** open from a round **button at the bottom right** (with the
-  backup reminder dot when it's due). It opens a **rolodex**: a rounded
-  capsule of round section buttons above it, scrolling sideways, snapping to
-  the centre, and **looping** so it never runs out. It's Hanzi Quest's loop
-  (porting.md C4), with five copies back to back rather than three, and a
-  silent jump of whole copies back to the middle once scrolling settles
-  (`scrollend`). A copy's width is measured chip to chip, never as the
-  scroll width over the copies, which counts the end padding. The chips
-  are tinted by their group, and the group of the one in the middle is
-  named above the wheel. **Games** and **Out & about** open a panel of
-  squares over the wheel instead of their page: one per game (and the
-  capsule machine) or place. Settings and Backup live there too, so
-  the top bar is just the name and the section you're in. The button sits
+  backup reminder dot when it's due), in two tiers (0.57.0). At the foot
+  is a **wheel of the five groups**: a rounded capsule of round buttons,
+  scrolling sideways, snapping to the centre, and **looping** so it never
+  runs out. It's Hanzi Quest's loop (porting.md C4), with five copies back
+  to back and a silent jump of whole copies back to the middle once
+  scrolling settles (`scrollend`); a copy's width is measured chip to
+  chip, never as the scroll width over the copies, which counts the end
+  padding. The group in the middle shows **its sections as squares**
+  above the wheel, all at once: the games and the capsule machine for
+  Play, every place for Out. **Settings** is a round button beside the
+  sections button while it's open (Backup is inside Settings), so the top
+  bar is just the name and the section you're in. The button sits
   outside `.topbar` on purpose: the header's `backdrop-filter` would make it
   the containing block for a fixed child (porting.md C3).
 - **The one main button** of a screen (start today's session, start the
