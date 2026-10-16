@@ -1,0 +1,67 @@
+{
+  "url": "https://jkw2lo.github.io/learn_japanese_nihongo_quest/",
+  "shots": [
+    {
+      "file": "desktop.png",
+      "steps": [
+        "eval:/* the trailer's learner a few weeks in (tools/trailer/cam.mjs) */ const t = today(); KANA.forEach(e => learn(e.k)); const ws = Object.keys(WORD_BY); ws.slice(0, Math.floor(ws.length * 0.55)).forEach(k => learn(k)); Object.keys(KANJI_BY).slice(0, 60).forEach(k => learn(k)); Object.keys(PATTERN_BY).slice(0, 28).forEach(k => learn(k)); state.gacha.earned = 520; state.gacha.spent = 300; TOY_SETS[0].toys.forEach(x => state.gacha.owned[x.id] = 1); TOY_SETS[1].toys.slice(0, 7).forEach(x => state.gacha.owned[x.id] = 1); for (let i = 1; i < 45; i++) { const k = addDays(t, -i); if (i > 41 || i % 13 !== 6) state.days[k] = { n: 20 + (i * 7) % 30, ok: { r: [], p: [] }, learned: [], rev: [], ms: 600000 + (i * 37 % 11) * 90000 }; } MILESTONES.forEach(m => { if (m.test()) state.milestones[m.id] = addDays(t, -3); }); save();",
+        "reload"
+      ],
+      "size": [
+        1440,
+        600
+      ]
+    },
+    {
+      "file": "out.png",
+      "size": [
+        1280,
+        900
+      ],
+      "scale": 2,
+      "steps": [
+        "eval:/* the trailer's learner a few weeks in (tools/trailer/cam.mjs) */ const t = today(); KANA.forEach(e => learn(e.k)); const ws = Object.keys(WORD_BY); ws.slice(0, Math.floor(ws.length * 0.55)).forEach(k => learn(k)); Object.keys(KANJI_BY).slice(0, 60).forEach(k => learn(k)); Object.keys(PATTERN_BY).slice(0, 28).forEach(k => learn(k)); state.gacha.earned = 520; state.gacha.spent = 300; TOY_SETS[0].toys.forEach(x => state.gacha.owned[x.id] = 1); TOY_SETS[1].toys.slice(0, 7).forEach(x => state.gacha.owned[x.id] = 1); for (let i = 1; i < 45; i++) { const k = addDays(t, -i); if (i > 41 || i % 13 !== 6) state.days[k] = { n: 20 + (i * 7) % 30, ok: { r: [], p: [] }, learned: [], rev: [], ms: 600000 + (i * 37 % 11) * 90000 }; } MILESTONES.forEach(m => { if (m.test()) state.milestones[m.id] = addDays(t, -3); }); save();",
+        "reload",
+        "eval:go('menu')",
+        "wait:900"
+      ],
+      "clip": "#v-menu",
+      "pad": 0,
+      "maxHeight": 640
+    },
+    {
+      "file": "games.png",
+      "size": [
+        1280,
+        900
+      ],
+      "scale": 2,
+      "steps": [
+        "eval:/* the trailer's learner a few weeks in (tools/trailer/cam.mjs) */ const t = today(); KANA.forEach(e => learn(e.k)); const ws = Object.keys(WORD_BY); ws.slice(0, Math.floor(ws.length * 0.55)).forEach(k => learn(k)); Object.keys(KANJI_BY).slice(0, 60).forEach(k => learn(k)); Object.keys(PATTERN_BY).slice(0, 28).forEach(k => learn(k)); state.gacha.earned = 520; state.gacha.spent = 300; TOY_SETS[0].toys.forEach(x => state.gacha.owned[x.id] = 1); TOY_SETS[1].toys.slice(0, 7).forEach(x => state.gacha.owned[x.id] = 1); for (let i = 1; i < 45; i++) { const k = addDays(t, -i); if (i > 41 || i % 13 !== 6) state.days[k] = { n: 20 + (i * 7) % 30, ok: { r: [], p: [] }, learned: [], rev: [], ms: 600000 + (i * 37 % 11) * 90000 }; } MILESTONES.forEach(m => { if (m.test()) state.milestones[m.id] = addDays(t, -3); }); save();",
+        "reload",
+        "eval:go('games')",
+        "wait:900"
+      ],
+      "clip": "#v-games",
+      "pad": 0,
+      "maxHeight": 600
+    },
+    {
+      "file": "grammar.png",
+      "size": [
+        1280,
+        900
+      ],
+      "scale": 2,
+      "steps": [
+        "eval:/* the trailer's learner a few weeks in (tools/trailer/cam.mjs) */ const t = today(); KANA.forEach(e => learn(e.k)); const ws = Object.keys(WORD_BY); ws.slice(0, Math.floor(ws.length * 0.55)).forEach(k => learn(k)); Object.keys(KANJI_BY).slice(0, 60).forEach(k => learn(k)); Object.keys(PATTERN_BY).slice(0, 28).forEach(k => learn(k)); state.gacha.earned = 520; state.gacha.spent = 300; TOY_SETS[0].toys.forEach(x => state.gacha.owned[x.id] = 1); TOY_SETS[1].toys.slice(0, 7).forEach(x => state.gacha.owned[x.id] = 1); for (let i = 1; i < 45; i++) { const k = addDays(t, -i); if (i > 41 || i % 13 !== 6) state.days[k] = { n: 20 + (i * 7) % 30, ok: { r: [], p: [] }, learned: [], rev: [], ms: 600000 + (i * 37 % 11) * 90000 }; } MILESTONES.forEach(m => { if (m.test()) state.milestones[m.id] = addDays(t, -3); }); save();",
+        "reload",
+        "eval:go('grammar')",
+        "wait:900"
+      ],
+      "clip": "#v-grammar",
+      "pad": 0,
+      "maxHeight": 520
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "version": 3,
+  "name": "Nihongo Quest",
+  "tagline": "Getting-by Japanese",
+  "pitch": "Kana first, then the words, kanji and grammar you need for signs, menus and simple talk, up to JLPT N5.",
+  "accent": "#b83a2e",
+  "status": "Live",
+
+  "problem": "Learning kanji alone gives you a list of readings to guess from.",
+  "stats": [
+    { "value": "1,127", "label": "words in nine stages, all of N5" },
+    { "value": "162", "label": "kanji, always learned through words" },
+    { "value": "40", "label": "grammar patterns, each with its lesson" }
+  ],
+
+  "features": [
+    { "title": "Japanese in the wild", "text": "Sushi counters, station signs, menus and shop talk, inked in as you learn.",
+      "details": ["A place opens when you can sound out half its words", "Order for a friend from a café menu, then hear the bill", "Just for practice: nothing here touches your reviews"],
+      "screen": { "src": "out.png", "alt": "Out and about: 15 of 15 places open, a word from the street, and cards for the sushi counter, public bath, festival stalls, shop signs and a receipt" } },
+    { "title": "Grammar you can see", "text": "Each pattern is built only from words you already know.",
+      "details": ["Sentences split into topic, when, how, where and verb", "Particles explained by what each part is doing", "Tap any part to hear it"],
+      "screen": { "src": "grammar.png", "alt": "The Grammar page: 私は 毎日 電車で 駅に 行きます split into topic, when, how, where to and verb, beside cards for the particles" } },
+    { "title": "Play, earn, collect", "text": "Arcade games pay coins for a capsule machine full of Japanese toys.",
+      "details": ["Ninja slice: hear a sound, slice its kana", "Look-alikes like さ and ち are the bombs", "Three shelves of 20 toys, each named in Japanese"],
+      "screen": { "src": "games.png", "alt": "The Games tab: a capsule machine with 220 coins and a shelf of food toys, onigiri, sushi, ramen, dango and taiyaki" } },
+    { "title": "Reading that keeps up", "text": "A ladder from single words to subtitles at real speed.",
+      "details": ["Find the words in a line with no spaces", "Every word and sentence can be played aloud"] }
+  ],
+
+  "screens": [
+    { "src": "desktop.png", "alt": "Nihongo Quest's Today page: every hiragana learned, Go deeper practice, progress bars for hiragana and katakana, and words you can read", "caption": "Today, a few weeks in" }
+  ],
+
+  "facts": {
+    "worksOn": "Phone and desktop, offline too",
+    "data": "In your browser, or synced",
+    "builtWith": "Plain HTML, CSS and JS",
+    "started": "Sep 2026"
+  }
+}
