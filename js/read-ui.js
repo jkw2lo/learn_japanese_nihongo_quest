@@ -26,7 +26,7 @@
       out of sight. Each opens when its words and patterns are learned.
 
    The games — 探す Word search and 結ぶ Match here, 忍者 Ninja slice and
-   めくる Swipe deck in arcade-ui.js — live on the Games tab (games-ui.js)
+   めくる Swipe deck in arcade-ui.js, 何回 Trails in trail-ui.js — live on the Games tab (games-ui.js)
    but play in this tab's overlay, RD.
 
    Words come from the same pool as the words sprint (sprintWords): every
@@ -209,6 +209,7 @@ function openRead(rung) {
   if (rung === "match") return matchOpen();
   if (rung === "ninja") return ninjaOpen();
   if (rung === "deck") return deckOpen();
+  if (rung === "trail") return trailOpen();
   if (rung === "loans") return loanOpen();
   if (rung === "subs") {
     const s = state.read.subs;

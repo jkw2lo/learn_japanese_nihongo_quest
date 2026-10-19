@@ -146,6 +146,7 @@ function subGamesHtml() {
     ${game("忍者", "Ninja slice", "ninja", ninjaKinds().length > 0, "gm-ninja")}
     ${game("めくる", "Swipe deck", "deck", deckModesOpen().length > 0, "gm-deck")}
     ${game("探す", "Word search", "search", searchable(pool).length >= 6, "rd-search")}
+    ${game("何回", "Trails", "trail", trailWords(pool).length >= TRAIL_GRIDS, "gm-trail")}
     ${game("結ぶ", "Match", "match", pool.length >= 8, "rd-match")}`;
 }
 

@@ -1095,6 +1095,22 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.60.0: 何回 Trails
+
+- **A new game on the Games tab**: one word, hidden again and again in a
+  grid of kana — find it every time it's there (*find it 4 times*). A copy
+  can run in a straight line, on a diagonal, round a corner or wind
+  through the grid like a snake, so finding them all means reading every
+  trail that starts with the word's first kana. Trace it with a finger;
+  what you've traced shows under the grid as you go.
+- **Five levels**: straight lines, then diagonals, then corners and the
+  first near misses (a trail a kana off: じたん for じかん), then snakes, then
+  snakes with look-alikes swapped in (ぬ for め). A round of five grids with
+  no more than one slip and no hint opens the next.
+- **A slip says what it read**, with the wrong kana marked; a trail read
+  backwards is pointed back to the start, not counted. Smoke makes 300
+  grids to check each holds the word exactly as many times as it says.
+
 ### 0.59.0: At a glance
 
 - **`overview.html`**, the companion to the trailer: the whole app on one
@@ -1845,8 +1861,8 @@ faster time). Record shows them in two cards, 読む Reading and 遊ぶ Games
 ## 遊ぶ Games
 
 Its own tab (0.48.0), beside Read: **忍者 Ninja slice** and the **めくる
-Swipe deck** (0.49.0, `js/arcade-ui.js`), **Word search** and **Match**
-(above) — and the reason to play them, **coins** and a **capsule
+Swipe deck** (0.49.0, `js/arcade-ui.js`), **何回 Trails** (0.60.0,
+`js/trail-ui.js`), **Word search** and **Match** (above) — and the reason to play them, **coins** and a **capsule
 machine** (ガチャガチャ, the toy vending machines outside every Japanese
 shop).
 
@@ -1875,12 +1891,44 @@ decoys from its row and its look-alikes). Ten a round; the first *this
 one* on each is graded like a sprint answer. Every deck holds its answer
 exactly once — smoke deals hundreds to be sure.
 
+**何回 Trails.** One word, and a grid it's hidden in several times — *find
+it 4 times*. Not a list of words to find but one, over and over, because
+the reading is in the trails: a copy can run in a straight line, on a
+diagonal, round a corner, or wind through the grid like a snake (each kana
+next to the one before, any of the eight ways), and the filler is mostly
+the word's own kana, so every trail that starts right has to be read to
+the end. A finger traces it: a cell joins when the finger is near its
+middle, so a diagonal doesn't catch the cell beside it, and going back a
+cell takes the last off. What's being traced shows under the grid. A
+wrong trail is a slip and says what it read, the wrong kana marked
+(*that reads じ**た**ん*); one read backwards gets *read it from the start*
+and isn't a slip, nor is one that stops short. *Show me one* pulses a
+first kana. Five grids a round, each a different word of three to six
+kana you can read, in the kana it's read with. **Five levels**
+(`TRAIL_LEVELS`): 1 straight lines (→ ↓, 6×6, three copies); 2 diagonals
+too (four); 3 corners, and two **near misses** — the word with one thing
+wrong after its first kana: a kana swapped, two the wrong way round, one
+left out (7×7); 4 snakes, three near misses; 5 more snakes and four near
+misses, look-alikes first (`KANA_ALIKE`: ぬ for め). The copies take turns
+at the level's shapes and directions, so a grid has some of each. A round
+with no more than one slip and no hint opens the next level and moves you
+to it; any level opened can be picked again. Best times per level.
+**Exactly as many as it says** (`makeTrail`): each copy is laid down only
+if it and the ones before don't spell the word somewhere new between them,
+then the filler goes in, then every place it spelled the word by accident
+(`trailPlaces` finds every trace) gets a cell changed to a kana not in the
+word — never one of the copies' own. A word that won't fit that many
+times goes in once less. Smoke builds 300 grids at every level to check.
+`state.read.trail` holds the level, the top level opened (merged by the
+larger), the bests (the faster) and the rounds.
+
 - **Every game pays.** Word search: two coins a word, four more without a
   hint, four for a best, one per bonus word — about twenty for an 8×8.
   Match: a coin a word right first time, five for no slips, four for a
   best. Ninja slice: most of a coin a slice, five for keeping every life,
   four for a best. Swipe deck: two for each found at the first try, four
-  for a best. **The Read tab and Sprint pay too**, a little less: a coin a
+  for a best. Trails: a coin a find, four for a clean round, four for a
+  best — about twenty-five. **The Read tab and Sprint pay too**, a little less: a coin a
   line right (one and a half for texts and phrases), three for a best; a
   sprint, half a coin a right answer (up to 30), three for finishing in
   time, three for a best. The end screen says so, with a way to the
@@ -2482,6 +2530,7 @@ clips, cropped into `overview/`.
     js/read-ui.js           the Read tab: Subtitles, Word chains, Phrases, Short texts; and Match and Word search, played from Games
     js/games-ui.js          the Games tab: coins, the capsule machine, the shelves
     js/arcade-ui.js         Ninja slice and the Swipe deck
+    js/trail-ui.js          何回 Trails: one word hidden again and again, in lines, corners and snakes
     js/data/toys.js         the capsule toys: sets, names, the machine's odds
     js/toys-art.js          the toys drawn, the machine, a capsule, a coin
     design/toys.html        every toy on one page, for drawing more

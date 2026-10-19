@@ -1682,6 +1682,7 @@ function recordGamesHtml() {
     r.ninja.rounds && `<li><span lang="ja">忍者</span> Ninja slice — best <b>${r.ninja.best}</b> points ${roundsTag(r.ninja.rounds)}</li>`,
     r.deck.rounds && `<li><span lang="ja">めくる</span> Swipe deck — best ${Object.entries(r.deck.best).map(([m, n]) => `${DECK_MODES[m].toLowerCase()} <b>${n}</b>`).join(", ") || "not yet"} ${roundsTag(r.deck.rounds)}</li>`,
     r.search.rounds && `<li><span lang="ja">探す</span> Word search — best ${Object.entries(r.search.best).sort((x, y) => x[0] - y[0]).map(([n, ms]) => `${n}×${n} <b>${fmtTime(ms)}</b>`).join(", ") || "none yet without a hint"} <small class="muted">${r.search.rounds} grid${r.search.rounds > 1 ? "s" : ""}</small></li>`,
+    r.trail.rounds && `<li><span lang="ja">何回</span> Trails — level <b>${r.trail.top}</b> of ${TRAIL_LEVELS.length} open${Object.keys(r.trail.best).length ? ` · best ${Object.entries(r.trail.best).sort((x, y) => x[0] - y[0]).map(([lv, ms]) => `level ${lv} <b>${fmtTime(ms)}</b>`).join(", ")}` : ""} ${roundsTag(r.trail.rounds)}</li>`,
     r.match.rounds && `<li><span lang="ja">結ぶ</span> Match — best without a slip ${Object.entries(r.match.best).map(([k, ms]) => `${k === "four" ? "four and four" : "one at a time"} <b>${fmtTime(ms)}</b>`).join(", ") || "not yet"} ${roundsTag(r.match.rounds)}</li>`,
     (g.earned || toys) && `<li><span lang="ja">ガチャ</span> Capsule toys — <b>${toys}</b> of ${TOY_SETS.flatMap(S => S.toys).length} collected · ${coins()} coins to spend <small class="muted">${g.earned} earned in all</small></li>`,
   ].filter(Boolean);

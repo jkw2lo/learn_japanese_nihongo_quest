@@ -51,3 +51,4 @@ what's built is the changelog in README.md; a short version is at the end.
 - 0.54: 247 everyday words beyond N5 (1,127 in all).
 - 0.48–0.49: 遊ぶ Games — the capsule machine, Ninja slice, the Swipe deck,
   coins from everything.
+- 0.60: 何回 Trails — one word hidden again and again, in lines, corners and snakes.

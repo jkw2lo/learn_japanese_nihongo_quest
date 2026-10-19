@@ -69,7 +69,7 @@ const freshRead = () => ({ flash: { cps: 1.5, best: 0, rounds: 0 }, chains: { n:
   search: { size: 8, clue: "m", best: {}, rounds: 0 }, match: { layout: null, best: {}, rounds: 0 },
   subs: { cps: 1.2, len: 4, best: 0, rounds: 0 }, phrases: { best: 0, rounds: 0 },
   texts: { best: 0, rounds: 0, read: [] }, ninja: { best: 0, rounds: 0 }, deck: { mode: null, best: {}, rounds: 0 },
-  loans: { best: 0, rounds: 0 } });
+  loans: { best: 0, rounds: 0 }, trail: { level: 1, top: 1, best: {}, rounds: 0 } });
 
 /* Coins are kept as two running totals, earned and spent, so a merge can
    take the larger of each; owned is toy id -> how many; dry, the turns in a
@@ -125,11 +125,15 @@ function normalise(s) {
      sync with an older device still merges; its pace carries over to a
      Subtitles not yet played */
   out.read = { flash: { ...fr.flash, ...(sr.flash || {}) }, chains: { ...fr.chains, ...(sr.chains || {}) }, search: { ...fr.search, ...(sr.search || {}) }, match: { ...fr.match, ...(sr.match || {}) }, subs: { ...fr.subs, ...(sr.subs || {}) }, phrases: { ...fr.phrases, ...(sr.phrases || {}) }, texts: { ...fr.texts, ...(sr.texts || {}) },
-    ninja: { ...fr.ninja, ...(sr.ninja || {}) }, deck: { ...fr.deck, ...(sr.deck || {}) }, loans: { ...fr.loans, ...(sr.loans || {}) } };
+    ninja: { ...fr.ninja, ...(sr.ninja || {}) }, deck: { ...fr.deck, ...(sr.deck || {}) }, loans: { ...fr.loans, ...(sr.loans || {}) },
+    trail: { ...fr.trail, ...(sr.trail || {}) } };
   out.read.deck.best = out.read.deck.best && typeof out.read.deck.best === "object" ? out.read.deck.best : {};
   out.read.texts.read = asList(out.read.texts.read);
   out.read.match.best = out.read.match.best && typeof out.read.match.best === "object" ? out.read.match.best : {};
   out.read.search.best = out.read.search.best && typeof out.read.search.best === "object" ? out.read.search.best : {};
+  out.read.trail.best = out.read.trail.best && typeof out.read.trail.best === "object" ? out.read.trail.best : {};
+  out.read.trail.top = Math.min(5, Math.max(1, +out.read.trail.top || 1));
+  out.read.trail.level = Math.min(out.read.trail.top, Math.max(1, +out.read.trail.level || 1));
   if (!out.read.subs.rounds && out.read.flash.rounds && out.read.flash.cps > out.read.subs.cps) out.read.subs.cps = out.read.flash.cps;
   out.sprint.recent = asList(out.sprint.recent);
   out.mistakes = s.mistakes && typeof s.mistakes === "object" ? s.mistakes : {};
@@ -586,6 +590,10 @@ function mergeState(a, b) {
   /* a word search's best is a time: the smaller, per grid size */
   out.read.search = { ...older.read.search, ...newer.read.search, rounds: bigger(a.read.search.rounds, b.read.search.rounds),
     best: mergeBy(a.read.search.best, b.read.search.best, (x, y) => Math.min(x || Infinity, y || Infinity)) };
+  /* trails: the highest level opened, and a best time per level */
+  out.read.trail = { ...older.read.trail, ...newer.read.trail, rounds: bigger(a.read.trail.rounds, b.read.trail.rounds),
+    top: bigger(a.read.trail.top, b.read.trail.top),
+    best: mergeBy(a.read.trail.best, b.read.trail.best, (x, y) => Math.min(x || Infinity, y || Infinity)) };
   /* the deck's bests are scores: the larger, per mode */
   out.read.deck = { ...older.read.deck, ...newer.read.deck, rounds: bigger(a.read.deck.rounds, b.read.deck.rounds),
     best: mergeBy(a.read.deck.best, b.read.deck.best, bigger) };

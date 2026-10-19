@@ -103,6 +103,7 @@ const CONTRACT = {
   'js/data/loans.js': ['LOAN_RULES', 'LOAN_WORDS', 'LOAN_GROUPS', 'LOAN_BY', 'LOAN_RULE_BY'],
   'js/loans-ui.js': ['loanCard', 'loanPool', 'loanOpen', 'loanShow', 'loanAnswer', 'loanDecoys', 'openLoanRules', 'openLoanList'],
   'js/arcade-ui.js': ['ninjaWave', 'ninjaKinds', 'ninjaCard', 'ninjaOpen', 'deckRound', 'deckModesOpen', 'deckCard', 'deckOpen', 'arcadeKey', 'knownKana'],
+  'js/trail-ui.js': ['TRAIL_LEVELS', 'TRAIL_GRIDS', 'makeTrail', 'trailPlaces', 'trailWords', 'trailCard', 'trailOpen'],
   'js/games-ui.js': ['renderGames', 'earnCoins', 'coins', 'gachaKey', 'shelfHtml'],
   'js/phone.js': ['isPhone', 'openDrawer', 'closeDrawer', 'initDrawerLoop', 'centerDrawer', 'drawerTick', 'phoneAfterRender', 'drawerOpen'],
 };
@@ -499,7 +500,7 @@ section('games');
     b.gacha = { earned: 80, spent: 60, owned: { daruma: 1, fuji: 1 }, dry: 0 }; b.updated = 2;
     return mergeState(a, b).gacha; })()`);
   ok(m.earned === 100 && m.spent === 60 && m.owned.daruma === 2 && m.owned.fuji === 1 && m.owned.maneki === 1, `gacha merge: ${JSON.stringify(m)}`);
-  ok(!/\bcta\b/.test(read('js/games-ui.js') + read('js/arcade-ui.js')), 'the Games tab uses .cta — on a phone its buttons would pile up');
+  ok(!/\bcta\b/.test(read('js/games-ui.js') + read('js/arcade-ui.js') + read('js/trail-ui.js')), 'the Games tab uses .cta — on a phone its buttons would pile up');
   /* the arcade (arcade-ui.js): a wave's targets are what it asks for and
      its bombs never are; a deck holds its answer exactly once */
   const a = {};
@@ -528,6 +529,37 @@ section('games');
       ok(new Set(q.cards).size === q.cards.length && q.cards.length <= 8 && q.cards.length >= 4, `deck ${mode}: ${q.show}'s cards repeat or number ${q.cards.length}`);
     });
   }
+}
+
+section('trails');
+{
+  /* 何回 Trails (trail-ui.js): every grid hides the word exactly as many
+     times as it says — never once more by accident, the copies never
+     sharing a cell — at every level, with words that repeat a kana */
+  const t = {};
+  vm.createContext(t);
+  vm.runInContext(read('js/data/kana.js') + ';var ACTS = {};' + read('js/trail-ui.js') + ';globalThis.T = { makeTrail, trailPlaces, trailWords, TRAIL_LEVELS, KANA, KANA_ALIKE };', t);
+  const { makeTrail, trailPlaces, trailWords, TRAIL_LEVELS, KANA, KANA_ALIKE } = t.T;
+  const script = s => KANA.filter(e => !e.concept && e.set === s && [...e.k].length === 1).map(e => e.k);
+  const hira = script('h'), kata = script('k'), alike = {};
+  KANA_ALIKE.forEach(g => g.forEach(c => { alike[c] = [...new Set([...(alike[c] || []), ...g.filter(x => x !== c)])]; }));
+  const set = p => [...p].sort((x, y) => x - y).join();
+  const words = ['こんにちは', 'きょう', 'ありがとう', 'たべます', 'がっこう', 'しんぶん', 'はは', 'ここ', 'コーヒー', 'テレビ', 'ツナ'];
+  let made = 0;
+  TRAIL_LEVELS.forEach((lv, li) => words.filter(w => [...w].length <= lv.maxL).forEach(w => {
+    for (let k = 0; k < 6; k++) {
+      const g = makeTrail(w, lv, /[ァ-ヺ]/.test(w) ? kata : hira, alike);
+      if (!g) { ok(false, `trails: no level ${li + 1} grid for ${w}`); return; }
+      made++;
+      const at = trailPlaces(g.grid, w), mine = new Set(g.paths.map(set));
+      ok(at.length === g.paths.length && at.every(p => mine.has(set(p))), `trails: ${w} at level ${li + 1} can be traced ${at.length} times, not ${g.paths.length}`);
+      ok(new Set(g.paths.flat()).size === g.paths.flat().length, `trails: ${w}'s copies share a cell`);
+      ok(g.paths.length >= 2 && g.grid.length === lv.size, `trails: ${w} at level ${li + 1}: ${g.paths.length} copies`);
+      if (!lv.decoys) ok(!g.decoys.length, `trails: level ${li + 1} shouldn't have near misses`);
+    }
+  }));
+  ok(made > 200, `trails: only ${made} grids made`);
+  ok(trailWords([{ kana: 'ねこ' }, { kana: 'ねこです' }, { kana: 'ねこです' }, { kana: 'お茶' }]).length === 1, 'trails: words are three kana or more, once each, kana only');
 }
 
 section('loanwords');

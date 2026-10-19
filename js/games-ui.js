@@ -2,7 +2,7 @@
    capsule machine those coins turn (README → Games).
 
    The games — Ninja slice and the Swipe deck (arcade-ui.js), Word search
-   and Match (read-ui.js) — play in the Read tab's overlay; they only live
+   and Match (read-ui.js), Trails (trail-ui.js) — play in the Read tab's overlay; they only live
    here. Each pays coins as it ends (earnCoins), and so do the Read tab's
    rounds and every sprint, a little less; a turn of the
    machine costs SPIN_COST and drops a capsule from the set being collected
@@ -64,6 +64,7 @@ function renderGames() {
     ${ninjaCard()}
     ${deckCard()}
     ${searchCard(pool)}
+    ${trailCard(pool)}
     ${matchCard(pool)}
   </div>`;
 }
