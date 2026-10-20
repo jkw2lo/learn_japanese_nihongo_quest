@@ -1095,6 +1095,22 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.60.1: The tab row fits
+
+- **The desktop tab row no longer runs off the screen.** It was sized for
+  nine sections and there are eleven now. From 1300px it put every label on
+  one line inside the 72rem column, which needs about 1430px, so between
+  1300 and about 1700px wide, Record, Backup and Settings were past the
+  right edge and the whole page scrolled sideways. The same thing happened
+  between 721 and about 880px. Now the labels stack (Japanese over English)
+  up to 1499px. From 1500px they sit on one line, and the bar widens to
+  92rem to make room. Below 900px the tabs tighten once more. If they ever
+  overflow again, the tab row scrolls inside the bar and Backup and
+  Settings stay on screen. Checked at every width from 721 to 2560px, on
+  all eleven tabs: no sideways scroll.
+- **On a phone nothing changes.** Every new rule is for 721px and up (or
+  only touches the tab row, which a phone never shows).
+
 ### 0.60.0: 何回 Trails
 
 - **A new game on the Games tab**: one word, hidden again and again in a

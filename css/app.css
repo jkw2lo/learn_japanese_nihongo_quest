@@ -259,14 +259,31 @@ ul.plain li:first-child { border-top: 0; }
 .top-nav button.on { background: var(--g); color: var(--paper); }
 .top-nav button.on .nz { color: inherit; opacity: .8; }
 .top-nav button.g-first:not(:first-child) { margin-left: .5rem; }
-/* nine sections fit on one line from here; narrower, each label stacks */
-/* Nine sections fit on one line each from 1300px. Narrower, each label
-   stacks (the Japanese over the English), the padding tightens, "Out &
-   about" is just "Out" (as in the phone's drawer), and below 1000px the
-   wordmark gives way to its seal. */
-@media (min-width: 1300px) { .top-nav button { white-space: nowrap; } .brand-name { white-space: nowrap; } }
-@media (max-width: 1299px) { .top-nav { gap: 0; margin-left: .5rem; } .top-nav button { padding: 5px 9px; } .top-nav .nav-more { display: none; } }
+/* Eleven sections on one line each need ~1430px of bar, more than the
+   72rem column, so from 1500px the bar grows to 92rem (wider than the page
+   below it) and every label sits on one line. Narrower, each label stacks
+   (the Japanese over the English), the padding tightens, "Out & about" is
+   just "Out" (as in the phone's drawer), below 1000px the wordmark gives way
+   to its seal, and below 900px the tabs tighten once more. If a section is
+   added and they still don't fit, the tab row scrolls inside the bar rather
+   than pushing Backup and Settings off the screen. */
+@media (min-width: 1500px) {
+  .topbar { padding-inline: max(16px, calc((100vw - 92rem) / 2)); }
+  .top-nav button { white-space: nowrap; } .brand-name { white-space: nowrap; }
+}
+@media (max-width: 1499px) { .top-nav { gap: 0; margin-left: .5rem; } .top-nav button { padding: 5px 9px; } .top-nav .nav-more { display: none; } }
 @media (max-width: 999px) and (min-width: 721px) { .brand-name { display: none; } }
+@media (max-width: 899px) and (min-width: 721px) {
+  .topbar { gap: .5rem; }
+  .top-nav { margin-left: 0; }
+  .top-nav button { padding: 5px 5px; font-size: .84rem; }
+  .top-nav button.g-first:not(:first-child) { margin-left: .2rem; }
+}
+@media (min-width: 721px) {
+  .top-nav { min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  .top-nav::-webkit-scrollbar { display: none; }
+  .top-actions, .brand-seal { flex: none; }
+}
 .top-actions { margin-left: auto; display: flex; gap: .2rem; }
 #saveBtn.nudge::after {
   content: ""; position: absolute; top: 6px; right: 6px; width: 8px; height: 8px;
