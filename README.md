@@ -1095,6 +1095,21 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.63.0: The neko asks
+
+- **A third way to quiz a full shelf: お願い Neko asks.** The neko sits
+  beside a shelf of six toys and asks for one by name. Its bubble reads
+  *＿＿をください* ("___, please"), and the blank replays the word. Tap
+  the toy it wants. The toys have no English labels, so you match the
+  sound straight to the thing.
+- **The neko reacts.** If you're right, the toy bounces, the neko cheers
+  and says ありがとう, and the round moves on. If you're wrong, it looks
+  puzzled, and you're told what you handed over (*That one's うちわ, round
+  fan*). Either way, the bubble then shows the word with its reading and
+  meaning.
+- It has its own best per set, synced like the others, and needs sound,
+  the same as Listen.
+
 ### 0.62.0: Quiz me
 
 - **A full shelf of capsule toys can now be quizzed.** A new Quiz me card
@@ -2009,7 +2024,10 @@ larger), the bests (the faster) and the rounds.
   a 全部 stamp; earlier sets stay to look at, later ones are locked.
 - **Quiz me** (`toyQuizCard` in `js/games-ui.js`): a full shelf's twenty
   names, ten at a time, either heard (聞く Listen) or read (読む Read), with
-  four of the shelf's toys, drawn and named in English, to pick from.
+  four of the shelf's toys, drawn and named in English, to pick from. Or
+  お願い Neko asks: the neko says a toy's name in a ＿＿をください bubble,
+  and you pick it from a shelf of six, pictures only. The bubble shows
+  the word once you've answered.
   Reading shows furigana over the kanji: the name is the word to learn, and
   its kanji mostly aren't taught, so there's no writing either. Nothing is
   scheduled. The best round per set and way is kept (`state.gacha.quiz`,

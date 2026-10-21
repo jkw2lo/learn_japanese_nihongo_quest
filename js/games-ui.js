@@ -283,13 +283,17 @@ function showSetDone(S, next) {
 
 /* Every toy is a word, and a full shelf can be quizzed: ten of its toys,
    each heard (聞く Listen) or read (読む Read), and four of the shelf's toys,
-   drawn and named in English, to pick from. Reading shows furigana over
+   drawn and named in English, to pick from — or asked for by the neko
+   (お願い Neko asks): it says a toy's name, and you hand it the right one
+   from a shelf of six, drawn but not named. Reading shows furigana over
    the kanji — the name is the word to know; its kanji mostly aren't taught.
    No writing, for the same reason. It plays in the Read overlay (RD, rung
    "toys"); nothing is scheduled, and the best round per set and way is
    kept (state.gacha.quiz). */
 const TOY_QUIZ_N = 10;
-const TOY_QUIZ_WAYS = { l: ["聞く", "Listen"], r: ["読む", "Read"] };
+const TOY_QUIZ_WAYS = { l: ["聞く", "Listen"], r: ["読む", "Read"], n: ["お願い", "Neko asks"] };
+const hearsIt = w => w !== "r";          /* the ways that need sound */
+const TOY_NEKO_N = 6;                   /* toys on the neko's shelf */
 let toyQuiz = { set: null, way: "r" };     /* the round to open: rd-again opens it again */
 
 function toyQuizCard() {
@@ -302,13 +306,13 @@ function toyQuizCard() {
     return `<div class="gq-set">
       <div class="gq-name"><span lang="ja">${wordHtml(S.jp)}</span> ${esc(S.en)}${bests.length ? `<small class="muted">Best: ${bests.join(" · ")}</small>` : ""}</div>
       <div class="gq-btns">${Object.entries(TOY_QUIZ_WAYS).map(([w, [jp, en]]) =>
-        `<button class="btn btn-ghost btn-sm" data-act="gq-start" data-s="${S.id}" data-w="${w}" ${w === "l" && !state.settings.sound ? "disabled" : ""}><span lang="ja">${jp}</span> ${en}</button>`).join("")}</div>
+        `<button class="btn btn-ghost btn-sm" data-act="gq-start" data-s="${S.id}" data-w="${w}" ${hearsIt(w) && !state.settings.sound ? "disabled" : ""}><span lang="ja">${jp}</span> ${en}</button>`).join("")}</div>
     </div>`;
   };
   return `<section class="card rd-rung gm-quiz ${done.length ? "" : "locked"}">
     <div class="rd-rung-head"><span class="rd-n rd-game" lang="ja">問</span><h2><span lang="ja">クイズ</span> Quiz me</h2></div>
     <p>Every toy is a word worth knowing. Fill a shelf, then test yourself on its twenty names — by ear, or by sight.</p>
-    ${done.length ? done.map(row).join("") + (state.settings.sound ? "" : `<p class="muted small">Listen needs sound — it's off in Settings.</p>`)
+    ${done.length ? done.map(row).join("") + (state.settings.sound ? "" : `<p class="muted small">Listen and Neko asks need sound — it's off in Settings.</p>`)
       : `<p class="muted small">Opens when a shelf is full: ${left} more to find for <b>${esc(cur.en)}</b>.</p>`}
   </section>`;
 }
@@ -331,6 +335,7 @@ function toyQuizOpen() {
 }
 
 function toyQuizShow() {
+  if (RD.way === "n") return toyNekoShow();
   const t = RD.lines[RD.i], listen = RD.way === "l";
   const opts = shuffle([t, ...sample(RD.set.toys.filter(x => x !== t), 3)]);
   RD.q = { x: t, opts, answered: false };
@@ -346,12 +351,32 @@ function toyQuizShow() {
   if (listen) say(furiKana(t.w));
 }
 
+/* The neko asks for a toy by name — ＿＿をください, "___, please" — and you
+   hand it over: a shelf of six, pictures only. Its bubble shows the word
+   once you've answered. */
+const nekoBubble = (t, shown) => `<div class="gq-bubble" lang="ja">${shown ? `<b>${wordHtml(t.w, "always")}</b>` : `<button class="gq-blank" data-act="gq-hear" aria-label="Hear it again">${icon("speaker")}</button>`}を ください！
+  <small lang="en">${shown ? esc(t.m) : "___"}, please!</small></div>`;
+
+function toyNekoShow() {
+  const t = RD.lines[RD.i];
+  const opts = shuffle([t, ...sample(RD.set.toys.filter(x => x !== t), TOY_NEKO_N - 1)]);
+  RD.q = { x: t, opts, answered: false };
+  $("#rdPace").textContent = `${RD.i + 1} of ${RD.n}`;
+  $("#rdBody").innerHTML = `<div class="gq-play gq-neko">
+    <div class="gq-ask"><span id="gqNeko">${neko("happy", "bob")}</span><span id="gqBubble">${nekoBubble(t, false)}</span></div>
+    <div class="gq-shelf">${opts.map((o, i) => `<button class="gq-toy" data-act="gq-opt" data-i="${i}" aria-label="${esc(o.m)}"><kbd>${i + 1}</kbd><span class="gm-fig">${toyArt(o.id)}</span></button>`).join("")}</div>
+    <div class="verdict gq-why" id="gqWhy" aria-live="polite"></div>
+  </div>`;
+  say(furiKana(t.w));
+}
+
 function toyQuizAnswer(i) {
   const q = RD?.q;
   if (!q || q.answered || !q.opts[i]) return;
   q.answered = true;
   const ok = q.opts[i] === q.x;
   RD.res[RD.i] = ok ? "ok" : "miss";
+  if (RD.way === "n") return toyNekoAnswer(q, i, ok);
   $$(".gq-opt").forEach((b, j) => { b.disabled = true; if (q.opts[j] === q.x) b.classList.add("right"); else if (j === i) b.classList.add("wrong"); });
   /* the answer, whichever way it was asked: the word with its reading, and its meaning */
   const v = $("#gqWhy");
@@ -360,6 +385,21 @@ function toyQuizAnswer(i) {
   if (RD.way === "r") say(furiKana(q.x.w));
   rdStrip();
   if (ok) RD.next = setTimeout(() => { if (RD?.q === q) { RD.i++; rdStep(); } }, 1300);
+  else $("#rdFoot").innerHTML = `<button class="btn btn-ghost" data-act="gq-hear">${icon("speaker")} Again</button><button class="btn" id="rdNext" data-act="rd-next">Next <kbd>↵</kbd></button>`;
+}
+
+function toyNekoAnswer(q, i, ok) {
+  $$(".gq-toy").forEach((b, j) => { b.disabled = true; if (q.opts[j] === q.x) b.classList.add("right"); else if (j === i) b.classList.add("wrong"); });
+  /* the right toy hops over; the neko cheers, or wonders */
+  $(".gq-toy.right")?.classList.add("bounce");
+  $("#gqNeko").innerHTML = neko(ok ? "cheer" : "think", "hop");
+  $("#gqBubble").innerHTML = nekoBubble(q.x, true);
+  const v = $("#gqWhy");
+  v.className = "verdict gq-why " + (ok ? "ok" : "miss");
+  v.innerHTML = ok ? `${icon("check", "v-ico")} ありがとう！ <small class="muted">Thank you!</small>`
+    : `${icon("close", "v-ico")} That one's <b lang="ja">${wordHtml(q.opts[i].w, "always")}</b>, ${esc(q.opts[i].m)}.`;
+  rdStrip();
+  if (ok) RD.next = setTimeout(() => { if (RD?.q === q) { RD.i++; rdStep(); } }, 1500);
   else $("#rdFoot").innerHTML = `<button class="btn btn-ghost" data-act="gq-hear">${icon("speaker")} Again</button><button class="btn" id="rdNext" data-act="rd-next">Next <kbd>↵</kbd></button>`;
 }
 
@@ -394,7 +434,7 @@ function toyQuizFinish() {
 }
 
 function toyQuizKey(e) {
-  if (/^[1-4]$/.test(e.key)) { e.preventDefault(); toyQuizAnswer(+e.key - 1); }
+  if (/^[1-6]$/.test(e.key)) { e.preventDefault(); toyQuizAnswer(+e.key - 1); }
   else if ((e.key === "Enter" || e.key === " ") && $("#rdNext")) { e.preventDefault(); ACTS["rd-next"](); }
   else if (e.key === "r" || e.key === "R") { e.preventDefault(); ACTS["gq-hear"](); }
   return true;
