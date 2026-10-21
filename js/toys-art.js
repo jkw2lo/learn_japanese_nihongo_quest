@@ -28,6 +28,32 @@ const UJACK = `<rect class="nv n" x="12" y="8" width="23" height="15"/>
   <path class="w n" d="M12 8h3l20 12.4V23h-3L12 10.6zM35 8v2.6L15 23h-3v-2.6L32 8z"/><path class="r n" d="M12 8l23 15h-1.6L12 9z M35 8L12 23v-1l21.4-14z"/>
   <path class="w n" d="M21 8h5v15h-5zM12 13h23v5H12z"/><path class="r n" d="M22.4 8h2.2v15h-2.2zM12 14.4h23v2.2H12z"/>`;
 
+/* A building (場所 places): walls, a roof (tri, flat or none), a sign, and
+   whatever else stands in front. */
+function bldg({ wall = "#EDE6D6", roof = "#7C786F", top = "tri", sign = "", signBg = "#2F4B7C", signFg = "#fff", extra = "", wins = true } = {}) {
+  const r = top === "tri" ? `<path class="k" d="M5 25l27-15 27 15z" style="fill:${roof}"/>` : top === "flat" ? `<rect class="k" x="8" y="18" width="48" height="6" rx="1" style="fill:${roof}"/>` : "";
+  return `<rect class="w" x="10" y="${top === "tri" ? 24 : 23}" width="44" height="34" style="fill:${wall}"/>${r}
+    ${wins ? `<rect class="sk" x="14" y="38" width="8" height="7"/><rect class="sk" x="42" y="38" width="8" height="7"/>` : ""}
+    <rect class="k" x="27" y="44" width="10" height="14" style="fill:#6E5A46"/>
+    ${sign ? `<rect class="b" x="18" y="${top === "tri" ? 27 : 26}" width="28" height="9" rx="1.6" style="fill:${signBg}"/><text x="32" y="${top === "tri" ? 34.4 : 33.4}" text-anchor="middle" font-size="7.4" font-weight="800" fill="${signFg}" font-family="Hiragino Sans, Noto Sans JP, sans-serif">${sign}</text>` : ""}${extra}`;
+}
+/* a station's exit sign: yellow, black lettering, an arrow */
+function exitSign(text, arrow) {
+  return `<rect class="k" x="30" y="40" width="4" height="18" style="fill:#5A5650"/>
+    <rect class="y" x="6" y="12" width="52" height="28" rx="2" style="fill:#F5CF52"/>
+    <text x="27" y="32" text-anchor="middle" font-size="13" font-weight="800" fill="#1E1D1A" font-family="Hiragino Sans, Noto Sans JP, sans-serif">${text}</text>
+    <path class="k n" d="${arrow}"/>`;
+}
+/* an open pot of paint (色 colours) */
+function paint(c, extra = "") {
+  return `<path class="l" d="M13 26q19-28 38 0" style="stroke:#8E8A80;stroke-width:1.8"/>
+    <path class="w" d="M13 24h38v28q0 6-19 6t-19-6z" style="fill:#D8D4CB"/>
+    <path class="w" d="M13 32h38v14H13z" style="fill:${c}"/>
+    <ellipse class="w" cx="32" cy="24" rx="19" ry="5.4" style="fill:${c}"/>
+    <path class="w" d="M19 25q0 9 2 11 2 1 2-3t0-8z" style="fill:${c}"/>
+    <ellipse class="w n" cx="24" cy="23" rx="5" ry="1.4" opacity=".4"/>${extra}`;
+}
+
 function feel(fill, face, extra = "") {
   const f = fill.startsWith("#") ? `class="w" style="fill:${fill}"` : `class="${fill}"`;
   return `<path ${f} d="M10 40q0-25 22-25t22 25q0 18-22 18T10 40z"/>
@@ -1161,6 +1187,192 @@ const TOY_ART = {
     <path class="gy" d="M8 56V24q0-12 9-12t9 12v32z" style="fill:#8E8A80"/><path class="gy" d="M34 56V18q0-14 11-14t11 14v38z" style="fill:#A9A499"/>
     <path class="k n" d="M12 26h10v3H12zM38 20h14v3.4H38z" style="fill:#5A5650"/><path class="gy" d="M17 30l-2 10h5z" style="fill:#7C786F"/><path class="gy" d="M45 24l-3 12h6z" style="fill:#8E8A80"/>
     <path class="l" d="M13 46h8M40 44h10" style="stroke:#5A5650;stroke-width:1.6"/>`,
+  /* ---------- 場所 places around town ---------- */
+  toire: `<rect class="k" x="30" y="46" width="4" height="12" style="fill:#5A5650"/><rect class="w" x="6" y="8" width="52" height="38" rx="3"/>
+    <circle class="b" cx="20" cy="15" r="3.6" style="fill:#2F6FBF"/><path class="b" d="M14 20h12l-2 10h-2v10h-4V30h-2z" style="fill:#2F6FBF"/>
+    <circle class="r" cx="44" cy="15" r="3.6"/><path class="r" d="M38 34l4-14h4l4 14h-4v6h-4v-6z"/><path class="l" d="M32 12v30" style="stroke:#A9A499"/>`,
+  eki: bldg({ wall: "#E9E1CF", roof: "#5E7C8A", sign: "駅", signBg: "#2F4B7C", extra: `<circle class="w" cx="32" cy="16" r="4" /><path class="l" d="M32 16v-2.4M32 16l1.8 1"/>` }),
+  byoin: bldg({ wall: "#F4F7F9", top: "flat", roof: "#9AB4C8", sign: "病院", signBg: "#2F6FBF", extra: `<path class="l" d="M32 18v-4"/><circle class="b" cx="32" cy="9" r="6" style="fill:#2F6FBF"/><text x="32" y="12" text-anchor="middle" font-size="8" font-weight="800" fill="#fff" font-family="sans-serif">H</text>` }),
+  yakkyoku: bldg({ wall: "#F4F7F9", top: "flat", roof: "#3F8E4F", sign: "薬", signBg: "#3F8E4F", extra: `<path class="gr" d="M8 42h4v-4h4v4h4v4h-4v4h-4v-4H8z" style="fill:#5FB36A"/>`, wins: false }),
+  ginko: `<path class="gy" d="M6 22l26-12 26 12z" style="fill:#C9C4BA"/><rect class="gy" x="8" y="22" width="48" height="5" style="fill:#B9B3A6"/>
+    <path class="w" d="M12 27h6v26h-6zM24 27h6v26h-6zM34 27h6v26h-6zM46 27h6v26h-6z" style="fill:#F2EEE2"/><rect class="gy" x="6" y="53" width="52" height="5" style="fill:#B9B3A6"/>
+    <circle class="g" cx="32" cy="16.4" r="4.4"/><text x="32" y="19.4" text-anchor="middle" font-size="7" font-weight="800" fill="#7A5A1A" font-family="sans-serif">¥</text>`,
+  supa: bldg({ wall: "#F4EFE2", top: "flat", roof: "#E8763A", sign: "SUPER", signBg: "#E8763A",
+    extra: `<path class="gy" d="M42 46h14l-2 7H44z" style="fill:#C9C4BA"/><path class="l" d="M40 43h3l1 3M44 53v0"/><circle class="k" cx="45" cy="56" r="1.8"/><circle class="k" cx="53" cy="56" r="1.8"/><circle class="r" cx="47" cy="44" r="2.4"/><circle class="y" cx="51" cy="44" r="2.4" style="fill:#F5CF52"/>`, wins: false }),
+  yubinkyoku: bldg({ wall: "#F4EFE2", top: "flat", roof: "#D9483B", sign: "〒", signBg: "#D9483B" }),
+  koban: `<rect class="w" x="14" y="24" width="36" height="34" style="fill:#EDEAE3"/><path class="k" d="M10 25l22-8 22 8z" style="fill:#5A5650"/>
+    <circle class="r" cx="32" cy="13" r="4"/><path class="l" d="M32 9V6"/><rect class="nv" x="18" y="28" width="28" height="7" rx="1"/>
+    <text x="32" y="33.6" text-anchor="middle" font-size="6" font-weight="800" fill="#fff" font-family="Hiragino Sans, Noto Sans JP, sans-serif">交番</text>
+    <rect class="k" x="26" y="42" width="12" height="16" style="fill:#6E5A46"/><rect class="sk" x="17" y="40" width="6" height="7"/><rect class="sk" x="41" y="40" width="6" height="7"/>`,
+  deguchi: `<rect class="gr" x="4" y="14" width="56" height="30" rx="2" style="fill:#2E9A55"/><rect class="w" x="8" y="18" width="18" height="22" rx="1"/>
+    <circle class="gr n" cx="20" cy="22" r="2" style="fill:#2E9A55"/><path class="gr n" d="M18 25l-4 4 2 1 3-3 1 4-3 5 2 1 3-4 2 4 2-1-2-5-1-4 3 2 1-2-5-3z" style="fill:#2E9A55"/>
+    <text x="43" y="34" text-anchor="middle" font-size="11" font-weight="800" fill="#fff" font-family="Hiragino Sans, Noto Sans JP, sans-serif">出口</text>
+    <rect class="k" x="30" y="44" width="4" height="14" style="fill:#5A5650"/>`,
+  iriguchi: `<rect class="y" x="4" y="10" width="56" height="24" rx="2" style="fill:#F5CF52"/>
+    <text x="24" y="27" text-anchor="middle" font-size="12" font-weight="800" fill="#1E1D1A" font-family="Hiragino Sans, Noto Sans JP, sans-serif">入口</text>
+    <path class="k n" d="M42 18h8v-4l7 8-7 8v-4h-8z"/><rect class="k" x="18" y="38" width="28" height="20" style="fill:#6E5A46"/><rect class="sk" x="21" y="41" width="10" height="14"/><rect class="sk" x="33" y="41" width="10" height="14"/>`,
+  kaisatsu: `${[6, 26, 46].map(x => `<rect class="gy" x="${x}" y="22" width="12" height="34" rx="2" style="fill:#C9C4BA"/><rect class="sk n" x="${x + 2}" y="26" width="8" height="5" rx="1" style="fill:#3B342D"/><path class="gr n" d="M${x + 4} 28.4h3l-1-1.4M${x + 7} 28.4l-1 1.4" style="stroke:#7FD19B;stroke-width:1.2;fill:none"/><rect class="b n" x="${x + 3}" y="36" width="6" height="2" rx="1" style="fill:#4F7FC0"/>`).join("")}
+    <path class="o" d="M18 36h8v4h-8zM38 36h8v4h-8z" style="fill:#F2A23A"/>`,
+  hoteru: `<rect class="w" x="14" y="8" width="36" height="50" style="fill:#EDE6D6"/><rect class="k" x="12" y="6" width="40" height="4" style="fill:#7C786F"/>
+    ${[14, 22, 30].map(y => [18, 28, 38].map(x => `<rect class="sk" x="${x}" y="${y}" width="7" height="5"/>`).join("")).join("")}
+    <rect class="nv" x="18" y="38" width="28" height="7" rx="1"/><text x="32" y="43.6" text-anchor="middle" font-size="6" font-weight="800" fill="#F5CF52" font-family="sans-serif">HOTEL</text>
+    <rect class="k" x="26" y="47" width="12" height="11" style="fill:#6E5A46"/>`,
+  kuko: `<rect class="gy" x="44" y="22" width="8" height="36" style="fill:#C9C4BA"/><path class="sk" d="M40 14h16l-2 8H42z" style="fill:#9FD3E8"/><rect class="gy" x="40" y="12" width="16" height="3" style="fill:#7C786F"/>
+    <path class="w" d="M4 30l28-4 4-10h4l-2 10 10 2v4l-10 2 2 10h-4l-4-10-28-4z" style="fill:#F4F7F9"/><path class="b n" d="M10 30h20" style="stroke:#4F7FC0;stroke-width:1.6"/>
+    <rect class="gy n" x="0" y="56" width="64" height="2" style="fill:#8E8A80"/>`,
+  resutoran: bldg({ wall: "#F4EFE2", top: "none", extra: `<path class="r" d="M8 22h48l-4 8H12z"/><path class="w n" d="M14 22l-2 8M22 22l-1 8M30 22v8M38 22l1 8M46 22l2 8" style="stroke:#fff;stroke-width:2.4"/>
+    <circle class="w" cx="32" cy="14" r="6"/><path class="l" d="M29 10v8M35 10v8M29 13h2" style="stroke-width:1.2"/>` }),
+  koen: `<path class="gr n" d="M0 54h64v6H0z" style="fill:#8DC27A"/>
+    <rect class="br" x="16" y="34" width="5" height="22"/><circle class="gr" cx="18.5" cy="24" r="14" style="fill:#5FA45A"/><circle class="gr n" cx="13" cy="20" r="4" style="fill:#7FBE6E"/>
+    <rect class="wd" x="34" y="42" width="24" height="4" rx="1"/><rect class="wd" x="34" y="36" width="24" height="3" rx="1"/><path class="l" d="M37 46v8M55 46v8M37 39v3M55 39v3" style="stroke:#7A5A3A;stroke-width:2"/>`,
+  toshokan: bldg({ wall: "#E9E1CF", roof: "#8A5A3A", extra: `<path class="w" d="M32 32q-5-3-11-2v10q6-1 11 2z" style="fill:#FFFDF8"/><path class="w" d="M32 32q5-3 11-2v10q-6-1-11 2z" style="fill:#FFFDF8"/><path class="l" d="M32 32v10"/>`, wins: true }),
+  gakko: `<rect class="w" x="4" y="26" width="56" height="32" style="fill:#F4EFE2"/><rect class="w" x="24" y="14" width="16" height="44" style="fill:#EDE6D6"/>
+    <circle class="w" cx="32" cy="22" r="5"/><path class="l" d="M32 22v-3M32 22l2 1"/>
+    ${[8, 15, 44, 51].map(x => `<rect class="sk" x="${x}" y="31" width="5" height="6"/><rect class="sk" x="${x}" y="42" width="5" height="6"/>`).join("")}
+    <rect class="k" x="28" y="46" width="8" height="12" style="fill:#6E5A46"/><rect class="r n" x="34" y="6" width="8" height="5" rx="1" style="fill:#fff"/><path class="l" d="M34 6v8"/><circle class="r n" cx="38" cy="8.4" r="1.4"/>`,
+  depato: `<rect class="w" x="10" y="6" width="44" height="52" style="fill:#EDE6D6"/>
+    ${[10, 18, 26, 34].map(y => [14, 22, 30, 38, 46].map(x => `<rect class="sk" x="${x}" y="${y}" width="5" height="5"/>`).join("")).join("")}
+    <path class="r" d="M10 42h44l-2 4H12z"/><rect class="k" x="24" y="46" width="16" height="12" style="fill:#6E5A46"/>
+    <path class="p" d="M46 48h10l-1 10h-8z" style="fill:#F28FB1"/><path class="l" d="M48 48q3-5 6 0"/>`,
+  eigakan: `<rect class="r" x="8" y="20" width="48" height="38" style="fill:#8E2238"/><rect class="k" x="12" y="24" width="40" height="12" style="fill:#2E2B27"/>
+    <text x="32" y="33" text-anchor="middle" font-size="7" font-weight="800" fill="#F5CF52" font-family="sans-serif">CINEMA</text>
+    ${[14, 20, 26, 32, 38, 44, 50].map(x => `<circle class="y n" cx="${x}" cy="22" r="1.2" style="fill:#F5CF52"/>`).join("")}
+    <rect class="k" x="24" y="42" width="16" height="16" style="fill:#3B1A22"/><circle class="gy" cx="22" cy="12" r="6" style="fill:#5A5650"/><circle class="gy" cx="40" cy="12" r="6" style="fill:#5A5650"/>
+    <circle class="w n" cx="22" cy="12" r="1.6"/><circle class="w n" cx="40" cy="12" r="1.6"/>`,
+  onsen: `<path class="l" d="M22 30q-4-5 0-10t0-10M32 28q-4-5 0-10t0-10M42 30q-4-5 0-10t0-10" style="stroke:#D9483B;stroke-width:3.4"/>
+    <ellipse class="sk" cx="32" cy="44" rx="24" ry="9" style="fill:#9FD3E8"/><path class="l" d="M16 44q4-2 8 0M34 46q4-2 8 0" style="stroke:#fff;stroke-width:1.6"/>
+    <ellipse class="gy" cx="10" cy="50" rx="6" ry="4" style="fill:#8E8A80"/><ellipse class="gy" cx="54" cy="48" rx="7" ry="5" style="fill:#A9A499"/><ellipse class="gy" cx="44" cy="55" rx="6" ry="3.4" style="fill:#8E8A80"/>`,
+
+  /* ---------- 道案内 directions ---------- */
+  migi: `<rect class="k" x="12" y="30" width="4" height="28" style="fill:#7A5A3A"/><path class="y" d="M6 16h38V8l16 14-16 14v-8H6z" style="fill:#F5CF52"/>
+    <text x="24" y="27" text-anchor="middle" font-size="10" font-weight="800" fill="#1E1D1A" font-family="Hiragino Sans, Noto Sans JP, sans-serif">右</text>`,
+  hidari: `<rect class="k" x="48" y="30" width="4" height="28" style="fill:#7A5A3A"/><path class="y" d="M58 16H20V8L4 22l16 14v-8h38z" style="fill:#F5CF52"/>
+    <text x="40" y="27" text-anchor="middle" font-size="10" font-weight="800" fill="#1E1D1A" font-family="Hiragino Sans, Noto Sans JP, sans-serif">左</text>`,
+  massugu: `<path class="gy n" d="M18 58l8-50h12l8 50z" style="fill:#A9A499"/><path class="w n" d="M31 50h2v4h-2zM31.4 38h1.6v5h-1.6zM31.6 28h1.2v4h-1.2z"/>
+    <path class="b" d="M26 26h-8l14-20 14 20h-8v14H26z" style="fill:#4F9BD9"/>`,
+  modoru: `<path class="l" d="M44 56V24q0-14-14-14T16 24v8" style="stroke:#4F9BD9;stroke-width:7;stroke-linecap:butt"/>
+    <path class="b" d="M6 30h20L16 44z" style="fill:#4F9BD9"/>`,
+  kado: `<rect class="w" x="4" y="4" width="26" height="26" style="fill:#E9E1CF"/><rect class="w" x="40" y="4" width="20" height="26" style="fill:#EDE6D6"/><rect class="w" x="4" y="40" width="26" height="20" style="fill:#EDE6D6"/>
+    <path class="l" d="M50 60V42q0-8-8-8H8" style="stroke:#D9483B;stroke-width:3.4;stroke-dasharray:4 3"/><path class="r" d="M10 28l-8 6 8 6z"/><circle class="k" cx="50" cy="58" r="3" style="fill:#2F4B7C"/>`,
+  kosaten: `<path class="gy n" d="M22 0h20v64H22zM0 22h64v20H0z" style="fill:#7C786F"/>
+    ${[24, 29, 34, 39].map(x => `<rect class="w n" x="${x}" y="14" width="2.6" height="7"/><rect class="w n" x="${x}" y="43" width="2.6" height="7"/>`).join("")}
+    ${[24, 29, 34, 39].map(y => `<rect class="w n" x="14" y="${y}" width="7" height="2.6"/><rect class="w n" x="43" y="${y}" width="7" height="2.6"/>`).join("")}
+    <path class="w n" d="M24 24l16 16M40 24L24 40" style="stroke:#fff;stroke-width:2;stroke-dasharray:2 2"/>`,
+  hashi2: `<path class="sk n" d="M0 46h64v18H0z" style="fill:#7FB8E6"/><path class="l" d="M4 54q4-2 8 0M40 56q4-2 8 0" style="stroke:#DDEFF7;stroke-width:1.6"/>
+    <path class="r" d="M2 40q30-30 60 0v4q-30-26-60 0z" style="fill:#D9483B"/>
+    <path class="l" d="M10 33v13M20 26v20M32 22v24M44 26v20M54 33v13" style="stroke:#A8362C;stroke-width:2.4"/><path class="r" d="M2 30q30-26 60 0v3q-30-24-60 0z" style="fill:#D9483B"/>`,
+  chizu: `<path class="w" d="M6 14l16-6 20 6 16-6v42l-16 6-20-6-16 6z" style="fill:#F2EEE2"/><path class="l" d="M22 8v42M42 14v42"/>
+    <path class="gr n" d="M8 30q6-4 12 0v14l-12 4zM44 40q6-6 12-2v10l-12 4z" style="fill:#B9DDA0"/><path class="b n" d="M24 22q8 4 16 0v8q-8 4-16 0z" style="fill:#B9DDF0"/>
+    <path class="l" d="M10 22h10M26 38q6 4 14 2" style="stroke:#D9483B;stroke-dasharray:2 2"/>
+    <path class="r" d="M34 30q-6-8 0-12 6 4 0 12z" style="fill:#D9483B"/><circle class="w n" cx="34" cy="21.6" r="1.6"/>`,
+  kitaguchi: exitSign("北口", "M48 30l-4 0v-8h-3l5-6 5 6h-3v8z"),
+  minamiguchi: exitSign("南口", "M46 16v8h3l-5 6-5-6h3v-8z"),
+  higashiguchi: exitSign("東口", "M40 24h8v-4l6 6-6 6v-4h-8z"),
+  chikai: `<path class="gy n" d="M2 50h60v4H2z" style="fill:#C9C4BA"/><rect class="w" x="34" y="22" width="24" height="28" style="fill:#E9E1CF"/><path class="k" d="M32 23l14-9 14 9z" style="fill:#7C786F"/><rect class="k" x="42" y="38" width="8" height="12" style="fill:#6E5A46"/>
+<circle class="c" cx="16" cy="28" r="5" style="fill:#F6D5B5"/><path class="b" d="M10 50q0-16 6-16t6 16z"/>
+    <path class="l" d="M22 44h10" style="stroke:#3F7D56;stroke-width:2;stroke-dasharray:2 2"/><path class="gr" d="M24 18l2 2 4-5" style="fill:none;stroke:#3F7D56;stroke-width:2.4"/>`,
+  toi: `<path class="gy n" d="M2 50h60v4H2z" style="fill:#C9C4BA"/><rect class="w" x="50" y="34" width="10" height="16" style="fill:#E9E1CF"/><path class="k" d="M49 35l6-5 6 5z" style="fill:#7C786F"/>
+    <path class="gr n" d="M30 50l10-16 10 16z" style="fill:#9FC48A"/><circle class="c" cx="10" cy="28" r="5" style="fill:#F6D5B5"/><path class="b" d="M4 50q0-16 6-16t6 16z"/>
+    <path class="l" d="M18 44h30" style="stroke:#D9483B;stroke-width:2;stroke-dasharray:2 3"/><path class="l" d="M20 22q4-6 10-6t10 6" style="stroke:#A9A499;stroke-width:1.6"/>`,
+  koko: `<ellipse class="gy n" cx="32" cy="54" rx="16" ry="4" style="fill:#C9C4BA"/>
+    <path class="r" d="M32 54Q14 32 14 22a18 18 0 0 1 36 0q0 10-18 32z" style="fill:#D9483B"/><circle class="w" cx="32" cy="22" r="7"/>`,
+  asoko: `<path class="gr n" d="M30 52l14-24 14 24z" style="fill:#9FC48A"/><rect class="w" x="40" y="38" width="10" height="14" style="fill:#E9E1CF"/>
+    <path class="c" d="M4 44q0-8 6-8h10l14-4q4 0 4 3t-4 3l-10 2v2q0 6-6 6H8q-4 0-4-4z" style="fill:#F6D5B5"/>
+    <path class="l" d="M38 34l6-4M38 37l8-1M38 40l7 2" style="stroke:#A9A499"/>`,
+  mae: `<rect class="w" x="10" y="8" width="44" height="34" style="fill:#E9E1CF"/><rect class="k" x="27" y="28" width="10" height="14" style="fill:#6E5A46"/><rect class="sk" x="14" y="14" width="8" height="7"/><rect class="sk" x="42" y="14" width="8" height="7"/>
+    <path class="gy n" d="M2 42h60v4H2z" style="fill:#C9C4BA"/><circle class="c" cx="32" cy="48" r="4.4" style="fill:#F6D5B5"/><path class="r" d="M26 62q0-10 6-10t6 10z"/>
+    <path class="r n" d="M44 52l6-4v8z"/>`,
+  ushiro: `<circle class="c" cx="48" cy="20" r="4.4" style="fill:#F6D5B5"/><path class="r" d="M42 34q0-10 6-10t6 10z"/>
+    <rect class="w" x="6" y="22" width="44" height="36" style="fill:#E9E1CF"/><rect class="k" x="23" y="44" width="10" height="14" style="fill:#6E5A46"/><rect class="sk" x="10" y="28" width="8" height="7"/><rect class="sk" x="38" y="28" width="8" height="7"/>
+    <path class="l" d="M54 14q4-4 6 0" style="stroke:#D9483B;stroke-width:2"/>`,
+  tonari: `<rect class="w" x="4" y="20" width="26" height="38" style="fill:#E9E1CF"/><path class="gy" d="M2 20l15-8 15 8z" style="fill:#C9C4BA"/><circle class="g" cx="17" cy="30" r="5"/><text x="17" y="33" text-anchor="middle" font-size="7" font-weight="800" fill="#7A5A1A" font-family="sans-serif">¥</text><rect class="k" x="13" y="46" width="8" height="12" style="fill:#6E5A46"/>
+    <rect class="w" x="34" y="26" width="26" height="32" style="fill:#F4EFE2"/><rect class="k" x="43" y="46" width="8" height="12" style="fill:#6E5A46"/>
+    ${star(47, 36, 6, "r")}`,
+  aruite: `${[[14, 50, -10], [26, 40, 10], [22, 26, -10], [36, 16, 10]].map(([x, y, a]) => `<g transform="rotate(${a} ${x} ${y})"><ellipse class="br" cx="${x}" cy="${y}" rx="4.4" ry="6.4" style="fill:#7A5A3A"/><circle class="br" cx="${x - 3}" cy="${y - 8}" r="1.4" style="fill:#7A5A3A"/><circle class="br" cx="${x}" cy="${y - 9}" r="1.4" style="fill:#7A5A3A"/><circle class="br" cx="${x + 3}" cy="${y - 8}" r="1.4" style="fill:#7A5A3A"/></g>`).join("")}
+    <circle class="w" cx="50" cy="44" r="10"/><path class="l" d="M50 44v-6M50 44l4 2"/>`,
+  mayou: `<rect class="k" x="30" y="16" width="4" height="42" style="fill:#7A5A3A"/>
+    <path class="y" d="M34 14h20l6 5-6 5H34z" style="fill:#F5CF52"/><path class="y" d="M30 26H10l-6 5 6 5h20z" style="fill:#F2A23A"/><path class="y" d="M34 38h18l6 5-6 5H34z" style="fill:#F5CF52"/>
+    <circle class="r" cx="14" cy="10" r="8" style="fill:#FFFDF8"/><text x="14" y="14" text-anchor="middle" font-size="12" font-weight="800" fill="#D9483B" font-family="sans-serif">?</text>`,
+
+  /* ---------- お金と買い物 paying and shopping ---------- */
+  genkin: `<rect class="gr" x="6" y="22" width="40" height="20" rx="2" style="fill:#C9DDB8" transform="rotate(-8 26 32)"/><rect class="gr" x="10" y="26" width="40" height="20" rx="2" style="fill:#D8E6C6"/>
+    <circle class="gr n" cx="30" cy="36" r="5" style="fill:#A9C890"/><text x="17" y="40" font-size="7" font-weight="800" fill="#5E7C4A" font-family="sans-serif">¥</text>
+    <circle class="g" cx="48" cy="48" r="7"/><circle class="gy" cx="38" cy="52" r="6" style="fill:#C9C4BA"/><circle class="g" cx="52" cy="40" r="5" style="fill:#D9A04A"/><circle class="l" cx="48" cy="48" r="4.4" style="stroke:#B8892E"/>`,
+  kado2: `<rect class="b" x="6" y="14" width="52" height="34" rx="4" style="fill:#3C6098"/><rect class="g" x="12" y="22" width="10" height="8" rx="1.4"/>
+    <path class="w n" d="M12 38h6M20 38h6M28 38h6M36 38h6" style="stroke:#fff;stroke-width:1.6"/><circle class="r n" cx="46" cy="42" r="3.4" style="fill:#E8484A"/><circle class="y n" cx="50" cy="42" r="3.4" style="fill:#F2A23A;opacity:.85"/>`,
+  qr: `<rect class="w" x="8" y="8" width="48" height="48" rx="2"/>
+    ${[[12, 12], [40, 12], [12, 40]].map(([x, y]) => `<rect class="k n" x="${x}" y="${y}" width="12" height="12"/><rect class="w n" x="${x + 2}" y="${y + 2}" width="8" height="8"/><rect class="k n" x="${x + 4}" y="${y + 4}" width="4" height="4"/>`).join("")}
+    ${[[28, 12], [32, 16], [28, 20], [28, 28], [36, 28], [12, 28], [20, 32], [32, 36], [40, 32], [48, 28], [44, 40], [36, 44], [48, 48], [28, 48], [40, 48], [32, 52], [52, 36]].map(([x, y]) => `<rect class="k n" x="${x}" y="${y}" width="4" height="4"/>`).join("")}`,
+  reshito: `<path class="w" d="M16 4h32v52l-4-3-4 3-4-3-4 3-4-3-4 3-4-3-4 3z"/>
+    <path class="l" d="M22 12h20M22 20h12M38 20h4M22 26h12M38 26h4M22 32h12M38 32h4" style="stroke:#A9A499"/><path class="l" d="M22 40h20" style="stroke:#2E2B27;stroke-width:1.6"/>
+    <text x="22" y="47" font-size="6" font-weight="800" fill="#2E2B27" font-family="sans-serif">¥1,280</text>`,
+  saifu: `<rect class="gr" x="16" y="10" width="26" height="16" rx="1" style="fill:#D8E6C6" transform="rotate(-10 29 18)"/>
+    <rect class="br" x="6" y="18" width="52" height="36" rx="5" style="fill:#9A5A3A"/><path class="br" d="M6 26q0-8 8-8h44v18H14q-8 0-8-8z" style="fill:#7A4528"/>
+    <circle class="g" cx="48" cy="27" r="3"/><path class="l" d="M10 48h44" style="stroke:#C8955E;stroke-dasharray:2 2"/>`,
+  ikura: `<path class="w" d="M8 30L30 8h24v24L32 54z" style="fill:#F4E6C8"/><circle class="w" cx="44" cy="18" r="3.4" style="fill:#F3F0E8"/><path class="l" d="M47 15l8-8" style="stroke:#A9A499"/>
+    <text x="30" y="40" text-anchor="middle" font-size="18" font-weight="800" fill="#D9483B" font-family="sans-serif" transform="rotate(-45 30 34)">?</text>`,
+  kore: `<rect class="r" x="32" y="16" width="26" height="26" rx="2"/><path class="g n" d="M44 16h3v26h-3zM32 27h26v3H32z"/>
+    <path class="c" d="M4 46q0-8 6-8h4l12-10q3-2 5 0t0 5l-6 6h4q4 0 4 4v8q0 6-6 6H10q-6 0-6-6z" style="fill:#F6D5B5"/>
+    <path class="l" d="M29 20l4-4" style="stroke:#A9A499"/>`,
+  yasui: `<path class="gr" d="M8 30L30 8h24v24L32 54z" style="fill:#C9E6B0"/><circle class="w" cx="44" cy="18" r="3.4" style="fill:#F3F0E8"/>
+    <text x="30" y="38" text-anchor="middle" font-size="11" font-weight="800" fill="#2E7D4F" font-family="sans-serif" transform="rotate(-45 30 34)">¥100</text>
+    <path class="gr" d="M50 40v10h-5l9 10 9-10h-5V40z" style="fill:#3F8E4F"/>`,
+  takai: `<path class="r" d="M8 30L30 8h24v24L32 54z" style="fill:#F4B6B0"/><circle class="w" cx="44" cy="18" r="3.4" style="fill:#F3F0E8"/>
+    <text x="30" y="38" text-anchor="middle" font-size="9" font-weight="800" fill="#A8362C" font-family="sans-serif" transform="rotate(-45 30 34)">¥9,999</text>
+    <path class="r" d="M50 60V50h-5l9-10 9 10h-5v10z"/>`,
+  saizu: `${[[1, 36, .34, "S"], [17, 27, .46, "M"], [33, 16, .58, "L"]].map(([x, y, k, t]) => `<g transform="translate(${x} ${y}) scale(${k})"><path class="b" d="M20 9L6 18l5 9 7-4v33h28V23l7 4 5-9-14-9q-3 6-12 6T20 9z" style="fill:#6FA0D8;stroke-width:${(1.6 / k).toFixed(2)}"/><text x="32" y="44" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="sans-serif">${t}</text></g>`).join("")}`,
+  shichaku: `<rect class="br" x="6" y="4" width="52" height="4" rx="2"/><path class="r" d="M8 8h22q-2 24 2 50H8z" style="fill:#B04A5A"/><path class="r" d="M56 8H38q2 24-2 50h20z" style="fill:#B04A5A"/>
+    <path class="l" d="M14 10v46M22 10v46M44 10v46M50 10v46" style="stroke:#8A3242"/><rect class="sk" x="30" y="10" width="8" height="40" style="fill:#DDEFF7"/>
+    <path class="b" d="M28 30l2-4h8l2 4-2 2v14h-8V32z" style="fill:#6FA0D8"/>`,
+  menzei: `<rect class="r" x="4" y="16" width="56" height="32" rx="4" style="fill:#D9483B"/><rect class="w n" x="8" y="20" width="48" height="24" rx="2" style="fill:#fff"/>
+    <text x="32" y="30" text-anchor="middle" font-size="8" font-weight="800" fill="#D9483B" font-family="sans-serif">TAX FREE</text>
+    <text x="32" y="41" text-anchor="middle" font-size="8" font-weight="800" fill="#1E1D1A" font-family="Hiragino Sans, Noto Sans JP, sans-serif">免税</text>`,
+  pointo: `<rect class="y" x="6" y="14" width="52" height="34" rx="4" style="fill:#F5CF52"/>
+    ${[[14, 26], [24, 26], [34, 26], [44, 26], [14, 38], [24, 38], [34, 38], [44, 38]].map(([x, y], i) => i < 5 ? star(x + 3, y, 4, "r") : `<circle class="l" cx="${x + 3}" cy="${y}" r="3.4" style="stroke:#C99A24;stroke-dasharray:1.6 1.4"/>`).join("")}
+    <text x="12" y="21" font-size="5" font-weight="800" fill="#7A5A1A" font-family="sans-serif">POINT</text>`,
+  kokan: `<rect class="r" x="4" y="34" width="20" height="20" rx="2" style="fill:#F28FA0"/><rect class="b" x="40" y="10" width="20" height="20" rx="2" style="fill:#6FA0D8"/>
+    <path class="l" d="M16 28q0-14 18-16" style="stroke:#3F7D56;stroke-width:3"/><path class="gr" d="M32 6l8 6-8 6z" style="fill:#3F7D56"/>
+    <path class="l" d="M48 36q0 14-18 16" style="stroke:#3F7D56;stroke-width:3"/><path class="gr" d="M32 58l-8-6 8-6z" style="fill:#3F7D56"/>`,
+  henpin: `<path class="wd" d="M18 28l16-8 16 8v24l-16 8-16-8z" style="fill:#D9B06A"/><path class="l" d="M18 28l16 8 16-8M34 36v24"/><path class="wd n" d="M26 24l16 8v6l-4-2v-6l-16-8z" style="fill:#C8955E"/>
+    <path class="l" d="M14 22q-6-14 12-16" style="stroke:#D9483B;stroke-width:3"/><path class="r" d="M24 2l8 4-6 6z"/>`,
+  purezento: `<rect class="r" x="10" y="26" width="44" height="32" rx="2" style="fill:#E0383B"/><rect class="r" x="8" y="20" width="48" height="8" rx="2" style="fill:#C8302E"/>
+    <path class="y n" d="M29 20h6v38h-6z" style="fill:#F5CF52"/>
+    <path class="y" d="M32 20q-12-14-16-6 0 6 16 6zM32 20q12-14 16-6 0 6-16 6z" style="fill:#F5CF52"/>`,
+  reji: `<rect class="gy" x="6" y="36" width="52" height="20" rx="3" style="fill:#C9C4BA"/><rect class="k" x="10" y="52" width="44" height="6" rx="1" style="fill:#7C786F"/>
+    <rect class="gy" x="14" y="24" width="24" height="12" rx="1" style="fill:#A9A499"/>${[0, 1, 2].map(r => [0, 1, 2, 3].map(c => `<rect class="w n" x="${16 + c * 5.4}" y="${26 + r * 3.4}" width="4" height="2.4" rx=".6"/>`).join("")).join("")}
+    <rect class="k" x="40" y="12" width="16" height="12" rx="1" style="fill:#3B342D"/><rect class="gr n" x="42" y="14" width="12" height="6" style="fill:#7FD19B"/><path class="l" d="M48 24v12" style="stroke-width:2.4"/>`,
+  waribiki: `<path class="o" d="M8 30L30 8h24v24L32 54z" style="fill:#F2A23A"/><circle class="w" cx="44" cy="18" r="3.4" style="fill:#F3F0E8"/>
+    <text x="30" y="38" text-anchor="middle" font-size="12" font-weight="800" fill="#fff" font-family="sans-serif" transform="rotate(-45 30 34)">20%</text>`,
+  seru: `<path class="r" d="M2 16h60l-4 16 4 16H2l4-16z" style="fill:#E0383B"/>
+    <text x="32" y="38" text-anchor="middle" font-size="16" font-weight="900" fill="#fff" font-family="sans-serif">SALE</text>${star(10, 10, 4, "y")}${star(56, 54, 4, "y")}`,
+  fukuro: `<path class="l" d="M22 24q0-14 10-14t10 14" style="stroke:#7A4E2A;stroke-width:2.6"/>
+    <path class="wd" d="M12 22h40l-2 36H14z" style="fill:#C8955E"/><path class="wd n" d="M12 22h40l-1 6H13z" style="fill:#B48250"/>
+    <circle class="w n" cx="32" cy="42" r="7" style="fill:#F4E6C8"/><path class="gr n" d="M29 42q3-6 6 0-3 4-6 0z" style="fill:#5E8C3A"/>`,
+
+  /* ---------- 色 colours ---------- */
+  aka: paint("#E0383B"),
+  ao: paint("#2F6FBF"),
+  kiiro: paint("#F5D84A"),
+  midori: paint("#3F9A55"),
+  shiro: paint("#FFFDF8"),
+  kuro: paint("#2E2B27"),
+  orenjiiro: paint("#F2903A"),
+  pinku: paint("#F4A0C0"),
+  murasaki: paint("#8E5AAE"),
+  chairo: paint("#8A5A34"),
+  haiiro: paint("#9A968E"),
+  mizuiro: paint("#9FD3F0"),
+  koniro: paint("#24356A"),
+  beju: paint("#E2CBA4"),
+  kiniro: paint("#E6B23E", `${star(52, 12, 4.4, "y")}${star(10, 16, 3, "y")}<path class="w n" d="M18 36l4-4M24 38l4-4" style="stroke:#FFF3C4;stroke-width:2"/>`),
+  giniro: paint("#C9CDD2", `${star(52, 12, 4.4, "w")}${star(10, 16, 3, "w")}<path class="w n" d="M18 36l4-4M24 38l4-4" style="stroke:#fff;stroke-width:2"/>`),
+  nijiiro: `<path class="l" d="M13 26q19-28 38 0" style="stroke:#8E8A80;stroke-width:1.8"/><path class="w" d="M13 24h38v28q0 6-19 6t-19-6z" style="fill:#D8D4CB"/>
+    ${["#E0383B", "#F2903A", "#F5D84A", "#3F9A55", "#2F6FBF", "#8E5AAE"].map((c, i) => `<rect class="w n" x="13" y="${30 + i * 3}" width="38" height="3" style="fill:${c}"/>`).join("")}
+    <ellipse class="w" cx="32" cy="24" rx="19" ry="5.4" style="fill:#F4A0C0"/><path class="w n" d="M18 24q6-3 10 0t10 0 10 0" style="stroke:#F5D84A;stroke-width:1.6;fill:none"/>`,
+  tomei: `<path class="l" d="M13 26q19-28 38 0" style="stroke:#8E8A80;stroke-width:1.8"/><path class="sk" d="M13 24h38v28q0 6-19 6t-19-6z" style="fill:#E6F3FA;opacity:.7"/>
+    <ellipse class="sk" cx="32" cy="24" rx="19" ry="5.4" style="fill:#F4F9FC"/><path class="w n" d="M18 30v20M24 32v18" style="stroke:#fff;stroke-width:2.4"/><circle class="w n" cx="40" cy="42" r="2" style="fill:#fff"/>`,
+  akarui: paint("#FFF2A8", `<path class="l" d="M32 2v6M8 10l4 4M56 10l-4 4M2 26h6M56 26h6" style="stroke:#F2C230;stroke-width:2.4"/>`),
+  kurai: paint("#3A3550", `<path class="y" d="M54 4a7 7 0 1 0 5 12A6 6 0 1 1 54 4z" style="fill:#F5D84A"/>${star(8, 10, 2.4, "y")}`),
 };
 
 function toyArt(id, cls = "") {

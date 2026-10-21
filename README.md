@@ -1095,6 +1095,28 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.67.0: Finding your way, and paying
+
+- **Four new capsule sets**, all 30 coins a turn. Three of them are
+  slotted in early, straight after 家 At home, because they're the words
+  you need first when you're out:
+  - **場所 Places around town:** トイレ, 駅, 病院, 薬局, 銀行, 交番,
+    出口, 改札, スーパー, 郵便局… with トイレはどこですか *Where's the
+    toilet?* (rares: 空港, 映画館, 温泉)
+  - **道案内 Directions:** 右, 左, まっすぐ, 角, 橋, 北口, 南口, 東口,
+    近い, 遠い, 隣… each with the line you'd hear or say: 右に曲がって
+    ください, 歩いて何分ですか, 銀行の隣です (rares: 交差点, 地図, and
+    道に迷う with 道に迷いました *I'm lost*)
+  - **お金と買い物 Paying and shopping:** 現金, カード, QRコード,
+    レシート, いくら, これ, 試着, 免税, ポイントカード, 袋… with カードで
+    払えますか, これをください, 試着してもいいですか, 袋はいりません
+    (rares: 財布, 免税, プレゼント)
+  - **色 Colours**, next to Clothes: twenty pots of paint with 赤いのは
+    ありますか *Do you have a red one?*, and もっと明るい色はありますか
+    (rares: 金色, 銀色, 虹色)
+- Sets you haven't reached have moved along to make room. Nothing you've
+  collected changes.
+
 ### 0.66.0: Countries, weather, coffee, animals, famous places
 
 - **Five more capsule sets**, opening after 仕事 Jobs, each 30 coins a
@@ -2119,11 +2141,13 @@ larger), the bests (the faster) and the rounds.
   鳥居, 富士山…), then 食べ物 Food (おにぎり, ラーメン, たいやき,
   抹茶…), then 町 Around town (自販機, 新幹線, 踏切, 東京タワー…), then
   家 At home (机, 冷蔵庫, 時計, 布団, お箸, 茶碗, こたつ, 猫…), then
-  sets of words to say things with: 気持ち Feelings (うれしい, つかれた,
-  おなかがすいた…), 服 Clothes, 飲み物 Drinks, コンビニ Convenience store,
-  仕事 Jobs, 国 Countries (flags), 天気と季節 Weather and seasons, カフェ
-  Coffee and tea, 動物 Animals and 名所 Famous places — fourteen sets,
-  280 toys. A
+  sets of words to say things with, the everyday-survival ones first:
+  場所 Places around town (トイレ, 駅, 病院, 薬局…), 道案内 Directions,
+  お金と買い物 Paying and shopping, 気持ち Feelings (うれしい, つかれた,
+  おなかがすいた…), 服 Clothes, 色 Colours, 飲み物 Drinks, コンビニ
+  Convenience store, 仕事 Jobs, 国 Countries (flags), 天気と季節 Weather
+  and seasons, カフェ Coffee and tea, 動物 Animals and 名所 Famous places.
+  A
   toy not yet found is a ? box; a found one stands on the shelf with its
   name in Japanese (furigana as the learner needs it) and English, and a
   tap says it. Doubles are counted (×2). **A full set opens the next**, with
