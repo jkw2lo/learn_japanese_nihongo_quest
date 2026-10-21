@@ -2890,8 +2890,7 @@ h1 .h-en { font-size: .6em; color: var(--ink-2); font-weight: 500; }
 /* 外来語 Loanwords: a word to sound out, and the rules sheet */
 .rd-btns { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; }
 /* Quiz me (games-ui.js): a full shelf's names, heard or read; the toys to pick from, drawn */
-.gq-sets { margin-top: 1rem; }
-.gq-set { padding: .8rem 0 .2rem; border-top: 1px solid var(--rule-2); }
+.gq-set { margin-top: 1rem; padding: .8rem 0 .2rem; border-top: 1px solid var(--rule-2); }
 .gq-name { font-weight: 600; margin-bottom: .5rem; }
 .gq-hint { margin: .8rem 0 0; }
 /* three equal tiles, the way in Japanese over English — never side by side, which wraps on a phone */

@@ -1095,10 +1095,19 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.63.2: One quiz a shelf
+
+- **The Collection card's Quiz me row belongs to the set on show.** Each
+  collection tab showed a Quiz me row for every full set, so with two
+  full sets both rows appeared under every tab. Now a full set's tab shows
+  only its own row. A set not yet full shows one line saying it opens when
+  the shelf is full. Folded, the card shows the row for the set its dots
+  are for, if that set is full.
+
 ### 0.63.1: Quiz me, on the shelf
 
 - **Quiz me has moved into the Collection card.** Each full shelf gets a
-  row at the foot of the card, shown whether the shelf is open or folded,
+  row at the foot of the card (0.63.2: only on its own tab), shown whether the shelf is open or folded,
   so the quiz sits with the toys it asks about. The separate Quiz me card
   is gone.
 - **The buttons are three equal tiles**, with the Japanese over the English

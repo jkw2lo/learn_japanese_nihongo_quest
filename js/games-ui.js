@@ -84,7 +84,7 @@ function shelfHtml() {
   if (!shown) return `<section class="card gm-shelves shut" id="gmShelves">${head}
     <button class="gm-dots" data-act="ga-shelf-fold" aria-label="Show the collection">${S.toys.map((t, i) =>
       `<i class="${owned[t.id] ? "on" : ""} ${t.rare ? "rare" : ""}" data-t="${t.id}" style="--h:${GACHA_HUES[i % GACHA_HUES.length]}"></i>`).join("")}</button>
-    ${toyQuizHtml(false)}
+    ${toyQuizHtml(S, false)}
   </section>`;
   const rows = [];
   for (let i = 0; i < S.toys.length; i += 5) rows.push(S.toys.slice(i, i + 5));
@@ -93,7 +93,7 @@ function shelfHtml() {
       ${open(x) ? "" : icon("lock")}<span lang="ja">${furiPlain(x.jp)}</span> ${i + 1}</button>`).join("")}</div>
     <p class="muted small">${setDone(S, owned) ? `<b>${esc(S.en)}</b> — complete. Tap a toy to hear its name.` : `<b>${esc(S.en)}</b> — ${S.toys.length - have} still to find. Tap a toy to hear its name.`}</p>
     <div class="gm-shelf">${rows.map(r => `<div class="gm-row">${r.map(t => toySlot(t, owned[t.id])).join("")}</div>`).join("")}</div>
-    ${toyQuizHtml(true)}
+    ${toyQuizHtml(S, true)}
   </section>`;
 }
 
@@ -297,25 +297,20 @@ const hearsIt = w => w !== "r";          /* the ways that need sound */
 const TOY_NEKO_N = 6;                   /* toys on the neko's shelf */
 let toyQuiz = { set: null, way: "r" };     /* the round to open: rd-again opens it again */
 
-/* Quiz me, at the foot of the Collection card — open or folded — a row for
-   each full shelf: three tiles, the way in Japanese over English, and the
-   best round under it. Before any shelf is full, one line says how to
-   open it (only with the shelf open, so the folded card stays one line). */
-function toyQuizHtml(shown) {
-  const owned = state.gacha.owned, quiz = state.gacha.quiz || {};
-  const done = TOY_SETS.filter(S => setDone(S, owned));
-  if (!done.length) return shown ? `<p class="muted small gq-hint">Fill a shelf and you can be quizzed on its twenty names: by ear, by sight, or by handing the neko what it asks for.</p>` : "";
-  const row = S => {
-    const b = quiz[S.id] || {};
-    return `<div class="gq-set">
-      <div class="gq-name">Quiz me on <span lang="ja">${wordHtml(S.jp)}</span> ${esc(S.en)}</div>
-      <div class="gq-btns">${Object.entries(TOY_QUIZ_WAYS).map(([w, [jp, en]]) =>
-        `<button class="gq-btn" data-act="gq-start" data-s="${S.id}" data-w="${w}" ${hearsIt(w) && !state.settings.sound ? "disabled" : ""}>
-          <span class="gq-jp" lang="ja">${jp}</span><span class="gq-en">${en}</span>${b[w] != null ? `<small>best ${b[w]}/${TOY_QUIZ_N}</small>` : ""}</button>`).join("")}</div>
-    </div>`;
-  };
-  return `<div class="gq-sets">${done.map(row).join("")}
-    ${state.settings.sound ? "" : `<p class="muted small">Listen and Neko asks need sound — it's off in Settings.</p>`}</div>`;
+/* Quiz me, at the foot of the Collection card: the set on show, and only
+   it — three tiles, the way in Japanese over English, and the best round
+   under it. A set not yet full gets one line saying so (with the shelf
+   open; folded, the card stays as it is). */
+function toyQuizHtml(S, shown) {
+  if (!setDone(S, state.gacha.owned)) return shown ? `<p class="muted small gq-hint">Fill this shelf and you can be quizzed on its twenty names: by ear, by sight, or by handing the neko what it asks for.</p>` : "";
+  const b = (state.gacha.quiz || {})[S.id] || {};
+  return `<div class="gq-set">
+    <div class="gq-name">Quiz me on <span lang="ja">${wordHtml(S.jp)}</span> ${esc(S.en)}</div>
+    <div class="gq-btns">${Object.entries(TOY_QUIZ_WAYS).map(([w, [jp, en]]) =>
+      `<button class="gq-btn" data-act="gq-start" data-s="${S.id}" data-w="${w}" ${hearsIt(w) && !state.settings.sound ? "disabled" : ""}>
+        <span class="gq-jp" lang="ja">${jp}</span><span class="gq-en">${en}</span>${b[w] != null ? `<small>best ${b[w]}/${TOY_QUIZ_N}</small>` : ""}</button>`).join("")}</div>
+    ${state.settings.sound ? "" : `<p class="muted small">Listen and Neko asks need sound — it's off in Settings.</p>`}
+  </div>`;
 }
 
 function toyQuizStart(setId, way) {
