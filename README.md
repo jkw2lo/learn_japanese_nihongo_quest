@@ -1095,6 +1095,27 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.62.0: Quiz me
+
+- **A full shelf of capsule toys can now be quizzed.** A new Quiz me card
+  sits under the collection on the Games tab, with a row for every
+  finished set. Each row has two buttons:
+  - **聞く Listen:** hear a toy's name and pick the toy.
+  - **読む Read:** see the name, with furigana over any kanji, and pick the
+    toy.
+  Each round is ten questions. The four answers are toys from the same
+  shelf, drawn and named in English.
+- **After each answer you see the word with its reading and meaning.** In
+  Read you also hear it. A right answer moves on by itself. After a wrong
+  one, Next waits, and you can hear the word again. The round ends with
+  your score, your best, and the names you missed, which you can tap to hear.
+- **No writing.** Most toy names are in kanji the lessons don't teach, so
+  the point is to know the word when you hear or see it.
+- **Pays like the Read tab's rounds:** a coin for each toy you name, three
+  more for a new best. Bests sync between devices.
+- **Finishing a set** now offers *Quiz me on them* beside *On to the next
+  set*.
+
 ### 0.61.1: Toys say what they are
 
 - **Every capsule toy shows its meaning on a phone too.** The collection
@@ -1986,6 +2007,14 @@ larger), the bests (the faster) and the rounds.
   name in Japanese (furigana as the learner needs it) and English, and a
   tap says it. Doubles are counted (×2). **A full set opens the next**, with
   a 全部 stamp; earlier sets stay to look at, later ones are locked.
+- **Quiz me** (`toyQuizCard` in `js/games-ui.js`): a full shelf's twenty
+  names, ten at a time, either heard (聞く Listen) or read (読む Read), with
+  four of the shelf's toys, drawn and named in English, to pick from.
+  Reading shows furigana over the kanji: the name is the word to learn, and
+  its kanji mostly aren't taught, so there's no writing either. Nothing is
+  scheduled. The best round per set and way is kept (`state.gacha.quiz`,
+  the larger on a sync), and a round pays a coin a toy named and three for
+  a best. The set-complete card has a way in too.
 - **The odds** (`gachaPick`): the machine only gives toys from the set
   being collected; one you haven't got is four times as likely as one you
   have, a rare one half as likely as the rest; a double gives 5 coins back

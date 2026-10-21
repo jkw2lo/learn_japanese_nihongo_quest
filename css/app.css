@@ -2889,6 +2889,21 @@ h1 .h-en { font-size: .6em; color: var(--ink-2); font-weight: 500; }
 
 /* 外来語 Loanwords: a word to sound out, and the rules sheet */
 .rd-btns { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; }
+/* Quiz me (games-ui.js): a full shelf's names, heard or read; the toys to pick from, drawn */
+.gq-set { display: flex; align-items: center; justify-content: space-between; gap: .4rem .8rem; flex-wrap: wrap; padding: .6rem 0; border-top: 1px solid var(--rule-2); }
+.gq-name { display: flex; flex-direction: column; }
+.gq-name small { font-size: .8rem; }
+.gq-btns { display: flex; gap: 6px; }
+.gq-play { text-align: center; padding-top: .6rem; }
+.gq-play .play { margin: .2rem 0 1rem; }
+.gq-word { font-size: clamp(2.2rem, 10vw, 3.2rem); line-height: 1.6; margin: 0 0 .8rem; }
+.gq-word rt { font-size: .4em; }
+.gq-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-width: 30rem; margin: 0 auto; }
+.gq-opt { flex-direction: column; gap: 4px; padding: 10px 6px; font-size: .95rem; font-weight: 500; }
+.gq-opt .gm-fig { width: min(72px, 60%); }
+.gq-m { line-height: 1.2; }
+.gq-why { min-height: 2.6rem; margin-top: .8rem; }
+.gq-missed { margin: .4rem auto 1rem; max-width: 30rem; }
 .ln-play { text-align: center; padding-top: 1rem; }
 .ln-word { font-size: clamp(2.4rem, 10vw, 3.6rem); line-height: 1.2; margin: .6rem 0 .2rem; }
 .ln-hear { display: inline-flex; align-items: center; gap: 4px; font-size: .9rem; margin-bottom: 1.2rem; }

@@ -104,7 +104,7 @@ const CONTRACT = {
   'js/loans-ui.js': ['loanCard', 'loanPool', 'loanOpen', 'loanShow', 'loanAnswer', 'loanDecoys', 'openLoanRules', 'openLoanList'],
   'js/arcade-ui.js': ['ninjaWave', 'ninjaKinds', 'ninjaCard', 'ninjaOpen', 'deckRound', 'deckModesOpen', 'deckCard', 'deckOpen', 'arcadeKey', 'knownKana'],
   'js/trail-ui.js': ['TRAIL_LEVELS', 'TRAIL_GRIDS', 'makeTrail', 'trailPlaces', 'trailWords', 'trailCard', 'trailOpen'],
-  'js/games-ui.js': ['renderGames', 'earnCoins', 'coins', 'gachaKey', 'shelfHtml'],
+  'js/games-ui.js': ['renderGames', 'earnCoins', 'coins', 'gachaKey', 'shelfHtml', 'toyQuizOpen', 'toyQuizShow', 'toyQuizFinish', 'toyQuizKey'],
   'js/phone.js': ['isPhone', 'openDrawer', 'closeDrawer', 'initDrawerLoop', 'centerDrawer', 'drawerTick', 'phoneAfterRender', 'drawerOpen'],
 };
 const declares = (src, name) => {
@@ -496,10 +496,12 @@ section('games');
   const r = code => vm.runInContext(code, sb);
   ok(r('(o => !Array.isArray(o) && typeof o === "object")(normalise({ gacha: { owned: [], earned: 5 } }).gacha.owned)'), 'a junk owned list should normalise to a map');
   const m = r(`(() => { const a = freshState(), b = freshState();
-    a.gacha = { earned: 100, spent: 40, owned: { daruma: 2, maneki: 1 }, dry: 1 }; a.updated = 1;
-    b.gacha = { earned: 80, spent: 60, owned: { daruma: 1, fuji: 1 }, dry: 0 }; b.updated = 2;
+    a.gacha = { earned: 100, spent: 40, owned: { daruma: 2, maneki: 1 }, dry: 1, quiz: { lucky: { r: 7, l: 4 } } }; a.updated = 1;
+    b.gacha = { earned: 80, spent: 60, owned: { daruma: 1, fuji: 1 }, dry: 0, quiz: { lucky: { r: 5, l: 9 }, food: { r: 3 } } }; b.updated = 2;
     return mergeState(a, b).gacha; })()`);
   ok(m.earned === 100 && m.spent === 60 && m.owned.daruma === 2 && m.owned.fuji === 1 && m.owned.maneki === 1, `gacha merge: ${JSON.stringify(m)}`);
+  ok(m.quiz.lucky.r === 7 && m.quiz.lucky.l === 9 && m.quiz.food.r === 3, `Quiz me bests should merge as the larger, per set and way: ${JSON.stringify(m.quiz)}`);
+  ok(r('JSON.stringify(normalise({ gacha: { owned: {} } }).gacha.quiz)') === '{}', 'an old save with no quiz bests should get an empty map');
   ok(!/\bcta\b/.test(read('js/games-ui.js') + read('js/arcade-ui.js') + read('js/trail-ui.js')), 'the Games tab uses .cta — on a phone its buttons would pile up');
   /* the arcade (arcade-ui.js): a wave's targets are what it asks for and
      its bombs never are; a deck holds its answer exactly once */

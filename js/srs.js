@@ -75,7 +75,7 @@ const freshRead = () => ({ flash: { cps: 1.5, best: 0, rounds: 0 }, chains: { n:
 /* Coins are kept as two running totals, earned and spent, so a merge can
    take the larger of each; owned is toy id -> how many; dry, the turns in a
    row with nothing new (the machine's pity, js/data/toys.js). */
-const freshGacha = () => ({ earned: 0, spent: 0, owned: {}, dry: 0 });
+const freshGacha = () => ({ earned: 0, spent: 0, owned: {}, dry: 0, quiz: {} });
 
 const freshState = () => ({
   app: "nihongo-quest", v: 1,
@@ -143,7 +143,8 @@ function normalise(s) {
   out.outWord = s.outWord && typeof s.outWord === "object" ? s.outWord : null;   /* today's word from the street — shown only */
   out.menu = { orders: 0, days: {}, ...(s.menu || {}) };
   const sg = s.gacha && typeof s.gacha === "object" ? s.gacha : {};
-  out.gacha = { ...freshGacha(), ...sg, owned: sg.owned && typeof sg.owned === "object" && !Array.isArray(sg.owned) ? sg.owned : {} };
+  const isMap = v => v && typeof v === "object" && !Array.isArray(v);
+  out.gacha = { ...freshGacha(), ...sg, owned: isMap(sg.owned) ? sg.owned : {}, quiz: isMap(sg.quiz) ? sg.quiz : {} };
   out.milestones = s.milestones && typeof s.milestones === "object" ? s.milestones : {};
   out.scenes = s.scenes && typeof s.scenes === "object" ? s.scenes : {};
   for (const [id, x] of Object.entries(out.scenes)) {
@@ -572,7 +573,9 @@ function mergeState(a, b) {
   out.menu = { orders: bigger(a.menu.orders, b.menu.orders), days: mergeBy(a.menu.days, b.menu.days, bigger) };
   /* coins: the larger total earned and the larger spent; a toy, the larger count */
   out.gacha = { earned: bigger(a.gacha.earned, b.gacha.earned), spent: bigger(a.gacha.spent, b.gacha.spent),
-    owned: mergeBy(a.gacha.owned, b.gacha.owned, bigger), dry: newer.gacha.dry || 0 };
+    owned: mergeBy(a.gacha.owned, b.gacha.owned, bigger), dry: newer.gacha.dry || 0,
+    /* Quiz me bests: the larger, per set and way */
+    quiz: mergeBy(a.gacha.quiz, b.gacha.quiz, (x, y) => mergeBy(x, y, bigger)) };
   const betterRun = (x, y) => (y.right > x.right || (y.right === x.right && y.ms < x.ms) ? y : x);
   const seen = new Set();
   out.sprint = {

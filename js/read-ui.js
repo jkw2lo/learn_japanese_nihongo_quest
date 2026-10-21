@@ -199,7 +199,7 @@ let RD = null;           /* the round being played */
 function openRead(rung) {
   const pool = readPool();
   /* the arcade games bring their own (kana, before there are words) */
-  if (pool.length < 6 && !["ninja", "deck", "loans"].includes(rung)) return;
+  if (pool.length < 6 && !["ninja", "deck", "loans", "toys"].includes(rung)) return;
   RD = { rung, pool, i: 0, res: [], t0: performance.now(), done: false };
   crumb(`read ${rung}`);
   $("#rdPace").textContent = "";
@@ -211,6 +211,7 @@ function openRead(rung) {
   if (rung === "deck") return deckOpen();
   if (rung === "trail") return trailOpen();
   if (rung === "loans") return loanOpen();
+  if (rung === "toys") return toyQuizOpen();
   if (rung === "subs") {
     const s = state.read.subs;
     Object.assign(RD, { cps: s.cps, cps0: s.cps, len: s.len, n: SUBS_N, streak: 0, lines: subsPool(), seen: new Set() });
@@ -247,7 +248,7 @@ function rdStep() {
   rdStrip();
   $("#rdFoot").innerHTML = "";
   if (RD.i >= RD.n) return rdFinish();
-  if (RD.rung === "subs") subsShow(); else if (RD.rung === "phrases") phraseShow(); else if (RD.rung === "texts") textShow(); else if (RD.rung === "loans") loanShow(); else chainShow();
+  if (RD.rung === "subs") subsShow(); else if (RD.rung === "phrases") phraseShow(); else if (RD.rung === "texts") textShow(); else if (RD.rung === "loans") loanShow(); else if (RD.rung === "toys") toyQuizShow(); else chainShow();
 }
 
 function closeRead() {
@@ -1073,6 +1074,7 @@ function matchDone() {
 
 function rdFinish() {
   if (RD.done) return;
+  if (RD.rung === "toys") return toyQuizFinish();
   RD.done = true;
   clearTimeout(RD.hide); clearTimeout(RD.next);
   addStudyTime(performance.now() - RD.t0);
@@ -1131,6 +1133,7 @@ function readKey(e) {
     const d = { ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3 }[e.key] ?? (/^[1-4]$/.test(e.key) ? +e.key - 1 : null);
     if (d != null && !$(`.mt-t[data-i="${d}"]`)?.disabled) { e.preventDefault(); matchOne(d); }
   }
+  if (RD.rung === "toys") return toyQuizKey(e);
   if (RD.rung === "loans") {
     if (/^[1-4]$/.test(e.key)) { e.preventDefault(); loanAnswer(+e.key - 1); }
     else if ((e.key === "Enter" || e.key === " ") && $("#rdNext")) { e.preventDefault(); ACTS["rd-next"](); }

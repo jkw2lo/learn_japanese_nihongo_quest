@@ -10,6 +10,7 @@
    opens the next set. state.gacha:
      earned  coins ever earned      spent  coins ever spent
      owned   toy id -> how many     dry    turns in a row with nothing new
+     quiz    set id -> { l, r }: the best Quiz me round, by ear and by sight
    Coins are earned − spent, so two devices merge by taking the larger of
    each (srs.js mergeState). */
 
@@ -61,6 +62,7 @@ function renderGames() {
       ${spinsAll() >= 2 ? `<button class="btn btn-ghost gm-turn-all" data-act="ga-spin-all" ${gaBusy ? "disabled" : ""}>Turn them all · ${spinsAll()} capsules</button>` : ""}
     </section>
     ${shelfHtml()}
+    ${toyQuizCard()}
     ${ninjaCard()}
     ${deckCard()}
     ${searchCard(pool)}
@@ -270,10 +272,132 @@ function showSetDone(S, next) {
     <div class="celebrate">${neko("cheer", "hop")}${stamp("全部")}</div>
     <h2>${esc(S.en)} — complete!</h2>
     <p>All ${S.toys.length} on the shelf.${next ? ` The next set is open: <b><span lang="ja">${wordHtml(next.jp)}</span> ${esc(next.en)}</b>.` : " That's every set there is — for now."}</p>
-    <div class="ga-acts"><button class="btn" data-act="ga-done-close">${next ? "On to the next set" : "Lovely"} <kbd>↵</kbd></button></div>
+    <div class="ga-acts"><button class="btn btn-ghost" data-act="gq-start" data-s="${S.id}" data-w="r">Quiz me on them</button>
+      <button class="btn" data-act="ga-done-close">${next ? "On to the next set" : "Lovely"} <kbd>↵</kbd></button></div>
   </div>`;
   document.body.appendChild(box);
   petals(box, 30);
+}
+
+/* ---------- Quiz me: a full shelf's twenty names ---------- */
+
+/* Every toy is a word, and a full shelf can be quizzed: ten of its toys,
+   each heard (聞く Listen) or read (読む Read), and four of the shelf's toys,
+   drawn and named in English, to pick from. Reading shows furigana over
+   the kanji — the name is the word to know; its kanji mostly aren't taught.
+   No writing, for the same reason. It plays in the Read overlay (RD, rung
+   "toys"); nothing is scheduled, and the best round per set and way is
+   kept (state.gacha.quiz). */
+const TOY_QUIZ_N = 10;
+const TOY_QUIZ_WAYS = { l: ["聞く", "Listen"], r: ["読む", "Read"] };
+let toyQuiz = { set: null, way: "r" };     /* the round to open: rd-again opens it again */
+
+function toyQuizCard() {
+  const owned = state.gacha.owned, quiz = state.gacha.quiz || {};
+  const done = TOY_SETS.filter(S => setDone(S, owned));
+  const cur = currentSet(owned), left = cur.toys.filter(t => !owned[t.id]).length;
+  const row = S => {
+    const b = quiz[S.id] || {};
+    const bests = Object.keys(TOY_QUIZ_WAYS).filter(w => b[w] != null).map(w => `${TOY_QUIZ_WAYS[w][1]} <b>${b[w]}</b>/${TOY_QUIZ_N}`);
+    return `<div class="gq-set">
+      <div class="gq-name"><span lang="ja">${wordHtml(S.jp)}</span> ${esc(S.en)}${bests.length ? `<small class="muted">Best: ${bests.join(" · ")}</small>` : ""}</div>
+      <div class="gq-btns">${Object.entries(TOY_QUIZ_WAYS).map(([w, [jp, en]]) =>
+        `<button class="btn btn-ghost btn-sm" data-act="gq-start" data-s="${S.id}" data-w="${w}" ${w === "l" && !state.settings.sound ? "disabled" : ""}><span lang="ja">${jp}</span> ${en}</button>`).join("")}</div>
+    </div>`;
+  };
+  return `<section class="card rd-rung gm-quiz ${done.length ? "" : "locked"}">
+    <div class="rd-rung-head"><span class="rd-n rd-game" lang="ja">問</span><h2><span lang="ja">クイズ</span> Quiz me</h2></div>
+    <p>Every toy is a word worth knowing. Fill a shelf, then test yourself on its twenty names — by ear, or by sight.</p>
+    ${done.length ? done.map(row).join("") + (state.settings.sound ? "" : `<p class="muted small">Listen needs sound — it's off in Settings.</p>`)
+      : `<p class="muted small">Opens when a shelf is full: ${left} more to find for <b>${esc(cur.en)}</b>.</p>`}
+  </section>`;
+}
+
+function toyQuizStart(setId, way) {
+  const S = TOY_SETS.find(x => x.id === setId);
+  if (!S || !setDone(S, state.gacha.owned)) return;
+  toyQuiz = { set: S.id, way };
+  openRead("toys");
+}
+
+/* called by openRead */
+function toyQuizOpen() {
+  const S = TOY_SETS.find(x => x.id === toyQuiz.set);
+  if (!S) return closeRead();
+  loadBundle("gacha");
+  Object.assign(RD, { set: S, way: toyQuiz.way, lines: sample(S.toys, TOY_QUIZ_N), n: TOY_QUIZ_N });
+  $("#rdStrip").innerHTML = Array.from({ length: RD.n }, (_, i) => `<i data-i="${i}"></i>`).join("");
+  rdStep();
+}
+
+function toyQuizShow() {
+  const t = RD.lines[RD.i], listen = RD.way === "l";
+  const opts = shuffle([t, ...sample(RD.set.toys.filter(x => x !== t), 3)]);
+  RD.q = { x: t, opts, answered: false };
+  $("#rdPace").textContent = `${RD.i + 1} of ${RD.n}`;
+  $("#rdBody").innerHTML = `<div class="gq-play">
+    <p class="muted">${listen ? "Listen. Which toy is it?" : "Read it. Which toy is it?"}</p>
+    ${listen ? `<button class="play" data-act="gq-hear" aria-label="Hear it again">${icon("speaker")}</button>`
+      : `<div class="gq-word" lang="ja">${wordHtml(t.w, "always")}</div>`}
+    <div class="gq-opts">${opts.map((o, i) => `<button class="opt gq-opt" data-act="gq-opt" data-i="${i}"><kbd>${i + 1}</kbd>
+      <span class="gm-fig">${toyArt(o.id)}</span><span class="gq-m">${esc(o.m)}</span></button>`).join("")}</div>
+    <div class="verdict gq-why" id="gqWhy" aria-live="polite"></div>
+  </div>`;
+  if (listen) say(furiKana(t.w));
+}
+
+function toyQuizAnswer(i) {
+  const q = RD?.q;
+  if (!q || q.answered || !q.opts[i]) return;
+  q.answered = true;
+  const ok = q.opts[i] === q.x;
+  RD.res[RD.i] = ok ? "ok" : "miss";
+  $$(".gq-opt").forEach((b, j) => { b.disabled = true; if (q.opts[j] === q.x) b.classList.add("right"); else if (j === i) b.classList.add("wrong"); });
+  /* the answer, whichever way it was asked: the word with its reading, and its meaning */
+  const v = $("#gqWhy");
+  v.className = "verdict gq-why " + (ok ? "ok" : "miss");
+  v.innerHTML = `${icon(ok ? "check" : "close", "v-ico")} <b lang="ja">${wordHtml(q.x.w, "always")}</b> ${esc(q.x.m)}`;
+  if (RD.way === "r") say(furiKana(q.x.w));
+  rdStrip();
+  if (ok) RD.next = setTimeout(() => { if (RD?.q === q) { RD.i++; rdStep(); } }, 1300);
+  else $("#rdFoot").innerHTML = `<button class="btn btn-ghost" data-act="gq-hear">${icon("speaker")} Again</button><button class="btn" id="rdNext" data-act="rd-next">Next <kbd>↵</kbd></button>`;
+}
+
+/* called by rdFinish */
+function toyQuizFinish() {
+  RD.done = true;
+  clearTimeout(RD.next);
+  addStudyTime(performance.now() - RD.t0);
+  const right = RD.res.filter(x => x === "ok").length, total = RD.n;
+  const quiz = state.gacha.quiz || (state.gacha.quiz = {});
+  const b = quiz[RD.set.id] || (quiz[RD.set.id] = {});
+  const best = right > (b[RD.way] || 0);
+  if (b[RD.way] == null || best) b[RD.way] = right;
+  /* coins: one a toy named, three for a best — as the Read tab's rounds pay */
+  const paid = earnCoins(right + (best ? 3 : 0));
+  save();
+  crumb(`toy quiz ${RD.set.id} ${RD.way} ${right}/${total}`);
+  rdStrip();
+  const missed = RD.lines.filter((_, i) => RD.res[i] !== "ok");
+  $("#rdBody").innerHTML = `<div class="finish">
+    <div class="celebrate">${neko(best ? "cheer" : right >= total * 0.75 ? "happy" : "think", "hop")}${best ? stamp("新記録") : ""}</div>
+    <div class="finish-big">${right}<small>/${total}</small></div>
+    <p><span lang="ja">${wordHtml(RD.set.jp)}</span> ${esc(RD.set.en)} · ${TOY_QUIZ_WAYS[RD.way][1].toLowerCase()}</p>
+    ${best ? `<div class="badge-best">New best</div>` : ""}
+    ${missed.length ? `<div class="gq-missed"><p class="muted small">To go over — tap one to hear it:</p>
+      <div class="chips">${missed.map(t => `<button class="chip" data-act="ga-hear" data-t="${t.id}"><b lang="ja">${wordHtml(t.w, "always")}</b> <small>${esc(t.m)}</small></button>`).join("")}</div></div>` : ""}
+    ${paid}
+  </div>`;
+  if (best) petals($("#read"), 24);
+  $("#rdFoot").innerHTML = `<button class="btn btn-ghost" data-act="rd-close">Done <kbd>Esc</kbd></button>
+    <button class="btn" data-act="rd-again">Again <kbd>↵</kbd></button>`;
+}
+
+function toyQuizKey(e) {
+  if (/^[1-4]$/.test(e.key)) { e.preventDefault(); toyQuizAnswer(+e.key - 1); }
+  else if ((e.key === "Enter" || e.key === " ") && $("#rdNext")) { e.preventDefault(); ACTS["rd-next"](); }
+  else if (e.key === "r" || e.key === "R") { e.preventDefault(); ACTS["gq-hear"](); }
+  return true;
 }
 
 function gachaKey(e) {
@@ -296,5 +420,12 @@ Object.assign(ACTS, {
   "ga-shelf": el => { gaShelf = el.dataset.s; const s = $("#gmShelves"); if (s) s.outerHTML = shelfHtml(); },
   "ga-done-close": () => { $("#gaDone")?.remove(); if (nextSetDone()) return; gaShelf = null; render(); },
   "ga-spin-all": () => gachaSpinAll(),
+  "gq-start": el => {
+    /* from the set-complete card too: that card goes, and any after it */
+    if ($("#gaDone")) { $("#gaDone").remove(); gaDoneQueue = []; gaShelf = null; render(); }
+    toyQuizStart(el.dataset.s, el.dataset.w);
+  },
+  "gq-opt": el => toyQuizAnswer(+el.dataset.i),
+  "gq-hear": () => { if (RD?.q) say(furiKana(RD.q.x.w)); },
   "ga-go": () => { closeRead(); if (typeof SP !== "undefined" && SP) ACTS["sp-close"](); go("games"); },
 });
