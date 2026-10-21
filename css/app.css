@@ -2804,6 +2804,7 @@ button.tx-line:hover { background: color-mix(in srgb, var(--ai) 8%, transparent)
 .ga-got.rare { background: var(--gold-soft); }
 .ga-got .gm-fig { width: min(64px, 100%); }
 .ga-got .gm-name { font-size: .82rem; }
+.ga-got small { font-size: .7rem; color: var(--ink-3); line-height: 1.15; }
 .ga-got em { font-style: normal; font-size: .68rem; font-weight: 600; color: var(--jade); }
 .ga-got.rare em { color: var(--amber); }
 .ga-got.bounce .gm-fig { animation: gm-bounce .45s; }
@@ -3462,7 +3463,8 @@ h1 .h-en { font-size: .6em; color: var(--ink-2); font-weight: 500; }
   .gm-turn, .gm-turn-all { min-width: 0; width: 100%; }
   .gm-row { gap: 4px; padding: 0 2px 8px; }
   .gm-name { font-size: .82rem; }
-  .gm-slot small { display: none; }
+  /* the meaning stays, smaller: five across leaves about 65px a toy */
+  .gm-slot small, .ga-got small { font-size: .66rem; hyphens: auto; }
   .ga-name { font-size: 1.7rem; }
 
   /* the arcade: the ninja's field fills the screen; the deck sits low, by the thumb */

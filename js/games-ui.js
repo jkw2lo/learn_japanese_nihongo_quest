@@ -173,7 +173,7 @@ function gachaOpenAll(got, sets) {
       <div class="ga-sum"><b>${got.length}</b> capsules · <b>${fresh}</b> new${dups ? ` · ${dups} double${dups > 1 ? "s" : ""}, ${coinArt()} +${dups * DUP_BACK} back` : ""}</div>
       <div class="ga-haul">${tiles.map((x, i) => `<button class="ga-got ${x.isNew ? "new" : ""} ${x.toy.rare ? "rare" : ""}" data-act="ga-hear" data-t="${x.toy.id}" style="--d:${Math.min(i, 24) * 60}ms">
         <span class="gm-fig">${toyArt(x.toy.id)}${x.n > 1 ? `<i class="gm-x">×${x.n}</i>` : ""}</span>
-        <span class="gm-name" lang="ja">${wordHtml(x.toy.w)}</span>${x.isNew ? `<em>${x.toy.rare ? "Rare!" : "New"}</em>` : ""}</button>`).join("")}</div>
+        <span class="gm-name" lang="ja">${wordHtml(x.toy.w)}</span><small>${esc(x.toy.m)}</small>${x.isNew ? `<em>${x.toy.rare ? "Rare!" : "New"}</em>` : ""}</button>`).join("")}</div>
       <p class="muted small">Tap a toy to hear its name.</p>
       <div class="ga-acts"><button class="btn" data-act="ga-keep">Put them on the shelf <kbd>↵</kbd></button></div>
     </div>

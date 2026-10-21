@@ -1095,6 +1095,16 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.61.1: Toys say what they are
+
+- **Every capsule toy shows its meaning on a phone too.** The collection
+  shelf had the English under each toy on a desktop, but the phone layout
+  hid it to save room. Now it shows in smaller type, wrapping onto a second
+  line where it needs to (*beckoning cat*).
+- **"Turn them all" shows meanings too.** The screen with every toy from one
+  big capsule had only the Japanese names. A single capsule already showed
+  the meaning.
+
 ### 0.61.0: Which kana, at a glance
 
 - **The writing prompt leads with the sound.** In Sprint's 書く Write and in
