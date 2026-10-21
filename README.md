@@ -1095,6 +1095,30 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.68.0: Fruit and veg, hobbies, actions, technology
+
+- **Four more capsule sets**, all 30 coins a turn. That makes twenty-two
+  sets and 440 toys.
+  - **果物と野菜 Fruit and veg**, after the convenience store: りんご,
+    みかん, バナナ, いちご, トマト, にんじん, ねぎ, 大根… Its lines teach
+    counting as you buy: りんごを三つください, ねぎを一本ください,
+    いちごを一パックください (rares: メロン, 柿, かぼちゃ)
+  - **趣味 Hobbies**, after Jobs: 映画, 音楽, 読書, 料理, 旅行, 写真,
+    サッカー, カラオケ, アニメ… with 趣味は料理です *My hobby is cooking*,
+    and ギターを弾きます (rares: 山登り, ダンス, 書道)
+  - **動き Actions:** twenty verbs, each a little person doing it, and
+    each with the line you'd actually say: 食べたいです, ゆっくり話して
+    ください, ちょっと待ってください, 手伝ってください, 写真を撮っても
+    いいですか, ここに座ってもいいですか. That covers 〜たい, 〜てください
+    and 〜てもいいですか in passing (rares: 走る, 泳ぐ, 遊ぶ)
+  - **テクノロジー Technology:** パソコン, イヤホン, ワイファイ,
+    コンセント, モバイルバッテリー, SIMカード… with ワイファイのパスワードは
+    何ですか and コンセントはありますか (rares: ゲーム機, ドローン,
+    スマートウォッチ)
+- **Each set's lines now have their own small sound file**
+  (`js/audio-use-<set>.js`), fetched the first time one of that set's
+  lines shows. One file for all of them had grown past 4 MB.
+
 ### 0.67.0: Finding your way, and paying
 
 - **Four new capsule sets**, all 30 coins a turn. Three of them are
@@ -2145,9 +2169,10 @@ larger), the bests (the faster) and the rounds.
   場所 Places around town (トイレ, 駅, 病院, 薬局…), 道案内 Directions,
   お金と買い物 Paying and shopping, 気持ち Feelings (うれしい, つかれた,
   おなかがすいた…), 服 Clothes, 色 Colours, 飲み物 Drinks, コンビニ
-  Convenience store, 仕事 Jobs, 国 Countries (flags), 天気と季節 Weather
-  and seasons, カフェ Coffee and tea, 動物 Animals and 名所 Famous places.
-  A
+  Convenience store, 果物と野菜 Fruit and veg, 仕事 Jobs, 趣味 Hobbies,
+  動き Actions, テクノロジー Technology, 国 Countries (flags), 天気と季節
+  Weather and seasons, カフェ Coffee and tea, 動物 Animals and 名所 Famous
+  places — twenty-two sets, 440 toys. A
   toy not yet found is a ? box; a found one stands on the shelf with its
   name in Japanese (furigana as the learner needs it) and English, and a
   tap says it. Doubles are counted (×2). **A full set opens the next**, with
@@ -2160,8 +2185,9 @@ larger), the bests (the faster) and the rounds.
   が好きです for Animals, に行きたいです for Famous places —
   and a toy can have its own (つかれました, 温めてください, 教師です). It's
   on the capsule as it opens, on the toy's card (tap one on the shelf),
-  and after each Quiz me answer; tap it to hear it. The lines' sound is
-  `js/audio-gacha-use.js`, fetched the first time one shows.
+  and after each Quiz me answer; tap it to hear it. The lines' sound is a
+  bundle a set, `js/audio-use-<set>.js`, fetched the first time one of
+  that set's lines shows.
 - **Quiz me** (`toyQuizHtml` in `js/games-ui.js`, at the foot of the
   Collection card): a full shelf's twenty
   names, ten at a time, either heard (聞く Listen) or read (読む Read), with

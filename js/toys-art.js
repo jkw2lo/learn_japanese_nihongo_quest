@@ -1373,6 +1373,220 @@ const TOY_ART = {
     <ellipse class="sk" cx="32" cy="24" rx="19" ry="5.4" style="fill:#F4F9FC"/><path class="w n" d="M18 30v20M24 32v18" style="stroke:#fff;stroke-width:2.4"/><circle class="w n" cx="40" cy="42" r="2" style="fill:#fff"/>`,
   akarui: paint("#FFF2A8", `<path class="l" d="M32 2v6M8 10l4 4M56 10l-4 4M2 26h6M56 26h6" style="stroke:#F2C230;stroke-width:2.4"/>`),
   kurai: paint("#3A3550", `<path class="y" d="M54 4a7 7 0 1 0 5 12A6 6 0 1 1 54 4z" style="fill:#F5D84A"/>${star(8, 10, 2.4, "y")}`),
+  /* ---------- 果物と野菜 fruit and veg ---------- */
+  ringo2: `<path class="r" d="M32 18q-6-6-14-4-10 4-8 18 2 16 14 22 4 2 8 0 4 2 8 0 12-6 14-22 2-14-8-18-8-2-14 4z" style="fill:#E0383B"/>
+    <path class="l" d="M32 18q0-8 2-12" style="stroke:#7A4E2A;stroke-width:2.4"/><path class="gr" d="M34 12q8-8 14-4-6 8-14 4z" style="fill:#5FA45A"/><ellipse class="w n" cx="20" cy="26" rx="3" ry="5" opacity=".4"/>`,
+  mikan: `<circle class="o" cx="32" cy="36" r="20" style="fill:#F2903A"/><path class="gr" d="M30 16q-8-6-14-2 6 6 14 2z" style="fill:#5FA45A"/><circle class="gr" cx="32" cy="17" r="2.4" style="fill:#3F7D56"/>
+    ${[[24, 30], [38, 28], [30, 42], [42, 40], [22, 44]].map(([x, y]) => `<circle class="o n" cx="${x}" cy="${y}" r=".9" style="fill:#D9761E"/>`).join("")}<ellipse class="w n" cx="22" cy="28" rx="3" ry="4.4" opacity=".35"/>`,
+  banana: `<path class="y" d="M14 12q-6 26 14 40 14 8 26 2-20-2-30-18-6-10-4-24z" style="fill:#F5D84A"/><path class="y" d="M20 12q0 24 18 34 12 6 20 0-16-4-26-16-8-10-6-18z" style="fill:#F2C230"/>
+    <path class="br" d="M14 8h8l-2 6h-5z" style="fill:#7A5A3A"/><path class="l" d="M18 22q4 16 20 26" style="stroke:#C99A24"/>`,
+  ichigo: `<path class="r" d="M32 58Q12 44 12 28q0-10 10-10h20q10 0 10 10 0 16-20 30z" style="fill:#E0383B"/>
+    ${[[22, 28], [32, 26], [42, 28], [26, 36], [38, 36], [32, 44], [22, 42], [42, 42]].map(([x, y]) => `<ellipse class="y n" cx="${x}" cy="${y}" rx=".9" ry="1.4" style="fill:#F5D84A"/>`).join("")}
+    <path class="gr" d="M18 18l6-2-2-6 6 4 4-8 4 8 6-4-2 6 6 2-8 4H26z" style="fill:#5FA45A"/>`,
+  budo: `${[[24, 22], [32, 20], [40, 22], [20, 30], [28, 29], [36, 29], [44, 30], [24, 37], [32, 37], [40, 37], [28, 45], [36, 45], [32, 52]].map(([x, y]) => `<circle class="pu" cx="${x}" cy="${y}" r="5.4" style="fill:#7A4A9A"/><circle class="w n" cx="${x - 1.6}" cy="${y - 1.8}" r="1.2" opacity=".5"/>`).join("")}
+    <path class="l" d="M32 16V6" style="stroke:#7A5A3A;stroke-width:2.4"/><path class="gr" d="M33 10q10-8 16 0-8 6-16 0z" style="fill:#5FA45A"/>`,
+  momo: `<path class="p" d="M32 18q-18-4-20 16 0 20 20 22 20-2 20-22-2-20-20-16z" style="fill:#F7B6A8"/><path class="l" d="M32 20q-6 16 0 34" style="stroke:#E88A80"/>
+    <ellipse class="r n" cx="40" cy="38" rx="8" ry="10" style="fill:#F28A80;opacity:.45"/><path class="gr" d="M32 18q-4-10 6-12 4 8-6 12z" style="fill:#5FA45A"/><path class="gr" d="M32 18q-10-8-16-4 6 8 16 4z" style="fill:#7FBE6E"/>`,
+  remon: `<path class="y" d="M8 34q2-14 16-18 10-2 18 0 14 4 16 18-2 14-16 16-10 2-18 0-14-4-16-16z" style="fill:#F5D84A"/><path class="y" d="M4 34l6-3v6zM60 34l-6-3v6z" style="fill:#F5D84A"/>
+    <ellipse class="w n" cx="22" cy="28" rx="6" ry="2.4" opacity=".45"/><path class="gr" d="M42 16q6-8 12-4-6 6-12 4z" style="fill:#5FA45A"/>`,
+  meron: `<circle class="gr" cx="32" cy="36" r="21" style="fill:#B9D88A"/>
+    <path class="l" d="M14 28q18 8 36-4M12 38q20 6 40-6M16 48q16 4 32-8M24 16q-6 18 2 40M36 15q6 18-2 41M46 20q4 16-4 32" style="stroke:#F4F2E4;stroke-width:1.4"/>
+    <path class="l" d="M32 15V6M26 6h12" style="stroke:#5E7C3A;stroke-width:2.6"/>`,
+  kaki: `<path class="o" d="M10 34q0-16 22-16t22 16q0 20-22 20T10 34z" style="fill:#EE7A2A"/>
+    <path class="gr" d="M32 22l-12-4 8-2-4-6 8 4 2-6 2 6 8-4-4 6 8 2-12 4z" style="fill:#5E7C3A"/><path class="l" d="M32 14v-6" style="stroke:#7A5A3A;stroke-width:2.4"/><ellipse class="w n" cx="20" cy="32" rx="3" ry="5" opacity=".35"/>`,
+  tomato: `<circle class="r" cx="32" cy="36" r="20" style="fill:#E8484A"/>
+    <path class="gr" d="M32 18l-10 2 6 3-6 4 8-1 2 6 2-6 8 1-6-4 6-3z" style="fill:#3F8E4F"/><path class="l" d="M32 18v-6" style="stroke:#3F8E4F;stroke-width:2.4"/><ellipse class="w n" cx="22" cy="30" rx="3.4" ry="5" opacity=".4"/>`,
+  kyuri: `<path class="gr" d="M8 52Q10 30 34 16q14-8 20-2 4 6-6 16Q30 46 16 56q-8 4-8-4z" style="fill:#4E9A4A"/>
+    ${[[18, 44], [26, 36], [34, 28], [42, 22], [22, 48], [30, 40], [40, 30]].map(([x, y]) => `<circle class="gr n" cx="${x}" cy="${y}" r="1" style="fill:#7FC06A"/>`).join("")}
+    <path class="y" d="M52 12q6-4 8 2-4 2-8-2z" style="fill:#F5D84A"/>`,
+  ninjin: `<path class="o" d="M24 20h16q2 0 0 6L32 60 24 26q-2-6 0-6z" style="fill:#F2903A"/><path class="l" d="M26 30h5M33 38h4M28 44h4" style="stroke:#C8661E"/>
+    <path class="gr" d="M30 20q-8-12-4-16 4 2 6 14zM32 20q0-14 6-16 2 4-4 16zM34 20q8-10 14-8-2 6-12 8z" style="fill:#5FA45A"/>`,
+  jagaimo: `<path class="wd" d="M10 36q0-16 18-18 20-2 26 10 6 14-6 22-12 6-26 2-12-4-12-16z" style="fill:#C8955E"/>
+    ${[[22, 30], [38, 28], [30, 42], [46, 40]].map(([x, y]) => `<path class="l" d="M${x - 1.6} ${y}q1.6-1.6 3.2 0" style="stroke:#8A5A34"/>`).join("")}<ellipse class="w n" cx="20" cy="28" rx="4" ry="2" opacity=".3"/>`,
+  tamanegi: `<path class="wd" d="M32 14q-24 12-20 30 4 14 20 14t20-14q4-18-20-30z" style="fill:#D9A35E"/>
+    <path class="l" d="M32 14q-12 16-8 44M32 14q12 16 8 44M32 14v44" style="stroke:#B47C3A"/><path class="w" d="M30 8q2-4 4 0l-1 6h-2z" style="fill:#E6C690"/><path class="l" d="M28 58l-2 4M32 58v4M36 58l2 4" style="stroke:#B9A88A"/>`,
+  kyabetsu: `<circle class="gr" cx="32" cy="36" r="22" style="fill:#9FD08A"/><path class="gr" d="M14 30q8-14 22-12 12 2 16 12-12-6-20-4-12 2-18 4z" style="fill:#B9DFA0"/>
+    <path class="l" d="M32 58V26M32 40l-12-8M32 46l12-10M32 34l10-8" style="stroke:#6FA85A"/>`,
+  negi: `<path class="w" d="M28 30h8v24q0 6-4 6t-4-6z" style="fill:#F4F7EC"/><path class="l" d="M30 60l-2 3M32 60v3M34 60l2 3" style="stroke:#B9A88A"/>
+    <path class="gr" d="M28 30q-6-18-14-26 8 4 16 20zM32 30q0-20 4-28 2 10-2 28zM36 30q6-16 16-22-6 10-14 24z" style="fill:#4E9A4A"/><path class="gr n" d="M28 28h8v6h-8z" style="fill:#B9D88A"/>`,
+  daikon: `<path class="w" d="M24 20h16q4 22-4 40-2 3-4 3t-4-3q-8-18-4-40z" style="fill:#F7F5EE"/><path class="gr n" d="M24.4 20h15.2l.4 8H24z" style="fill:#CDE6B4"/>
+    <path class="l" d="M28 34h4M30 44h4M28 52h3" style="stroke:#D8D4CB"/>
+    <path class="gr" d="M28 20q-12-10-10-18 6 2 12 16zM32 20q-2-14 2-18 4 4 0 18zM36 20q10-10 14-8-2 6-12 10z" style="fill:#4E9A4A"/>`,
+  nasu: `<path class="pu" d="M24 22q-14 14-12 28 2 10 12 10 12 0 22-14 10-14 2-24-10-8-24 0z" style="fill:#5E3A7A"/>
+    <path class="gr" d="M30 20q4-6 14-4 6 2 4 6-4-2-8 0l-6 2q-4 0-4-4z" style="fill:#4E7A3A"/><path class="l" d="M44 16l4-8" style="stroke:#4E7A3A;stroke-width:2.6"/>
+    <path class="w n" d="M20 40q2-8 8-12" style="stroke:#fff;stroke-width:2;fill:none;opacity:.5"/>`,
+  tomorokoshi: `<path class="gr" d="M22 58q-10-20 4-44 2 20 6 40z" style="fill:#7FB35A"/><path class="gr" d="M42 58q10-20-4-44-2 20-6 40z" style="fill:#7FB35A"/>
+    <path class="y" d="M24 20q8-14 16 0v30q-8 8-16 0z" style="fill:#F5D84A"/>
+    ${[22, 28, 34, 40, 46].map(y => [27, 32, 37].map(x => `<circle class="y n" cx="${x}" cy="${y}" r="1.6" style="fill:#F2C230"/>`).join("")).join("")}`,
+  kabocha: `<path class="dg" d="M8 38q0-16 14-16 6-2 10 0 4-2 10 0 14 0 14 16 0 16-14 16-6 2-10 0-4 2-10 0-14 0-14-16z" style="fill:#3E6B3A"/>
+    <path class="l" d="M22 22q-6 16 0 32M42 22q6 16 0 32M32 22v32" style="stroke:#2A4A28"/>
+    <path class="br" d="M30 22l2-10 4 2-2 8z" style="fill:#7A5A3A"/><path class="y n" d="M14 34q2-6 6-8" style="stroke:#9FC48A;stroke-width:2;fill:none"/>`,
+
+  /* ---------- 趣味 hobbies ---------- */
+  eiga: `<path class="k" d="M8 24h48v32H8z" style="fill:#2E2B27"/><path class="k" d="M6 14l46-8 2 10-46 8z" style="fill:#2E2B27"/>
+    <path class="w n" d="M12 13l6 9M22 11l6 9M32 10l6 8M42 8l6 8" style="stroke:#fff;stroke-width:3"/><path class="w n" d="M8 30h48" style="stroke:#fff;stroke-width:1.4"/>
+    <text x="14" y="42" font-size="6" font-weight="700" fill="#fff" font-family="sans-serif">SCENE 1</text><text x="14" y="51" font-size="6" font-weight="700" fill="#fff" font-family="sans-serif">TAKE 3</text>`,
+  ongaku: `<path class="k" d="M20 50V16l30-8v34" style="fill:none;stroke:#2E2B27;stroke-width:3.4"/><path class="k" d="M20 16l30-8v8l-30 8z"/>
+    <ellipse class="k" cx="14" cy="50" rx="7" ry="5" transform="rotate(-20 14 50)"/><ellipse class="k" cx="44" cy="42" rx="7" ry="5" transform="rotate(-20 44 42)"/>
+    <path class="l" d="M54 22q4 2 4 6M57 18q6 3 6 10" style="stroke:#F2A23A;stroke-width:2"/>`,
+  dokusho: `<rect class="r" x="10" y="44" width="44" height="10" rx="1"/><rect class="b" x="14" y="34" width="38" height="10" rx="1" style="fill:#4F7FC0"/><rect class="gr" x="12" y="24" width="40" height="10" rx="1" style="fill:#5FA45A"/>
+    <path class="l" d="M50 44v10M48 34v10M50 24v10" style="stroke:#F4E6C8;stroke-width:2"/>
+    <circle class="l" cx="24" cy="16" r="5" style="stroke:#2E2B27;stroke-width:2"/><circle class="l" cx="38" cy="16" r="5" style="stroke:#2E2B27;stroke-width:2"/><path class="l" d="M29 16h4M19 15l-6-2M43 15l6-2" style="stroke:#2E2B27;stroke-width:2"/>`,
+  ryori: `<path class="l" d="M48 30l14-12" style="stroke:#7A5A3A;stroke-width:4"/><ellipse class="k" cx="28" cy="36" rx="22" ry="14" style="fill:#3B342D"/><ellipse class="gy n" cx="28" cy="34" rx="18" ry="10.4" style="fill:#5A5650"/>
+    <path class="w" d="M16 34q0-8 10-8 6 0 10 4 8 0 8 6t-10 6q-6 2-12 0-6-2-6-8z"/><circle class="y" cx="28" cy="34" r="4.4" style="fill:#F5C030"/>
+    <path class="l" d="M22 16q-3-4 0-8M30 14q-3-4 0-8" style="stroke:#A9A499;stroke-width:1.8"/>`,
+  ryoko: `<rect class="o" x="12" y="20" width="40" height="34" rx="5" style="fill:#E8763A"/><path class="l" d="M24 20v-6q0-3 3-3h10q3 0 3 3v6" style="stroke:#3B342D;stroke-width:3"/>
+    <path class="l" d="M24 20v34M40 20v34" style="stroke:#B8582A;stroke-width:2"/><circle class="k" cx="18" cy="56" r="3"/><circle class="k" cx="46" cy="56" r="3"/>
+    <rect class="b" x="27" y="28" width="10" height="7" rx="1" style="fill:#4F9BD9" transform="rotate(-10 32 31)"/><circle class="y" cx="44" cy="44" r="4" style="fill:#F5D84A"/><rect class="gr" x="16" y="40" width="6" height="8" rx="1" style="fill:#5FA45A"/>`,
+  shashin: `<g transform="rotate(-10 26 34)"><rect class="w" x="6" y="14" width="34" height="38" rx="1"/><rect class="sk" x="10" y="18" width="26" height="22"/><path class="gr n" d="M10 40l8-10 6 6 4-4 8 8z" style="fill:#7FB35A"/></g>
+    <g transform="rotate(8 40 34)"><rect class="w" x="24" y="12" width="34" height="38" rx="1"/><rect class="sk" x="28" y="16" width="26" height="22" style="fill:#F7D7A8"/><circle class="o n" cx="41" cy="27" r="5" style="fill:#F2A23A"/><path class="b n" d="M28 32h26v6H28z" style="fill:#6FA0D8"/></g>`,
+  gemu: `<path class="gy" d="M10 26q0-6 8-6h28q8 0 8 6l4 20q2 8-6 8-4 0-8-6H20q-4 6-8 6-8 0-6-8z" style="fill:#5A5650"/>
+    <path class="w n" d="M18 30h4v4h4v4h-4v4h-4v-4h-4v-4h4z" style="fill:#EDEAE3"/>
+    <circle class="r" cx="44" cy="32" r="2.6"/><circle class="b" cx="49" cy="37" r="2.6" style="fill:#4F7FC0"/><circle class="y" cx="39" cy="37" r="2.6" style="fill:#F5D84A"/><circle class="gr" cx="44" cy="42" r="2.6" style="fill:#5FA45A"/>`,
+  sakka: `<circle class="w" cx="32" cy="32" r="24"/>
+    <path class="k" d="M32 22l8 6-3 9h-10l-3-9z"/><path class="k" d="M10 26l6-2 4 6-4 6-6-2zM54 26l-6-2-4 6 4 6 6-2zM22 52l2-6h8v6l-4 4zM42 52l-2-6h-8M32 8v6l-6 4-6-4" style="fill:#2E2B27"/>
+    <path class="l" d="M32 22v-8M24 28l-8-4M40 28l8-4M27 37l-3 8M37 37l3 8"/>`,
+  yakyu: `<path class="wd" d="M10 56l34-40q4-4 8 0t0 8L18 60q-4 2-8-4z" style="fill:#D3A26A"/>
+    <circle class="w" cx="44" cy="44" r="12"/><path class="l" d="M36 36q6 8 0 16M52 36q-6 8 0 16" style="stroke:#E0383B;stroke-width:1.4;stroke-dasharray:1.6 1.4"/>`,
+  tenisu: `<ellipse class="w" cx="26" cy="22" rx="16" ry="18" style="fill:none;stroke:#2F4B7C;stroke-width:4"/>
+    <path class="l" d="M14 14h24M12 22h28M14 30h24M20 6v32M26 4v36M32 6v32" style="stroke:#A9A499;stroke-width:1"/><path class="l" d="M26 40l4 16" style="stroke:#2F4B7C;stroke-width:5"/>
+    <circle class="y" cx="48" cy="46" r="8" style="fill:#D7E84A"/><path class="l" d="M41 42q7 2 14 0M41 50q7-2 14 0" style="stroke:#fff;stroke-width:1.4"/>`,
+  suiei: `<path class="sk n" d="M0 38h64v26H0z" style="fill:#7FB8E6"/><path class="l" d="M2 42q5-4 10 0t10 0 10 0 10 0 10 0 10 0M4 52q5-4 10 0t10 0 10 0 10 0 10 0" style="stroke:#DDEFF7;stroke-width:2"/>
+    <path class="r" d="M18 24q0-12 14-12t14 12z" style="fill:#E0383B"/>
+    <rect class="b" x="18" y="22" width="12" height="8" rx="4" style="fill:#4F9BD9"/><rect class="b" x="34" y="22" width="12" height="8" rx="4" style="fill:#4F9BD9"/><path class="l" d="M30 26h4M14 26h4M46 26h4" style="stroke:#2E2B27;stroke-width:2"/>`,
+  yoga: `<rect class="pu" x="6" y="48" width="52" height="8" rx="2" style="fill:#9C7BC0"/><path class="pu" d="M50 40a8 8 0 1 1 0 16h-6V40z" style="fill:#8A68B0"/>
+    <circle class="c" cx="24" cy="18" r="5" style="fill:#F6D5B5"/><path class="gr" d="M24 24v14" style="fill:none;stroke:#5FA45A;stroke-width:5"/>
+    <path class="l" d="M24 28l-10-8M24 28l10-8M24 38l-10 10h20" style="stroke:#5FA45A;stroke-width:3.4"/>`,
+  yamanobori: `<path class="gr" d="M2 56L24 18l12 18 8-10 18 30z" style="fill:#7FA35A"/><path class="w" d="M20 25l4-7 5 7-3 2z" style="fill:#F4F7F9"/>
+    <path class="l" d="M24 18V6" style="stroke:#7A5A3A;stroke-width:1.8"/><path class="r" d="M24 6h10l-3 3 3 3H24z"/>
+    <rect class="o" x="44" y="38" width="12" height="16" rx="3" style="fill:#E8763A"/><path class="l" d="M46 42h8M48 38v-4h4v4" style="stroke:#8A3A1A"/>`,
+  karaoke: `<rect class="k" x="6" y="8" width="38" height="24" rx="2" style="fill:#2F3F7C"/><path class="w n" d="M10 16h22M10 22h30M10 28h18" style="stroke:#F5D84A;stroke-width:2"/>
+    <path class="l" d="M42 58l8-18" style="stroke:#2E2B27;stroke-width:3.4"/><rect class="gy" x="46" y="30" width="10" height="14" rx="5" transform="rotate(22 51 37)" style="fill:#C9C4BA"/>
+    <path class="l" d="M50 14v8M56 12v8M50 14l6-2" style="stroke-width:1.6"/><ellipse class="k" cx="48.6" cy="22" rx="2" ry="1.6"/><ellipse class="k" cx="54.6" cy="20" rx="2" ry="1.6"/>`,
+  gita: `<path class="wd" d="M18 38q-10-2-10 8 0 12 14 12 10 0 12-8 8 0 8-8t-8-10q-2-8-10-6-6 2-6 12z" style="fill:#C8783A"/>
+    <circle class="k" cx="25" cy="44" r="4" style="fill:#3B2614"/><path class="br" d="M30 38l24-30 4 3-24 30z" style="fill:#5E3A22"/>
+    <rect class="k" x="52" y="4" width="8" height="8" rx="1" transform="rotate(40 56 8)" style="fill:#3B2614"/><path class="l" d="M22 48l30-38" style="stroke:#F4E6C8;stroke-width:.8"/>`,
+  piano: `<path class="k" d="M6 30q0-20 26-20 22 0 26 14v10H6z" style="fill:#2E2B27"/><path class="k" d="M34 10l18-6 2 4-16 8z" style="fill:#2E2B27"/>
+    <rect class="w" x="6" y="34" width="52" height="12"/>${[11, 17, 29, 35, 41, 53].map(x => `<rect class="k n" x="${x}" y="34" width="3.4" height="7"/>`).join("")}
+    <path class="l" d="M14.4 34v12M20.6 34v12M26.8 34v12M33 34v12M39.2 34v12M45.4 34v12M51.6 34v12"/><path class="l" d="M12 46v12M52 46v12" style="stroke-width:2.6"/>`,
+  anime: `<rect class="w" x="6" y="8" width="52" height="40" rx="3" style="fill:#2E2B27"/><rect class="sk n" x="9" y="11" width="46" height="34" style="fill:#FCE4EC"/>
+    <path class="p" d="M18 30q0-16 14-16t14 16v10h-4l-2-8-8-6-8 6-2 8h-4z" style="fill:#F28FB1"/><path class="c" d="M22 30q0-8 10-10 10 2 10 10 0 10-10 12-10-2-10-12z" style="fill:#FCE8D8"/>
+    <ellipse class="b" cx="27" cy="31" rx="3" ry="4" style="fill:#4F7FC0"/><ellipse class="b" cx="37" cy="31" rx="3" ry="4" style="fill:#4F7FC0"/><circle class="w n" cx="28" cy="29.4" r="1.2"/><circle class="w n" cx="38" cy="29.4" r="1.2"/>
+    <path class="l" d="M30 38q2 1.4 4 0"/><path class="l" d="M26 52h12M32 48v4" style="stroke-width:2.6"/>${star(50, 16, 3, "y")}`,
+  tsuri: `<path class="l" d="M6 58L46 6" style="stroke:#7A5A3A;stroke-width:3"/><path class="l" d="M46 6q6 4 4 22" style="stroke:#8E8A80;stroke-width:1"/>
+    <circle class="l" cx="12" cy="50" r="4" style="stroke:#2E2B27;stroke-width:2"/>
+    <path class="b" d="M38 36q8-6 16 0l4-4v12l-4-4q-8 6-16 0z" style="fill:#6FA0D8"/><circle class="k n" cx="42" cy="36" r="1"/><path class="l" d="M50 28q-2 3 0 6" style="stroke:#8E8A80"/>
+    <path class="sk" d="M28 56q5-4 10 0t10 0 10 0" style="fill:none;stroke:#7FB8E6;stroke-width:2.4"/>`,
+  dansu: `<path class="l" d="M32 2v10" style="stroke:#8E8A80;stroke-width:1.6"/><circle class="gy" cx="32" cy="28" r="16" style="fill:#C9CDD2"/>
+    ${[[24, 20], [32, 18], [40, 20], [22, 28], [30, 26], [38, 26], [44, 30], [26, 36], [34, 34], [40, 38], [30, 42]].map(([x, y], i) => `<rect class="w n" x="${x}" y="${y}" width="4" height="4" style="fill:${["#fff", "#9FD3F0", "#F4A0C0", "#F5D84A"][i % 4]}"/>`).join("")}
+    ${star(10, 50, 4, "y")}${star(54, 52, 5, "p")}${star(52, 10, 3, "y")}<path class="l" d="M8 18l4 2M56 30l4-1" style="stroke:#F2A23A;stroke-width:2"/>`,
+  shodo: `<rect class="w" x="4" y="8" width="36" height="50" style="fill:#FBF7EE"/>
+    <text x="22" y="44" text-anchor="middle" font-size="30" font-weight="700" fill="#1E1D1A" font-family="Hiragino Mincho ProN, Noto Serif JP, serif">書</text>
+    <path class="l" d="M60 6L44 40" style="stroke:#9A6A3A;stroke-width:3.4"/><path class="k" d="M44 40l-4 10 2 2 6-8z" style="fill:#2E2B27"/>
+    <rect class="k" x="44" y="50" width="16" height="10" rx="2" style="fill:#3B342D"/>`,
+
+  /* ---------- 動き actions ---------- */
+  taberu: who({ body: "o", prop: `<path class="w" d="M38 42h18q0 10-9 10t-9-10z"/><path class="w" d="M39 42q0-6 8-6t8 6z" style="fill:#FFFDF8"/><path class="l" d="M44 34l12-10M47 35l11-8" style="stroke:#9A6A3A;stroke-width:1.8"/>`,
+    face: `<path class="l" d="M25.5 24q2-2 4 0M34.5 24q2-2 4 0"/><ellipse class="r2" cx="32" cy="29.4" rx="2.4" ry="2"/>` }),
+  nomu: who({ body: "b", face: `<path class="l" d="M25.5 24.6q2 1.6 4 0M34.5 24.6q2 1.6 4 0"/>`,
+    prop: `<rect class="w" x="34" y="26" width="12" height="13" rx="2" style="fill:#F2EEE2"/><path class="l" d="M46 29h2q3 0 3 3t-3 3h-2"/><path class="l" d="M38 22q-2-3 0-6M43 22q-2-3 0-6" style="stroke:#A9A499"/>` }),
+  neru: `<rect class="w" x="4" y="38" width="56" height="14" rx="4" style="fill:#6FA0D8"/><rect class="w" x="6" y="30" width="20" height="10" rx="5"/>
+    <circle class="c" cx="18" cy="30" r="9" style="fill:#F6D5B5"/><path class="k" d="M10 28q0-10 8-10t8 6q-6-2-16 4z"/><path class="l" d="M13 31q2 1.4 4 0M20 31q2 1.4 4 0"/>
+    <path class="w n" d="M28 42h30" style="stroke:#fff;stroke-width:1.6;opacity:.5"/><rect class="br" x="4" y="52" width="4" height="6"/><rect class="br" x="56" y="52" width="4" height="6"/>
+    <text x="34" y="22" font-size="10" font-weight="700" fill="#5F6EA8" font-family="sans-serif">z</text><text x="42" y="14" font-size="8" font-weight="700" fill="#5F6EA8" font-family="sans-serif">z</text>`,
+  iku: who({ body: "gr", prop: `<path class="r" d="M46 30h8v-5l8 9-8 9v-5h-8z"/><path class="l" d="M6 44h6M4 50h7" style="stroke:#A9A499;stroke-width:2"/>` }),
+  kaeru2: who({ body: "p", back: `<rect class="w" x="42" y="32" width="18" height="16" style="fill:#F4E6C8"/><path class="r" d="M40 33l11-9 11 9z"/><rect class="k" x="48" y="40" width="5" height="8" style="fill:#6E5A46"/>`,
+    prop: `${HEART(51, 14, .8)}` }),
+  kau: who({ body: "pu", prop: `<path class="p" d="M42 40h14l-2 14H44z" style="fill:#F28FB1"/><path class="l" d="M45 40q4-7 8 0"/><circle class="g" cx="12" cy="40" r="5"/><text x="12" y="43" text-anchor="middle" font-size="6" font-weight="800" fill="#7A5A1A" font-family="sans-serif">¥</text>` }),
+  miru: who({ body: "o", face: `<rect class="k" x="23" y="20" width="8" height="8" rx="2"/><rect class="k" x="33" y="20" width="8" height="8" rx="2"/><rect class="k" x="30" y="22" width="4" height="3"/><circle class="sk n" cx="27" cy="24" r="2.4"/><circle class="sk n" cx="37" cy="24" r="2.4"/><path class="l" d="M29.5 31q2.5 1.6 5 0"/>`,
+    prop: `<path class="l" d="M46 16l6-4M48 22h7M46 28l6 3" style="stroke:#F2A23A;stroke-width:2"/>` }),
+  yasumu: `<path class="y n" d="M30 4q24 0 30 14H0q6-14 30-14z" style="fill:#F28FA0"/><path class="l" d="M30 18v40" style="stroke:#9A6A3A;stroke-width:2"/>
+    <path class="wd" d="M8 40l30-6 4 4-30 8z" style="fill:#4F9BD9"/><path class="l" d="M12 46l-4 12M38 38l6 20" style="stroke:#9A6A3A;stroke-width:2"/>
+    <circle class="c" cx="16" cy="32" r="6" style="fill:#F6D5B5"/><rect class="k" x="11" y="30" width="10" height="3" rx="1.4"/><path class="l" d="M14 36q2 1 4 0"/>
+    <path class="r" d="M20 38q10-2 16-4v4l-16 4z"/>`,
+  hanasu: who({ body: "r", face: `<circle class="k n" cx="27.5" cy="24" r="1.5"/><circle class="k n" cx="36.5" cy="24" r="1.5"/><ellipse class="r2" cx="32" cy="29.6" rx="2.6" ry="2.2"/>`,
+    prop: `<path class="w" d="M40 4h20q4 0 4 4v10q0 4-4 4h-12l-6 5 1-5h-3q-4 0-4-4V8q0-4 4-4z"/><text x="50" y="16" text-anchor="middle" font-size="8" font-weight="700" fill="#2E2B27" font-family="Hiragino Sans, Noto Sans JP, sans-serif">あいう</text>` }),
+  kiku: who({ body: "sk", prop: `<path class="c" d="M43 20q4 0 4 4t-4 4z" style="fill:#F6D5B5"/><path class="l" d="M50 20q3 4 0 8M54 17q5 7 0 14M58 14q7 10 0 20" style="stroke:#F2A23A;stroke-width:2"/>` }),
+  yomu: who({ body: "gr", face: `<path class="l" d="M25.5 25.4q2 1 4 0M34.5 25.4q2 1 4 0M29.5 29q2.5 1.4 5 0"/>`,
+    prop: `<path class="w" d="M32 46q-8-4-14-2v-10q6-2 14 2z" style="fill:#FFFDF8"/><path class="w" d="M32 46q8-4 14-2v-10q-6-2-14 2z" style="fill:#FFFDF8"/><path class="r" d="M32 36v10"/>` }),
+  kaku: who({ body: "y", prop: `<rect class="w" x="36" y="44" width="22" height="14" rx="1" transform="rotate(-6 47 51)"/><path class="l" d="M40 50h12M40 54h8" style="stroke:#A9A499"/>
+    <path class="y" d="M52 36l4 2-8 12-3 1 .4-3z" style="fill:#F5CF52"/>` }),
+  aruku: who({ body: "#7FA35A", prop: `<path class="l" d="M44 46q8 0 10 4" style="stroke:#D9483B;stroke-width:1.6"/><path class="wd" d="M50 46q0-6 6-6 4 0 4 6v6h-10z" style="fill:#D98A3E"/><path class="wd" d="M56 40l1-4 3 3z" style="fill:#D98A3E"/><circle class="k n" cx="57.6" cy="43" r=".9"/>` }),
+  hashiru: who({ body: "r", face: `<path class="l" d="M25 23l4 1.6M39 23l-4 1.6"/><circle class="k n" cx="27.5" cy="25" r="1.4"/><circle class="k n" cx="36.5" cy="25" r="1.4"/><ellipse class="r2" cx="32" cy="29.6" rx="2.2" ry="1.6"/>`,
+    prop: `<path class="l" d="M2 36h10M4 42h10M2 48h10" style="stroke:#A9A499;stroke-width:2.4"/>${SWEAT(46, 14)}` }),
+  oyogu: `<path class="sk n" d="M0 34h64v30H0z" style="fill:#7FB8E6"/>
+    <circle class="c" cx="28" cy="32" r="9" style="fill:#F6D5B5"/><path class="r" d="M19 30q0-10 9-10t9 10z"/><rect class="b" x="20" y="29" width="16" height="4" rx="2" style="fill:#4F9BD9"/>
+    <path class="c" d="M40 30q8-14 18-10-6 4-12 14z" style="fill:#F6D5B5"/>
+    <path class="l" d="M0 38q5-4 10 0t10 0 10 0 10 0 10 0 10 0 10 0M4 50q5-4 10 0t10 0 10 0 10 0 10 0" style="stroke:#DDEFF7;stroke-width:2"/>`,
+  matsu: who({ body: "nv", face: `<circle class="k n" cx="27.5" cy="24.5" r="1.5"/><circle class="k n" cx="36.5" cy="24.5" r="1.5"/><path class="l" d="M29.5 29h5"/>`,
+    prop: `<circle class="w" cx="51" cy="14" r="9"/><path class="l" d="M51 14V9M51 14l3 2"/><circle class="k n" cx="8" cy="20" r="1.4"/><circle class="k n" cx="13" cy="20" r="1.4"/><circle class="k n" cx="18" cy="20" r="1.4"/>` }),
+  tetsudau: `<rect class="wd" x="20" y="30" width="24" height="16" style="fill:#D9B06A"/><path class="l" d="M20 36h24"/>
+    <circle class="c" cx="12" cy="22" r="7" style="fill:#F6D5B5"/><path class="b" d="M4 58q0-26 8-26t8 26z" style="fill:#4F7FC0"/>
+    <circle class="c" cx="52" cy="22" r="7" style="fill:#F6D5B5"/><path class="r" d="M44 58q0-26 8-26t8 26z"/>
+    <path class="k" d="M5 20q0-8 7-8t7 7q-4-3-14 1zM45 20q0-8 7-8t7 7q-4-3-14 1z"/>
+    <circle class="k n" cx="10" cy="23" r="1"/><circle class="k n" cx="14" cy="23" r="1"/><circle class="k n" cx="50" cy="23" r="1"/><circle class="k n" cx="54" cy="23" r="1"/>${HEART(32, 12, .8)}`,
+  toru: who({ body: "pu", face: `<circle class="k n" cx="27.5" cy="25" r="1.4"/><path class="l" d="M34 25h5M29.5 30q2.5 1.6 5 0"/>`,
+    prop: `<rect class="k" x="34" y="14" width="22" height="14" rx="2" style="fill:#3B342D"/><circle class="gy" cx="45" cy="21" r="5" style="fill:#7C786F"/><circle class="sk n" cx="45" cy="21" r="2.6" style="fill:#9FD3E8"/><rect class="r" x="50" y="11" width="4" height="3"/>
+    <path class="l" d="M58 8l4-4M58 14h5" style="stroke:#F5CF52;stroke-width:2"/>` }),
+  suwaru: `<rect class="wd" x="34" y="10" width="20" height="26" rx="4"/><rect class="r" x="28" y="36" width="30" height="7" rx="3"/><path class="l" d="M32 43v15M54 43v15M38 36V10" style="stroke:#9A6A3A;stroke-width:3"/>
+    <circle class="c" cx="28" cy="16" r="8" style="fill:#F6D5B5"/><path class="k" d="M20 15q0-9 8-9t8 7q-5-3-16 2z"/><circle class="k n" cx="25.6" cy="17" r="1.2"/><circle class="k n" cx="30.6" cy="17" r="1.2"/><path class="l" d="M26 21q2 1.4 4 0"/>
+    <path class="gr" d="M18 38q0-14 10-14t10 12z" style="fill:#5FA45A"/><path class="k" d="M18 38h16l-2 10h-4v10h-4V48h-6z" style="fill:#3B342D"/>`,
+  asobu: `<path class="r" d="M44 4l14 10-10 14L34 18z" style="fill:#E0383B"/><path class="y n" d="M44 4l4 17L34 18z" style="fill:#F5CF52"/><path class="l" d="M48 28q-6 10-2 16t-6 12" style="stroke:#2E2B27;stroke-width:1.2"/>
+    <path class="b n" d="M46 34l-3 3 4 1zM44 42l-3 2 4 2z" style="fill:#4F9BD9"/>
+    ${who({ body: "y" })}`,
+
+  /* ---------- テクノロジー technology ---------- */
+  pasokon: `<rect class="gy" x="10" y="12" width="44" height="30" rx="2" style="fill:#5A5650"/><rect class="sk n" x="13" y="15" width="38" height="24" rx="1" style="fill:#9FD3E8"/>
+    <path class="w n" d="M16 20h14M16 25h20M16 30h10" style="stroke:#fff;stroke-width:2"/><path class="gy" d="M4 46l6-4h44l6 4v4H4z" style="fill:#C9C4BA"/><rect class="gy n" x="26" y="45" width="12" height="2" rx="1" style="fill:#A9A499"/>`,
+  taburetto: `<rect class="k" x="8" y="8" width="48" height="48" rx="5" style="fill:#3B342D"/><rect class="sk n" x="12" y="12" width="40" height="40" rx="2" style="fill:#FCF4E4"/>
+    <path class="l" d="M18 40q6-14 12-4t12-10" style="stroke:#E0383B;stroke-width:2.4"/><circle class="y n" cx="42" cy="20" r="4" style="fill:#F5CF52"/>
+    <path class="gy" d="M50 46l10-20 3 1-9 21z" style="fill:#EDEAE3"/>`,
+  iyahon: `<path class="w" d="M16 14q10 0 10 10t-8 10l-2 18q0 4-4 4t-4-4V24q0-10 8-10z" style="fill:#FBFAF6"/><circle class="gy n" cx="18" cy="24" r="3" style="fill:#C9C4BA"/>
+    <path class="w" d="M44 18q10 0 10 10t-8 10l-2 16q0 4-4 4t-4-4V28q0-10 8-10z" style="fill:#FBFAF6"/><circle class="gy n" cx="46" cy="28" r="3" style="fill:#C9C4BA"/>`,
+  heddohon: `<path class="l" d="M12 38q0-28 20-28t20 28" style="stroke:#2E2B27;stroke-width:5"/>
+    <rect class="r" x="6" y="34" width="12" height="20" rx="5" style="fill:#E0383B"/><rect class="r" x="46" y="34" width="12" height="20" rx="5" style="fill:#E0383B"/>
+    <rect class="k" x="15" y="37" width="5" height="14" rx="2"/><rect class="k" x="44" y="37" width="5" height="14" rx="2"/>`,
+  kamera: `<rect class="k" x="6" y="20" width="52" height="34" rx="4" style="fill:#3B342D"/><path class="k" d="M20 20l4-6h16l4 6z" style="fill:#3B342D"/>
+    <circle class="gy" cx="32" cy="37" r="12" style="fill:#7C786F"/><circle class="sk" cx="32" cy="37" r="7" style="fill:#4F7FC0"/><circle class="w n" cx="29" cy="34" r="2"/>
+    <rect class="r" x="46" y="24" width="7" height="4" rx="1"/><circle class="w n" cx="13" cy="26" r="2" style="fill:#F5CF52"/>`,
+  waifai: `<path class="l" d="M6 26q26-24 52 0" style="stroke:#2F6FBF;stroke-width:5"/><path class="l" d="M14 34q18-16 36 0" style="stroke:#2F6FBF;stroke-width:5"/>
+    <path class="l" d="M22 42q10-9 20 0" style="stroke:#2F6FBF;stroke-width:5"/><circle class="b" cx="32" cy="50" r="5" style="fill:#2F6FBF"/>`,
+  pasuwado: `<path class="l" d="M22 28v-8q0-12 10-12t10 12v8" style="stroke:#8E8A80;stroke-width:5"/>
+    <rect class="g" x="14" y="28" width="36" height="28" rx="4"/><circle class="k" cx="32" cy="39" r="3.4"/><path class="k" d="M30.6 41h2.8l1 7h-4.8z"/>
+    <rect class="w" x="2" y="6" width="20" height="10" rx="2" style="fill:#FFFDF8"/><text x="12" y="14" text-anchor="middle" font-size="8" font-weight="800" fill="#2E2B27" font-family="sans-serif">***</text>`,
+  konsento: `<rect class="w" x="12" y="6" width="40" height="52" rx="4" style="fill:#FBFAF6"/>
+    ${[18, 38].map(y => `<rect class="w" x="20" y="${y}" width="24" height="12" rx="3" style="fill:#F2EEE2"/><rect class="k n" x="25" y="${y + 3}" width="2.6" height="6"/><rect class="k n" x="36.4" y="${y + 3}" width="2.6" height="6.8"/>`).join("")}
+    <circle class="gy n" cx="32" cy="10" r="1.4" style="fill:#C9C4BA"/><circle class="gy n" cx="32" cy="54" r="1.4" style="fill:#C9C4BA"/>`,
+  batteri: `<rect class="k" x="12" y="10" width="40" height="46" rx="6" style="fill:#3B342D"/><rect class="gr n" x="18" y="40" width="28" height="10" rx="1" style="fill:#7FD19B"/>
+    <rect class="gr n" x="18" y="28" width="28" height="10" rx="1" style="fill:#7FD19B"/><rect class="gy n" x="18" y="16" width="28" height="10" rx="1" style="fill:#5A5650"/>
+    <path class="y n" d="M34 16l-5 8h4l-2 7 6-9h-4l2-6z" style="fill:#F5D84A"/><rect class="gy" x="26" y="56" width="12" height="3" rx="1" style="fill:#7C786F"/>`,
+  keburu: `<path class="l" d="M10 54q0-10 10-10t10-10-10-10 0-12q10 0 16 6t14 4" style="stroke:#2E2B27;stroke-width:3"/>
+    <rect class="gy" x="48" y="16" width="10" height="16" rx="2" style="fill:#EDEAE3"/><rect class="gy" x="51" y="10" width="4" height="7" style="fill:#A9A499"/>
+    <rect class="gy" x="4" y="52" width="12" height="8" rx="2" style="fill:#EDEAE3"/>`,
+  usb: `<rect class="b" x="10" y="24" width="34" height="18" rx="4" style="fill:#4F7FC0"/><rect class="gy" x="44" y="27" width="14" height="12" style="fill:#C9CDD2"/>
+    <rect class="k n" x="48" y="30" width="3" height="2.4"/><rect class="k n" x="53" y="30" width="3" height="2.4"/><circle class="w n" cx="18" cy="33" r="2" style="fill:#9FD3F0"/><path class="l" d="M10 33H4" style="stroke-width:2"/>`,
+  apuri: `<rect class="o" x="10" y="10" width="44" height="44" rx="12" style="fill:#F2903A"/>${star(32, 30, 12, "w")}
+    <circle class="r" cx="52" cy="12" r="7" style="fill:#E0383B"/><text x="52" y="15" text-anchor="middle" font-size="9" font-weight="800" fill="#fff" font-family="sans-serif">1</text>`,
+  meru: `<rect class="w" x="6" y="16" width="52" height="36" rx="3" style="fill:#FBFAF6"/><path class="l" d="M6 18l26 18 26-18"/>
+    <circle class="b" cx="50" cy="16" r="9" style="fill:#4F7FC0"/><text x="50" y="20" text-anchor="middle" font-size="12" font-weight="800" fill="#fff" font-family="sans-serif">@</text>`,
+  shimu: `<path class="r" d="M14 8h28l10 10v38H14z" style="fill:#E0383B"/><rect class="g" x="22" y="24" width="22" height="20" rx="3"/>
+    <path class="l" d="M22 31h22M22 37h22M33 24v20" style="stroke:#B8892E"/><text x="22" y="16" font-size="6" font-weight="800" fill="#fff" font-family="sans-serif">SIM</text>`,
+  mausu: `<path class="l" d="M32 14q0-10 10-10" style="stroke:#2E2B27;stroke-width:2"/><path class="gy" d="M16 30q0-16 16-16t16 16v12q0 16-16 16T16 42z" style="fill:#EDEAE3"/>
+    <path class="l" d="M16 30h32M32 14v16"/><rect class="gy" x="30" y="18" width="4" height="8" rx="2" style="fill:#7C786F"/>`,
+  kibodo: `<rect class="gy" x="2" y="20" width="60" height="26" rx="3" style="fill:#C9C4BA"/>
+    ${[0, 1, 2].map(r => [...Array(10)].map((_, c) => `<rect class="w n" x="${5 + c * 5.6 + (r % 2) * 1.4}" y="${23 + r * 6}" width="4.4" height="4.4" rx=".8"/>`).join("")).join("")}<rect class="w n" x="16" y="41" width="32" height="3.4" rx=".8"/>`,
+  purinta: `<rect class="w" x="18" y="4" width="28" height="16" style="fill:#FFFDF8"/><rect class="gy" x="6" y="18" width="52" height="24" rx="3" style="fill:#C9C4BA"/>
+    <rect class="gy" x="10" y="40" width="44" height="10" style="fill:#A9A499"/><rect class="w" x="18" y="44" width="28" height="16" style="fill:#FFFDF8"/><path class="l" d="M22 50h20M22 54h14" style="stroke:#A9A499"/>
+    <circle class="gr n" cx="50" cy="26" r="2" style="fill:#7FD19B"/>`,
+  gemuki: `<rect class="r" x="2" y="16" width="16" height="32" rx="6" style="fill:#E0383B"/><rect class="b" x="46" y="16" width="16" height="32" rx="6" style="fill:#4F9BD9"/>
+    <rect class="k" x="16" y="14" width="32" height="36" rx="2" style="fill:#3B342D"/><rect class="sk n" x="19" y="18" width="26" height="28" style="fill:#9FD3E8"/>
+    <circle class="k" cx="10" cy="26" r="3"/><circle class="k" cx="54" cy="38" r="3"/><path class="y n" d="M26 38l6-10 6 10z" style="fill:#F5CF52"/>`,
+  doron: `${[[10, 14], [54, 14], [10, 40], [54, 40]].map(([x, y]) => `<ellipse class="gy" cx="${x}" cy="${y}" rx="9" ry="2.4" style="fill:#C9CDD2"/><rect class="k" x="${x - 1.4}" y="${y}" width="2.8" height="4"/>`).join("")}
+    <path class="l" d="M12 18l14 8M52 18l-14 8M12 42l14-8M52 42l-14-8" style="stroke:#3B342D;stroke-width:3"/>
+    <rect class="w" x="22" y="22" width="20" height="16" rx="5" style="fill:#F4F7F9"/><circle class="k" cx="32" cy="42" r="4" style="fill:#3B342D"/><circle class="sk n" cx="32" cy="42" r="2" style="fill:#4F7FC0"/>`,
+  uotchi: `<rect class="k" x="24" y="2" width="16" height="60" rx="5" style="fill:#2F3F7C"/><rect class="k" x="16" y="16" width="32" height="32" rx="9" style="fill:#2E2B27"/>
+    <rect class="sk n" x="20" y="20" width="24" height="24" rx="6" style="fill:#3B342D"/><text x="32" y="35" text-anchor="middle" font-size="9" font-weight="800" fill="#7FD19B" font-family="sans-serif">10:09</text>
+    ${HEART(32, 37, .45)}<rect class="gy" x="47" y="26" width="3" height="6" rx="1" style="fill:#7C786F"/>`,
 };
 
 function toyArt(id, cls = "") {

@@ -7,7 +7,7 @@
                           shop talk…) — loaded when that place opens
      js/audio-konbini.js  the convenience store: every name, slogan, tag and label
      js/audio-gacha.js    遊ぶ Games: every capsule toy's name
-     js/audio-gacha-use.js     …and each one's line to say (toyUse)
+     js/audio-use-<set>.js     …and each one's line to say (toyUse), a bundle a set
      js/audio-loans.js    読む Read → 外来語: every loanword
    All add to window.NQ_AUDIO rather than replace it, so they load in any order.
 
@@ -136,8 +136,10 @@ function stageBundles() {
   /* 外来語: every loanword, fetched when the Read tab's loanwords open */
   out['js/audio-loans.js'] = [...new Set(LOAN_WORDS.map(x => x.k))].filter(t => !kana.has(t));
   out['js/audio-gacha.js'] = [...new Set(TOY_SETS.flatMap(S => S.toys.map(t => furiKana(t.w))))].filter(t => !kana.has(t));
-  /* …and each toy's word in a line to say (toyUse), fetched with it */
-  out['js/audio-gacha-use.js'] = [...new Set(TOY_SETS.flatMap(S => S.toys.map(t => furiKana(toyUse(t)[0]))))].filter(t => !kana.has(t));
+  /* …and each toy's word in a line to say (toyUse), a bundle a set, fetched
+     the first time one of its lines shows (one bundle for all of them grew
+     past 4 MB) */
+  TOY_SETS.forEach(S => { out[`js/audio-use-${S.id}.js`] = [...new Set(S.toys.map(t => furiKana(toyUse(t)[0])))].filter(t => !kana.has(t)); });
   out['js/audio-konbini.js'] = [...new Set(KONBINI.flatMap(p => [p.name, p.copy, ...p.tags, ...p.back.map(r => r[0])].map(furiKana)))].filter(t => !kana.has(t));
   return out;
 }

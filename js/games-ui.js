@@ -119,8 +119,8 @@ function toySlot(t, n) {
 /* A toy's word in a line to say (toyUse), as a button that says it */
 function useLine(t, cls = "") {
   const u = toyUse(t);
-  /* the lines' sound is a bundle of its own (2 MB), fetched the first time one shows */
-  if (u) loadBundle("gacha-use");
+  /* the lines' sound is a bundle a set, fetched the first time one of its lines shows */
+  if (u) loadBundle("use-" + TOY_BY[t.id].set);
   return u ? `<button class="ga-use ${cls}" data-act="ga-use" data-t="${t.id}">${icon("speaker")}<span><span class="ga-use-jp" lang="ja">${wordHtml(u[0])}</span><small>${esc(u[1])}</small></span></button>` : "";
 }
 
