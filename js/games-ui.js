@@ -5,7 +5,7 @@
    and Match (read-ui.js), Trails (trail-ui.js) — play in the Read tab's overlay; they only live
    here. Each pays coins as it ends (earnCoins), and so do the Read tab's
    rounds and every sprint, a little less; a turn of the
-   machine costs SPIN_COST and drops a capsule from the set being collected
+   machine costs spinCost of the set being collected and drops a capsule from it
    (js/data/toys.js); the toy goes on the shelf, under its name. A full shelf
    opens the next set. state.gacha:
      earned  coins ever earned      spent  coins ever spent
@@ -16,9 +16,13 @@
 
 const coins = () => Math.max(0, (state.gacha.earned || 0) - (state.gacha.spent || 0));
 const spinFree = () => !(state.gacha.spent || 0) && !Object.keys(state.gacha.owned).length;
-const canSpin = () => spinFree() || coins() >= SPIN_COST;
-/* how many turns the purse buys at once (a free first turn isn't one of them) */
-const spinsAll = () => spinFree() ? 0 : Math.floor(coins() / SPIN_COST);
+/* what a turn costs now: the price of the set being collected */
+const turnCost = () => spinCost(currentSet(state.gacha.owned));
+const canSpin = () => spinFree() || coins() >= turnCost();
+/* how many turns the purse buys at once (a free first turn isn't one of
+   them) — at this set's price; a set filled on the way may cost more, and
+   the turns stop when the purse runs out (gachaSpinAll) */
+const spinsAll = () => spinFree() ? 0 : Math.floor(coins() / turnCost());
 
 /* Pay for a game. Returns the html that says so, for the game's last screen. */
 function earnCoins(n) {
@@ -57,8 +61,8 @@ function renderGames() {
       <div class="gm-purse" aria-label="${coins()} coins">${coinArt()}<b id="gmCoins">${coins()}</b><span>coins</span></div>
       <div class="gm-stage" id="gmStage">${gachaMachine()}</div>
       <div class="gm-set"><span lang="ja">${wordHtml(S.jp)}</span> ${esc(S.en)} · <b>${have}</b> of ${S.toys.length}${allDone ? " · every set complete" : ""}</div>
-      <button class="btn gm-turn" data-act="ga-spin" ${canSpin() && !gaBusy ? "" : "disabled"}>${spinFree() ? "Turn the handle — the first one's free" : `Turn the handle · ${coinArt()} ${SPIN_COST}`}</button>
-      ${!canSpin() ? `<p class="muted small">${SPIN_COST - coins()} more coins for a turn — a game pays about twenty.</p>` : ""}
+      <button class="btn gm-turn" data-act="ga-spin" ${canSpin() && !gaBusy ? "" : "disabled"}>${spinFree() ? "Turn the handle — the first one's free" : `Turn the handle · ${coinArt()} ${turnCost()}`}</button>
+      ${!canSpin() ? `<p class="muted small">${turnCost() - coins()} more coins for a turn — a game pays about twenty.</p>` : ""}
       ${spinsAll() >= 2 ? `<button class="btn btn-ghost gm-turn-all" data-act="ga-spin-all" ${gaBusy ? "disabled" : ""}>Turn them all · ${spinsAll()} capsules</button>` : ""}
     </section>
     ${shelfHtml()}
@@ -113,7 +117,7 @@ function gachaSpin() {
   const S = currentSet(g.owned);
   const toy = gachaPick(S, g.owned, g.dry || 0);
   const isNew = !g.owned[toy.id];
-  if (!free) g.spent = (g.spent || 0) + SPIN_COST;
+  if (!free) g.spent = (g.spent || 0) + spinCost(S);
   g.owned[toy.id] = (g.owned[toy.id] || 0) + 1;
   g.dry = isNew ? 0 : (g.dry || 0) + 1;
   if (!isNew) g.earned = (g.earned || 0) + DUP_BACK;
@@ -138,9 +142,10 @@ function gachaSpinAll() {
   const g = state.gacha, got = [], sets = [];
   for (let i = 0; i < n; i++) {
     const S = currentSet(g.owned);
+    if (coins() < spinCost(S)) break;
     const toy = gachaPick(S, g.owned, g.dry || 0);
     const isNew = !g.owned[toy.id];
-    g.spent = (g.spent || 0) + SPIN_COST;
+    g.spent = (g.spent || 0) + spinCost(S);
     g.owned[toy.id] = (g.owned[toy.id] || 0) + 1;
     g.dry = isNew ? 0 : (g.dry || 0) + 1;
     if (!isNew) g.earned = (g.earned || 0) + DUP_BACK;

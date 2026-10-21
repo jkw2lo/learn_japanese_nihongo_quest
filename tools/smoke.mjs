@@ -98,7 +98,7 @@ const CONTRACT = {
   'js/read-ui.js': ['renderRead', 'readKey', 'readText', 'readPool', 'splits', 'makeChain', 'chainable', 'READ_RUNGS', 'openRead', 'closeRead',
     'makeSearch', 'searchPlaces', 'searchSnap', 'SEARCH_DIRS', 'SEARCH_SIZES', 'searchCard', 'matchCard', 'phrasePool', 'phraseCard', 'pieceMeaning', 'subsPool', 'textCard', 'textShow', 'textOpen', 'textAnswer'],
   'js/data/texts.js': ['TEXTS', 'textSay', 'READ_PHRASES', 'PHRASE_BITS', 'phraseWord'],
-  'js/data/toys.js': ['TOY_SETS', 'TOY_BY', 'SPIN_COST', 'DUP_BACK', 'PITY', 'gachaPick', 'setDone', 'currentSet'],
+  'js/data/toys.js': ['TOY_SETS', 'TOY_BY', 'SPIN_COST', 'spinCost', 'RARE_WEIGHT', 'DUP_BACK', 'PITY', 'gachaPick', 'setDone', 'currentSet'],
   'js/toys-art.js': ['TOY_ART', 'toyArt', 'gachaMachine', 'capsuleArt', 'coinArt', 'GACHA_HUES'],
   'js/data/loans.js': ['LOAN_RULES', 'LOAN_WORDS', 'LOAN_GROUPS', 'LOAN_BY', 'LOAN_RULE_BY'],
   'js/loans-ui.js': ['loanCard', 'loanPool', 'loanOpen', 'loanShow', 'loanAnswer', 'loanDecoys', 'openLoanRules', 'openLoanList'],
@@ -458,8 +458,8 @@ section('games');
   const g = {};
   vm.createContext(g);
   vm.runInContext(['js/data/kana.js', 'js/furi.js', 'js/data/toys.js', 'js/toys-art.js'].map(read).join('\n') +
-    ';globalThis.G = { TOY_SETS, TOY_BY, TOY_ART, gachaPick, setDone, currentSet, PITY, furiProblems, furiKana, kanaUnits, KANA_BY };', g);
-  const { TOY_SETS, TOY_BY, TOY_ART, gachaPick, setDone, currentSet, PITY } = g.G;
+    ';globalThis.G = { TOY_SETS, TOY_BY, TOY_ART, gachaPick, setDone, currentSet, PITY, spinCost, furiProblems, furiKana, kanaUnits, KANA_BY };', g);
+  const { TOY_SETS, TOY_BY, TOY_ART, gachaPick, setDone, currentSet, PITY, spinCost } = g.G;
   ok(TOY_SETS.length >= 2, 'expected more than one set of toys, so finishing one opens another');
   const all = TOY_SETS.flatMap(S => S.toys);
   ok(new Set(all.map(t => t.id)).size === all.length, 'two toys share an id');
@@ -478,11 +478,18 @@ section('games');
   /* the machine: a toy you lack is likelier; after PITY repeats, a new one; a set
      takes a fair number of turns */
   const S = TOY_SETS[0];
-  const owned = Object.fromEntries(S.toys.slice(1).map(t => [t.id, 1]));
+  const lack = S.toys.find(t => !t.rare);
+  const owned = Object.fromEntries(S.toys.filter(t => t !== lack).map(t => [t.id, 1]));
   let fresh = 0;
-  for (let i = 0; i < 2000; i++) if (gachaPick(S, owned, 0).id === S.toys[0].id) fresh++;
+  for (let i = 0; i < 2000; i++) if (gachaPick(S, owned, 0).id === lack.id) fresh++;
   ok(fresh > 2000 * 0.08 && fresh < 2000 * 0.3, `the one toy missing came up ${fresh} times in 2000 — expected four times the others' share`);
-  ok([...Array(50)].every(() => gachaPick(S, owned, PITY).id === S.toys[0].id), 'after PITY repeats in a row the next toy should be new');
+  ok([...Array(50)].every(() => gachaPick(S, owned, PITY).id === lack.id), 'after PITY repeats in a row the next toy should be new');
+  /* a rare is rare: from an empty shelf, about one turn in thirty is gold */
+  let gold = 0;
+  for (let i = 0; i < 4000; i++) if (gachaPick(S, {}, 0).rare) gold++;
+  ok(gold > 4000 * 0.015 && gold < 4000 * 0.06, `a rare came up ${gold} times in 4000 turns from an empty shelf — expected about one in thirty`);
+  /* later sets cost more, never less */
+  ok(TOY_SETS.every((x, i) => i === 0 || spinCost(x) >= spinCost(TOY_SETS[i - 1])), `a set costs less than the one before it: ${TOY_SETS.map(spinCost).join(", ")}`);
   let turns = 0;
   for (let run = 0; run < 200; run++) {
     const own = {}; let dry = 0;

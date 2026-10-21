@@ -1095,6 +1095,27 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.64.0: At home, and rarer rares
+
+- **A fourth set of capsule toys: 家 At home.** It has twenty everyday
+  words: 机 desk, いす chair, ベッド bed, テレビ TV, 冷蔵庫 fridge,
+  スマホ smartphone, 時計 clock, 傘 umbrella, 鍵 key, 布団 futon,
+  枕 pillow, コップ glass, お箸 chopsticks, 茶碗 rice bowl, やかん
+  kettle, 本 book, 窓 window, and three rares: こたつ heated table,
+  お風呂 bath and 猫 cat. All are drawn, all are recorded, and Quiz me
+  works on them once the shelf is full.
+- **Later sets cost more per turn:** 20 for Lucky charms and Food, 25 for
+  Around town, and 30 for At home. Earning is unchanged. "Turn them all"
+  pays each set's own price, and stops when the purse runs out if a set
+  fills partway through.
+- **Rares are rarer:** a fifth as likely as a normal toy, down from a
+  half. From an empty shelf, about one turn in thirty is now a gold
+  capsule, down from about one in twelve. A set still can't stall: six
+  doubles in a row always bring a new toy. A set takes about 37 turns,
+  up from 32, and never more than about 60 (simulated over 20,000 sets).
+- **The collection's tabs fit on one line.** With four sets, 縁起物 and
+  食べ物 wrapped onto two lines on a phone. Now each tab is one line.
+
 ### 0.63.2: One quiz a shelf
 
 - **The Collection card's Quiz me row belongs to the set on show.** Each
@@ -2029,7 +2050,10 @@ larger), the bests (the faster) and the rounds.
   sprint, half a coin a right answer (up to 30), three for finishing in
   time, three for a best. The end screen says so, with a way to the
   machine (`earnCoins`).
-- **A turn costs 20** (`SPIN_COST`); the first is free, so the machine
+- **A turn costs 20 to 30**: each set has its price (`spinCost`) — 20 for
+  Lucky charms and Food, 25 for Around town, 30 from At home on — so later
+  sets take longer to fill without the first ones being a grind. The first
+  turn is free, so the machine
   shows what it does before it asks. The handle turns, the dome jiggles,
   a capsule drops; it opens in the middle of the screen with a tap — its
   two halves fly apart — and the toy inside says its name. A rare toy
@@ -2037,7 +2061,8 @@ larger), the bests (the faster) and the rounds.
 - **Twenty toys a set**, on four shelves of five (`TOY_SETS` in
   `js/data/toys.js`): 縁起物 Lucky charms (招き猫, だるま, こけし,
   鳥居, 富士山…), then 食べ物 Food (おにぎり, ラーメン, たいやき,
-  抹茶…), then 町 Around town (自販機, 新幹線, 踏切, 東京タワー…). A
+  抹茶…), then 町 Around town (自販機, 新幹線, 踏切, 東京タワー…), then
+  家 At home (机, 冷蔵庫, 時計, 布団, お箸, 茶碗, こたつ, 猫…). A
   toy not yet found is a ? box; a found one stands on the shelf with its
   name in Japanese (furigana as the learner needs it) and English, and a
   tap says it. Doubles are counted (×2). **A full set opens the next**, with
@@ -2056,11 +2081,21 @@ larger), the bests (the faster) and the rounds.
   a best. The set-complete card has a way in too.
 - **The odds** (`gachaPick`): the machine only gives toys from the set
   being collected; one you haven't got is four times as likely as one you
-  have, a rare one half as likely as the rest; a double gives 5 coins back
-  (`DUP_BACK`); and after six doubles in a row the next is new (`PITY`). A
-  set takes about 36 turns — nine in ten by 48, by simulation — so
-  about thirty games: a week or two of play, not a grind. Smoke runs the
-  machine 200 times to keep it there.
+  have, a rare one a fifth as likely as the rest (`RARE_WEIGHT`, a half
+  until 0.64.0); a double gives 5 coins back (`DUP_BACK`); and after six
+  doubles in a row the next is new (`PITY`) — which is what keeps the
+  rares from ever holding a set up for long. From an empty shelf about one
+  turn in thirty is gold, and the first rare comes after about sixteen
+  turns. A set takes about 37 turns — nine in ten by 44, never more than
+  about 60, by simulation of 20,000 sets — so about thirty games at 20 a
+  turn, forty-odd at 30. Smoke runs the machine 200 times to keep it
+  there, and checks a rare stays about one in thirty.
+
+  | rare weight | turns a set: median / 9 in 10 / worst | first rare after |
+  |---|---|---|
+  | 0.5 (before 0.64.0) | 32 / 39 / 51 | ~9 turns |
+  | **0.2** | **37 / 44 / 58** | **~16 turns** |
+  | 0.1 | 41 / 48 / 64 | ~21 turns |
 - **The toys are drawn** (`js/toys-art.js`): little vinyl figures, flat
   colour with a dark outline, each a 64×64 SVG. Like the painted places
   they have their own light — the same colours in either theme — so the
