@@ -1095,6 +1095,39 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.65.0: Words to say things with
+
+- **Five new capsule sets**, opening after 家 At home, each 30 coins a
+  turn:
+  - **気持ち Feelings:** うれしい, かなしい, つかれた, おなかがすいた,
+    のどがかわいた, いそがしい, いたい, 心配… (rares: びっくり,
+    しあわせ, 大好き)
+  - **服 Clothes:** シャツ, Tシャツ, ズボン, 靴, 帽子, めがね,
+    セーター, 手袋, かばん… (rares: 腕時計, 着物)
+  - **飲み物 Drinks:** 水, お湯, 氷, お茶, 牛乳, ビール, ワイン,
+    レモンサワー… (rares: 日本酒, 梅酒, シャンパン)
+  - **コンビニ Convenience store:** サンドイッチ, からあげ, 肉まん,
+    電池, 充電器, 切手, ゴミ箱, レジ袋… (rares: 電子レンジ, ATM,
+    コピー機)
+  - **仕事 Jobs:** 医者, 看護師, 先生, 学生, 会社員, 警察官,
+    エンジニア… (rares: 歌手, パイロット, 宇宙飛行士)
+- **Every toy now comes with a line to say it in**, with its sound:
+  うれしいです *I'm happy*, 医者です *I'm a doctor*, 靴がほしいです *I want
+  shoes*, 水をください *Water, please*, 電池はありますか *Do you have
+  batteries?* The first four sets got lines too: 招き猫が好きです,
+  おにぎりをください, 自販機はどこですか, 鍵はどこですか. The line
+  appears in three places: on the capsule when it opens, on a toy's card
+  (tap any toy on the shelf, which now opens its card instead of only
+  saying its name), and after each Quiz me answer. Tap it to hear it.
+- **The neko asks the way that fits.** For feelings, jobs and places it
+  asks ＿＿は どれ？ ("Which one is ___?") and says そう！ when you're
+  right. For things you'd ask for, it still says ＿＿を ください！
+- **The collection tabs scroll sideways** once there are more sets than
+  fit, and the tab you're on stays in view. With nine sets, they had
+  stretched the card wider than a phone screen.
+- Names with letters in them, like Tシャツ and ATM, carry furigana over
+  the letters (ティー, エーティーエム).
+
 ### 0.64.0: At home, and rarer rares
 
 - **A fourth set of capsule toys: 家 At home.** It has twenty everyday
@@ -2062,11 +2095,22 @@ larger), the bests (the faster) and the rounds.
   `js/data/toys.js`): 縁起物 Lucky charms (招き猫, だるま, こけし,
   鳥居, 富士山…), then 食べ物 Food (おにぎり, ラーメン, たいやき,
   抹茶…), then 町 Around town (自販機, 新幹線, 踏切, 東京タワー…), then
-  家 At home (机, 冷蔵庫, 時計, 布団, お箸, 茶碗, こたつ, 猫…). A
+  家 At home (机, 冷蔵庫, 時計, 布団, お箸, 茶碗, こたつ, 猫…), then
+  sets of words to say things with: 気持ち Feelings (うれしい, つかれた,
+  おなかがすいた…), 服 Clothes, 飲み物 Drinks, コンビニ Convenience store
+  and 仕事 Jobs. A
   toy not yet found is a ? box; a found one stands on the shelf with its
   name in Japanese (furigana as the learner needs it) and English, and a
   tap says it. Doubles are counted (×2). **A full set opens the next**, with
   a 全部 stamp; earlier sets stay to look at, later ones are locked.
+- **Every toy has a line to say it in** (`toyUse` in `js/data/toys.js`):
+  each set has one — 好きです for Lucky charms, をください for Food and
+  Drinks, はどこですか for Around town and At home, です for Feelings and
+  Jobs, がほしいです for Clothes, はありますか for the convenience store —
+  and a toy can have its own (つかれました, 温めてください, 教師です). It's
+  on the capsule as it opens, on the toy's card (tap one on the shelf),
+  and after each Quiz me answer; tap it to hear it. The lines' sound is
+  `js/audio-gacha-use.js`, fetched the first time one shows.
 - **Quiz me** (`toyQuizHtml` in `js/games-ui.js`, at the foot of the
   Collection card): a full shelf's twenty
   names, ten at a time, either heard (聞く Listen) or read (読む Read), with

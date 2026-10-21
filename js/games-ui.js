@@ -72,6 +72,7 @@ function renderGames() {
     ${trailCard(pool)}
     ${matchCard(pool)}
   </div>`;
+  shelfTabInView();
 }
 
 /* ---------- the shelves ---------- */
@@ -101,11 +102,40 @@ function shelfHtml() {
   </section>`;
 }
 
+/* the shelf's tabs scroll sideways once there are more sets than fit: keep
+   the one on show in view (without moving the page) */
+function shelfTabInView() {
+  const row = $(".gm-tabs"), on = row && $("button.on", row);
+  if (on && row.scrollWidth > row.clientWidth) row.scrollLeft = on.offsetLeft - (row.clientWidth - on.offsetWidth) / 2;
+}
+
 function toySlot(t, n) {
   if (!n) return `<div class="gm-slot empty" aria-label="not found yet"><span class="gm-box">?</span><span class="gm-name">？</span></div>`;
-  return `<button class="gm-slot ${t.rare ? "rare" : ""}" data-act="ga-hear" data-t="${t.id}" title="${esc(furiPlain(t.w))} — ${esc(t.m)}">
+  return `<button class="gm-slot ${t.rare ? "rare" : ""}" data-act="ga-card" data-t="${t.id}" title="${esc(furiPlain(t.w))} — ${esc(t.m)}">
     <span class="gm-fig">${toyArt(t.id)}${n > 1 ? `<i class="gm-x">×${n}</i>` : ""}</span>
     <span class="gm-name" lang="ja">${wordHtml(t.w)}</span><small>${esc(t.m)}</small></button>`;
+}
+
+/* A toy's word in a line to say (toyUse), as a button that says it */
+function useLine(t, cls = "") {
+  const u = toyUse(t);
+  /* the lines' sound is a bundle of its own (2 MB), fetched the first time one shows */
+  if (u) loadBundle("gacha-use");
+  return u ? `<button class="ga-use ${cls}" data-act="ga-use" data-t="${t.id}">${icon("speaker")}<span><span class="ga-use-jp" lang="ja">${wordHtml(u[0])}</span><small>${esc(u[1])}</small></span></button>` : "";
+}
+
+/* A toy on the shelf, tapped: its card — the word, said, and a line to use it in */
+function openToyCard(t) {
+  const S = TOY_SETS.find(x => x.id === TOY_BY[t.id].set);
+  openSheet(`<div class="ga-cardsheet">
+    <div class="eyebrow"><span lang="ja">${furiPlain(S.jp)}</span> · ${esc(S.en)}${t.rare ? " · rare" : ""}</div>
+    <div class="ga-fig">${toyArt(t.id)}</div>
+    <div class="ga-name" lang="ja">${wordHtml(t.w)}</div>
+    <div class="ga-m">${esc(t.m)}</div>
+    <button class="btn btn-ghost btn-sm" data-act="ga-hear" data-t="${t.id}">${icon("speaker")} Hear it</button>
+    ${useLine(t)}
+  </div>`);
+  say(furiKana(t.w));
 }
 
 /* ---------- a turn of the handle ---------- */
@@ -204,6 +234,7 @@ function gachaOpen(toy, isNew, done, S) {
       ${isNew ? `<div class="ga-new">${toy.rare ? "Rare! " : ""}New</div>` : `<div class="ga-dup">Got this one already · ${coinArt()} +${DUP_BACK} back</div>`}
       <div class="ga-name" lang="ja">${wordHtml(toy.w)}</div>
       <div class="ga-m">${esc(toy.m)}</div>
+      ${useLine(toy)}
       <div class="ga-acts">
         <button class="btn btn-ghost" data-act="ga-hear" data-t="${toy.id}">${icon("speaker")} Hear it</button>
         <button class="btn" data-act="ga-keep">${done ? "Finish the set" : "Put it on the shelf"} <kbd>↵</kbd></button>
@@ -352,11 +383,17 @@ function toyQuizShow() {
   if (listen) say(furiKana(t.w));
 }
 
-/* The neko asks for a toy by name — ＿＿をください, "___, please" — and you
-   hand it over: a shelf of six, pictures only. Its bubble shows the word
-   once you've answered. */
-const nekoBubble = (t, shown) => `<div class="gq-bubble" lang="ja">${shown ? `<b>${wordHtml(t.w, "always")}</b>` : `<button class="gq-blank" data-act="gq-hear" aria-label="Hear it again">${icon("speaker")}</button>`}を ください！
-  <small lang="en">${shown ? esc(t.m) : "___"}, please!</small></div>`;
+/* The neko asks for a toy by name — ＿＿をください, "___, please", or, where
+   that doesn't fit (a feeling, a job: the set's ask is "dore"), ＿＿は
+   どれ？, "which one is ___?" — and you hand it over: a shelf of six,
+   pictures only. Its bubble shows the word once you've answered. */
+const nekoBubble = (t, shown) => {
+  const which = RD?.set?.ask === "dore";
+  const word = shown ? `<b>${wordHtml(t.w, "always")}</b>` : `<button class="gq-blank" data-act="gq-hear" aria-label="Hear it again">${icon("speaker")}</button>`;
+  const m = shown ? esc(t.m) : "___";
+  return `<div class="gq-bubble" lang="ja">${word}${which ? "は どれ？" : "を ください！"}
+    <small lang="en">${which ? `Which one is ${m}?` : `${m}, please!`}</small></div>`;
+};
 
 function toyNekoShow() {
   const t = RD.lines[RD.i];
@@ -382,7 +419,7 @@ function toyQuizAnswer(i) {
   /* the answer, whichever way it was asked: the word with its reading, and its meaning */
   const v = $("#gqWhy");
   v.className = "verdict gq-why " + (ok ? "ok" : "miss");
-  v.innerHTML = `${icon(ok ? "check" : "close", "v-ico")} <b lang="ja">${wordHtml(q.x.w, "always")}</b> ${esc(q.x.m)}`;
+  v.innerHTML = `${icon(ok ? "check" : "close", "v-ico")} <b lang="ja">${wordHtml(q.x.w, "always")}</b> ${esc(q.x.m)}${useLine(q.x, "sm")}`;
   if (RD.way === "r") say(furiKana(q.x.w));
   rdStrip();
   if (ok) RD.next = setTimeout(() => { if (RD?.q === q) { RD.i++; rdStep(); } }, 1300);
@@ -397,8 +434,8 @@ function toyNekoAnswer(q, i, ok) {
   $("#gqBubble").innerHTML = nekoBubble(q.x, true);
   const v = $("#gqWhy");
   v.className = "verdict gq-why " + (ok ? "ok" : "miss");
-  v.innerHTML = ok ? `${icon("check", "v-ico")} ありがとう！ <small class="muted">Thank you!</small>`
-    : `${icon("close", "v-ico")} That one's <b lang="ja">${wordHtml(q.opts[i].w, "always")}</b>, ${esc(q.opts[i].m)}.`;
+  v.innerHTML = (ok ? (RD.set.ask === "dore" ? `${icon("check", "v-ico")} そう！ <small class="muted">That's it!</small>` : `${icon("check", "v-ico")} ありがとう！ <small class="muted">Thank you!</small>`)
+    : `${icon("close", "v-ico")} That one's <b lang="ja">${wordHtml(q.opts[i].w, "always")}</b>, ${esc(q.opts[i].m)}.`) + useLine(q.x, "sm");
   rdStrip();
   if (ok) RD.next = setTimeout(() => { if (RD?.q === q) { RD.i++; rdStep(); } }, 1500);
   else $("#rdFoot").innerHTML = `<button class="btn btn-ghost" data-act="gq-hear">${icon("speaker")} Again</button><button class="btn" id="rdNext" data-act="rd-next">Next <kbd>↵</kbd></button>`;
@@ -458,7 +495,7 @@ Object.assign(ACTS, {
     try { localStorage.setItem("nq-shelf", gaShelfOpen ? "1" : "0"); } catch {}
     const s = $("#gmShelves"); if (s) s.outerHTML = shelfHtml();
   },
-  "ga-shelf": el => { gaShelf = el.dataset.s; const s = $("#gmShelves"); if (s) s.outerHTML = shelfHtml(); },
+  "ga-shelf": el => { gaShelf = el.dataset.s; const s = $("#gmShelves"); if (s) s.outerHTML = shelfHtml(); shelfTabInView(); },
   "ga-done-close": () => { $("#gaDone")?.remove(); if (nextSetDone()) return; gaShelf = null; render(); },
   "ga-spin-all": () => gachaSpinAll(),
   "gq-start": el => {
@@ -467,6 +504,8 @@ Object.assign(ACTS, {
     toyQuizStart(el.dataset.s, el.dataset.w);
   },
   "gq-opt": el => toyQuizAnswer(+el.dataset.i),
+  "ga-card": el => { const t = TOY_BY[el.dataset.t]; if (t) openToyCard(t); },
+  "ga-use": el => { const t = TOY_BY[el.dataset.t], u = t && toyUse(t); if (u) say(furiKana(u[0])); },
   "gq-hear": () => { if (RD?.q) say(furiKana(RD.q.x.w)); },
   "ga-go": () => { closeRead(); if (typeof SP !== "undefined" && SP) ACTS["sp-close"](); go("games"); },
 });

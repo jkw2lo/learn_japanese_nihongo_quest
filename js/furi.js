@@ -54,7 +54,8 @@ function furiProblems(s) {
       if (loose.length) out.push(`${loose.join("")} has no reading in "${s}"`);
     } else {
       if (!x.k) out.push(`an empty kanji run in "${s}"`);
-      else if (![...x.k].every(c => KANJI_RE.test(c))) out.push(`{${x.k}|…} holds more than kanji in "${s}" — okurigana goes outside the braces`);
+      /* capitals too, for the letters Japanese writes as letters: {T|ティー}シャツ, {ATM|エーティーエム} */
+      else if (![...x.k].every(c => KANJI_RE.test(c) || /[A-Z]/.test(c))) out.push(`{${x.k}|…} holds more than kanji in "${s}" — okurigana goes outside the braces`);
       if (!x.r) out.push(`{${x.k}|} has no reading in "${s}"`);
       else if (!KANA_RE.test(x.r)) out.push(`{${x.k}|${x.r}}: the reading isn't all kana in "${s}"`);
     }
