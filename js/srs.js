@@ -30,6 +30,7 @@ const DEFAULT_SETTINGS = {
   strokeOrder: false,    /* also check stroke order and direction */
   writeCheck: "shape",   /* shape: stroke by stroke | read: like a handwriting keyboard (write.js) */
   writeKanji: false,     /* writing drills for kanji too — opt-in */
+  scriptColour: true,    /* writing prompts: hiragana indigo, katakana plum (write.js, writeAskHtml) */
   furigana: "auto",      /* over kanji you don't know | always | never */
   theme: "auto",
   bookPen: "pen",        /* the notebook: pen, brush, pencil, marker */

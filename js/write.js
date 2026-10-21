@@ -412,6 +412,21 @@ function modelAnimMs(k) {
 
 /* ---------- the pad ---------- */
 
+/* What to write, over the box: the sound, big, and under it which kana —
+   hiragana or katakana — with the stroke count. With Settings' colour-coding
+   on (scriptColour) the script's name sits on a wash of its colour, indigo
+   or plum, and the box is edged to match (writeTint, on the question); never
+   green, amber or red, which the marking uses. `head` is an optional line
+   over the sound, e.g. "Trace it". */
+function writeAskHtml(e, n, { head = "", note = "" } = {}) {
+  const tint = state.settings.scriptColour ? ` tint-${e.set}` : "";
+  return `<div class="w-ask">${head ? `<div class="w-head">${head}</div>` : ""}
+    <div class="w-rom">${esc(kanaAsked(e))}</div>
+    <div class="w-sub"><span class="w-set${tint}">${SET_NAME[e.set]}</span>
+      <span class="muted small">${n} stroke${n > 1 ? "s" : ""}${note}</span></div></div>`;
+}
+const writeTint = e => state.settings.scriptColour ? ` tint-${e.set}` : "";
+
 /* A square you draw in with a mouse, finger or pen. The guide is a faint
    cross, like the squared paper Japanese children practise on. */
 function padHtml(k, { trace = false } = {}) {

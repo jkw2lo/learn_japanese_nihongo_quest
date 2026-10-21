@@ -262,9 +262,8 @@ function showSprintQ() {
   const body = $("#spBody");
   if (SP.mode === "write") {
     const e = KANA_BY[q.k];
-    body.innerHTML = `<div class="q q-w sp-q">
-      <div class="q-ask">Write <b class="sp-w-r">${esc(kanaAsked(e))}</b> in ${SET_NAME[e.set]}
-        <span class="muted small">· ${strokesFor(q.k).m.length} stroke${strokesFor(q.k).m.length > 1 ? "s" : ""}</span></div>
+    body.innerHTML = `<div class="q q-w sp-q${writeTint(e)}">
+      ${writeAskHtml(e, strokesFor(q.k).m.length)}
       ${padHtml(q.k)}
       <button class="btn sp-next" data-act="sp-write-next">Next <kbd>↵</kbd></button>
       <div class="pad-tools">

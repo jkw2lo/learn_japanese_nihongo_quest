@@ -651,6 +651,18 @@ button.glyph-xl:hover:not(:disabled) { background: var(--sunken); }
   background: var(--sheet); border: 1.5px solid var(--rule); border-radius: 14px; overflow: hidden;
 }
 .pad > svg, .pad-model, .pad-model svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* what to write (write.js, writeAskHtml): the sound big, the script under it */
+.w-ask { margin-bottom: .5rem; }
+.w-head { color: var(--ink-3); font-size: .92rem; }
+.w-rom { font: 600 2.6rem/1.15 var(--f-display); color: var(--ink); }
+.w-sub { display: flex; gap: .5rem; align-items: center; justify-content: center; flex-wrap: wrap; margin-top: .15rem; }
+.w-set { color: var(--ink-2); font-size: 1rem; }
+/* colour-coded (Settings): the script's name on its wash, the box edged to match */
+.w-set.tint-h, .w-set.tint-k { padding: .1rem .7rem; border-radius: 999px; font-weight: 600; }
+.w-set.tint-h { color: var(--c-hira); background: color-mix(in srgb, var(--c-hira) 12%, transparent); }
+.w-set.tint-k { color: var(--c-kata); background: color-mix(in srgb, var(--c-kata) 12%, transparent); }
+.q-w.tint-h .pad { border: 3px solid var(--c-hira); }
+.q-w.tint-k .pad { border: 3px solid var(--c-kata); }
 .pad-guide line { stroke: var(--rule); stroke-width: 4; stroke-dasharray: 18 14; }
 .pad-ink { touch-action: none; cursor: crosshair; }
 .pad-ink polyline { fill: none; stroke: var(--ink); stroke-width: 34; stroke-linecap: round; stroke-linejoin: round; }
@@ -1051,8 +1063,6 @@ ul.rc li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .4re
 .sp-pop-box .sp-ink polyline { stroke-width: 34; }
 .sp-pop-why { color: var(--ink-2); font-size: .92rem; min-height: 1.4em; }
 .sp-pop .ask-btns { justify-content: center; flex-wrap: wrap; }
-.sp-q.q-w .q-ask { font-size: 1.1rem; }
-.sp-w-r { font: 600 1.6rem var(--f-display); color: var(--ai); margin: 0 .15em; }
 .sp-q .pad-tools { margin-top: .6rem; }
 /* Write's Next: a row of its own straight under the box, as wide as it, where it's quickest to hit */
 .sp-next { display: flex; justify-content: center; width: min(19rem, 72vw); margin: 0 auto; min-height: 48px; }

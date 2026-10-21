@@ -1095,6 +1095,20 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.61.0: Which kana, at a glance
+
+- **The writing prompt leads with the sound.** In Sprint's 書く Write and in
+  the lessons' writing questions, the romaji is now big on its own line
+  (*ka*), with *hiragana* or *katakana* and the stroke count under it. It
+  used to be one sentence, "Write ka in katakana", which was easy to misread
+  at speed. Kanji questions are unchanged.
+- **Colour-coded hiragana and katakana** (Settings, on by default): the
+  script's name sits on a wash of its colour, and the writing box is edged to
+  match. Hiragana is indigo, katakana plum, the same colours the scripts
+  already have in the app, and never the green, amber or red the marking
+  uses. The name is always spelled out too, so the colour is a second cue,
+  not the only one. Turn it off for plain text and a plain box.
+
 ### 0.60.1: The tab row fits
 
 - **The desktop tab row no longer runs off the screen.** It was sized for

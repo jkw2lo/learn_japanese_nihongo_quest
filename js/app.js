@@ -1016,17 +1016,19 @@ function showCard() {
 function showWrite(c) {
   const n = strokesFor(c.ch).s.length;
   const ordered = state.settings.strokeOrder && state.settings.writeCheck !== "read";
-  let what;
+  const head = c.trace ? "Trace it" : "Write it from memory";
+  let ask, tint = "";
   if (isKanjiKey(c.k)) {
     const K = KANJI_BY[c.ch];
-    what = `${c.trace ? `<b lang="ja">${esc(c.ch)}</b> ` : "the kanji for "}<b>${esc(K.m)}</b>`;
+    ask = `<div class="q-ask">${head}: ${c.trace ? `<b lang="ja">${esc(c.ch)}</b> ` : "the kanji for "}<b>${esc(K.m)}</b>
+      <span class="muted small">· ${n} stroke${n > 1 ? "s" : ""}${ordered ? ", in order" : ""}</span></div>`;
   } else {
     const e = KANA_BY[c.k];
-    what = `${c.trace ? `<b lang="ja">${esc(e.k)}</b> ` : ""}<b>${esc(kanaAsked(e))}</b> in ${SET_NAME[e.set]}`;
+    ask = writeAskHtml(e, n, { head, note: ordered ? ", in order" : "" });
+    tint = writeTint(e);
   }
-  $("#sBody").innerHTML = `<div class="q q-w">
-    <div class="q-ask">${c.trace ? "Trace it" : "Write it from memory"}: ${what}
-      <span class="muted small">· ${n} stroke${n > 1 ? "s" : ""}${ordered ? ", in order" : ""}</span></div>
+  $("#sBody").innerHTML = `<div class="q q-w${tint}">
+    ${ask}
     ${padHtml(c.ch, { trace: c.trace })}
     <div class="pad-tools">
       <button class="btn btn-ghost btn-sm" data-act="w-undo">Undo <kbd>Z</kbd></button>
@@ -1723,6 +1725,7 @@ function openSettings() {
     <label class="set-row"><span>Review days<small>A day with no new lesson, for going back over the last few. Also, whatever the rhythm, on coming back after ${BREAK_DAYS} days or more away.</small></span>
       <select data-set="reviewEvery">${[[3, "Every 4th day"], [2, "Every 3rd day"], [4, "Every 5th day"], [0, "Never"]].map(([n, t]) => `<option value="${n}" ${s.reviewEvery === n ? "selected" : ""}>${t}</option>`).join("")}</select></label>
     ${tog("writing", "Writing practice", "Trace each new kana, and write today's from memory. Draw with a mouse, finger or pen.")}
+    ${tog("scriptColour", "Colour-code hiragana and katakana", "When writing, the script you're asked for is shown in its colour — hiragana indigo, katakana plum — and the box is edged to match.")}
     ${tog("writeKanji", "Write kanji too", "Trace each new kanji, and write today's from memory. Off by default — reading them is the part that gets you by.")}
     <label class="set-row"><span>How writing is marked<small><b>Stroke by stroke</b> holds you to the textbook shape: every stroke there, in its place, going the usual way round. <b>In order</b> wants them in turn too. <b>Read it like a keyboard</b> is for later, once the shapes are in your hand: it reads your writing the way a phone's handwriting keyboard does, so strokes can be joined up, and it's right if it reads as the right kana.</small></span>
       <select data-set="writeMark">${[["shape", "Stroke by stroke"], ["order", "Stroke by stroke, in order"], ["read", "Read it like a keyboard"]].map(([v, t]) =>
