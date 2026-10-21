@@ -1095,6 +1095,17 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.63.1: Quiz me, on the shelf
+
+- **Quiz me has moved into the Collection card.** Each full shelf gets a
+  row at the foot of the card, shown whether the shelf is open or folded,
+  so the quiz sits with the toys it asks about. The separate Quiz me card
+  is gone.
+- **The buttons are three equal tiles**, with the Japanese over the English
+  (聞く / Listen) and your best under them. Before, the Japanese and English
+  sat side by side, and on a phone the Japanese wrapped one character to a
+  line.
+
 ### 0.63.0: The neko asks
 
 - **A third way to quiz a full shelf: お願い Neko asks.** The neko sits
@@ -2022,7 +2033,8 @@ larger), the bests (the faster) and the rounds.
   name in Japanese (furigana as the learner needs it) and English, and a
   tap says it. Doubles are counted (×2). **A full set opens the next**, with
   a 全部 stamp; earlier sets stay to look at, later ones are locked.
-- **Quiz me** (`toyQuizCard` in `js/games-ui.js`): a full shelf's twenty
+- **Quiz me** (`toyQuizHtml` in `js/games-ui.js`, at the foot of the
+  Collection card): a full shelf's twenty
   names, ten at a time, either heard (聞く Listen) or read (読む Read), with
   four of the shelf's toys, drawn and named in English, to pick from. Or
   お願い Neko asks: the neko says a toy's name in a ＿＿をください bubble,

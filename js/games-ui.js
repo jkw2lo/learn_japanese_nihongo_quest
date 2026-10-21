@@ -62,7 +62,6 @@ function renderGames() {
       ${spinsAll() >= 2 ? `<button class="btn btn-ghost gm-turn-all" data-act="ga-spin-all" ${gaBusy ? "disabled" : ""}>Turn them all · ${spinsAll()} capsules</button>` : ""}
     </section>
     ${shelfHtml()}
-    ${toyQuizCard()}
     ${ninjaCard()}
     ${deckCard()}
     ${searchCard(pool)}
@@ -85,6 +84,7 @@ function shelfHtml() {
   if (!shown) return `<section class="card gm-shelves shut" id="gmShelves">${head}
     <button class="gm-dots" data-act="ga-shelf-fold" aria-label="Show the collection">${S.toys.map((t, i) =>
       `<i class="${owned[t.id] ? "on" : ""} ${t.rare ? "rare" : ""}" data-t="${t.id}" style="--h:${GACHA_HUES[i % GACHA_HUES.length]}"></i>`).join("")}</button>
+    ${toyQuizHtml(false)}
   </section>`;
   const rows = [];
   for (let i = 0; i < S.toys.length; i += 5) rows.push(S.toys.slice(i, i + 5));
@@ -93,6 +93,7 @@ function shelfHtml() {
       ${open(x) ? "" : icon("lock")}<span lang="ja">${furiPlain(x.jp)}</span> ${i + 1}</button>`).join("")}</div>
     <p class="muted small">${setDone(S, owned) ? `<b>${esc(S.en)}</b> — complete. Tap a toy to hear its name.` : `<b>${esc(S.en)}</b> — ${S.toys.length - have} still to find. Tap a toy to hear its name.`}</p>
     <div class="gm-shelf">${rows.map(r => `<div class="gm-row">${r.map(t => toySlot(t, owned[t.id])).join("")}</div>`).join("")}</div>
+    ${toyQuizHtml(true)}
   </section>`;
 }
 
@@ -296,25 +297,25 @@ const hearsIt = w => w !== "r";          /* the ways that need sound */
 const TOY_NEKO_N = 6;                   /* toys on the neko's shelf */
 let toyQuiz = { set: null, way: "r" };     /* the round to open: rd-again opens it again */
 
-function toyQuizCard() {
+/* Quiz me, at the foot of the Collection card — open or folded — a row for
+   each full shelf: three tiles, the way in Japanese over English, and the
+   best round under it. Before any shelf is full, one line says how to
+   open it (only with the shelf open, so the folded card stays one line). */
+function toyQuizHtml(shown) {
   const owned = state.gacha.owned, quiz = state.gacha.quiz || {};
   const done = TOY_SETS.filter(S => setDone(S, owned));
-  const cur = currentSet(owned), left = cur.toys.filter(t => !owned[t.id]).length;
+  if (!done.length) return shown ? `<p class="muted small gq-hint">Fill a shelf and you can be quizzed on its twenty names: by ear, by sight, or by handing the neko what it asks for.</p>` : "";
   const row = S => {
     const b = quiz[S.id] || {};
-    const bests = Object.keys(TOY_QUIZ_WAYS).filter(w => b[w] != null).map(w => `${TOY_QUIZ_WAYS[w][1]} <b>${b[w]}</b>/${TOY_QUIZ_N}`);
     return `<div class="gq-set">
-      <div class="gq-name"><span lang="ja">${wordHtml(S.jp)}</span> ${esc(S.en)}${bests.length ? `<small class="muted">Best: ${bests.join(" · ")}</small>` : ""}</div>
+      <div class="gq-name">Quiz me on <span lang="ja">${wordHtml(S.jp)}</span> ${esc(S.en)}</div>
       <div class="gq-btns">${Object.entries(TOY_QUIZ_WAYS).map(([w, [jp, en]]) =>
-        `<button class="btn btn-ghost btn-sm" data-act="gq-start" data-s="${S.id}" data-w="${w}" ${hearsIt(w) && !state.settings.sound ? "disabled" : ""}><span lang="ja">${jp}</span> ${en}</button>`).join("")}</div>
+        `<button class="gq-btn" data-act="gq-start" data-s="${S.id}" data-w="${w}" ${hearsIt(w) && !state.settings.sound ? "disabled" : ""}>
+          <span class="gq-jp" lang="ja">${jp}</span><span class="gq-en">${en}</span>${b[w] != null ? `<small>best ${b[w]}/${TOY_QUIZ_N}</small>` : ""}</button>`).join("")}</div>
     </div>`;
   };
-  return `<section class="card rd-rung gm-quiz ${done.length ? "" : "locked"}">
-    <div class="rd-rung-head"><span class="rd-n rd-game" lang="ja">問</span><h2><span lang="ja">クイズ</span> Quiz me</h2></div>
-    <p>Every toy is a word worth knowing. Fill a shelf, then test yourself on its twenty names — by ear, or by sight.</p>
-    ${done.length ? done.map(row).join("") + (state.settings.sound ? "" : `<p class="muted small">Listen and Neko asks need sound — it's off in Settings.</p>`)
-      : `<p class="muted small">Opens when a shelf is full: ${left} more to find for <b>${esc(cur.en)}</b>.</p>`}
-  </section>`;
+  return `<div class="gq-sets">${done.map(row).join("")}
+    ${state.settings.sound ? "" : `<p class="muted small">Listen and Neko asks need sound — it's off in Settings.</p>`}</div>`;
 }
 
 function toyQuizStart(setId, way) {

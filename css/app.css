@@ -2890,10 +2890,19 @@ h1 .h-en { font-size: .6em; color: var(--ink-2); font-weight: 500; }
 /* 外来語 Loanwords: a word to sound out, and the rules sheet */
 .rd-btns { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; }
 /* Quiz me (games-ui.js): a full shelf's names, heard or read; the toys to pick from, drawn */
-.gq-set { display: flex; align-items: center; justify-content: space-between; gap: .4rem .8rem; flex-wrap: wrap; padding: .6rem 0; border-top: 1px solid var(--rule-2); }
-.gq-name { display: flex; flex-direction: column; }
-.gq-name small { font-size: .8rem; }
-.gq-btns { display: flex; gap: 6px; }
+.gq-sets { margin-top: 1rem; }
+.gq-set { padding: .8rem 0 .2rem; border-top: 1px solid var(--rule-2); }
+.gq-name { font-weight: 600; margin-bottom: .5rem; }
+.gq-hint { margin: .8rem 0 0; }
+/* three equal tiles, the way in Japanese over English — never side by side, which wraps on a phone */
+.gq-btns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; max-width: 30rem; }
+.gq-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-height: 64px; padding: 8px 4px;
+  border: 1.5px solid var(--rule); border-radius: 14px; background: var(--sheet); color: var(--ink); line-height: 1.2; }
+.gq-btn:hover:not(:disabled) { border-color: var(--ink-3); }
+.gq-btn:disabled { opacity: .45; }
+.gq-jp { font-size: 1.1rem; }
+.gq-en { font-size: .85rem; font-weight: 600; white-space: nowrap; }
+.gq-btn small { font-size: .72rem; color: var(--ink-3); }
 .gq-play { text-align: center; padding-top: .6rem; }
 .gq-play .play { margin: .2rem 0 1rem; }
 .gq-word { font-size: clamp(2.2rem, 10vw, 3.2rem); line-height: 1.6; margin: 0 0 .8rem; }
