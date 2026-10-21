@@ -1095,6 +1095,29 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.66.0: Countries, weather, coffee, animals, famous places
+
+- **Five more capsule sets**, opening after 仕事 Jobs, each 30 coins a
+  turn. That makes fourteen sets and 280 toys.
+  - **国 Countries:** 20 flags, with the line アメリカから来ました *I'm
+    from the US* (rares: 日本, ブラジル, シンガポール)
+  - **天気と季節 Weather and seasons:** 晴れ, 雨, 雪, 台風, 梅雨,
+    暑い, 寒い, 春夏秋冬… with lines like 暑いですね *It's hot, isn't
+    it?* and 月がきれいですね (rares: 虹, 月, 雪だるま)
+  - **カフェ Coffee and tea:** コーヒー, カフェラテ, 紅茶, 抹茶ラテ,
+    ほうじ茶, 麦茶, 砂糖, plus ホット and 持ち帰り for ordering: ホットで
+    お願いします, 持ち帰りでお願いします (rares: エスプレッソ,
+    タピオカミルクティー, パフェ)
+  - **動物 Animals:** 犬, うさぎ, 鳥, 魚, くま, ぞう, きりん… with 犬が
+    好きです *I like dogs* (rares: パンダ, ペンギン, いるか)
+  - **名所 Famous places:** スカイツリー, 金閣寺, 姫路城, 雷門,
+    エッフェル塔, 自由の女神, ピラミッド, 万里の長城… with 金閣寺に
+    行きたいです, and ハチ公の前で会いましょう *Let's meet at Hachikō*
+    (rares: 大仏, モアイ)
+- **The smoke test now checks every toy's line** as well as its name:
+  the line has to be there, have correct furigana, and have no blank
+  left unfilled.
+
 ### 0.65.0: Words to say things with
 
 - **Five new capsule sets**, opening after 家 At home, each 30 coins a
@@ -2097,16 +2120,20 @@ larger), the bests (the faster) and the rounds.
   抹茶…), then 町 Around town (自販機, 新幹線, 踏切, 東京タワー…), then
   家 At home (机, 冷蔵庫, 時計, 布団, お箸, 茶碗, こたつ, 猫…), then
   sets of words to say things with: 気持ち Feelings (うれしい, つかれた,
-  おなかがすいた…), 服 Clothes, 飲み物 Drinks, コンビニ Convenience store
-  and 仕事 Jobs. A
+  おなかがすいた…), 服 Clothes, 飲み物 Drinks, コンビニ Convenience store,
+  仕事 Jobs, 国 Countries (flags), 天気と季節 Weather and seasons, カフェ
+  Coffee and tea, 動物 Animals and 名所 Famous places — fourteen sets,
+  280 toys. A
   toy not yet found is a ? box; a found one stands on the shelf with its
   name in Japanese (furigana as the learner needs it) and English, and a
   tap says it. Doubles are counted (×2). **A full set opens the next**, with
   a 全部 stamp; earlier sets stay to look at, later ones are locked.
 - **Every toy has a line to say it in** (`toyUse` in `js/data/toys.js`):
   each set has one — 好きです for Lucky charms, をください for Food and
-  Drinks, はどこですか for Around town and At home, です for Feelings and
-  Jobs, がほしいです for Clothes, はありますか for the convenience store —
+  Drinks and Coffee and tea, はどこですか for Around town and At home,
+  です for Feelings and Jobs, がほしいです for Clothes, はありますか for the
+  convenience store, から来ました for Countries, ですね for the weather,
+  が好きです for Animals, に行きたいです for Famous places —
   and a toy can have its own (つかれました, 温めてください, 教師です). It's
   on the capsule as it opens, on the toy's card (tap one on the shelf),
   and after each Quiz me answer; tap it to hear it. The lines' sound is

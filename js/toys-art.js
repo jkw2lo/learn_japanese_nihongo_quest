@@ -12,6 +12,22 @@
 /* Shared shapes for the sets of people and feelings (0.65.0).
    feel: a round little figure in a colour, its face and whatever's around it.
    who:  a small person — skin, clothes, hair or hat, face — and what they hold. */
+/* A flag on a pole (国 countries): the cloth is x 12–58, y 8–38. */
+function flag(inner) {
+  return `<rect class="br" x="8.4" y="5" width="3.4" height="53" rx="1.4"/><circle class="g" cx="10.1" cy="5" r="2.6"/>
+    ${inner}<rect class="l" x="12" y="8" width="46" height="30"/>`;
+}
+/* a five-pointed star, centred, radius r */
+function star(cx, cy, r, cls, k = 0.42) {
+  const p = [];
+  for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * k : r; p.push(`${(cx + rr * Math.cos(a)).toFixed(1)} ${(cy + rr * Math.sin(a)).toFixed(1)}`); }
+  return `<path class="${cls}" d="M${p.join("L")}z"/>`;
+}
+/* the Union Jack, small, in the top corner (x 12–35, y 8–23) */
+const UJACK = `<rect class="nv n" x="12" y="8" width="23" height="15"/>
+  <path class="w n" d="M12 8h3l20 12.4V23h-3L12 10.6zM35 8v2.6L15 23h-3v-2.6L32 8z"/><path class="r n" d="M12 8l23 15h-1.6L12 9z M35 8L12 23v-1l21.4-14z"/>
+  <path class="w n" d="M21 8h5v15h-5zM12 13h23v5H12z"/><path class="r n" d="M22.4 8h2.2v15h-2.2zM12 14.4h23v2.2H12z"/>`;
+
 function feel(fill, face, extra = "") {
   const f = fill.startsWith("#") ? `class="w" style="fill:${fill}"` : `class="${fill}"`;
   return `<path ${f} d="M10 40q0-25 22-25t22 25q0 18-22 18T10 40z"/>
@@ -792,6 +808,359 @@ const TOY_ART = {
     <rect class="k" x="38" y="22" width="14" height="8" rx="1" style="fill:#3B342D"/><rect class="sk n" x="39.4" y="23.4" width="11.2" height="5.2" style="fill:#9FD3E8"/>
     <path class="l" d="M12 34h40M12 44h40"/><rect class="w" x="16" y="24" width="16" height="6" style="fill:#FFFDF8"/>
     <rect class="gr" x="44" y="34" width="5" height="5" rx="1" style="fill:#7FD19B"/>`,
+  /* ---------- 国 countries ---------- */
+  nihon: flag(`<rect class="w n" x="12" y="8" width="46" height="30"/><circle class="r n" cx="35" cy="23" r="8.6"/>`),
+  amerika: flag(`<rect class="r n" x="12" y="8" width="46" height="30"/>${[1, 3, 5, 7, 9, 11].map(i => `<rect class="w n" x="12" y="${(8 + i * 30 / 13).toFixed(2)}" width="46" height="${(30 / 13).toFixed(2)}"/>`).join("")}
+    <rect class="nv n" x="12" y="8" width="19" height="16.2"/>${[0, 1, 2, 3].map(r => [0, 1, 2, 3, 4].map(c => `<circle class="w n" cx="${14.2 + c * 3.6 + (r % 2) * 1.2}" cy="${10.4 + r * 3.8}" r=".75"/>`).join("")).join("")}`),
+  igirisu: flag(`<rect class="nv n" x="12" y="8" width="46" height="30"/>
+    <path class="w n" d="M12 8h5l41 25.6V38h-5L12 12.4zM58 8v4.4L17 38h-5v-4.4L53 8z"/><path class="r n" d="M12 8l46 30h-2.6L12 9.6zM58 8L12 38v-1.6L55.4 8z"/>
+    <path class="w n" d="M30.5 8h9v30h-9zM12 18.5h46v9H12z"/><path class="r n" d="M32.6 8h4.8v30h-4.8zM12 20.6h46v4.8H12z"/>`),
+  kanada: flag(`<rect class="w n" x="12" y="8" width="46" height="30"/><rect class="r n" x="12" y="8" width="11.5" height="30"/><rect class="r n" x="46.5" y="8" width="11.5" height="30"/>
+    <path class="r n" d="M35 12.5l1.8 3.4 2-1-.8 5 3-2.8 .8 1.8 3-.6-1 3.2 1.2.8-5 3.8.8 1.8-4.4-.8V32h-.8v-4.6l-4.4.8.8-1.8-5-3.8 1.2-.8-1-3.2 3 .6.8-1.8 3 2.8-.8-5 2 1z"/>`),
+  osutoraria: flag(`<rect class="nv n" x="12" y="8" width="46" height="30"/>${UJACK}
+    ${star(23.5, 31, 3.6, "w n")}${star(48, 13, 1.9, "w n")}${star(42.5, 22, 1.9, "w n")}${star(53, 20.5, 1.9, "w n")}${star(48, 33, 2.1, "w n")}${star(50.5, 25.5, 1, "w n")}`),
+  nyujirando: flag(`<rect class="nv n" x="12" y="8" width="46" height="30"/>${UJACK}
+    ${[[48, 13, 2.4], [42, 22, 2.4], [53.5, 20.5, 2.2], [48, 33, 2.6]].map(([x, y, r]) => star(x, y, r + .9, "w n") + star(x, y, r, "r n")).join("")}`),
+  chugoku: flag(`<rect class="r n" x="12" y="8" width="46" height="30"/>${star(20, 15.5, 4.6, "y n")}${star(26, 10.6, 1.5, "y n")}${star(28.8, 13.6, 1.5, "y n")}${star(28.8, 17.6, 1.5, "y n")}${star(26, 20.6, 1.5, "y n")}`),
+  kankoku: flag(`<rect class="w n" x="12" y="8" width="46" height="30"/>
+    <path class="r n" d="M28 23A7 7 0 0 1 42 23A3.5 3.5 0 0 1 35 23A3.5 3.5 0 0 0 28 23z"/><path class="b n" d="M28 23A7 7 0 0 0 42 23A3.5 3.5 0 0 1 35 23A3.5 3.5 0 0 0 28 23z" style="fill:#2F5FAA"/>
+    ${[[20, 13.5, -33], [50, 13.5, 33], [20, 32.5, 33], [50, 32.5, -33]].map(([x, y, a]) => `<g transform="rotate(${a} ${x} ${y})"><rect class="k n" x="${x - 4}" y="${y - 3}" width="8" height="1.4"/><rect class="k n" x="${x - 4}" y="${y - .7}" width="8" height="1.4"/><rect class="k n" x="${x - 4}" y="${y + 1.6}" width="8" height="1.4"/></g>`).join("")}`),
+  furansu: flag(`<rect class="nv n" x="12" y="8" width="15.4" height="30" style="fill:#2F4FA0"/><rect class="w n" x="27.4" y="8" width="15.3" height="30"/><rect class="r n" x="42.7" y="8" width="15.3" height="30"/>`),
+  doitsu: flag(`<rect class="k n" x="12" y="8" width="46" height="10"/><rect class="r n" x="12" y="18" width="46" height="10"/><rect class="g n" x="12" y="28" width="46" height="10" style="fill:#F2C230"/>`),
+  itaria: flag(`<rect class="gr n" x="12" y="8" width="15.4" height="30" style="fill:#3E9A55"/><rect class="w n" x="27.4" y="8" width="15.3" height="30"/><rect class="r n" x="42.7" y="8" width="15.3" height="30"/>`),
+  supein: flag(`<rect class="r n" x="12" y="8" width="46" height="30" style="fill:#C8382C"/><rect class="g n" x="12" y="15.5" width="46" height="15" style="fill:#F2C230"/>
+    <rect class="r n" x="21" y="18.6" width="5.6" height="8" rx="1.6" style="fill:#C8382C"/><rect class="g n" x="22.4" y="20" width="2.8" height="3" style="fill:#E6B23E"/>`),
+  mekishiko: flag(`<rect class="gr n" x="12" y="8" width="15.4" height="30" style="fill:#2E7D4F"/><rect class="w n" x="27.4" y="8" width="15.3" height="30"/><rect class="r n" x="42.7" y="8" width="15.3" height="30"/>
+    <ellipse class="br n" cx="35" cy="22" rx="3.4" ry="3"/><path class="l" d="M31 25q4 4 8 0" style="stroke:#3E9A55;stroke-width:1.2"/>`),
+  burajiru: flag(`<rect class="gr n" x="12" y="8" width="46" height="30" style="fill:#2E9A55"/><path class="y n" d="M15.6 23L35 10.4 54.4 23 35 35.6z" style="fill:#F5D84A"/>
+    <circle class="nv n" cx="35" cy="23" r="7.4" style="fill:#2F4FA0"/><path class="w n" d="M27.8 21.6q7.4-2.6 14.4 2.4" style="stroke:#fff;stroke-width:1.6;fill:none"/>`),
+  indo: flag(`<rect class="o n" x="12" y="8" width="46" height="10" style="fill:#F29A3C"/><rect class="w n" x="12" y="18" width="46" height="10"/><rect class="gr n" x="12" y="28" width="46" height="10" style="fill:#3E8E4F"/>
+    <circle class="l" cx="35" cy="23" r="3.6" style="stroke:#2F4B7C;stroke-width:1.2"/><path class="l" d="M35 19.4v7.2M31.4 23h7.2M32.5 20.5l5 5M37.5 20.5l-5 5" style="stroke:#2F4B7C;stroke-width:.6"/>`),
+  tai: flag(`<rect class="r n" x="12" y="8" width="46" height="30" style="fill:#C8382C"/><rect class="w n" x="12" y="13" width="46" height="20"/><rect class="nv n" x="12" y="18" width="46" height="10" style="fill:#2F3F7C"/>`),
+  betonamu: flag(`<rect class="r n" x="12" y="8" width="46" height="30" style="fill:#D33A2C"/>${star(35, 23.4, 7, "y n")}`),
+  firipin: flag(`<rect class="nv n" x="12" y="8" width="46" height="15" style="fill:#2F4FA0"/><rect class="r n" x="12" y="23" width="46" height="15"/>
+    <path class="w n" d="M12 8l25.4 15L12 38z"/><circle class="y n" cx="20" cy="23" r="2.8" style="fill:#F5CF52"/>
+    ${[0, 45, 90, 135, 180, 225, 270, 315].map(a => `<path class="y n" transform="rotate(${a} 20 23)" d="M19.5 18.4h1l-.5-1.6z" style="fill:#F5CF52"/>`).join("")}${star(14.6, 11.6, 1.2, "y n")}${star(14.6, 34.4, 1.2, "y n")}${star(32.4, 23, 1.2, "y n")}`),
+  indoneshia: flag(`<rect class="r n" x="12" y="8" width="46" height="15"/><rect class="w n" x="12" y="23" width="46" height="15"/>`),
+  shingaporu: flag(`<rect class="r n" x="12" y="8" width="46" height="15" style="fill:#E0383B"/><rect class="w n" x="12" y="23" width="46" height="15"/>
+    <circle class="w n" cx="19.4" cy="15.6" r="4.8"/><circle class="r n" cx="21.4" cy="15.6" r="4.4" style="fill:#E0383B"/>
+    ${[[26, 12], [28.6, 14.2], [27.6, 17.4], [24.4, 17.4], [23.4, 14.2]].map(([x, y]) => star(x, y, 1.1, "w n")).join("")}`),
+
+  /* ---------- 天気と季節 weather and seasons ---------- */
+  hare: `<g transform="translate(32 32)">${[0, 45, 90, 135, 180, 225, 270, 315].map(a => `<path class="o" transform="rotate(${a})" d="M-3-19h6l-3-9z" style="fill:#F2A23A"/>`).join("")}</g>
+    <circle class="y" cx="32" cy="32" r="15" style="fill:#F5CF52"/><path class="l" d="M25 31q2.4-3 4.8 0M34.2 31q2.4-3 4.8 0M27 37q5 4 10 0" style="stroke-width:1.8"/>
+    <ellipse class="p n" cx="23.6" cy="36" rx="2.4" ry="1.4" opacity=".8"/><ellipse class="p n" cx="40.4" cy="36" rx="2.4" ry="1.4" opacity=".8"/>`,
+  kumori: `<path class="gy" d="M30 30q0-12 12-12 10 0 12 9 7 1 7 8t-8 7H34q-6 0-6-6z" style="fill:#C9C4BA"/>
+    <path class="w" d="M6 42q0-8 8-8 2-10 13-10 10 0 13 9 8 0 8 8t-8 8H14q-8 0-8-7z" style="fill:#EDEAE3"/>`,
+  ame: `<path class="gy" d="M6 28q0-8 8-8 2-10 13-10 10 0 13 9 9 0 9 8t-8 8H14q-8 0-8-7z" style="fill:#A9B4C2"/>
+    ${[[16, 42], [28, 46], [40, 42], [22, 54], [34, 56], [46, 52]].map(([x, y]) => `<path class="b" d="M${x} ${y}q-2.6 4.4 0 6 2.6-1.6 0-6z" style="fill:#4F9BD9"/>`).join("")}`,
+  yuki: `<path class="w" d="M6 28q0-8 8-8 2-10 13-10 10 0 13 9 9 0 9 8t-8 8H14q-8 0-8-7z" style="fill:#E6EEF4"/>
+    ${[[16, 44], [30, 48], [44, 44], [22, 56], [38, 57]].map(([x, y]) => `<path class="l" d="M${x - 3.4} ${y}h6.8M${x} ${y - 3.4}v6.8M${x - 2.4} ${y - 2.4}l4.8 4.8M${x + 2.4} ${y - 2.4}l-4.8 4.8" style="stroke:#7FB8E6;stroke-width:1.6"/>`).join("")}`,
+  kaze: `<path class="l" d="M6 22h30q8 0 8-7t-7-6-5 6M6 34h42q8 0 8 7t-7 6-5-6M10 46h18q6 0 6 5t-5 4" style="stroke:#7FB8E6;stroke-width:3.4"/>
+    <path class="gr" d="M46 18q10-4 12 4-8 6-12-4z"/><path class="l" d="M46 18q6 2 12 4" style="stroke:#3F7D56"/>`,
+  kaminari: `<path class="gy" d="M6 26q0-8 8-8 2-10 13-10 10 0 13 9 9 0 9 8t-8 8H14q-8 0-8-7z" style="fill:#6E6A63"/>
+    <path class="y" d="M30 30h12l-6 10h8L26 60l5-14h-7z" style="fill:#F5D84A"/>`,
+  taifu: `<path class="l" d="M32 32m-4 0a4 4 0 1 1 8 0q0 10-12 10-14 0-14-14 0-16 18-18 22 0 22 20 0 26-26 26" style="stroke:#6D95C8;stroke-width:4.4"/>
+    <circle class="w" cx="32" cy="32" r="4" style="fill:#EDEAE3"/>`,
+  kiri: `<path class="gr" d="M14 44q0-18 10-18t10 18z" style="fill:#7FA35A"/><rect class="br" x="22" y="44" width="4" height="10"/>
+    <path class="gr" d="M34 44q0-24 12-24t12 24z" style="fill:#5E8C5A"/><rect class="br" x="44" y="44" width="4" height="10"/>
+    <path class="l" d="M4 24h30M14 32h44M4 40h40M18 48h42M6 56h44" style="stroke:#D8D4CB;stroke-width:4;opacity:.92"/>`,
+  tsuyu: `<path class="gr" d="M20 50q-8-4-6-12 8 0 10 8M44 50q8-4 6-12-8 0-10 8" style="fill:#5E8C5A"/>
+    <circle class="pu" cx="32" cy="30" r="15" style="fill:#9C8BD0"/>
+    ${[[24, 24], [32, 20], [40, 24], [26, 32], [34, 30], [40, 34], [30, 38], [22, 32]].map(([x, y]) => `<path class="w n" transform="translate(${x} ${y})" d="M0-3l1 2 2 1-2 1-1 2-1-2-2-1 2-1z" style="fill:#E4DCF5"/>`).join("")}
+    <rect class="br" x="30.4" y="44" width="3.2" height="12" style="fill:#5E8C5A"/>
+    <path class="b" d="M8 10q-2.4 4 0 5.6 2.4-1.6 0-5.6zM54 6q-2.4 4 0 5.6 2.4-1.6 0-5.6zM56 22q-2.4 4 0 5.6 2.4-1.6 0-5.6z" style="fill:#4F9BD9"/>`,
+  atsui: `<g transform="translate(16 16)">${[0, 60, 120, 180, 240, 300].map(a => `<path class="o n" transform="rotate(${a})" d="M-2-11h4l-2-5z" style="fill:#F2A23A"/>`).join("")}</g><circle class="y" cx="16" cy="16" r="8" style="fill:#F5CF52"/>
+    <rect class="w" x="36" y="6" width="12" height="40" rx="6"/><circle class="r" cx="42" cy="50" r="8"/><rect class="r n" x="39.4" y="16" width="5.2" height="32" rx="2.6"/>
+    <path class="l" d="M48 14h3M48 22h3M48 30h3M48 38h3"/>${SWEAT(24, 36)}`,
+  samui: `<path class="l" d="M12 10v18M3 19h18M5.6 12.6l12.8 12.8M18.4 12.6L5.6 25.4" style="stroke:#7FB8E6;stroke-width:2.4"/>
+    <rect class="w" x="36" y="6" width="12" height="40" rx="6"/><circle class="b" cx="42" cy="50" r="8" style="fill:#4F9BD9"/><rect class="b n" x="39.4" y="38" width="5.2" height="10" rx="2.6" style="fill:#4F9BD9"/>
+    <path class="l" d="M48 14h3M48 22h3M48 30h3M48 38h3"/><path class="sk" d="M6 40l4 8 4-8zM16 40l3 6 3-6z" style="fill:#DDEFF7"/><path class="l" d="M4 40h20" style="stroke:#A9B4C2;stroke-width:2"/>`,
+  atatakai: `<path class="y" d="M4 30a14 14 0 0 1 28 0z" style="fill:#F7C26B"/><path class="l" d="M18 12V6M6 18l-4-4M30 18l4-4" style="stroke:#F2A23A;stroke-width:2.4"/>
+    <path class="gr" d="M44 58V36" style="fill:none;stroke:#3F7D56;stroke-width:2.4"/><path class="gr" d="M44 50q-8-2-10-10 8 0 10 6zM44 46q8-2 10-10-8 0-10 6z"/>
+    <path class="r" d="M36 22q0 12 8 14 8-2 8-14l-4 4-4-6-4 6z" style="fill:#F2708A"/>
+    <path class="l" d="M2 44q6-4 12 0t12 0" style="stroke:#F2A23A;stroke-width:2;opacity:.6"/>`,
+  suzushii: `<circle class="sk" cx="32" cy="32" r="22" style="fill:#DDEFF7"/>
+    <path class="l" d="M14 24h24q6 0 6-5t-5-5-4 4M14 36h30q6 0 6 5t-5 4" style="stroke:#6D95C8;stroke-width:2.6"/>
+    <path class="o" d="M40 46q8-2 10 4-8 4-10-4z" style="fill:#E8763A"/><path class="l" d="M40 46l10 4" style="stroke:#A8362C"/>`,
+  haru: `<path class="gr" d="M32 58V40" style="fill:none;stroke:#3F7D56;stroke-width:2.4"/><path class="gr" d="M32 44q-10-2-12-12 10 0 12 8zM32 44q10-2 12-12-10 0-12 8z" style="fill:#7FB35A"/>
+    <path class="p" d="M22 20q-12-10-14 0 0 10 14 4z" style="fill:#F4A9C8"/><path class="p" d="M26 20q12-10 14 0 0 10-14 4z" style="fill:#F4A9C8"/>
+    <path class="p" d="M22 24q-8 2-6 9 6 0 7-6zM26 24q8 2 6 9-6 0-7-6z" style="fill:#F7C9D4"/><rect class="k" x="23" y="16" width="2.4" height="16" rx="1.2"/>
+    <path class="l" d="M23.4 16q-3-6-6-6M25 16q3-6 6-6" style="stroke-width:1.2"/>`,
+  natsu: `<path class="gr" d="M4 30a28 28 0 0 0 56 0z" style="fill:#3F8E4F"/><path class="w n" d="M8 30a24 24 0 0 0 48 0z" style="fill:#EAF3D8"/>
+    <path class="r n" d="M10 30a22 22 0 0 0 44 0z" style="fill:#E8484A"/><path class="l" d="M4 30h56"/>
+    <ellipse class="k n" cx="22" cy="38" rx="1.4" ry="2"/><ellipse class="k n" cx="32" cy="44" rx="1.4" ry="2"/><ellipse class="k n" cx="42" cy="38" rx="1.4" ry="2"/><ellipse class="k n" cx="27" cy="36" rx="1.2" ry="1.8"/><ellipse class="k n" cx="37" cy="36" rx="1.2" ry="1.8"/>`,
+  aki: `<path class="r" d="M32 8l4 10 8-6-2 10 12-2-8 9 10 5-12 2 4 9-10-5-2 10h-4l-2-10-10 5 4-9-12-2 10-5-8-9 12 2-2-10 8 6z" style="fill:#D9483B"/>
+    <path class="l" d="M32 18v32M32 30l8-6M32 30l-8-6M32 38l9 1M32 38l-9 1" style="stroke:#A8362C;stroke-width:1.2"/><path class="l" d="M32 50v8" style="stroke:#9A6A3A;stroke-width:2.4"/>`,
+  fuyu: `<path class="l" d="M32 4v56M8 18l48 28M56 18L8 46" style="stroke:#7FB8E6;stroke-width:4"/>
+    <path class="l" d="M26 8l6 6 6-6M26 56l6-6 6 6M8 26l8-2-2-8M56 38l-8 2 2 8M56 26l-8-2 2-8M8 38l8 2-2 8" style="stroke:#7FB8E6;stroke-width:3"/>
+    <circle class="w" cx="32" cy="32" r="5" style="fill:#E6F3FA"/>`,
+  niji: `${["#E8484A", "#F2A23A", "#F5D84A", "#6BAF73", "#4F9BD9", "#8E5A9A"].map((c, i) => `<path class="l" d="M${8 + i * 3} 44a${24 - i * 3} ${24 - i * 3} 0 0 1 ${48 - i * 6} 0" style="stroke:${c};stroke-width:3.2"/>`).join("")}
+    <path class="w" d="M2 46q0-6 6-6 2-6 8-6 6 0 8 6 4 0 4 5t-5 5H6q-4 0-4-4z"/><path class="w" d="M36 46q0-6 6-6 2-6 8-6 6 0 8 6 4 0 4 5t-5 5H40q-4 0-4-4z"/>`,
+  tsuki: `<path class="y" d="M38 8a24 24 0 1 0 18 34A20 20 0 1 1 38 8z" style="fill:#F5D84A"/>
+    <circle class="g n" cx="24" cy="36" r="2.4" opacity=".5"/><circle class="g n" cx="30" cy="48" r="1.6" opacity=".5"/>
+    ${star(48, 16, 3.6, "y")}${star(56, 30, 2.4, "y")}${star(44, 30, 1.8, "y")}`,
+  yukidaruma: `<circle class="w" cx="32" cy="44" r="15" style="fill:#F4F7F9"/><circle class="w" cx="32" cy="22" r="11" style="fill:#F4F7F9"/>
+    <path class="r" d="M21 30q11 6 22 0l1 4q-12 6-24 0z"/><path class="r" d="M38 32l4 10-4 1-2-9z"/>
+    <path class="b" d="M22 13l2-9h16l2 9z" style="fill:#4F7FC0"/><path class="b" d="M19 13h26v3H19z" style="fill:#3C6098"/>
+    <circle class="k n" cx="28" cy="21" r="1.5"/><circle class="k n" cx="36" cy="21" r="1.5"/><path class="o" d="M32 24l6 1.6-6 1.4z"/>
+    <circle class="k n" cx="32" cy="40" r="1.6"/><circle class="k n" cx="32" cy="47" r="1.6"/>
+    <path class="l" d="M17 40l-10-6M47 40l10-6" style="stroke:#7A4E2A;stroke-width:2.4"/>`,
+
+  /* ---------- カフェ coffee and tea ---------- */
+  kohi: `<path class="l" d="M26 14q-3-4 0-8M34 13q-3-4 0-8" style="stroke:#A9A499;stroke-width:1.8"/>
+    <ellipse class="w" cx="30" cy="50" rx="22" ry="5"/><path class="w" d="M14 20h32l-3 24q-1 5-6 5H23q-5 0-6-5z"/>
+    <ellipse class="br" cx="30" cy="20.6" rx="15.4" ry="2.6" style="fill:#4A2A1E"/><path class="l" d="M46 25h4q5 0 5 6t-6 7l-5 1" style="stroke-width:3"/>`,
+  aisukohi: `<path class="w" d="M16 14h32l-4 42H20z" style="fill:#F4F7F9"/><path class="br n" d="M17 22h30l-3.2 33H20.2z" style="fill:#6E4528"/>
+    <rect class="sk" x="21" y="24" width="9" height="9" rx="1.4" style="fill:#F4F7F9;opacity:.7"/><rect class="sk" x="31" y="30" width="9" height="9" rx="1.4" style="fill:#F4F7F9;opacity:.7"/>
+    <path class="w n" d="M17.4 22h29.2v4H17.2z" style="fill:#E8D7BE"/><path class="l" d="M16 14h32l-4 42H20z"/><path class="l" d="M38 2l-4 40" style="stroke:#3F7D56;stroke-width:3"/>`,
+  rate: `<ellipse class="w" cx="32" cy="52" rx="24" ry="5"/><path class="w" d="M12 22h40l-4 24q-1 5-6 5H22q-5 0-6-5z"/>
+    <ellipse class="wd" cx="32" cy="22.6" rx="19.4" ry="5.6" style="fill:#C8955E"/>
+    <path class="w n" d="M32 27l-4.6-3.6c-2-1.8-.4-4.6 2-3.4L32 21.2l2.6-1.2c2.4-1.2 4 1.6 2 3.4z"/>`,
+  kapuchino: `<ellipse class="w" cx="32" cy="52" rx="24" ry="5"/><path class="w" d="M12 24h40l-4 22q-1 5-6 5H22q-5 0-6-5z"/>
+    <path class="w" d="M12 24q0-10 20-10t20 10q-20 4-40 0z" style="fill:#F4E9D2"/>
+    <circle class="br n" cx="26" cy="18" r=".9" style="fill:#9A6A3A"/><circle class="br n" cx="32" cy="16" r=".9" style="fill:#9A6A3A"/><circle class="br n" cx="38" cy="19" r=".9" style="fill:#9A6A3A"/><circle class="br n" cx="30" cy="21" r=".9" style="fill:#9A6A3A"/>
+    <path class="l" d="M52 28h3q4 0 4 5t-5 6h-4" style="stroke-width:2.6"/>`,
+  esupuresso: `<path class="l" d="M30 26q-3-4 0-8" style="stroke:#A9A499;stroke-width:1.8"/>
+    <ellipse class="w" cx="30" cy="50" rx="18" ry="4"/><path class="w" d="M20 32h20l-2 12q-1 4-5 4h-6q-4 0-5-4z"/>
+    <ellipse class="br" cx="30" cy="32.4" rx="9.6" ry="1.8" style="fill:#3A2016"/><path class="l" d="M40 35h2.4q3 0 3 3.4t-4 4" style="stroke-width:2.4"/>`,
+  moka: `<path class="w" d="M16 24q-2-10 8-10 2-8 8-8t8 8q10 0 8 10z"/><path class="br n" d="M22 14q4 3 8 0t8 0" style="stroke:#5E3A22;stroke-width:1.6;fill:none"/>
+    <path class="br" d="M16 24h32l-3 30q0 4-4 4H23q-4 0-4-4z" style="fill:#7A4E2A"/><path class="l" d="M48 30h3q5 0 5 7t-6 7h-3" style="stroke-width:3"/>
+    <path class="w n" d="M18 34h28v3H18z" style="fill:#C8955E"/>`,
+  kocha: `<ellipse class="w" cx="30" cy="52" rx="24" ry="5"/><path class="w" d="M10 26h40q0 16-8 20t-12 4-12-4q-8-4-8-20z"/>
+    <ellipse class="r2" cx="30" cy="26.6" rx="19.6" ry="3.6" style="fill:#9A3A22"/><path class="l" d="M50 30h3q4 0 4 5t-6 6" style="stroke-width:2.6"/>
+    <path class="l" d="M38 26l6-16" style="stroke:#D8D4CB;stroke-width:1.2"/><rect class="y" x="41" y="4" width="7" height="8" rx="1" style="fill:#F2C25C"/>`,
+  mirukuti: `<path class="w" d="M16 10h32l-3 46H19z" style="fill:#F4F7F9"/><path class="wd n" d="M17 18h30l-2.6 37H19.6z" style="fill:#D9B48A"/>
+    <path class="w n" d="M22 26q6 4 10 0t10 2" style="stroke:#F4EBDD;stroke-width:2.4;fill:none"/><path class="w n" d="M21 38q6 4 10 0t12 2" style="stroke:#F4EBDD;stroke-width:2;fill:none"/>
+    <path class="l" d="M16 10h32l-3 46H19z"/>`,
+  remonti: `<ellipse class="w" cx="30" cy="52" rx="24" ry="5"/><path class="w" d="M10 26h40q0 16-8 20t-12 4-12-4q-8-4-8-20z"/>
+    <ellipse class="o" cx="30" cy="26.6" rx="19.6" ry="3.6" style="fill:#C8783A"/><path class="l" d="M50 30h3q4 0 4 5t-6 6" style="stroke-width:2.6"/>
+    <circle class="y" cx="44" cy="20" r="8" style="fill:#F5D84A"/><circle class="w n" cx="44" cy="20" r="5.4" style="fill:#FBEFA8"/><path class="l" d="M44 15v10M39 20h10M40.4 16.4l7.2 7.2M47.6 16.4l-7.2 7.2" style="stroke:#E6B23E;stroke-width:1"/>`,
+  matcharate: `<path class="w" d="M16 10h32l-3 46H19z" style="fill:#F4F7F9"/><path class="w n" d="M17.6 28h28.8l-2 27H19.6z" style="fill:#FBFAF6"/><path class="mt n" d="M17 16h30l-.8 12H17.8z" style="fill:#8DB05A"/>
+    <path class="mt n" d="M18 28q14 4 28 0" style="stroke:#8DB05A;stroke-width:2;fill:none"/><rect class="sk" x="24" y="34" width="8" height="8" rx="1.4" style="fill:#F4F7F9;opacity:.8"/>
+    <path class="l" d="M16 10h32l-3 46H19z"/><path class="l" d="M38 2l-3 30" style="stroke:#3F7D56;stroke-width:3"/>`,
+  hojicha: `<path class="l" d="M26 12q-3-4 0-8M36 12q-3-4 0-8" style="stroke:#A9A499;stroke-width:1.8"/>
+    <path class="w" d="M16 16h32l-3 36q0 5-5 5H24q-5 0-5-5z" style="fill:#5E7C6C"/>
+    <ellipse class="br" cx="32" cy="17.6" rx="15" ry="2.6" style="fill:#8A4E26"/><path class="w n" d="M18 30h28l-.4 4H18.4z" style="fill:#4A6656"/>
+    <path class="w n" d="M24 40q4-4 8 0t8 0" style="stroke:#EDEAE3;stroke-width:1.6;fill:none"/>`,
+  mugicha: `<path class="w" d="M14 10h30v44q0 4-4 4H18q-4 0-4-4z" style="fill:#F4F7F9"/><path class="o n" d="M15 20h28v34q0 3-3 3H18q-3 0-3-3z" style="fill:#C8823A"/>
+    <path class="l" d="M44 16h5q5 0 5 6v18q0 6-5 6h-5" style="stroke-width:3.4"/><rect class="r" x="12" y="6" width="34" height="6" rx="2"/>
+    <rect class="sk" x="20" y="24" width="8" height="8" rx="1.4" style="fill:#F4F7F9;opacity:.7"/><path class="l" d="M14 10h30v44q0 4-4 4H18q-4 0-4-4z"/>`,
+  uroncha: `<rect class="r" x="26" y="3" width="12" height="5" rx="1.4"/>
+    <path class="w" d="M24 8h16v4q6 4 6 12v30q0 4-4 4H22q-4 0-4-4V24q0-8 6-12z" style="fill:#F4F7F9"/><path class="br n" d="M19 22h26v32q0 3-3 3H22q-3 0-3-3z" style="fill:#9A5A2A"/>
+    <rect class="w" x="18" y="28" width="28" height="14" style="fill:#FFFDF8"/><path class="r n" d="M18 28h28v3H18z"/>
+    <text x="32" y="40" text-anchor="middle" font-size="8" font-weight="700" fill="#9A3A22" font-family="Hiragino Sans, Noto Sans JP, sans-serif">烏龍</text>`,
+  tapioka: `<path class="w" d="M14 18q0-10 18-10t18 10z" style="fill:#F4F7F9"/><path class="w" d="M14 18h36l-4 38H18z" style="fill:#F4F7F9"/>
+    <path class="wd n" d="M15.4 26h33.2l-3 29H18.4z" style="fill:#D9B48A"/>
+    ${[[21, 50], [26, 52], [31, 50], [36, 52], [41, 50], [24, 46], [29, 47], [34, 46], [39, 47]].map(([x, y]) => `<circle class="k n" cx="${x}" cy="${y}" r="2.2" style="fill:#3A2016"/>`).join("")}
+    <path class="l" d="M14 18h36l-4 38H18z"/><path class="l" d="M38 0l-4 50" style="stroke:#E8484A;stroke-width:4.4"/>`,
+  kokoa: `<path class="br" d="M14 20h34l-3 32q0 5-5 5H22q-5 0-5-5z" style="fill:#D9483B"/><path class="l" d="M48 26h3q5 0 5 7t-6 7h-3" style="stroke-width:3"/>
+    <ellipse class="br" cx="31" cy="20.6" rx="16.4" ry="3" style="fill:#6E4528"/>
+    <rect class="w" x="20" y="14" width="7" height="7" rx="1.6" style="fill:#FBF7EE"/><rect class="p" x="28" y="12" width="7" height="7" rx="1.6" style="fill:#F7C9D4"/><rect class="w" x="35" y="15" width="7" height="7" rx="1.6" style="fill:#FBF7EE"/>
+    <path class="w n" d="M20 34q4 3 8 0t8 0 8 0" style="stroke:#fff;stroke-width:1.8;fill:none;opacity:.8"/>`,
+  sato: `<path class="w" d="M8 40l12-6 12 6v14l-12 6-12-6z" style="fill:#FBFAF6"/><path class="l" d="M8 40l12 6 12-6M20 46v14"/>
+    <path class="w" d="M24 28l12-6 12 6v12l-12 6-12-6z" style="fill:#FBFAF6"/><path class="l" d="M24 28l12 6 12-6M36 34v12"/>
+    <path class="gy" d="M44 54l14-22 2 1-12 23q-2 2-4 0z" style="fill:#C9C4BA"/><ellipse class="gy" cx="58" cy="30" rx="3" ry="4.4" transform="rotate(32 58 30)" style="fill:#C9C4BA"/>
+    <circle class="w n" cx="14" cy="44" r=".8" style="fill:#E8E2D4"/><circle class="w n" cx="30" cy="32" r=".8" style="fill:#E8E2D4"/>`,
+  keki: `<path class="w" d="M8 34l40-14 8 6v22L16 60l-8-4z" style="fill:#FBF7EE"/><path class="w" d="M16 38l40-12v22L16 60z" style="fill:#F4E6C8"/>
+    <path class="r n" d="M16 46l40-12v3L16 49z" style="fill:#F28FA0"/><path class="w n" d="M16 50l40-12v2L16 52z"/>
+    <path class="w" d="M8 34l8 4 40-12-8-6z" style="fill:#FFFDF8"/>
+    <path class="r" d="M28 22q-6-2-4-8 4-2 8 2 3 4-4 6z" style="fill:#E0383B"/><path class="gr" d="M26 13l4 1-1 3z"/>`,
+  hotto: `<path class="l" d="M20 16q-4-5 0-10t0-10M32 14q-4-5 0-10M44 16q-4-5 0-10" style="stroke:#E8763A;stroke-width:2.4"/>
+    <path class="r" d="M12 22h36l-4 30q-1 6-7 6H23q-6 0-7-6z"/><path class="l" d="M48 28h4q5 0 5 7t-7 7h-3" style="stroke-width:3.4"/>
+    <path class="w n" d="M18 30h24v8H18z" style="fill:#FFFDF8"/><text x="30" y="37" text-anchor="middle" font-size="7" font-weight="800" fill="#D9483B" font-family="sans-serif">HOT</text>`,
+  mochikaeri: `<path class="wd" d="M10 26h44l-3 32H13z" style="fill:#C8955E"/><path class="l" d="M22 26q0-10 10-10t10 10" style="stroke:#7A4E2A;stroke-width:3"/>
+    <path class="w" d="M36 6h14l-2 20H38z" style="fill:#FFFDF8"/><rect class="k" x="35" y="4" width="16" height="4" rx="1.4"/><path class="gr n" d="M37.6 13h11l-.6 5H38z" style="fill:#3F7D56"/>
+    <path class="w n" d="M18 38h28" style="stroke:#fff;stroke-width:2;opacity:.6"/><circle class="w" cx="32" cy="44" r="5" style="fill:#FFFDF8"/><path class="l" d="M30 44l2 2 3-4" style="stroke:#3F7D56;stroke-width:1.6"/>`,
+  pafe: `<path class="w" d="M14 22h36l-6 22H20z" style="fill:#F4F7F9"/><path class="l" d="M32 44v8" style="stroke-width:3"/><ellipse class="w" cx="32" cy="55" rx="11" ry="3" style="fill:#F4F7F9"/>
+    <path class="p n" d="M15.4 26h33.2l-1.4 5H16.8z" style="fill:#F4A9B8"/><path class="w n" d="M16.8 31h30.4l-1.4 5H18.2z" style="fill:#FBF7EE"/><path class="br n" d="M18.2 36h27.6l-1.8 7H20z" style="fill:#8A5A3A"/>
+    <path class="w" d="M16 22q-2-8 6-8 0-8 10-8t10 8q8 0 6 8z" style="fill:#FFFDF8"/>
+    <circle class="r" cx="32" cy="6" r="3.4" style="fill:#E0383B"/><path class="l" d="M32 3q2-4 5-4"/><rect class="wd" x="40" y="2" width="4" height="16" rx="1" transform="rotate(20 42 10)" style="fill:#E0B06A"/>`,
+  /* ---------- 動物 animals ---------- */
+  inu: `<path class="o" d="M13 24l3-15 12 10zM51 24l-3-15-12 10z" style="fill:#D98A3E"/><path class="p n" d="M17 19l1.4-6.4 5 4.4zM47 19l-1.4-6.4-5 4.4z" style="fill:#F2C2A0"/>
+    <ellipse class="o" cx="32" cy="35" rx="20" ry="18" style="fill:#D98A3E"/><path class="w" d="M15 41q4-9 17-9t17 9q-3 12-17 12T15 41z" style="fill:#FBF3E6"/>
+    <circle class="w n" cx="24" cy="26" r="1.8" style="fill:#FBF3E6"/><circle class="w n" cx="40" cy="26" r="1.8" style="fill:#FBF3E6"/>
+    <circle class="k n" cx="24" cy="31" r="2.3"/><circle class="k n" cx="40" cy="31" r="2.3"/><ellipse class="k" cx="32" cy="38" rx="3.2" ry="2.3"/><path class="l" d="M32 40.4v2.6M28 44q4 3 8 0"/>`,
+  usagi: `<path class="w" d="M20 26q-6-18 0-22 6 2 6 22zM44 26q6-18 0-22-6 2-6 22z"/><path class="p n" d="M20.6 22q-3-12 0-15 2.6 2 2.6 15zM43.4 22q3-12 0-15-2.6 2-2.6 15z"/>
+    <ellipse class="w" cx="32" cy="38" rx="18" ry="16"/><circle class="k n" cx="25" cy="36" r="2.2"/><circle class="k n" cx="39" cy="36" r="2.2"/>
+    <path class="p" d="M30 41h4l-2 2.4z"/><path class="l" d="M32 43.4q-2 3-4 2M32 43.4q2 3 4 2M20 42h-8M20 45l-7 2M44 42h8M44 45l7 2" style="stroke-width:1.2"/>
+    <ellipse class="p n" cx="22" cy="42" rx="2.6" ry="1.4" opacity=".7"/><ellipse class="p n" cx="42" cy="42" rx="2.6" ry="1.4" opacity=".7"/>`,
+  tori: `<path class="b" d="M10 38q0-20 22-20 18 0 20 14l8 4-8 2q-2 16-22 16-20 0-20-16z" style="fill:#6FA8DC"/>
+    <path class="w" d="M18 42q6 10 18 8 10-2 12-10-14 4-30 2z" style="fill:#FBF3E6"/><path class="b" d="M18 34q8-4 16 2-6 8-16-2z" style="fill:#4F7FC0"/>
+    <path class="o" d="M52 32l9 3-9 3z"/><circle class="k n" cx="44" cy="30" r="2.2"/><circle class="w n" cx="44.8" cy="29.2" r=".7"/>
+    <path class="l" d="M26 54v5M34 54v5M24 59h4M32 59h4" style="stroke:#E8763A;stroke-width:1.8"/>`,
+  sakana: `<path class="b" d="M8 32q14-18 34-12 8 2 12 8l8-8v24l-8-8q-4 6-12 8-20 6-34-12z" style="fill:#5FA0D8"/>
+    <path class="w" d="M14 34q12 10 30 6-16 0-30-6z" style="fill:#DDEFF7"/><path class="l" d="M36 22q4 10 0 20" style="stroke:#3C6098"/>
+    <circle class="w" cx="18" cy="29" r="3.4"/><circle class="k n" cx="18" cy="29" r="1.6"/><path class="b" d="M28 20l6-8 4 9z" style="fill:#4F7FC0"/>
+    <circle class="w n" cx="6" cy="22" r="1.4" style="fill:#B9DDF0"/><circle class="w n" cx="4" cy="16" r="1" style="fill:#B9DDF0"/>`,
+  uma: `<path class="br" d="M20 14l2-10 6 8zM44 14l-2-10-6 8z" style="fill:#8A5A34"/>
+    <path class="br" d="M18 26q0-16 14-16t14 16v18q0 14-14 14T18 44z" style="fill:#9A6A3A"/>
+    <path class="k" d="M26 10q6-6 14 0l-2 14q-4-6-6-6t-6 6z" style="fill:#3E2614"/>
+    <ellipse class="wd" cx="32" cy="48" rx="10" ry="8" style="fill:#C8955E"/><circle class="k n" cx="28" cy="49" r="1.6"/><circle class="k n" cx="36" cy="49" r="1.6"/>
+    <circle class="k n" cx="23" cy="30" r="2.2"/><circle class="k n" cx="41" cy="30" r="2.2"/><path class="w n" d="M30 22l2 8 2-8z" style="fill:#FBF3E6"/>`,
+  ushi: `<path class="c" d="M18 18q-8-2-10-10 6 2 12 6zM46 18q8-2 10-10-6 2-12 6z" style="fill:#F4E6C8"/>
+    <ellipse class="w" cx="14" cy="26" rx="6" ry="3.6" transform="rotate(-20 14 26)"/><ellipse class="w" cx="50" cy="26" rx="6" ry="3.6" transform="rotate(20 50 26)"/>
+    <path class="w" d="M16 30q0-16 16-16t16 16v10H16z"/><path class="k n" d="M20 18q6 2 6 8-4 4-10 2 0-6 4-10zM40 28q6-2 8 4-2 4-8 2z"/>
+    <ellipse class="p" cx="32" cy="44" rx="16" ry="11" style="fill:#F2B6B6"/><ellipse class="k n" cx="26" cy="44" rx="2" ry="2.6"/><ellipse class="k n" cx="38" cy="44" rx="2" ry="2.6"/>
+    <circle class="k n" cx="24" cy="29" r="2.2"/><circle class="k n" cx="40" cy="29" r="2.2"/>`,
+  buta: `<path class="p" d="M14 22l4-12 10 8zM50 22l-4-12-10 8z" style="fill:#F2A6B4"/>
+    <ellipse class="p" cx="32" cy="35" rx="21" ry="19" style="fill:#F7C1CC"/>
+    <ellipse class="p" cx="32" cy="40" rx="9" ry="6.4" style="fill:#F2A6B4"/><ellipse class="r2 n" cx="28.6" cy="40" rx="1.6" ry="2.4" style="fill:#B0566A"/><ellipse class="r2 n" cx="35.4" cy="40" rx="1.6" ry="2.4" style="fill:#B0566A"/>
+    <circle class="k n" cx="24" cy="30" r="2.2"/><circle class="k n" cx="40" cy="30" r="2.2"/><path class="l" d="M28 49q4 2 8 0"/>`,
+  hitsuji: `${[[16, 26], [24, 16], [34, 13], [44, 17], [50, 27], [50, 39], [44, 48], [32, 51], [20, 48], [14, 38]].map(([x, y]) => `<circle class="w" cx="${x}" cy="${y}" r="8" style="fill:#F7F2E4"/>`).join("")}
+    <circle class="w n" cx="32" cy="32" r="16" style="fill:#F7F2E4"/>
+    <ellipse class="k" cx="12" cy="32" rx="5" ry="3" transform="rotate(-20 12 32)" style="fill:#5A4A3E"/><ellipse class="k" cx="52" cy="32" rx="5" ry="3" transform="rotate(20 52 32)" style="fill:#5A4A3E"/>
+    <ellipse class="k" cx="32" cy="36" rx="10" ry="13" style="fill:#5A4A3E"/><circle class="w n" cx="28" cy="33" r="1.8"/><circle class="w n" cx="36" cy="33" r="1.8"/><path class="l" d="M29 44q3 2 6 0" style="stroke:#F4E6C8"/>`,
+  saru: `<circle class="br" cx="12" cy="32" r="7" style="fill:#9A6A3A"/><circle class="p n" cx="12" cy="32" r="4" style="fill:#F2C2A0"/><circle class="br" cx="52" cy="32" r="7" style="fill:#9A6A3A"/><circle class="p n" cx="52" cy="32" r="4" style="fill:#F2C2A0"/>
+    <circle class="br" cx="32" cy="32" r="20" style="fill:#9A6A3A"/>
+    <path class="p" d="M32 24q-4-6-10-4-6 4-2 12-4 6 2 12 4 4 10 4t10-4q6-6 2-12 4-8-2-12-6-2-10 4z" style="fill:#F2C2A0"/>
+    <circle class="k n" cx="26" cy="31" r="2"/><circle class="k n" cx="38" cy="31" r="2"/><path class="l" d="M30 38h1M33 38h1M27 44q5 3 10 0"/>`,
+  kuma: `<circle class="br" cx="15" cy="16" r="7" style="fill:#8A5A34"/><circle class="br" cx="49" cy="16" r="7" style="fill:#8A5A34"/><circle class="p n" cx="15" cy="16" r="3.6" style="fill:#C8955E"/><circle class="p n" cx="49" cy="16" r="3.6" style="fill:#C8955E"/>
+    <ellipse class="br" cx="32" cy="34" rx="21" ry="20" style="fill:#8A5A34"/><ellipse class="wd" cx="32" cy="42" rx="10" ry="8" style="fill:#D9B48A"/>
+    <circle class="k n" cx="24" cy="31" r="2.2"/><circle class="k n" cx="40" cy="31" r="2.2"/><ellipse class="k" cx="32" cy="38.6" rx="3.2" ry="2.2"/><path class="l" d="M32 41v2.6M28.6 45q3.4 2.4 6.8 0"/>`,
+  panda: `<circle class="k" cx="14" cy="16" r="7"/><circle class="k" cx="50" cy="16" r="7"/>
+    <ellipse class="w" cx="32" cy="34" rx="21" ry="20"/>
+    <ellipse class="k" cx="23" cy="32" rx="5" ry="6.4" transform="rotate(-30 23 32)"/><ellipse class="k" cx="41" cy="32" rx="5" ry="6.4" transform="rotate(30 41 32)"/>
+    <circle class="w n" cx="23.6" cy="31" r="1.8"/><circle class="w n" cx="40.4" cy="31" r="1.8"/><ellipse class="k" cx="32" cy="41" rx="3" ry="2"/><path class="l" d="M32 43v2M29 47q3 2 6 0"/>
+    <ellipse class="p n" cx="18" cy="42" rx="3" ry="1.6" opacity=".7"/><ellipse class="p n" cx="46" cy="42" rx="3" ry="1.6" opacity=".7"/>`,
+  zo: `<path class="gy" d="M18 20q-16-4-16 14 0 14 14 12z" style="fill:#A9B0B8"/><path class="gy" d="M46 20q16-4 16 14 0 14-14 12z" style="fill:#A9B0B8"/>
+    <ellipse class="gy" cx="32" cy="30" rx="17" ry="17" style="fill:#B9C0C8"/>
+    <path class="gy" d="M27 40q-2 10 2 14 4 4 10 0 2-2 0-4-4 2-6-2 0-4 1-8z" style="fill:#B9C0C8"/>
+    <path class="w" d="M24 40q-4 4-6 2l2-4zM40 40q4 4 6 2l-2-4z"/><circle class="k n" cx="25" cy="29" r="2"/><circle class="k n" cx="39" cy="29" r="2"/>
+    <path class="l" d="M29 46h4M29 50h4" style="stroke:#8E8A80"/>`,
+  kirin: `<path class="y" d="M24 58V30q0-6-4-10l8-4q6 4 6 14v28z" style="fill:#F2C25C"/>
+    <path class="br n" d="M25 36l4 1-1 4-4-1zM28 46l4-1 1 4-4 1zM24 52l3 1-1 3h-2zM29 30l3 2-2 3-2-2z" style="fill:#B8732E"/>
+    <path class="y" d="M14 18q2-10 14-10 12 0 18 6 4 6-2 8-8 2-14 0-14 2-16-4z" style="fill:#F2C25C"/>
+    <path class="l" d="M22 8V2M30 8V2" style="stroke-width:2"/><circle class="br" cx="22" cy="2" r="2"/><circle class="br" cx="30" cy="2" r="2"/>
+    <circle class="k n" cx="30" cy="13" r="1.8"/><ellipse class="k n" cx="44" cy="17" rx="1" ry="1.4"/><path class="y" d="M14 14l-6-4 2 8z" style="fill:#F2C25C"/>
+    <path class="br n" d="M36 18l3 .6-.6 2.4-3-.6zM20 16l2.4 1-1 2-2.4-1z" style="fill:#B8732E"/>`,
+  raion: `<g transform="translate(32 32)">${[...Array(12)].map((_, i) => `<path class="o" transform="rotate(${i * 30})" d="M-7-17l7-11 7 11z" style="fill:#C8783A"/>`).join("")}</g>
+    <circle class="o" cx="32" cy="32" r="19" style="fill:#C8783A"/>
+    <circle class="y" cx="32" cy="34" r="14" style="fill:#F2C25C"/><circle class="y" cx="20" cy="22" r="4" style="fill:#F2C25C"/><circle class="y" cx="44" cy="22" r="4" style="fill:#F2C25C"/>
+    <ellipse class="w" cx="32" cy="40" rx="7" ry="5" style="fill:#FBF3E6"/><path class="br" d="M29 36h6l-3 3z" style="fill:#7A4E2A"/><path class="l" d="M32 39v2M29 43q3 2 6 0"/>
+    <circle class="k n" cx="26" cy="31" r="2"/><circle class="k n" cx="38" cy="31" r="2"/>`,
+  tora: `<path class="o" d="M14 22l2-12 10 6zM50 22l-2-12-10 6z" style="fill:#EE8A3C"/><path class="w n" d="M17 19l1-5 4 3zM47 19l-1-5-4 3z"/>
+    <ellipse class="o" cx="32" cy="34" rx="21" ry="19" style="fill:#EE8A3C"/>
+    <path class="w" d="M15 40q6-6 17-6t17 6q-3 13-17 13T15 40z"/>
+    <path class="k n" d="M30 16h4l-2 8zM24 18l3 6-5-3zM40 18l-3 6 5-3zM12 30l7 2-7 2zM52 30l-7 2 7 2zM13 38l6 1-6 2zM51 38l-6 1 6 2z"/>
+    <circle class="k n" cx="24" cy="31" r="2.2"/><circle class="k n" cx="40" cy="31" r="2.2"/><path class="p" d="M29 39h6l-3 3z"/><path class="l" d="M32 42v2M28 46q4 2.4 8 0"/>`,
+  pengin: `<path class="k" d="M14 38q0-28 18-28t18 28q0 18-18 18T14 38z" style="fill:#2E3440"/>
+    <path class="w" d="M20 40q0-18 12-18t12 18q0 14-12 14T20 40z"/><path class="k" d="M14 34q-6 10-4 16 4-2 6-10z" style="fill:#2E3440"/><path class="k" d="M50 34q6 10 4 16-4-2-6-10z" style="fill:#2E3440"/>
+    <circle class="w n" cx="26" cy="22" r="3"/><circle class="w n" cx="38" cy="22" r="3"/><circle class="k n" cx="26.6" cy="22" r="1.6"/><circle class="k n" cx="37.4" cy="22" r="1.6"/>
+    <path class="o" d="M28 27h8l-4 4z"/><path class="o" d="M22 55h8l-2 3h-6zM34 55h8l2 3h-6z"/><ellipse class="p n" cx="22" cy="30" rx="2.4" ry="1.4" opacity=".7"/><ellipse class="p n" cx="42" cy="30" rx="2.4" ry="1.4" opacity=".7"/>`,
+  kame: `<path class="gr" d="M10 46l-4 6h8zM26 50l-2 6h8zM42 50l2 6h-8zM52 44l6 6h-8z" style="fill:#8DB05A"/>
+    <path class="gr" d="M50 36q8-6 12 0 0 6-8 6z" style="fill:#8DB05A"/><circle class="k n" cx="56" cy="36" r="1.4"/>
+    <path class="dg" d="M8 46q0-26 24-26t24 26z" style="fill:#4F8A4A"/>
+    <path class="l" d="M20 46l4-12h16l4 12M24 34l-6-8M40 34l6-8M32 21v13" style="stroke:#2F5A2E;stroke-width:1.6"/>
+    <path class="mt n" d="M25 36h14l3 9H22z" style="fill:#6BAF73"/><path class="w" d="M6 46h52v4H6z" style="fill:#C9D9A0"/>`,
+  kaeru: `<circle class="gr" cx="20" cy="22" r="9" style="fill:#7FC06A"/><circle class="gr" cx="44" cy="22" r="9" style="fill:#7FC06A"/>
+    <ellipse class="gr" cx="32" cy="38" rx="24" ry="17" style="fill:#7FC06A"/>
+    <circle class="w" cx="20" cy="21" r="5.6"/><circle class="w" cx="44" cy="21" r="5.6"/><circle class="k n" cx="21" cy="22" r="2.6"/><circle class="k n" cx="43" cy="22" r="2.6"/>
+    <path class="l" d="M18 40q14 10 28 0" style="stroke-width:2"/><ellipse class="p n" cx="15" cy="38" rx="3" ry="1.8" opacity=".75"/><ellipse class="p n" cx="49" cy="38" rx="3" ry="1.8" opacity=".75"/>
+    <circle class="dg n" cx="30" cy="30" r="1" style="fill:#3F7D56"/><circle class="dg n" cx="34" cy="30" r="1" style="fill:#3F7D56"/>`,
+  nezumi: `<circle class="gy" cx="14" cy="20" r="11" style="fill:#A9A4A0"/><circle class="gy" cx="50" cy="20" r="11" style="fill:#A9A4A0"/><circle class="p n" cx="14" cy="20" r="7" style="fill:#F2B6C4"/><circle class="p n" cx="50" cy="20" r="7" style="fill:#F2B6C4"/>
+    <path class="gy" d="M14 36q0-14 18-14t18 14q-4 14-18 18-14-4-18-18z" style="fill:#B9B4AE"/>
+    <circle class="k n" cx="25" cy="34" r="2.2"/><circle class="k n" cx="39" cy="34" r="2.2"/><circle class="p" cx="32" cy="44" r="2.6" style="fill:#E87A96"/>
+    <path class="l" d="M28 44H16M28 46l-11 3M36 44h12M36 46l11 3" style="stroke-width:1.2"/>`,
+  iruka: `<path class="b" d="M6 42q10-30 36-28 10 0 14 6l6 0-4 4q2 10-8 12-6 2-10-4-8 2-14 10-6 8-10 14 0-8 2-12-8 4-12-2z" style="fill:#6FA0D8"/>
+    <path class="w" d="M30 30q10 2 20-4-4 8-10 8-6 0-10-4z" style="fill:#DDEFF7"/><circle class="k n" cx="48" cy="20" r="1.6"/>
+    <path class="b" d="M34 16l2-8 6 8z" style="fill:#4F7FC0"/>
+    <path class="sk" d="M2 56q6-6 12 0t12 0 12 0 12 0 12 0" style="fill:none;stroke:#7FB8E6;stroke-width:3"/>
+    <circle class="sk n" cx="16" cy="50" r="1.6" style="fill:#9CCBEB"/><circle class="sk n" cx="22" cy="46" r="1.2" style="fill:#9CCBEB"/>`,
+
+  /* ---------- 名所 famous places ---------- */
+  sukaitsuri: `<path class="gy" d="M18 58l10-10h8l10 10z" style="fill:#C9C4BA"/>
+    <path class="w" d="M27 50l2.4-34h5.2L37 50z" style="fill:#E6EEF4"/><path class="l" d="M28 46l8-6M28.4 40l7.2 6M28.8 34l6.4-5M29.2 28l5.6 4.6M29.6 22l4.8-4" style="stroke:#9AA8B6;stroke-width:1"/>
+    <rect class="sk" x="24" y="27" width="16" height="5" rx="1.6" style="fill:#9FD3E8"/><rect class="sk" x="27" y="15" width="10" height="4" rx="1.4" style="fill:#9FD3E8"/>
+    <path class="l" d="M32 15V2" style="stroke-width:2"/><circle class="r n" cx="32" cy="3" r="1.4"/>`,
+  kinkakuji: `<path class="sk n" d="M2 52h60v8H2z" style="fill:#9FC9E8"/><path class="g n" d="M22 54h20v2H22z" opacity=".6"/>
+    <rect class="g" x="16" y="38" width="32" height="14" style="fill:#E6B23E"/><path class="k" d="M10 38l8-6h28l8 6z" style="fill:#4A3C30"/>
+    <rect class="g" x="19" y="24" width="26" height="10" style="fill:#F0C24E"/><path class="k" d="M13 25l7-6h24l7 6z" style="fill:#4A3C30"/>
+    <rect class="g" x="23" y="13" width="18" height="8" style="fill:#F0C24E"/><path class="k" d="M17 14l9-8h12l9 8z" style="fill:#4A3C30"/>
+    <path class="g" d="M32 6l-2-4h4z"/><path class="l" d="M22 42v8M28 42v8M36 42v8M42 42v8" style="stroke:#B8892E"/>`,
+  daibutsu: `<circle class="g" cx="32" cy="22" r="18" style="fill:#E6B23E;opacity:.5"/>
+    <path class="gr" d="M8 58q0-24 24-24t24 24z" style="fill:#5E8C7A"/>
+    <path class="gr" d="M20 52q12-8 24 0-4 6-12 6t-12-6z" style="fill:#4E7A68"/>
+    <circle class="gr" cx="32" cy="22" r="11" style="fill:#5E8C7A"/><path class="gr" d="M22 18q0-10 10-10t10 10q-4-4-10-4t-10 4z" style="fill:#4E7A68"/>
+    <path class="l" d="M27 23q2-1.4 4 0M33 23q2-1.4 4 0M30 28q2 1.4 4 0" style="stroke:#2F4A40"/><circle class="w n" cx="32" cy="17" r="1.2" style="fill:#E6B23E"/>
+    <path class="gr" d="M20 22q-3 0-3 4t3 6zM44 22q3 0 3 4t-3 6z" style="fill:#5E8C7A"/>`,
+  himeji: `<path class="gy" d="M8 58l4-14h40l4 14z" style="fill:#A9A499"/><path class="l" d="M12 50h40M10 54h44" style="stroke:#8E8A80"/>
+    <rect class="w" x="16" y="34" width="32" height="10"/><path class="gy" d="M10 35l8-6h28l8 6z" style="fill:#7C8790"/>
+    <rect class="w" x="20" y="22" width="24" height="8"/><path class="gy" d="M14 23l8-6h20l8 6z" style="fill:#7C8790"/>
+    <rect class="w" x="24" y="12" width="16" height="6"/><path class="gy" d="M18 13l8-7h12l8 7z" style="fill:#7C8790"/>
+    <rect class="k n" x="22" y="37" width="3" height="3"/><rect class="k n" x="30.5" y="37" width="3" height="3"/><rect class="k n" x="39" y="37" width="3" height="3"/><rect class="k n" x="25" y="24.6" width="3" height="3"/><rect class="k n" x="36" y="24.6" width="3" height="3"/>`,
+  kaminarimon: `<path class="k" d="M4 16l8-8h40l8 8z" style="fill:#3B342D"/><rect class="r" x="8" y="16" width="48" height="6"/>
+    <rect class="r" x="10" y="22" width="6" height="36"/><rect class="r" x="48" y="22" width="6" height="36"/>
+    <ellipse class="r" cx="32" cy="40" rx="12" ry="15" style="fill:#D9483B"/><rect class="k" x="25" y="24" width="14" height="3"/><rect class="k" x="25" y="53" width="14" height="3"/>
+    <text x="32" y="39" text-anchor="middle" font-size="9" font-weight="800" fill="#1E1D1A" font-family="Hiragino Mincho ProN, Noto Serif JP, serif">雷</text><text x="32" y="49" text-anchor="middle" font-size="9" font-weight="800" fill="#1E1D1A" font-family="Hiragino Mincho ProN, Noto Serif JP, serif">門</text>`,
+  kiyomizu: `<path class="o n" d="M50 30q10-10 12 4 2 12-10 10-8-2-2-14z" style="fill:#E8763A"/><path class="r n" d="M52 36q6-6 8 2-2 6-8 2z" style="fill:#D9483B"/>
+    <path class="k" d="M6 20l14-10h24l14 10z" style="fill:#5A4A3E"/><rect class="r" x="10" y="20" width="44" height="12" style="fill:#C8573A"/>
+    <rect class="wd" x="6" y="32" width="48" height="4"/>
+    <path class="l" d="M10 36v22M18 36v22M26 36v22M34 36v22M42 36v22M50 36v22M10 44h40M10 52h40" style="stroke:#9A6A3A;stroke-width:2.2"/>
+    <path class="gr n" d="M2 58q10-6 20 0t20 0 20 0v2H2z" style="fill:#6BAF73"/>`,
+  itsukushima: `<path class="o n" d="M0 0h64v40H0z" style="fill:#F7D7A8;opacity:.6"/><circle class="o n" cx="50" cy="16" r="6" style="fill:#F2A23A"/>
+    <path class="k" d="M6 14q26 6 52 0l-2 5q-24 4-48 0z"/><rect class="r" x="10" y="22" width="44" height="4"/>
+    <rect class="r" x="15" y="18" width="5" height="34"/><rect class="r" x="44" y="18" width="5" height="34"/>
+    <path class="b n" d="M0 46h64v18H0z" style="fill:#6D95C8"/><path class="l" d="M4 52q4-3 8 0t8 0M36 56q4-3 8 0t8 0M44 48q4-3 8 0" style="stroke:#DDEFF7;stroke-width:1.6"/>`,
+  hachiko: `<rect class="gy" x="10" y="44" width="44" height="14" style="fill:#A9A499"/><path class="l" d="M10 50h44" style="stroke:#8E8A80"/>
+    <path class="br" d="M16 44q0-14 10-18l10-2q12 0 14 8 2 6-2 12z" style="fill:#7A6A4E"/>
+    <path class="br" d="M36 26q-2-10 6-14l4-6 2 6q6 2 6 8t-6 8z" style="fill:#7A6A4E"/><path class="br" d="M14 30q-6 2-4 8 4 0 6-4z" style="fill:#7A6A4E"/>
+    <circle class="k n" cx="48" cy="18" r="1.4"/><ellipse class="k" cx="53.6" cy="21" rx="1.6" ry="1.2"/>
+    <path class="l" d="M22 44v-8M42 44v-8" style="stroke:#5A4A3A"/>`,
+  efferu: `<path class="br" d="M30 4h4l1 12h-6z" style="fill:#8A6A4A"/>
+    <path class="br" d="M28 16h8l4 18H24z" style="fill:#9A7A55"/><rect class="br" x="22" y="32" width="20" height="3" style="fill:#7A5A3A"/>
+    <path class="br" d="M23 35h18l9 23h-9q-2-10-9-10t-9 10h-9z" style="fill:#9A7A55"/>
+    <path class="l" d="M26 22l12 10M38 22L26 32M25 38l14 8M39 38l-14 8" style="stroke:#6E5032;stroke-width:1"/><rect class="br" x="20" y="44" width="24" height="2.6" style="fill:#7A5A3A"/>`,
+  megami: `<rect class="gy" x="20" y="48" width="24" height="10" style="fill:#C9C4BA"/>
+    <path class="gr" d="M22 48l2-22q8-4 16 0l2 22z" style="fill:#7FB8A0"/><path class="l" d="M28 30l-2 18M34 30v18" style="stroke:#4F8A74"/>
+    <circle class="gr" cx="32" cy="20" r="6" style="fill:#7FB8A0"/>
+    <path class="gr" d="M26 16l-4-4 6 2 1-5 3 4 3-4 1 5 6-2-4 4z" style="fill:#7FB8A0"/>
+    <path class="gr" d="M38 28l6-18 3 1-5 18z" style="fill:#7FB8A0"/><path class="y" d="M45 8q-4-6 0-8 4 2 0 8z" style="fill:#F2A23A"/>
+    <rect class="gr" x="20" y="30" width="6" height="9" rx="1" style="fill:#6BA68E"/>`,
+  piramiddo: `<circle class="o n" cx="50" cy="12" r="6" style="fill:#F2A23A"/>
+    <path class="y" d="M2 56L24 18l22 38z" style="fill:#E9C778"/><path class="y n" d="M24 18l22 38H28z" style="fill:#D2AE5E"/>
+    <path class="y" d="M30 56l16-26 16 26z" style="fill:#E9C778"/><path class="y n" d="M46 30l16 26H50z" style="fill:#D2AE5E"/>
+    <path class="l" d="M10 44h28M16 34h16" style="stroke:#B89048;stroke-width:1"/><path class="wd n" d="M0 56h64v4H0z" style="fill:#E0C48A"/>`,
+  biggubeh: `<path class="g" d="M32 2l-6 12h12z" style="fill:#B8892E"/>
+    <rect class="c" x="24" y="14" width="16" height="44" style="fill:#E0C48A"/><rect class="c" x="22" y="14" width="20" height="18" style="fill:#E9D2A0"/>
+    <circle class="w" cx="32" cy="23" r="7"/><path class="l" d="M32 23v-4.4M32 23l3 2"/><circle class="k n" cx="32" cy="23" r="1"/>
+    <path class="l" d="M28 36v20M32 36v20M36 36v20" style="stroke:#B89048"/>`,
+  pisa: `<g transform="rotate(8 32 58)"><rect class="w" x="22" y="12" width="20" height="46" style="fill:#F4EFE2"/>
+    <rect class="w" x="24" y="6" width="16" height="7" style="fill:#F4EFE2"/>
+    <path class="l" d="M22 20h20M22 28h20M22 36h20M22 44h20M22 52h20" style="stroke:#B9B3A6"/>
+    ${[16, 24, 32, 40, 48].map(y => `<path class="l" d="M26 ${y + 2}v-3q0-2 2-2t2 2v3M34 ${y + 2}v-3q0-2 2-2t2 2v3" style="stroke:#8E8A80;stroke-width:1"/>`).join("")}</g>
+    <path class="gr n" d="M4 58h56v3H4z" style="fill:#7FB35A"/>`,
+  chojo: `<path class="gr" d="M0 48q16-20 32-8t32-12v36H0z" style="fill:#7FB35A"/>
+    <path class="gy" d="M0 44q16-20 32-8t32-12v6q-16 12-32 0t-32 8z" style="fill:#C9B48A"/>
+    <rect class="gy" x="10" y="26" width="9" height="12" style="fill:#B8A27A"/><rect class="gy" x="44" y="18" width="9" height="12" style="fill:#B8A27A"/>
+    <path class="l" d="M10 26h2v-2h2v2h2v-2h2v2M44 18h2v-2h2v2h2v-2h2v2" style="stroke:#8A7650"/>`,
+  tajimahar: `<rect class="w" x="14" y="34" width="36" height="22" style="fill:#F7F4EC"/><path class="w" d="M18 34q0-16 14-20 14 4 14 20z" style="fill:#F7F4EC"/>
+    <path class="g" d="M32 14V6" style="stroke:#B8892E;stroke-width:1.6"/><circle class="g" cx="32" cy="6" r="1.4"/>
+    <path class="k n" d="M28 56V46q0-4 4-4t4 4v10z" style="fill:#A9A499"/>
+    <rect class="w" x="4" y="22" width="4" height="34" style="fill:#F7F4EC"/><rect class="w" x="56" y="22" width="4" height="34" style="fill:#F7F4EC"/>
+    <circle class="w" cx="6" cy="21" r="3" style="fill:#F7F4EC"/><circle class="w" cx="58" cy="21" r="3" style="fill:#F7F4EC"/><path class="sk n" d="M0 58h64v4H0z" style="fill:#9FC9E8"/>`,
+  koroseo: `<path class="c" d="M4 26q28-12 56 0v32H4z" style="fill:#D9B98A"/><path class="c" d="M4 26q14-6 28-8 16 0 28 4v-8q-12-4-28-4-14 2-28 8z" style="fill:#E4C89A"/>
+    ${[0, 1, 2].map(r => [0, 1, 2, 3, 4, 5].map(c => `<path class="k n" d="M${8 + c * 8.6} ${50 - r * 10}v-5q0-2.6 2.4-2.6t2.4 2.6v5z" style="fill:#8A6E4A"/>`).join("")).join("")}`,
+  operahausu: `<path class="sk n" d="M0 48h64v16H0z" style="fill:#6D95C8"/><rect class="c" x="6" y="44" width="52" height="6" style="fill:#D9B98A"/>
+    <path class="w" d="M8 44q4-20 18-28-2 16-4 28z"/><path class="w" d="M20 44q6-22 20-26-4 14-6 26z"/><path class="w" d="M34 44q6-18 18-20-4 12-6 20z"/><path class="w" d="M46 44q4-10 12-12-2 6-4 12z"/>
+    <path class="l" d="M4 56q4-3 8 0t8 0M40 58q4-3 8 0t8 0" style="stroke:#DDEFF7;stroke-width:1.6"/>`,
+  gaisenmon: `<rect class="c" x="8" y="10" width="48" height="48" style="fill:#E4D2AE"/>
+    <rect class="c" x="6" y="8" width="52" height="6" style="fill:#D2BC90"/><rect class="c" x="8" y="18" width="48" height="3" style="fill:#D2BC90"/>
+    <path class="k n" d="M22 58V38q0-10 10-10t10 10v20z" style="fill:#F3F0E8"/><path class="l" d="M22 58V38q0-10 10-10t10 10v20"/>
+    <path class="l" d="M12 26v28M52 26v28" style="stroke:#B8A27A"/>`,
+  marion: `<path class="sk" d="M49 25q8-1 13 8" style="fill:none;stroke:#7FB8E6;stroke-width:3.4"/><circle class="sk n" cx="61" cy="38" r="1.6" style="fill:#9CCBEB"/><circle class="sk n" cx="58" cy="42" r="1.2" style="fill:#9CCBEB"/>
+    <rect class="gy" x="10" y="52" width="34" height="6" style="fill:#C9C4BA"/>
+    <path class="w" d="M16 52q-6-14 6-22 6-4 12-4l4 10q-8 2-10 8t2 8z" style="fill:#F4F2EC"/>
+    <path class="w" d="M16 52l-9 2 4-6-4-6 9 4z" style="fill:#F4F2EC"/>
+    <path class="l" d="M22 40q2 2 4 0M20 46q2 2 4 0M26 46q2 2 4 0M27 35q2 2 4 0" style="stroke:#C9C4BA"/>
+    <g transform="translate(38 22)">${[...Array(10)].map((_, i) => `<circle class="w" transform="rotate(${i * 36})" cx="0" cy="-10" r="4.4" style="fill:#E8E2D0"/>`).join("")}</g>
+    <circle class="w n" cx="38" cy="22" r="10" style="fill:#E8E2D0"/>
+    <circle class="w" cx="40" cy="23" r="7.4" style="fill:#F4F2EC"/><circle class="k n" cx="41" cy="20.6" r="1.3"/>
+    <path class="k" d="M44 25.6q3 0 4 .4-1 3-4 2.4z" style="fill:#7A6A5A"/><path class="l" d="M45 22.4l2.6.4"/>`,
+  moai: `<path class="gr n" d="M0 54q32-6 64 0v10H0z" style="fill:#7FB35A"/>
+    <path class="gy" d="M8 56V24q0-12 9-12t9 12v32z" style="fill:#8E8A80"/><path class="gy" d="M34 56V18q0-14 11-14t11 14v38z" style="fill:#A9A499"/>
+    <path class="k n" d="M12 26h10v3H12zM38 20h14v3.4H38z" style="fill:#5A5650"/><path class="gy" d="M17 30l-2 10h5z" style="fill:#7C786F"/><path class="gy" d="M45 24l-3 12h6z" style="fill:#8E8A80"/>
+    <path class="l" d="M13 46h8M40 44h10" style="stroke:#5A5650;stroke-width:1.6"/>`,
 };
 
 function toyArt(id, cls = "") {

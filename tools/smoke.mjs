@@ -98,7 +98,7 @@ const CONTRACT = {
   'js/read-ui.js': ['renderRead', 'readKey', 'readText', 'readPool', 'splits', 'makeChain', 'chainable', 'READ_RUNGS', 'openRead', 'closeRead',
     'makeSearch', 'searchPlaces', 'searchSnap', 'SEARCH_DIRS', 'SEARCH_SIZES', 'searchCard', 'matchCard', 'phrasePool', 'phraseCard', 'pieceMeaning', 'subsPool', 'textCard', 'textShow', 'textOpen', 'textAnswer'],
   'js/data/texts.js': ['TEXTS', 'textSay', 'READ_PHRASES', 'PHRASE_BITS', 'phraseWord'],
-  'js/data/toys.js': ['TOY_SETS', 'TOY_BY', 'SPIN_COST', 'spinCost', 'RARE_WEIGHT', 'DUP_BACK', 'PITY', 'gachaPick', 'setDone', 'currentSet'],
+  'js/data/toys.js': ['TOY_SETS', 'TOY_BY', 'SPIN_COST', 'spinCost', 'RARE_WEIGHT', 'toyUse', 'DUP_BACK', 'PITY', 'gachaPick', 'setDone', 'currentSet'],
   'js/toys-art.js': ['TOY_ART', 'toyArt', 'gachaMachine', 'capsuleArt', 'coinArt', 'GACHA_HUES'],
   'js/data/loans.js': ['LOAN_RULES', 'LOAN_WORDS', 'LOAN_GROUPS', 'LOAN_BY', 'LOAN_RULE_BY'],
   'js/loans-ui.js': ['loanCard', 'loanPool', 'loanOpen', 'loanShow', 'loanAnswer', 'loanDecoys', 'openLoanRules', 'openLoanList'],
@@ -458,7 +458,7 @@ section('games');
   const g = {};
   vm.createContext(g);
   vm.runInContext(['js/data/kana.js', 'js/furi.js', 'js/data/toys.js', 'js/toys-art.js'].map(read).join('\n') +
-    ';globalThis.G = { TOY_SETS, TOY_BY, TOY_ART, gachaPick, setDone, currentSet, PITY, spinCost, furiProblems, furiKana, kanaUnits, KANA_BY };', g);
+    ';globalThis.G = { TOY_SETS, TOY_BY, TOY_ART, gachaPick, setDone, currentSet, PITY, spinCost, toyUse, furiProblems, furiKana, kanaUnits, KANA_BY };', g);
   const { TOY_SETS, TOY_BY, TOY_ART, gachaPick, setDone, currentSet, PITY, spinCost } = g.G;
   ok(TOY_SETS.length >= 2, 'expected more than one set of toys, so finishing one opens another');
   const all = TOY_SETS.flatMap(S => S.toys);
@@ -474,6 +474,10 @@ section('games');
     ok(!!t.m, `${t.id} has no English`);
     g.G.furiProblems(t.w).forEach(p => ok(false, p));
     g.G.kanaUnits(g.G.furiKana(t.w)).forEach(u => ok(!!g.G.KANA_BY[u], `${t.id}: ${u} isn't a kana that's taught`));
+    /* and its line to say it in (toyUse): there, well formed, nothing left unfilled */
+    const u = g.G.toyUse(t);
+    ok(!!u, `${t.id} has no line to say it in — its set needs a use`);
+    if (u) { g.G.furiProblems(u[0]).forEach(p => ok(false, p)); ok(!/[{}]/.test(u[1]) && !/\{w\}/.test(u[0]), `${t.id}: a blank left in "${u.join(" / ")}"`); }
   });
   /* the machine: a toy you lack is likelier; after PITY repeats, a new one; a set
      takes a fair number of turns */
