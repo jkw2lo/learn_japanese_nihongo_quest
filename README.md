@@ -1095,6 +1095,19 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.68.1: A demo for visitors from the portfolio
+
+- **See the demo or start fresh.** Opened from Jen's portfolio
+  (`?from=portfolio`) with nothing saved yet, the app offers two ways in:
+  the trailer's learner a few weeks in (every kana, about half the words,
+  60 kanji, 28 patterns, toys and six weeks of days, katakana open and the
+  introduction read), so the games and the street aren't locked; or a fresh
+  start at the first lesson. While the demo is in use, a small banner at the
+  bottom left offers Start fresh, which empties the store. Anyone arriving
+  another way, or with their own progress, sees none of it. `js/demo.js`
+  holds the learner; `js/demo-welcome.js` is the overlay, shared with the
+  other projects (its master is in the portfolio repo, `tools/`).
+
 ### 0.68.0: Fruit and veg, hobbies, actions, technology
 
 - **Four more capsule sets**, all 30 coins a turn. That makes twenty-two
