@@ -37,5 +37,24 @@ addEventListener("DOMContentLoaded", () => {
       !(Object.keys(state.items).length || Object.keys(state.words).length),
     loadDemo: () => { demoLearner(); location.reload(); return new Promise(() => {}); },
     clear: () => { state = freshState(); save(); location.reload(); },
+    /* a walk round what the demo learner has open, so a visitor isn't just dropped in */
+    tour: [
+      { go: () => go("today"), el: ["#v-today .hero", "#v-today .col-main"], title: "今日 Today",
+        text: "Each day is one short list: a few new things to learn, then read, listen, say and write them. A task ticks only when every item in it is right." },
+      { el: ["#v-today .col-rail"], title: "How far you've come",
+        text: "Hiragana, katakana, words, kanji and grammar, counted up toward JLPT N5. This learner has every kana and about half the words." },
+      { go: () => go("grammar"), el: ["#v-grammar .g-grid > :first-child", "#v-grammar"], title: "文法 Grammar you can see",
+        text: "Each pattern is built only from words you already know, split into its parts. Tap any part to hear it." },
+      { go: () => go("read"), el: ["#v-read .rd-rung", "#v-read"], title: "読む Reading that keeps up",
+        text: "A ladder from words run together to subtitles at real speed, every rung made of words you know." },
+      { go: () => go("games"), el: ["#v-games .gm-machine", "#v-games"], title: "遊ぶ Play, earn, collect",
+        text: "Games like Ninja slice and Word search pay coins for the capsule machine, and every toy is named in Japanese. There are 220 coins here to spend." },
+      { go: () => go("menu"), el: ["#v-menu .places", "#v-menu"], title: "街 Japanese in the wild",
+        text: "Sushi counters, station signs, menus and shop talk, inked in as you learn. A place opens once you can sound out half its words." },
+      { go: () => go("today"), el: [".top-nav", "#burger"], title: "Every section",
+        text: "Kana, Words, Sprint, Cards, the Notebook and your Record are all here too." },
+      { title: "Over to you",
+        text: "Everything works: take a lesson, play a game, spend the coins. When you'd rather start as a new learner, Start fresh is at the bottom left." },
+    ],
   });
 });

@@ -1095,6 +1095,17 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.68.2: A walk round the demo
+
+- **The demo starts with a short tour** (eight steps), so a visitor isn't
+  just dropped in: Today, the progress rail, Grammar, Read, Games, Out &
+  about, where every section lives (the top bar, or the sections button on
+  a phone), then over to them. Each step goes to its tab and lights up the
+  part it's about; Back, Next, Skip, the arrow keys and Esc all work. On a
+  phone the card sits along the bottom, or along the top when the part it
+  points at is down there. The steps are in `js/demo.js`; the tour itself
+  is in `js/demo-welcome.js`. The banner waits until the tour is over.
+
 ### 0.68.1: A demo for visitors from the portfolio
 
 - **See the demo or start fresh.** Opened from Jen's portfolio
