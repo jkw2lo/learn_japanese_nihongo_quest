@@ -2757,8 +2757,8 @@ each device. Each device then reads and writes one Firestore document,
 | speech | macOS `say` | Apple's terms | fine for personal study; same caveat as Hanzi Quest if it's published |
 
 The share-alike licences mean that if this is published, the data files carry
-attribution and stay under CC BY-SA. The code can still be licensed however
-you like.
+attribution and stay under CC BY-SA. The code is under the
+[MIT licence](LICENSE).
 
 ---
 
