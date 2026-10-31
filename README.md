@@ -1095,6 +1095,12 @@ the konbini's does, and the smoke test checks both.
   and ran out of the bottom, and the concourse signs sat on top of each
   other. On a phone nothing changes (checked element by element).
 
+### 0.68.3: The demo welcome fits any screen
+
+- The shared overlay (`js/demo-welcome.js`) now places its card, tour and
+  banner against what's on screen rather than the page, so they stay put on
+  a phone even where a page is wider than the screen. Nothing changes here.
+
 ### 0.68.2: A walk round the demo
 
 - **The demo starts with a short tour** (eight steps), so a visitor isn't
