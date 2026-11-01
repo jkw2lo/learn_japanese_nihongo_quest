@@ -14,7 +14,7 @@
   ],
 
   "features": [
-    { "title": "Japanese in the wild", "text": "Sushi counters, station signs, menus and shop talk, inked in as you learn.",
+    { "title": "Practical and gamified", "text": "Sushi counters, station signs, menus and shop talk, inked in as you learn.",
       "details": ["A place opens when you can sound out half its words", "Order for a friend from a café menu, then hear the bill", "Just for practice: nothing here touches your reviews"],
       "screen": { "src": "out.png", "alt": "Out and about: 15 of 15 places open, a word from the street, and cards for the sushi counter, public bath, festival stalls, shop signs and a receipt" } },
     { "title": "Grammar you can see", "text": "Each pattern is built only from words you already know.",
